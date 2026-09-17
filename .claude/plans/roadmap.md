@@ -7,10 +7,12 @@
 
 ### Сборка v1 по build-brief
 
-Спецификация — `docs/research/BUILD-BRIEF.md`; решения владельца —
-`docs/research/ssr/DECISIONS.md`; итог ресёрча — `docs/research/ssr/00-synthesis.md`
-(§12 — план фаз). Исполнение: Fable-агент по одной фазе за запуск, приёмка главной
-сессией (brief §8), после приёмки — коммит + push в `main`.
+Вход сессии — `docs/research/NEXT-SESSION.md` (цикл фазы, приёмка, ревью, известные
+проблемы среды). Спецификация — `docs/research/BUILD-BRIEF.md`; решения владельца —
+`docs/research/ssr/DECISIONS.md`; отчёты принятых фаз — `docs/research/reports/phase-N.md`;
+итог ресёрча — `docs/research/ssr/00-synthesis.md` (§12 — план фаз). Исполнение: Fable-агент
+по одной фазе за запуск, приёмка главной сессией (brief §8), после приёмки — коммит + push
+в `main`.
 
 - [x] Фаза 1 — фундамент: прунинг SPA-рантайма, `astro.config.ts`, гейт (`astro check`,
   Biome + Prettier для `.astro`, ESLint 10 + `boundaries` с резолвером, Steiger, Vitest 5,
