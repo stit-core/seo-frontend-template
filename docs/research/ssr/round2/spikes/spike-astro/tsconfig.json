@@ -1,0 +1,29 @@
+{
+  "extends": "astro/tsconfigs/strictest",
+  "compilerOptions": {
+    "target": "ES2024",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+    "useUnknownInCatchVariables": true,
+
+    "skipLibCheck": true,
+    "noEmit": true,
+
+    "paths": { "@/*": ["./src/*"] }
+  },
+  "include": [".astro/types.d.ts", "src", "e2e", "*.config.ts", "scripts"],
+  "exclude": ["node_modules", "dist"]
+}

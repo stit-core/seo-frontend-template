@@ -1,0 +1,22 @@
+---
+import DocumentLayout from '@/app/layouts/document.astro'
+import { t } from '@/shared/i18n'
+import { SeoHead } from '@/shared/seo'
+
+const locale = 'ru' as const
+---
+<DocumentLayout locale={locale}>
+  <Fragment slot="head">
+    <SeoHead
+      title={t(locale, 'contact.thanksTitle')}
+      description={t(locale, 'contact.thanks')}
+      path="/contact/thanks"
+      pathWithoutLocale="/contact/thanks"
+      locale={locale}
+      noindex
+    />
+  </Fragment>
+  <h1 class="text-heading-lg font-semibold text-ink">{t(locale, 'contact.thanksTitle')}</h1>
+  <p class="mt-4 text-body-md" role="status">{t(locale, 'contact.thanks')}</p>
+  <p class="mt-6"><a href="/">{t(locale, 'breadcrumbs.home')}</a></p>
+</DocumentLayout>

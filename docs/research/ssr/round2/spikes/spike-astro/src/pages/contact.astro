@@ -1,0 +1,33 @@
+---
+import DocumentLayout from '@/app/layouts/document.astro'
+import { ContactForm } from '@/features/contact-form'
+import { t } from '@/shared/i18n'
+import { SeoHead } from '@/shared/seo'
+
+const locale = 'ru' as const
+---
+<DocumentLayout locale={locale}>
+  <Fragment slot="head">
+    <SeoHead
+      title={t(locale, 'contact.title')}
+      description={t(locale, 'contact.description')}
+      path="/contact"
+      pathWithoutLocale="/contact"
+      locale={locale}
+    />
+  </Fragment>
+  <h1 class="text-heading-lg font-semibold text-ink">{t(locale, 'contact.title')}</h1>
+  <p class="mt-4 text-body-md text-muted">{t(locale, 'contact.description')}</p>
+  <div class="mt-8">
+    <ContactForm
+      client:idle
+      labels={{
+        name: 'Имя',
+        email: 'Email',
+        message: 'Сообщение',
+        submit: 'Отправить',
+        thanks: 'Спасибо! Сообщение принято.',
+      }}
+    />
+  </div>
+</DocumentLayout>

@@ -1,0 +1,29 @@
+---
+import '@/app/styles/index.css'
+import type { Locale } from '@/shared/i18n'
+import { SiteFooter } from '@/widgets/site-footer'
+import { SiteHeader } from '@/widgets/site-header'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+---
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#18181b" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <slot name="head" />
+  </head>
+  <body class="min-h-dvh flex flex-col">
+    <SiteHeader locale={locale} />
+    <main class="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
+      <slot />
+    </main>
+    <SiteFooter locale={locale} />
+  </body>
+</html>

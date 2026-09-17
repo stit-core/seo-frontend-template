@@ -1,0 +1,24 @@
+---
+import DocumentLayout from '@/app/layouts/document.astro'
+import { t } from '@/shared/i18n'
+import { breadcrumbs, JsonLdScript, SeoHead } from '@/shared/seo'
+
+const locale = 'en' as const
+---
+<DocumentLayout locale={locale}>
+  <Fragment slot="head">
+    <SeoHead
+      title={t(locale, 'about.title')}
+      description={t(locale, 'about.description')}
+      path="/en/about"
+      pathWithoutLocale="/about"
+      locale={locale}
+    />
+    <JsonLdScript data={breadcrumbs([{ name: t(locale, 'breadcrumbs.home'), path: '/en' }, { name: t(locale, 'about.title'), path: '/en/about' }])} />
+  </Fragment>
+  <h1 class="text-heading-lg font-semibold text-ink">{t(locale, 'about.title')}</h1>
+  <p class="mt-4 text-body-md">
+    A demo content site: static by default, server rendering only where it is genuinely needed,
+    and not a single kilobyte of JavaScript on pages without interactivity.
+  </p>
+</DocumentLayout>

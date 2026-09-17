@@ -1,0 +1,4221 @@
+<!doctype html>
+<html lang="en" >
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+      <title>CMS | 2025 | The Web Almanac by HTTP Archive</title>
+      <link rel="stylesheet" href="/static/css/normalize.css?v=3a712a3381a95c0a7b7c6ed3aa03b911">
+      
+
+  <link rel="stylesheet" href="/static/css/almanac.css?v=f1b659664e1ffbc5e1f3feca4080486d">
+
+<link rel="stylesheet" href="/static/css/page.css?v=9a1ae5aea9b36df260da9f7c442073e7">
+
+      <link rel="preload" href="/static/fonts/Lato-Regular.woff2" as="font" type="font/woff2" crossorigin>
+      <link rel="preload" href="/static/fonts/Poppins-Bold.woff2" as="font" type="font/woff2" crossorigin>
+      <link rel="preload" href="/static/fonts/Lato-Black.woff2" as="font" type="font/woff2" crossorigin>
+      <link rel="preload" href="/static/fonts/Lato-Bold.woff2" as="font" type="font/woff2" crossorigin>
+
+      <script nonce="WC_UqnvvqUMfcZrOY8JwCUop5y46DXiM">
+        window.dataLayer = window.dataLayer || [];
+        function gtag() {
+            dataLayer.push(arguments);
+        }
+        gtag('set', 'allow_google_signals', false);
+        gtag('set', 'allow_ad_personalization_signals', false);
+        gtag('js', new Date());
+        gtag('config', 'UA-22381566-3', {
+          'link_attribution': true
+        });
+        gtag('config', 'G-PQ5N2MZG5M');
+      </script>
+    
+    <link rel="shortcut icon" href="/static/images/favicon.ico">
+    <link rel="apple-touch-icon" href="/static/images/apple-touch-icon.png">
+    
+    
+<meta name="description" content="CMS chapter of the 2025 Web Almanac covering CMS adoption, user experience of websites running on CMS platforms, and CMS resource weights.">
+
+<meta property="og:title" content="CMS | 2025 | The Web Almanac by HTTP Archive">
+<meta property="og:url" content="https://almanac.httparchive.org/en/2025/cms">
+<meta property="og:image" content="https://almanac.httparchive.org/static/images/2019/cms/hero_lg.jpg">
+<meta property="og:image:height" content="433">
+<meta property="og:image:width" content="866">
+<meta property="og:type" content="article">
+<meta property="og:description" content="CMS chapter of the 2025 Web Almanac covering CMS adoption, user experience of websites running on CMS platforms, and CMS resource weights.">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@HTTPArchive">
+<meta name="twitter:title" content="CMS | 2025 | The Web Almanac by HTTP Archive">
+<meta name="twitter:image" content="https://almanac.httparchive.org/static/images/2019/cms/hero_lg.jpg">
+<meta name="twitter:image:alt" content="Chapter image for the CMS chapter of the 2025 Web Almanac">
+<meta name="twitter:description" content="CMS chapter of the 2025 Web Almanac covering CMS adoption, user experience of websites running on CMS platforms, and CMS resource weights.">
+
+<link rel="webmention" href="https://webmention.io/almanac.httparchive.org/webmention">
+<link rel="pingback" href="https://webmention.io/almanac.httparchive.org/xmlrpc">
+<link rel="me" href="mailto:team@httparchive.org">
+
+
+<script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "ScholarlyArticle",
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://almanac.httparchive.org/en/2025/cms"
+    },
+    "headline": "CMS | 2025 | The Web Almanac by HTTP Archive",
+    "image": {
+        "@type": "ImageObject",
+        "url": "https://almanac.httparchive.org/static/images/2019/cms/hero_lg.jpg",
+        "height": 433,
+        "width": 866
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "HTTP Archive",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "https://almanac.httparchive.org/static/images/ha.png",
+            "height": 160,
+            "width": 320
+        },
+        "sameAs": [
+          "https://httparchive.org",
+          "https://x.com/HTTPArchive",
+          "https://bsky.app/profile/httparchive.org",
+          "https://github.com/HTTPArchive"
+          ]
+      },
+    "author":
+      
+      {
+        "@type": "Person",
+          "sameAs": [
+            "https://almanac.httparchive.org/en/2025/contributors#VaheSODP"
+            
+            ,"https://github.com/VaheSODP"
+            ,"https://www.linkedin.com/in/ahearabian/"
+            ],
+        "name": "Vahe Arabian"
+      }
+,
+      "description": "CMS chapter of the 2025 Web Almanac covering CMS adoption, user experience of websites running on CMS platforms, and CMS resource weights.",
+      "datePublished": "2026-01-15T00:00:00.000Z",
+      "dateModified": "2026-01-16T00:00:00.000Z"
+  }
+  </script>
+  
+
+  
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [{
+        "@type": "ListItem",
+        "position": 1,
+        "name": "en",
+        "item": "https://almanac.httparchive.org/en/"
+      },{
+        "@type": "ListItem",
+        "position": 2,
+        "name": "2025",
+        "item": "https://almanac.httparchive.org/en/2025"
+      }]
+    }
+  </script>
+  
+
+
+    
+    <meta name="citation_title" content="The 2025 Web Almanac: CMS">
+    <meta name="citation_author" content="Vahe Arabian">
+    <meta name="citation_publication_date" content="2026/01/15">
+    <meta name="citation_journal_title" content="The 2025 Web Almanac">
+    <meta name="citation_volume" content="7">
+    <meta name="citation_issue" content="12">
+    <meta name="citation_publisher" content="HTTP Archive">
+    <meta name="citation_technical_report_institution" content="HTTP Archive">
+    <meta name="citation_language" content="English">
+    <meta name="citation_fulltext_html_url" content="https://almanac.httparchive.org/en/2025/cms">
+    <meta name="citation_abstract_html_url" content="https://almanac.httparchive.org/en/2025/cms">
+    <meta name="citation_doi" content="10.5281/zenodo.18246656">
+    
+
+    <link rel="canonical" href="https://almanac.httparchive.org/en/2025/cms">
+    <link rel="alternate" type="application/rss+xml" title="Web Almanac by HTTP Archive RSS (en)" href="/en/rss.xml">
+    
+    
+    <link rel="alternate" href="https://almanac.httparchive.org/en/2025/cms" hreflang="en">
+    
+    <link rel="alternate" href="https://almanac.httparchive.org/ja/2025/cms" hreflang="ja">
+    
+    <link rel="alternate" href="https://almanac.httparchive.org/zh-TW/2025/cms" hreflang="zh-TW">
+    
+    <link rel="alternate" href="https://almanac.httparchive.org/en/2025/cms" hreflang="x-default">
+    
+  </head>
+
+  <body class="year-2025">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" width="0" height="0" display="none">
+      <!-- HTTPArchive -->
+      <symbol id="ha-logo" viewBox="0 0 432 225">
+        <path d="M10.626 7.433h14.5v47.5c6-7.4 13.5-11 22.5-11 4.9 0 9.2 1.2 13.1 3.7 3.9 2.4 6.7 5.8 8.6 10.1 1.9 4.3 2.9 10.7 2.9 19.1v41.6h-14.6v-45.2c0-5.3-1.3-9.6-4-12.9-2.6-3.3-6-4.9-10.3-4.9-3.2 0-6.2.8-9 2.5-2.8 1.6-5.9 4.4-9.3 8.2v52.4h-14.4V7.433m66.4 49.5l27.2-26.7v15.1h23.1v13h-23.1v35.8c0 8.4 3.5 12.6 10.4 12.6 5.2 0 10.7-1.7 16.4-5.2v13.5c-5.6 3.1-11.6 4.7-18.2 4.7s-12.1-1.9-16.5-5.8c-1.4-1.2-2.5-2.5-3.4-3.9-.9-1.5-1.7-3.4-2.3-5.7-.6-2.4-.9-6.9-.9-13.5v-32.5h-12.7v-1.4m54.3 0l27.2-26.7v15.1h23.1v13h-23.1v35.8c0 8.4 3.5 12.6 10.4 12.6 5.2 0 10.7-1.7 16.4-5.2v13.5c-5.6 3.1-11.6 4.7-18.2 4.7s-12.1-1.9-16.5-5.8c-1.4-1.2-2.5-2.5-3.4-3.9-.9-1.5-1.7-3.4-2.3-5.7-.6-2.4-.9-6.9-.9-13.5v-32.5h-12.7v-1.4M212.8 30.1l-27.2 26.7v1.4h39c6.1.2 10.6 1.5 13.9 3.1 3.5 1.6 6.3 4.3 8.3 7.9 2.1 3.7 3.1 7.9 3.1 12.7 0 7.4-2.2 13.5-6.5 18.2-4.3 4.7-9.8 7.1-16.6 7.1-2.8 0-5.5-.4-8.2-1.1v12.3c3.4.9 6.7 1.3 9.7 1.3 10.5 0 19.2-3.5 26-10.6 6.8-7 10.2-16 10.3-27 0-11.6-3.6-20.6-10.9-27.1-7.1-6.4-17.1-9.6-29.8-9.7h-.4l-10.6-.1V30.1z" fill="currentColor" />
+        <path d="M198 63.7c0 52.2-.1 108.8-.1 154.7h14.8v-52.5c3.4-3.8 6.1-6.4 8.9-8 2.8-1.6 5.8-2.4 9-2.4 4.3 0 7.7 1.6 10.3 4.9 2.6 3.2 4 7.5 4 12.9v45.2h14.5v-41.6c0-8.5-.9-14.9-2.8-19.2-1.9-4.3-4.7-7.7-8.6-10.1-3.9-2.4-8.3-3.7-13.1-3.7-8.8 0-16.1 3.5-22.1 10.6v-53.1c.1-12.5 0-25.1 0-37.7H198zM55.9 174.5v31.1c0 2.5.8 3.7 2.5 3.7s4.5-1.3 8.2-3.9v8.8c-3.3 2.1-5.9 3.5-7.9 4.3-2 .8-4 1.2-6.2 1.2-6.2 0-9.9-2.4-11-7.3-6.1 4.8-12.7 7.2-19.6 7.2-5.1 0-9.3-1.7-12.7-5-3.4-3.4-5.1-7.6-5.1-12.7 0-4.6 1.6-8.7 4.9-12.3 3.3-3.7 8.1-6.5 14.1-8.7l18.5-6.4v-3.9c0-8.8-4.4-13.2-13.2-13.2-7.9 0-15.6 4.1-23 12.2v-15.8c5.6-6.6 13.7-9.9 24.2-9.9 7.9 0 14.2 2.1 19 6.2 1.6 1.3 3 3.1 4.3 5.3 1.3 2.2 2.1 4.4 2.4 6.6.4 2.2.6 6.3.6 12.5m-14.2 29.4v-21.7L32 186c-4.9 2-8.4 3.9-10.5 6-2 2-3 4.4-3 7.4s1 5.5 2.9 7.4c2 1.9 4.5 2.9 7.5 2.9 4.6-.1 8.8-2 12.8-5.8M90 145.3v16.8l.8-1.3c7-11.3 14-16.9 21-16.9 5.5 0 11.1 2.8 17.1 8.3l-7.6 12.7c-5-4.8-9.7-7.2-14-7.2-4.7 0-8.7 2.2-12.2 6.7-3.4 4.4-5.1 9.7-5.1 15.8v38.2H75.5v-73.1H90m96.9 56v14.3c-7.3 2.7-14.4 4.1-21.3 4.1-11.4 0-20.6-3.4-27.4-10.2-6.8-6.8-10.2-15.9-10.2-27.3 0-11.5 3.3-20.8 9.9-27.8 6.6-7 15.3-10.6 26.1-10.6 3.8 0 7.1.4 10.1 1.1 3 .7 6.7 2 11.1 4v15.4c-7.3-4.7-14.1-7-20.3-7-6.5 0-11.9 2.3-16 6.9-4.2 4.6-6.3 10.4-6.3 17.5 0 7.5 2.3 13.4 6.8 17.8 4.6 4.4 10.7 6.6 18.4 6.6 5.5.1 11.9-1.5 19.1-4.8m93.2-86.7c2.4 0 4.4.8 6.1 2.5 1.7 1.6 2.5 3.7 2.5 6s-.8 4.3-2.5 6c-1.7 1.7-3.7 2.5-6.1 2.5-2.2 0-4.2-.8-5.9-2.5-1.7-1.7-2.5-3.8-2.5-6s.8-4.2 2.5-5.9c1.7-1.8 3.7-2.6 5.9-2.6m-7.2 30.7h14.5v73.1h-14.5v-73.1m75 0h15.7l-32.3 74.4h-4.8l-33.1-74.4h15.8l19.7 45 19-45m78.8 37.8h-51.4c.4 7 2.7 12.6 7 16.7s9.9 6.2 16.8 6.2c9.5 0 18.3-3 26.4-8.9v14.1c-4.4 3-8.9 5.1-13.3 6.4-4.3 1.3-9.5 1.9-15.3 1.9-8.1 0-14.6-1.7-19.5-5-5-3.3-9-7.8-12-13.4-3-5.7-4.4-12.2-4.4-19.6 0-11.1 3.2-20.2 9.5-27.1 6.3-7 14.5-10.5 24.6-10.5 9.7 0 17.4 3.4 23.2 10.2 5.8 6.8 8.7 15.9 8.7 27.3v1.7m-51.4-8.6h36.8c-.4-5.8-2.1-10.2-5.2-13.3-3.1-3.1-7.2-4.7-12.4-4.7s-9.5 1.6-12.8 4.7c-3.2 3-5.4 7.5-6.4 13.3" fill="currentColor" />
+      </symbol>
+      <!-- GitHub -->
+      <symbol id="github-logo" viewBox="0 0 32.6 31.8">
+        <path d="M16.3 0C7.3 0 0 7.3 0 16.3c0 7.2 4.7 13.3 11.1 15.5.8.1 1.1-.4 1.1-.8v-2.8c-4.5 1-5.5-2.2-5.5-2.2-.7-1.9-1.8-2.4-1.8-2.4-1.5-1 .1-1 .1-1 1.6.1 2.5 1.7 2.5 1.7 1.5 2.5 3.8 1.8 4.7 1.4.1-1.1.6-1.8 1-2.2-3.6-.4-7.4-1.8-7.4-8.1 0-1.8.6-3.2 1.7-4.4-.1-.3-.7-2 .2-4.2 0 0 1.4-.4 4.5 1.7 1.3-.4 2.7-.5 4.1-.5 1.4 0 2.8.2 4.1.5 3.1-2.1 4.5-1.7 4.5-1.7.9 2.2.3 3.9.2 4.3 1 1.1 1.7 2.6 1.7 4.4 0 6.3-3.8 7.6-7.4 8 .6.5 1.1 1.5 1.1 3V31c0 .4.3.9 1.1.8 6.5-2.2 11.1-8.3 11.1-15.5C32.6 7.3 25.3 0 16.3 0z" fill-rule="evenodd" clip-rule="evenodd" fill="currentColor" />
+      </symbol>
+      <!-- Twitter -->
+      <symbol id="twitter-logo" viewBox="0 0 300 271">
+        <path xmlns="http://www.w3.org/2000/svg" d="m236 0h46l-101 115 118 156h-92.6l-72.5-94.8-83 94.8h-46l107-123-113-148h94.9l65.5 86.6zm-16.1 244h25.5l-165-218h-27.4z" fill="currentColor" />
+      </symbol>
+      <!-- LinkedIn -->
+      <symbol id="linkedin-logo" viewBox="0 0 200 200">
+        <path d="M185.2 0H14.8C6.6 0 0 6.4 0 14.3v171.3c0 7.9 6.6 14.3 14.8 14.3h170.4c8.1 0 14.8-6.4 14.8-14.3V14.3C199.9 6.4 193.3 0 185.2 0zM60.6 167.3H30.4V77.1h30.2v90.2zM45.5 64.8h-.2c-10.1 0-16.7-6.9-16.7-15.6 0-8.8 6.7-15.6 17.1-15.6 10.3 0 16.7 6.7 16.9 15.6 0 8.6-6.5 15.6-17.1 15.6zm124 102.5h-30.2V119c0-12.1-4.4-20.4-15.3-20.4-8.4 0-13.3 5.6-15.5 11-.8 1.9-1 4.6-1 7.3v50.4H77.3s.4-81.8 0-90.3h30.2v12.8c4-6.1 11.2-14.9 27.2-14.9 19.9 0 34.8 12.9 34.8 40.6v51.8zm-62.2-77.1c0-.1.1-.2.2-.3v.3h-.2z" fill="currentColor" />
+      </symbol>
+      <!-- Mastodon -->
+      <symbol id="mastodon-logo" viewBox="0 0 61 65">
+        <path d="M60.7539 14.3904C59.8143 7.40642 53.7273 1.90257 46.5117 0.836066C45.2943 0.655854 40.6819 0 29.9973 0H29.9175C19.2299 0 16.937 0.655854 15.7196 0.836066C8.70488 1.87302 2.29885 6.81852 0.744617 13.8852C-0.00294988 17.3654 -0.0827298 21.2237 0.0561464 24.7629C0.254119 29.8384 0.292531 34.905 0.753482 39.9598C1.07215 43.3175 1.62806 46.6484 2.41704 49.9276C3.89445 55.9839 9.87499 61.0239 15.7344 63.0801C22.0077 65.2244 28.7542 65.5804 35.2184 64.1082C35.9295 63.9428 36.6318 63.7508 37.3252 63.5321C38.8971 63.0329 40.738 62.4745 42.0913 61.4937C42.1099 61.4799 42.1251 61.4621 42.1358 61.4417C42.1466 61.4212 42.1526 61.3986 42.1534 61.3755V56.4773C42.153 56.4557 42.1479 56.4345 42.1383 56.4151C42.1287 56.3958 42.1149 56.3788 42.0979 56.3655C42.0809 56.3522 42.0611 56.3429 42.04 56.3382C42.019 56.3335 41.9971 56.3336 41.9761 56.3384C37.8345 57.3276 33.5905 57.8234 29.3324 57.8156C22.0045 57.8156 20.0336 54.3384 19.4693 52.8908C19.0156 51.6397 18.7275 50.3346 18.6124 49.0088C18.6112 48.9866 18.6153 48.9643 18.6243 48.9439C18.6333 48.9236 18.647 48.9056 18.6643 48.8915C18.6816 48.8774 18.7019 48.8675 18.7237 48.8628C18.7455 48.858 18.7681 48.8585 18.7897 48.8641C22.8622 49.8465 27.037 50.3423 31.2265 50.3412C32.234 50.3412 33.2387 50.3412 34.2463 50.3146C38.4598 50.1964 42.9009 49.9808 47.0465 49.1713C47.1499 49.1506 47.2534 49.1329 47.342 49.1063C53.881 47.8507 60.1038 43.9097 60.7362 33.9301C60.7598 33.5372 60.8189 29.8148 60.8189 29.4071C60.8218 28.0215 61.2651 19.5781 60.7539 14.3904Z" fill="currentColor"/>
+        <path d="M50.3943 22.237V39.5876H43.5185V22.7481C43.5185 19.2029 42.0411 17.3949 39.036 17.3949C35.7325 17.3949 34.0778 19.5338 34.0778 23.7585V32.9759H27.2434V23.7585C27.2434 19.5338 25.5857 17.3949 22.2822 17.3949C19.2949 17.3949 17.8027 19.2029 17.8027 22.7481V39.5876H10.9298V22.237C10.9298 18.6918 11.835 15.8754 13.6453 13.7877C15.5128 11.7049 17.9623 10.6355 21.0028 10.6355C24.522 10.6355 27.1813 11.9885 28.9542 14.6917L30.665 17.5633L32.3788 14.6917C34.1517 11.9885 36.811 10.6355 40.3243 10.6355C43.3619 10.6355 45.8114 11.7049 47.6847 13.7877C49.4931 15.8734 50.3963 18.6899 50.3943 22.237Z" fill="white"/>
+      </symbol>
+      <!-- Bluesky -->
+      <symbol id="bluesky-logo" viewBox="0 0 600 530">
+        <path d="m135.72 44.03c66.496 49.921 138.02 151.14 164.28 205.46 26.262-54.316 97.782-155.54 164.28-205.46 47.98-36.021 125.72-63.892 125.72 24.795 0 17.712-10.155 148.79-16.111 170.07-20.703 73.984-96.144 92.854-163.25 81.433 117.3 19.964 147.14 86.092 82.697 152.22-122.39 125.59-175.91-31.511-189.63-71.766-2.514-7.3797-3.6904-10.832-3.7077-7.8964-0.0174-2.9357-1.1937 0.51669-3.7077 7.8964-13.714 40.255-67.233 197.36-189.63 71.766-64.444-66.128-34.605-132.26 82.697-152.22-67.108 11.421-142.55-7.4491-163.25-81.433-5.9562-21.282-16.111-152.36-16.111-170.07 0-88.687 77.742-60.816 125.72-24.795z" fill="currentColor"/>
+      </symbol>
+      <!-- Globe -->
+      <symbol id="globe-logo" viewBox="0 0 30 30">
+        <circle cx="14.5" cy="14.5" r="13.5" stroke-width="2" stroke-miterlimit="10" fill="none" stroke="currentColor" />
+        <ellipse cx="14.5" cy="14.5" rx="6.1" ry="13.5" stroke-width="2" stroke-miterlimit="10" fill="none" stroke="currentColor" />
+        <path d="M1.6 9.6h25.8M1.6 19.4h25.8" stroke-width="2" stroke-miterlimit="10" fill="none" stroke="currentColor" />
+      </symbol>
+      <!-- Bar chart -->
+      <symbol id="bar-chart-logo" viewBox="0 0 18 19">
+        <path d="M0 9h3v10H0V9zm5-9h3v19H5V0zm5 7h3v12h-3V7zm5-4h3v16h-3V3z" fill="currentColor" />
+      </symbol>
+      <!-- Comment -->
+      <symbol id="comment-logo" viewBox="0 0 22 22.1">
+        <path d="M4.4 22.1l8-5.1H22V0H0v17h4.4z" fill="currentColor" />
+      </symbol>
+      <!-- SQL -->
+      <symbol id="sql-logo" viewBox="0 0 32 14.6">
+        <path d="M.1 12.4V9.6c.5.4 1.1.8 1.7 1 .6.2 1.2.3 1.8.3.4 0 .7 0 .9-.1s.5-.2.7-.3c.2-.1.3-.2.4-.4.1-.2.1-.3.1-.5s-.1-.5-.2-.7c-.2-.2-.4-.4-.6-.5-.3-.2-.5-.4-.9-.5-.3-.2-.7-.3-1.1-.5-1-.4-1.7-.9-2.2-1.5S0 4.6 0 3.8c0-.7.1-1.2.4-1.7S1 1.2 1.5.9s1-.5 1.6-.7S4.3 0 5 0s1.2 0 1.8.1 1 .2 1.4.4v2.6c-.3-.1-.5-.3-.8-.4s-.5-.2-.7-.2c-.3-.1-.6-.2-.8-.2-.3 0-.5-.1-.7-.1-.3 0-.6 0-.9.1s-.5.2-.7.3c-.2.1-.4.2-.5.4-.1.2-.1.3-.1.5s.1.4.2.6c.1.2.3.3.5.5.1.1.4.3.7.4.3.1.6.3 1 .4.5.2 1 .4 1.4.7.4.2.7.5 1 .8s.5.6.7 1c.2.4.2.8.2 1.3 0 .7-.1 1.3-.4 1.8-.3.6-.7 1-1.1 1.3-.5.3-1 .5-1.6.6s-1.3.2-1.9.2c-.7 0-1.4-.1-2-.2-.6-.1-1.2-.3-1.6-.5zm16 .7c-1.8 0-3.3-.6-4.4-1.8-1.2-1.2-1.7-2.7-1.7-4.6 0-2 .6-3.6 1.7-4.9C12.9.6 14.4 0 16.3 0c1.8 0 3.3.6 4.4 1.8 1.1 1.2 1.7 2.7 1.7 4.7s-.6 3.6-1.7 4.8l-.1.1-.1.1 3.2 3.1h-4L18 12.9c-.6.1-1.2.2-1.9.2zm.1-10.6c-1 0-1.8.4-2.4 1.1-.6.7-.9 1.7-.9 3s.3 2.2.9 3c.6.7 1.4 1.1 2.3 1.1 1 0 1.8-.4 2.3-1.1.6-.7.9-1.7.9-3s-.3-2.3-.8-3.1c-.5-.7-1.3-1-2.3-1zM32 12.9h-7.5V.2h2.8v10.3H32v2.4z" fill="currentColor" />
+      </symbol>
+      <!-- Search -->
+      <symbol id="search-logo" viewBox="0 0 13 13">
+        <path d="m4.8495 7.8226c0.82666 0 1.5262-0.29146 2.0985-0.87438 0.57232-0.58292 0.86378-1.2877 0.87438-2.1144 0.010599-0.82666-0.28086-1.5262-0.87438-2.0985-0.59352-0.57232-1.293-0.86378-2.0985-0.87438-0.8055-0.010599-1.5103 0.28086-2.1144 0.87438-0.60414 0.59352-0.8956 1.293-0.87438 2.0985 0.021197 0.8055 0.31266 1.5103 0.87438 2.1144 0.56172 0.60414 1.2665 0.8956 2.1144 0.87438zm4.4695 0.2115 3.681 3.6819-1.259 1.284-3.6817-3.7 0.0019784-0.69479-0.090043-0.098846c-0.87973 0.76087-1.92 1.1413-3.1207 1.1413-1.3553 0-2.5025-0.46363-3.4417-1.3909s-1.4088-2.0686-1.4088-3.4239c0-1.3553 0.4696-2.4966 1.4088-3.4239 0.9392-0.92727 2.0864-1.3969 3.4417-1.4088 1.3553-0.011889 2.4906 0.45771 3.406 1.4088 0.9154 0.95107 1.379 2.0924 1.3909 3.4239 0 1.2126-0.38043 2.2588-1.1413 3.1385l0.098834 0.090049z" fill="currentColor" />
+      </symbol>
+      <!-- Share Apple -->
+      <symbol id="share-apple-logo" viewBox="0 0 24 24">
+        <path d="M0 0h24v24H0V0z" fill="none" />
+        <path d="M16 5l-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4 4 4zm4 5v11c0 1.1-.9 2-2 2H6c-1.11 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2z" />
+      </symbol>
+      <!-- Share Android -->
+      <symbol id="share-android-logo" viewBox="0 0 24 24">
+        <path d="M0 0h24v24H0z" fill="none" />
+        <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z" />
+      </symbol>
+    </svg>
+    
+  <div id="skiptocontent"><a href="#maincontent">Skip navigation</a></div>
+  
+    
+  
+  
+  <header id="header" class="alt-bg">
+    <div class="container">
+      <div class="top-header">
+        <a class="navigation-logo" href="/en/2025/">
+          
+  <span class="wa">Web Almanac</span>
+  <span class="line-group">
+    <span class="pre">By</span>
+    <span class="ha">HTTP Archive</span>
+  </span>
+
+        </a>
+        <nav id="header-page-navigation" aria-label="Page navigation">
+          <ul>
+            
+
+<li><a href="/en/2025/contributors">Contributors</a></li>
+<li><a href="/en/2025/methodology">Methodology</a></li>
+
+
+            <li>
+              
+  
+  <a class="nav-dropdown-btn js-hide" href="/en/search">Search</a>
+  <div class="nav-dropdown header search-nav js-enable hidden">
+    <button type="button" class="nav-dropdown-btn search-button" aria-expanded="false">
+      Search
+    </button>
+    <ul class="nav-dropdown-list align-right hidden header-search">
+      <li class="nav-dropdown-list-part">
+        <form action="/en/search">
+          <label for="header-search-box" class="visually-hidden">Search</label>
+          <input id="header-search-box" class="search-input" type="search" name="q" placeholder="Search" title="Search" aria-label="Search">
+          <button class="search-button" type="submit">
+            <svg width="13" height="13" role="img" aria-labelledby="header-search-icon">
+              <title id="header-search-icon">Search</title>
+              <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#search-logo"></use>
+            </svg>
+          </button>
+        </form>
+      </li>
+    </ul>
+  </div>
+  
+
+            </li>
+            <li>
+              
+
+  
+    
+
+<a class="nav-dropdown-btn js-hide" href="/en/2025/table-of-contents">Table of Contents</a>
+<div class="nav-dropdown header table-of-contents js-enable hidden">
+  <button type="button" class="nav-dropdown-btn" aria-expanded="false" aria-label="Table of Contents" >
+    Table of Contents
+  </button>
+  <ul class="nav-dropdown-list hidden header-list">
+
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/">Home</a>
+    </li>
+    
+
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/table-of-contents">Table of Contents</a>
+    </li>
+    
+    
+    <li class="nav-dropdown-list-chapter foreword">
+      <a href="/en/2025/table-of-contents#foreword">Foreword</a>
+    </li>
+    
+
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/table-of-contents#part-1">Part I. Page Content</a>
+    </li>
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/fonts">
+          Chapter 1: Fonts
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/webassembly">
+          Chapter 2: WebAssembly
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/third-parties">
+          Chapter 3: Third Parties
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/generative-ai">
+          Chapter 4: Generative AI
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/table-of-contents#part-2">Part II. User Experience</a>
+    </li>
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/seo">
+          Chapter 5: SEO
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/accessibility">
+          Chapter 6: Accessibility
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/performance">
+          Chapter 7: Performance
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/privacy">
+          Chapter 8: Privacy
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/security">
+          Chapter 9: Security
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/capabilities">
+          Chapter 10: Capabilities
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/pwa">
+          Chapter 11: PWA
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/table-of-contents#part-3">Part III. Content Publishing</a>
+    </li>
+    
+    
+    
+    <li class="nav-dropdown-list-chapter nav-dropdown-list-current">
+      
+          
+          <span>
+            Chapter 12: CMS
+          </span>
+          
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/ecommerce">
+          Chapter 13: Ecommerce
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/table-of-contents#part-4">Part IV. Content Distribution</a>
+    </li>
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/page-weight">
+          Chapter 14: Page Weight
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/cdn">
+          Chapter 15: CDN
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/cookies">
+          Chapter 16: Cookies
+        </a>
+        
+      
+    </li>
+    
+    
+    
+
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/table-of-contents#appendices">Appendices</a>
+    </li>
+    
+    <li class="nav-dropdown-list-chapter">
+      
+      <a href="/en/2025/methodology">Methodology</a>
+      
+    </li>
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+      <a href="/en/2025/contributors">Contributors</a>
+      
+    </li>
+    
+
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/search">Search</a>
+    </li>
+    
+
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/table-of-contents#ebook">Ebook</a>
+    </li>
+    <li class="nav-dropdown-list-chapter ebook">
+      <a href="https://cdn.httparchive.org/v1/static/almanac/ebooks/web_almanac_2025_en.pdf" data-event="ebook-click" data-label="toc-menu">Ebook PDF (12MB)</a>
+    </li>
+    
+  </ul>
+</div>
+
+  
+
+
+            </li>
+            <li>
+              
+    
+    
+      
+          
+  <div class="nav-dropdown header">
+    <button type="button" class="nav-dropdown-btn js-enable" disabled aria-expanded="false" aria-label="Year Switcher">2025</button>
+    <ul class="nav-dropdown-list hidden header-list">
+      
+        
+          
+        
+      
+        
+          
+            
+            <li>
+              <a href="/en/2024/cms">2024</a>
+            </li>
+          
+          
+        
+      
+        
+          
+            
+            <li>
+              <a href="/en/2022/cms">2022</a>
+            </li>
+          
+          
+        
+      
+        
+          
+            
+            <li>
+              <a href="/en/2021/cms">2021</a>
+            </li>
+          
+          
+        
+      
+        
+          
+            
+            <li>
+              <a href="/en/2020/cms">2020</a>
+            </li>
+          
+          
+        
+      
+        
+          
+            
+            <li>
+              <a href="/en/2019/cms">2019</a>
+            </li>
+          
+          
+        
+      
+    </ul>
+  </div>
+
+      
+    
+  
+            </li>
+            <li>
+              
+  
+    
+  <div class="nav-dropdown header">
+    <button type="button" class="nav-dropdown-btn js-enable" disabled aria-expanded="false" aria-label="Language Switcher" >English</button>
+    <ul class="nav-dropdown-list hidden header-list">
+      
+        
+      
+        
+          <li>
+            <a lang="ja" href="/ja/2025/cms">日本語</a>
+          </li>
+        
+      
+        
+          <li>
+            <a lang="zh-TW" href="/zh-TW/2025/cms">繁體中文</a>
+          </li>
+        
+      
+      
+      <li>
+        <a class="help-translate" href="https://github.com/HTTPArchive/almanac.httparchive.org/wiki/Translators'-Guide"><em>Help translate</em></a>
+      </li>
+      
+    </ul>
+  </div>
+
+  
+
+            </li>
+          </ul>
+        </nav>
+        <nav id="menu" aria-labelledby="menu-btn">
+          <a href="#footer" class="menu-btn js-hide" aria-label="Page menu">
+            <span class="menu-btn-bar"></span>
+            <span class="menu-btn-bar"></span>
+            <span class="menu-btn-bar"></span>
+          </a>
+          <button type="button" class="menu-btn js-enable hidden" disabled id="menu-btn" aria-label="Open the menu" aria-expanded="false" data-open-text="Open the menu" data-close-text="Close the menu">
+            <span class="menu-btn-bar"></span>
+            <span class="menu-btn-bar"></span>
+            <span class="menu-btn-bar"></span>
+          </button>
+          <ul class="menu">
+            
+
+<li><a href="/en/2025/contributors">Contributors</a></li>
+<li><a href="/en/2025/methodology">Methodology</a></li>
+
+
+            <li>
+              
+  
+  <form class="search-nav" action="/en/search">
+    <label for="mobile-search-box" class="visually-hidden">Search</label>
+    <input id="mobile-search-box" class="search-input" type="search" name="q" placeholder="Search" title="Search" aria-label="Search">
+    <button class="search-button" type="submit">
+      <svg width="13" height="13" role="img" aria-labelledby="mobile-search-icon">
+        <title id="mobile-search-icon">Search</title>
+        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#search-logo"></use>
+      </svg>
+    </button>
+  </form>
+  
+
+            </li>
+            <li>
+              
+
+  
+    
+
+<a class="js-hide" href="/en/2025/table-of-contents">Table of Contents</a>
+<div class="table-of-contents-switcher js-enable hidden">
+  <label for="table-of-contents-switcher-mobile" class="visually-hidden">
+    Table of Contents Switcher
+  </label>
+  <select id="table-of-contents-switcher-mobile" data-label="toc-menu-mobile">
+    
+      <option value="/en/2025/">Home</option>
+    
+    
+      <option value="/en/2025/table-of-contents">Table of Contents</option>
+    
+    
+    <option value="/en/2025/table-of-contents#foreword">Foreword</option>
+    
+    
+    
+      
+      
+        
+          
+            <option value="/en/2025/fonts">
+              Chapter 1: Fonts
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/webassembly">
+              Chapter 2: WebAssembly
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/third-parties">
+              Chapter 3: Third Parties
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/generative-ai">
+              Chapter 4: Generative AI
+            </option>
+          
+        
+      
+    
+    
+    
+      
+      
+        
+          
+            <option value="/en/2025/seo">
+              Chapter 5: SEO
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/accessibility">
+              Chapter 6: Accessibility
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/performance">
+              Chapter 7: Performance
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/privacy">
+              Chapter 8: Privacy
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/security">
+              Chapter 9: Security
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/capabilities">
+              Chapter 10: Capabilities
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/pwa">
+              Chapter 11: PWA
+            </option>
+          
+        
+      
+    
+    
+    
+      
+      
+        
+          
+            <option disabled selected value="/en/2025/cms">
+              Chapter 12: CMS
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/ecommerce">
+              Chapter 13: Ecommerce
+            </option>
+          
+        
+      
+    
+    
+    
+      
+      
+        
+          
+            <option value="/en/2025/page-weight">
+              Chapter 14: Page Weight
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/cdn">
+              Chapter 15: CDN
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/cookies">
+              Chapter 16: Cookies
+            </option>
+          
+        
+      
+    
+    
+
+    
+    <option value="/en/2025/methodology">
+      Methodology
+    </option>
+    
+    
+    <option value="/en/2025/contributors">
+      Contributors
+    </option>
+    
+
+    
+    <option value="/en/search">
+      Search
+    </option>
+    
+
+    
+    <option value="https://cdn.httparchive.org/v1/static/almanac/ebooks/web_almanac_2025_en.pdf" data-event="ebook-click">
+      Ebook PDF (12MB)
+    </option>
+    
+  </select>
+</div>
+
+  
+
+
+            </li>
+            <li>
+              
+    
+    
+      
+          
+  <div class="year-switcher js-show">
+    <label for="year-switcher-mobile" class="visually-hidden">Year Switcher</label>
+    <select id="year-switcher-mobile">
+      
+        
+          
+            <option selected="selected" value="/en/2025/cms">
+              2025
+            </option>
+          
+        
+      
+        
+          
+            <option value="/en/2024/cms">
+              2024
+            </option>
+          
+        
+      
+        
+          
+            <option value="/en/2022/cms">
+              2022
+            </option>
+          
+        
+      
+        
+          
+            <option value="/en/2021/cms">
+              2021
+            </option>
+          
+        
+      
+        
+          
+            <option value="/en/2020/cms">
+              2020
+            </option>
+          
+        
+      
+        
+          
+            <option value="/en/2019/cms">
+              2019
+            </option>
+          
+        
+      
+    </select>
+  </div>
+
+        
+    
+  
+            </li>
+            <li>
+              
+  
+    
+  <div class="language-switcher js-show">
+    <label for="language-switcher-mobile" class="visually-hidden">Language Switcher</label>
+    <select id="language-switcher-mobile">
+      
+        
+          <option selected="selected" lang="en" value="/en/2025/cms">
+            English
+          </option>
+        
+      
+        
+          <option lang="ja" value="/ja/2025/cms">
+            日本語
+          </option>
+        
+      
+        
+          <option lang="zh-TW" value="/zh-TW/2025/cms">
+            繁體中文
+          </option>
+        
+      
+      <hr>
+      <option value="https://github.com/HTTPArchive/almanac.httparchive.org/wiki/Translators'-Guide">
+        Help translate
+      </option>
+    </select>
+  </div>
+
+  
+
+            </li>
+            <li id="mobile-misc" class="misc">
+              <ul class="misc">
+                <li>
+                  <a href="https://httparchive.org/" aria-labelledby="ha-logo-mobile">
+                    <svg width="70" height="35" role="img">
+                      <title id="ha-logo-mobile">HTTP Archive home</title>
+                      <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#ha-logo"></use>
+                    </svg>
+                  </a>
+                </li>
+                <li>
+                  <ul class="social-media">
+                    <li>
+                      <a href="https://x.com/HTTPArchive" aria-labelledby="twitter-logo-mobile">
+                        <svg width="20" height="20" role="img">
+                          <title id="twitter-logo-mobile">Twitter</title>
+                          <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#twitter-logo"></use>
+                        </svg>
+                      </a>
+                    </li>
+                    <li>
+                      <a href="https://bsky.app/profile/httparchive.org" aria-labelledby="bluesky-logo-mobile">
+                        <svg width="20" height="20" role="img">
+                          <title id="bluesky-logo-mobile">Bluesky</title>
+                          <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#bluesky-logo"></use>
+                        </svg>
+                      </a>
+                    </li>
+                    <li>
+                      <a href="https://github.com/HTTPArchive/almanac.httparchive.org" aria-labelledby="github-logo-mobile">
+                        <svg width="22" height="20" role="img">
+                          <title id="github-logo-mobile">GitHub</title>
+                          <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#github-logo"></use>
+                        </svg>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <script nonce="WC_UqnvvqUMfcZrOY8JwCUop5y46DXiM">
+    // If JS is enabled then enable menus ASAP to avoid CLS as menu items change from links to buttons
+    (function() {
+      document.querySelectorAll('.js-hide').forEach(element => {
+        // Don't just hide it - delete it completely to avoid any specifity issues
+        element.parentNode.removeChild(element);
+      });
+      document.querySelectorAll('.js-enable').forEach(element => {
+        element.classList.remove('js-enable');
+        element.classList.remove('hidden');
+        element.disabled = false;
+        element.hidden = false;
+      });
+    })();
+  </script>
+  
+
+  
+    <div class="container">
+      
+<main id="chapter" class="main">
+    <nav aria-label="Chapter table of contents" class="index">
+        <div class="index-box floating-card">
+          <h2 class="header">
+            <button type="button" class="index-btn" aria-expanded="false" aria-label="Open the Table of Contents" data-close-text="Close the Table of Contents" data-open-text="Open the Table of Contents">Index</button>
+            <span class="no-button">Index</span>
+          </h2>
+          
+  <ul>
+  
+    <li>
+        <a href="#introduction">Introduction</a>
+        
+    </li>
+  
+    <li>
+        <a href="#what-is-a-cms">What is a CMS?</a>
+        
+    </li>
+  
+    <li>
+        <a href="#cms-adoption">CMS adoption</a>
+                    <ul>
+  
+    <li>
+        <a href="#overall-adoption">Overall adoption</a>
+        
+    </li>
+  
+    <li>
+        <a href="#adoption-by-geography">Adoption by geography</a>
+        
+    </li>
+  
+    <li>
+        <a href="#adoption-by-rank">Adoption by rank</a>
+        
+    </li>
+  
+    <li>
+        <a href="#most-popular-cmss">Most popular CMSs</a>
+        
+    </li>
+  
+    <li>
+        <a href="#fastest-growing-cmss">Fastest growing CMSs</a>
+        
+    </li>
+  
+</ul>
+
+        
+    </li>
+  
+    <li>
+        <a href="#wordpress-in-2025">WordPress in 2025</a>
+                    <ul>
+  
+    <li>
+        <a href="#market-and-ecosystem">Market and ecosystem</a>
+        
+    </li>
+  
+    <li>
+        <a href="#technical-performance-and-improvements">Technical performance and improvements</a>
+        
+    </li>
+  
+    <li>
+        <a href="#wordpress-progression-in-2025">WordPress progression in 2025</a>
+        
+    </li>
+  
+    <li>
+        <a href="#page-builders">Page builders</a>
+        
+    </li>
+  
+</ul>
+
+        
+    </li>
+  
+    <li>
+        <a href="#cms-user-experience">CMS user experience</a>
+        
+    </li>
+  
+    <li>
+        <a href="#core-web-vitals">Core Web Vitals</a>
+                    <ul>
+  
+    <li>
+        <a href="#year-over-year-trends">Year-over-year trends</a>
+        
+    </li>
+  
+    <li>
+        <a href="#largest-contentful-paint-lcp">Largest Contentful Paint (LCP)</a>
+        
+    </li>
+  
+    <li>
+        <a href="#cumulative-layout-shift-cls">Cumulative Layout Shift (CLS)</a>
+        
+    </li>
+  
+    <li>
+        <a href="#interaction-to-next-paint-inp">Interaction to Next Paint (INP)</a>
+        
+    </li>
+  
+</ul>
+
+        
+    </li>
+  
+    <li>
+        <a href="#lighthouse-quality-metrics">Lighthouse quality metrics</a>
+                    <ul>
+  
+    <li>
+        <a href="#performance">Performance</a>
+        
+    </li>
+  
+    <li>
+        <a href="#seo">SEO</a>
+        
+    </li>
+  
+    <li>
+        <a href="#accessibility">Accessibility</a>
+        
+    </li>
+  
+    <li>
+        <a href="#best-practices">Best Practices</a>
+        
+    </li>
+  
+</ul>
+
+        
+    </li>
+  
+    <li>
+        <a href="#page-weight-and-resource-composition">Page weight and resource composition</a>
+                    <ul>
+  
+    <li>
+        <a href="#total-page-weight-by-cms">Total page weight by CMS</a>
+        
+    </li>
+  
+    <li>
+        <a href="#resource-composition-images">Resource composition: images</a>
+        
+    </li>
+  
+    <li>
+        <a href="#resource-composition-javascript">Resource composition: JavaScript</a>
+        
+    </li>
+  
+    <li>
+        <a href="#css-and-html">CSS and HTML</a>
+        
+    </li>
+  
+    <li>
+        <a href="#page-weight-performance-and-variance">Page weight, performance, and variance</a>
+        
+    </li>
+  
+</ul>
+
+        
+    </li>
+  
+    <li>
+        <a href="#emerging-web-apis">Emerging web APIs</a>
+                    <ul>
+  
+    <li>
+        <a href="#speculation-rules-api">Speculation Rules API</a>
+        
+    </li>
+  
+    <li>
+        <a href="#long-animation-frames-api-loaf">Long Animation Frames API (LoAF)</a>
+        
+    </li>
+  
+    <li>
+        <a href="#view-transitions-api">View Transitions API</a>
+        
+    </li>
+  
+    <li>
+        <a href="#priority-hints-and-scheduling-apis">Priority Hints and Scheduling APIs</a>
+        
+    </li>
+  
+    <li>
+        <a href="#implications-for-cms-platforms">Implications for CMS platforms</a>
+        
+    </li>
+  
+</ul>
+
+        
+    </li>
+  
+    <li>
+        <a href="#artificial-intelligence-in-cms">Artificial Intelligence in CMS</a>
+        
+    </li>
+  
+    <li>
+        <a href="#cms-in-the-era-of-llm-search">CMS in the era of LLM search</a>
+        
+    </li>
+  
+    <li>
+        <a href="#structured-data-evolution">Structured data evolution</a>
+        
+    </li>
+  
+    <li>
+        <a href="#conclusion">Conclusion</a>
+        
+    </li>
+  
+</ul>
+
+
+        </div>
+    </nav>
+
+    <div class="content">
+        <article id="maincontent" class="body">
+            <div class="subtitle">
+                Part III Chapter 12
+            </div>
+            <h1 class="title title-lg">
+                CMS
+                
+            </h1>
+            
+<div class="article-dates">
+  <div class="article-date">
+  Date published: <time id="published-date" datetime="2026-01-15T00:00:00.000Z">2026/01/15</time>
+  </div>
+  
+  <div class="article-date">
+    Last updated: <time id="modified-date" datetime="2026-01-16T00:00:00.000Z">2026/01/16</time>
+  </div>
+  
+  <script nonce="WC_UqnvvqUMfcZrOY8JwCUop5y46DXiM">
+    // Update chapter dates to locale/language-specific format immeadiately with inline
+    // script to avoid annoying shift as much as possible since this is in initial viewport.
+    function formatDates(selector) {
+      if (window.Intl && window.Intl.DateTimeFormat) {
+        var publishedDateElement=document.querySelector(selector);
+        if (!publishedDateElement) return;
+        var publishedDate = new Date(publishedDateElement.getAttribute("datetime"));
+
+        // Set up the date format - initially using the users default locale
+        // This allows different locales in same language to be respected
+        // (e.g. en-GB or en-US).
+        var options = { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" };
+        var dateFormat = new Intl.DateTimeFormat([], options)
+        const usedOptions = dateFormat.resolvedOptions();
+        if (!usedOptions.locale.startsWith("en")) {
+          // Reader is looking at a page in a language that is not their default locale
+          // Set date format to page's language locale to avoid incorrect date translation.
+          dateFormat = new Intl.DateTimeFormat("en", options)
+        }
+        publishedDateElement.textContent = dateFormat.format(publishedDate);
+
+      } else {
+        console.log("Could not format date");
+      }
+    }
+
+    formatDates("#published-date");
+    formatDates("#modified-date");
+  </script>
+</div>
+
+            <!-- Show large image for large screens and high density screens and use avif and webp when supported -->
+            <picture>
+              <source media="(min-width: 866px)" type="image/avif" srcset="/static/images/2019/cms/hero_lg.avif">
+              <source media="(min-width: 866px)" type="image/webp" srcset="/static/images/2019/cms/hero_lg.webp">
+              <source media="(min-width: 866px)" type="image/jpeg" srcset="/static/images/2019/cms/hero_lg.jpg">
+              <source type="image/avif" srcset="/static/images/2019/cms/hero_sm.avif 1x, /static/images/2019/cms/hero_lg.avif 2x">
+              <source type="image/webp" srcset="/static/images/2019/cms/hero_sm.webp 1x, /static/images/2019/cms/hero_lg.webp 2x">
+              <source type="image/jpeg" srcset="/static/images/2019/cms/hero_sm.jpg 1x, /static/images/2019/cms/hero_lg.jpg 2x">
+              <img src="/static/images/2019/cms/hero_lg.jpg" class="content-banner" alt="Hero image of Web Almanac characters on a type writer writing a web page." width="866" height="433" fetchpriority="high">
+            </picture>
+            
+<div class="bylines">
+  <div class="byline">Written by
+  
+  <a class="author" href="/en/2025/contributors#VaheSODP">Vahe Arabian</a>
+  
+  
+  </div>
+
+  
+  <div class="byline reviewers">Reviewed by
+    
+      <a class="reviewer" href="/en/2025/contributors#dknauss">Dan Knauss</a>
+      
+    
+    </div>
+    
+
+  
+  <div class="byline analysts">Analyzed by
+  
+    <a class="analyst" href="/en/2025/contributors#onurglr">Onur Güler</a>
+     and 
+  
+    <a class="analyst" href="/en/2025/contributors#alonko">Alon Kochba</a>
+    
+  
+  </div>
+  
+
+  
+  <div class="byline editors">Edited by
+  
+    <a class="editor" href="/en/2025/contributors#samuelfatola">Samuel Fatola</a>
+     and 
+  
+    <a class="editor" href="/en/2025/contributors#sreemoyeebhattacharya">Sreemoyee Bhattacharya</a>
+    
+  
+  </div>
+  
+
+  
+</div>
+
+            
+  <h2 id="introduction"><a href="#introduction" class="anchor-link">Introduction</a></h2>
+<p>Content Management Systems (CMSs) now power almost all websites. By 2025, they do far more than simply let people create and publish pages. They shape how sites are built, how easy they are to use, and how well content surfaces in search engines and AI-powered tools. As sites grow larger, more active, and more personalized, a CMS can be the difference between a site that feels fast, intuitive, and reliable, and one that feels slow and frustrating. This chapter examines the CMS landscape using data from the HTTP Archive.</p>
+<p>We look at how many sites use CMSs, how top sites differ from the wider web, how CMS-powered sites perform, and which new capabilities are emerging as these platforms run at scale. Rather than just comparing CMS feature lists, this chapter focuses on how CMS defaults, hosting models, and build approaches shape the real experience of the web—for users and search engines—across both the top million and the top ten thousand sites.</p>
+<p>The data shows that CMSs are now used by the majority of sites, and that sites without them are declining every year. To understand the trade-offs this creates for speed, usability, and discoverability, the chapter first explores overall CMS adoption, then examines what that means for performance and user experience, and finally looks at the new tools and patterns emerging alongside widespread CMS use.</p>
+<h2 id="what-is-a-cms"><a href="#what-is-a-cms" class="anchor-link">What is a CMS?</a></h2>
+<p>A Content Management System is software that allows people to create and update content on the web without editing code for every change. Most CMSs separate content from presentation, so editors can change text, images, and structure without writing HTML, CSS, or JavaScript. Developers can extend a CMS by building themes, plugins, or modules.</p>
+<p>Broadly, there are two main types of CMSs. A classic monolithic CMS combines content storage, presentation, and delivery into a single system.</p>
+<p>A headless or composable CMS separates content management from the site or app that displays it. In practice, most CMSs share a common set of tasks: modeling content, editing it, managing media, extending functionality, and integrating with other systems. The differences in how they approach these tasks become clearer when we look at adoption and implementation patterns across the web.</p>
+<h2 id="cms-adoption"><a href="#cms-adoption" class="anchor-link">CMS adoption</a></h2>
+<p>By 2025, CMS adoption reflects a web that&#8217;s both mature and increasingly specialized. Almost every site now runs on some kind of CMS, but how these platforms are used varies a lot by region, traffic level, and underlying technology. Instead of everyone standardizing on a single go-to system, the market is clearly fragmenting, with different platforms leading in different parts of the world, for different use cases, and at different scales.</p>
+<h3 id="overall-adoption"><a href="#overall-adoption" class="anchor-link">Overall adoption</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-1">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/cms-adoption.png"  class="">
+      <img src="/static/images/2025/cms/cms-adoption.png" alt="CMS adoption." aria-labelledby="fig-1-caption" aria-describedby="fig-1-description" width="600" height="371" data-width="600" data-height="371" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=1626517714&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=1841486394">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/cms_adoption.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/cms-adoption.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-1-description" data-show-text="Show description of Figure 12.1" data-hide-text="Hide description of Figure 12.1">Show description of Figure 12.1</button>
+  <div id="fig-1-description" class="hidden">The percentage of web pages using a Content Management System across desktop and mobile platforms from 2021 to 2025. The data shows a consistent upward trend for both categories, with desktop adoption rising from 42% to 55% and mobile adoption increasing from 43% to 54%. While mobile adoption was slightly higher or equal to desktop in the earlier years, desktop usage saw a significant jump in 2025 to take a 1% lead over mobile.</div>
+  <figcaption id="fig-1-caption">
+
+<a href="#fig-1" class="anchor-link">Figure 12.1.</a> CMS adoption.
+
+</figcaption>
+</figure>
+<p>Overall adoption HTTP Archive measurements show that CMS-driven sites account for over 54% of observed websites in 2025, reinforcing CMSs as the default infrastructure for the web.</p>
+<h3 id="adoption-by-geography"><a href="#adoption-by-geography" class="anchor-link">Adoption by geography</a></h3>
+<p>CMS adoption looks different from one region to another.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-2">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/cms-adoption-by-geo.png"  class="">
+      <img src="/static/images/2025/cms/cms-adoption-by-geo.png" alt="CMS adoption by geo." aria-labelledby="fig-2-caption" aria-describedby="fig-2-description" width="600" height="528" data-width="600" data-height="528" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=1849936162&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=897134076">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/cms_adoption_by_geo.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/cms-adoption-by-geo.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-2-description" data-show-text="Show description of Figure 12.2" data-hide-text="Hide description of Figure 12.2">Show description of Figure 12.2</button>
+  <div id="fig-2-description" class="hidden">Bar chart comparing the percentage of websites using a Content Management System (CMS) across ten different countries for both desktop and mobile platforms. Italy leads the group with the highest adoption rate, reaching 51% for mobile sites, followed closely by the United States and the United Kingdom, both at 49%. In contrast, Indonesia and Brazil show the lowest adoption rates at 25% and 32% respectively, while mobile adoption consistently outperforms desktop across nearly all featured nations.</div>
+  <figcaption id="fig-2-caption">
+
+<a href="#fig-2" class="anchor-link">Figure 12.2.</a> CMS adoption by geo.
+
+</figcaption>
+</figure>
+<p>HTTP Archive data shows higher concentrations of hosted CMS platforms in North America and Western Europe. In contrast, open-source systems hold a relatively stronger position in parts of Asia and Eastern Europe.</p>
+<h3 id="adoption-by-rank"><a href="#adoption-by-rank" class="anchor-link">Adoption by rank</a></h3>
+<p>Website rank continues to shape CMS adoption patterns. High-traffic sites tend to choose platforms that support complex workflows, deep customization, and long-term scalability. Lower-traffic sites are more likely to use hosted or all-in-one solutions that reduce operational overhead.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-3">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/top-5-cms-by-rank.png"  class="">
+      <img src="/static/images/2025/cms/top-5-cms-by-rank.png" alt="Top 5 CMSs by rank." aria-labelledby="fig-3-caption" aria-describedby="fig-3-description" width="600" height="371" data-width="600" data-height="371" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=481895919&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=156249791">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/top_cms_by_rank.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/top-5-cms-by-rank.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-3-description" data-show-text="Show description of Figure 12.3" data-hide-text="Hide description of Figure 12.3">Show description of Figure 12.3</button>
+  <div id="fig-3-description" class="hidden">Bar chart of the leading Content Management Systems across different website traffic rankings on mobile. WordPress emerges as the dominant leader, showing a dramatic increase in adoption as site volume grows, peaking at 35.0% for all websites. In contrast, competitors like Shopify and Wix maintain much smaller footprints, with Shopify reaching its highest usage (5.0%) among the top 10 million sites.</div>
+  <figcaption id="fig-3-caption">
+
+<a href="#fig-3" class="anchor-link">Figure 12.3.</a> Top 5 CMSs by rank.
+
+</figcaption>
+</figure>
+<p>Among the top 10,000 websites, WordPress accounts for roughly 58% of CMS usage, while Drupal represents about 6–7%, far higher than its 1% overall market share. Platforms like Wix and Shopify are almost absent at this traffic level.</p>
+<h3 id="most-popular-cmss"><a href="#most-popular-cmss" class="anchor-link">Most popular CMSs</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-4">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/cms-adoption-share.png"  class="">
+      <img src="/static/images/2025/cms/cms-adoption-share.png" alt="CMS adoption share." aria-labelledby="fig-4-caption" aria-describedby="fig-4-description" width="600" height="371" data-width="600" data-height="371" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=1716078713&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=54237467">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/top_cms.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/cms-adoption-share.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-4-description" data-show-text="Show description of Figure 12.4" data-hide-text="Hide description of Figure 12.4">Show description of Figure 12.4</button>
+  <div id="fig-4-description" class="hidden">Pie chart highlighting the massive market dominance of WordPress, which accounts for 64.3% of all mobile CMS usage. Shopify holds the second-largest share at 7.3%, followed by Wix at 5.2%, while competitors like Squarespace and Joomla maintain much smaller footprints below 3%. The remaining portion of the chart is fragmented among dozens of niche providers, with systems like Webflow and Drupal each representing less than 2% of the total adoption.</div>
+  <figcaption id="fig-4-caption">
+
+<a href="#fig-4" class="anchor-link">Figure 12.4.</a> CMS adoption share.
+
+</figcaption>
+</figure>
+<p>WordPress remains the dominant CMS in 2025, powering roughly 64% of CMS-driven sites. Its growth, however, has slowed to under one percentage point year over year, which points more to market saturation than to a major competitive threat from any single rival.</p>
+<p>The data shows that this slowdown is not caused by one platform displacing WordPress. Instead, small gains are spread across several CMSs. Shopify has grown to around 7.3–7.8% CMS share, Wix to about 5%, and Squarespace to roughly 3%. No single platform&#8217;s growth is large enough to offset WordPress&#8217;s slowing expansion, suggesting a more fragmented ecosystem rather than a consolidating one.</p>
+<p>Overall, the data indicates a more diverse CMS landscape shaped by market maturity and greater choice. WordPress remains broadly adopted, but new growth is increasingly distributed across multiple platforms instead of accruing to a single default CMS.</p>
+<h3 id="fastest-growing-cmss"><a href="#fastest-growing-cmss" class="anchor-link">Fastest growing CMSs</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-5">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/top-5-cms.png"  class="">
+      <img src="/static/images/2025/cms/top-5-cms.png" alt="Top 5 CMS’." aria-labelledby="fig-5-caption" aria-describedby="fig-5-description" width="600" height="371" data-width="600" data-height="371" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=1261903171&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=54237467">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/top_cms.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/top-5-cms.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-5-description" data-show-text="Show description of Figure 12.5" data-hide-text="Hide description of Figure 12.5">Show description of Figure 12.5</button>
+  <div id="fig-5-description" class="hidden">Bar chart tracking the year-over-year mobile adoption trends of the most popular platforms from 2022 to 2025. WordPress maintains a massive, consistent lead over its competitors, ending the period with a 35.6% adoption rate. While Wix and Squarespace have experienced steady growth, reaching 2.8% and 1.5% respectively, older open-source platforms like Joomla and Drupal have seen a gradual decline in market share.</div>
+  <figcaption id="fig-5-caption">
+
+<a href="#fig-5" class="anchor-link">Figure 12.5.</a> Top 5 CMS&#8217;.
+
+</figcaption>
+</figure>
+<p>Year-over-year growth among CMS platforms in 2025 is modest and uneven. Shopify is a new entry this year having previously just been classified as under the Ecommerce category but now is included under CMS as well. Squarespace shows small but positive growth of roughly 0.2–0.3 points, reaching around 3.0–3.3%. Wix&#8217;s growth slows sharply compared with prior years and is now effectively flat at about 5.2% after a period of rapid expansion. These gains are incremental and spread out, not indicative of a new wave of explosive growth.</p>
+<p>By contrast, WordPress&#8217;s share declines slightly year over year—by less than one percentage point—from its 2024 peak, marking its first sustained slowdown after decades of expansion. Even so, WordPress still powers most CMS-driven sites and remains the clear leader across the web. Traditional open-source platforms like Joomla and Drupal continue long-term declines in overall share, though Drupal is still disproportionately represented among high-traffic sites. In short, the fastest-growing CMSs in 2025 are making gains in specific niches, while WordPress remains dominant in absolute terms and continues to anchor the broader ecosystem.</p>
+<h2 id="wordpress-in-2025"><a href="#wordpress-in-2025" class="anchor-link">WordPress in 2025</a></h2>
+<p>Given its dominance in the CMS world, it&#8217;s worthwhile discussing it a bit more.</p>
+<h3 id="market-and-ecosystem"><a href="#market-and-ecosystem" class="anchor-link">Market and ecosystem</a></h3>
+<p>WordPress&#8217;s importance in the CMS ecosystem is now less about raw growth and more about influence. Its sheer scale makes it the reference point for understanding architectural choices, performance patterns, and real-world implementation trade-offs. Because WordPress is used across almost every traffic tier and use case, its behavior in production has an outsized impact on overall web performance and CMS-driven outcomes.</p>
+<p>That influence is supported by a highly extensible ecosystem. Rather than enforcing a single development or hosting model, WordPress supports many approaches through its plugin, theme, and integration layers. This flexibility lets sites evolve gradually—adding new features, monetization models, or editorial complexity—without migrating platforms. As a result, WordPress often stays in place across multiple generations of a site&#8217;s lifecycle, even as other platforms grow in narrower segments.</p>
+<p>The same openness, however, introduces significant variability. WordPress sites show a wide range of architectures, performance profiles, and operational complexity compared with more tightly integrated CMSs. Its dominance does not lead to uniform outcomes; instead, it produces a broad distribution shaped by implementation choices. The next sections examine how this flexibility appears in practice, in terms of architecture, performance metrics, and constraints at scale.</p>
+<h3 id="technical-performance-and-improvements"><a href="#technical-performance-and-improvements" class="anchor-link">Technical performance and improvements</a></h3>
+<p>Recent WordPress development has focused on reducing performance bottlenecks that appear as sites grow in size, editorial complexity, and block usage. Rather than redefining interaction models, core engineering work emphasizes making existing systems faster, more cache-friendly, and less sensitive to configuration differences.</p>
+<p>A major area of progress has been editor performance. Optimizations to template loading, block rendering, and pattern reuse have reduced editor startup and interaction lag, delivering up to 35% faster template loading in block-heavy setups. Persistent caching of reusable block patterns and global styles cuts down on repeated computation, addressing long-standing scalability issues for large sites with complex layouts.</p>
+<p>Media handling has also improved. Updates to image processing pipelines result in <a hreflang="en" href="http://core.trac.wordpress.org/ticket/61758?st_source=ai_mode#:~:text=AVIF%20generation%20has%20improved%20from,:%2095.81%20MB%20(100463863%20bytes)">roughly 20% faster AVIF image generation</a>, better auto-sizing, and more reliable lazy loading. These changes reduce server-side processing time and frontend layout shifts, improving load performance without requiring individual site-level tuning.</p>
+<p>On the frontend, performance work has centered on cutting unnecessary payloads and redundant processing. Core now loads block styles and scripts more selectively, avoids assets for hidden blocks, and caches generated styles more aggressively. Speculative loading techniques—such as prefetching and prerendering likely navigations—further improve perceived speed and Largest Contentful Paint in supported browsers. Collectively, these optimizations target common real-world bottlenecks, improving consistency across a wide variety of configurations. HTTP Archive data supports this pattern, showing that WordPress performance variance is driven more by configuration than by core limitations.</p>
+<p>Accessibility improvements run alongside performance work. Enhancements to semantic markup, keyboard navigation, labeling, and editor usability aim to make accessibility a baseline property of WordPress output, not something that depends entirely on theme or plugin choices.</p>
+<h3 id="wordpress-progression-in-2025"><a href="#wordpress-progression-in-2025" class="anchor-link">WordPress progression in 2025</a></h3>
+<p>These changes suggest that WordPress is shifting from a focus on expansion to one on stabilization. The emphasis on editor responsiveness, cache reuse, asset reduction, and variance control aligns with HTTP Archive findings that show WordPress sites spanning a wide performance range rather than clustering at the top or bottom. Core changes are increasingly aimed at lifting the worst-performing implementations, narrowing the gap between well-tuned and poorly tuned sites.</p>
+<p>Ongoing investment in block-based architecture and Full-Site Editing (FSE) looks less like experimentation and more like long-term commitment. Rather than stepping back from the block model, WordPress is absorbing its operational costs through steady optimization. Blocks are now treated as core infrastructure, with performance work focused on making them viable for large, long-lived sites.</p>
+<p>Equally important is what WordPress core does not try to do. Despite widespread experimentation with AI, collaboration tools, and advanced workflows in the broader ecosystem, core continues to prioritize APIs, primitives, and backward compatibility over bundled, opinionated end-user features. This follows WordPress&#8217;s historical pattern: let innovation happen at the ecosystem edge while keeping core conservative and predictable.</p>
+<p>In a CMS market that is becoming more polarized, these choices reinforce WordPress&#8217;s position as durable web infrastructure. While other platforms differentiate themselves through tightly managed, vertically integrated experiences, WordPress continues to favor adaptability, longevity, and risk reduction at scale. Its technical trajectory in 2025 is less about chasing competitors feature-for-feature and more about remaining operable across the broadest and most diverse slice of the web.</p>
+<h3 id="page-builders"><a href="#page-builders" class="anchor-link">Page builders</a></h3>
+<p>Page builders have become a dominant interface layer within the WordPress ecosystem. Estimates suggest that around 60% of WordPress sites use a page builder, reflecting demand for faster iteration, less reliance on developers, and greater editorial autonomy. Elementor has the largest observed footprint, followed by WPBakery and Divi, alongside broad use of the native Block Editor.</p>
+<p>Page builders appeal because they speed up workflows. WYSIWYG editing, reusable components, and template libraries allow non-technical users to adjust layouts without writing code, aligning with broader no-code and component-based development trends. For many organizations, this shrinks bottlenecks and shortens iteration cycles.</p>
+<p>These advantages come with trade-offs. Page builders often generate more complex DOM structures and larger CSS and JavaScript bundles, raising performance risks at scale. Older builders, in particular, have created long-term maintenance and lock-in issues. As performance expectations rise, these costs are increasingly visible.</p>
+<p>In response, major builders are moving closer to WordPress core conventions. Newer efforts prioritize block-native output, reduced reliance on shortcodes, and deeper integration with the Block Editor and FSE. Rather than trying to replace core, many builders are converging around shared primitives and competing mainly at the UX layer.</p>
+<p>Page builders change how WordPress pages are put together and rendered, with clear consequences for performance. By abstracting layout and design into visual components, they reduce the need for custom code and speed up site creation. But this extra abstraction also affects DOM complexity, asset-loading behavior, and runtime execution, making page builders a major contributor to performance variation across WordPress sites.</p>
+<p>Historically, many page builders were associated with heavy markup and large CSS and JavaScript payloads, which often led to slower loads and weaker Core Web Vitals. More recent builders have tried to improve this by adding conditional asset loading, minification, and reduced shortcode use. These efforts help, but they do not completely erase the performance gap between builder-heavy sites and more tightly controlled builds.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-6">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/top-5-page-builders.png"  class="">
+      <img src="/static/images/2025/cms/top-5-page-builders.png" alt="Top 5 page builders." aria-labelledby="fig-6-caption" aria-describedby="fig-6-description" width="600" height="371" data-width="600" data-height="371" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=216707306&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=527845777">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/wordpress_page_builders.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/top-5-page-builders.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-6-description" data-show-text="Show description of Figure 12.6" data-hide-text="Hide description of Figure 12.6">Show description of Figure 12.6</button>
+  <div id="fig-6-description" class="hidden">Bar chart comparing the adoption rates of leading page builders across desktop and mobile platforms. Elementor is the clear market leader, with a substantial 43% adoption on mobile and 42% on desktop, more than doubling the share of the WordPress Block Editor at 18%. Other popular builders like wpBakery (13%) and Divi (10%) follow, while adoption rates remain remarkably consistent between desktop and mobile devices for all listed platforms.</div>
+  <figcaption id="fig-6-caption">
+
+<a href="#fig-6" class="anchor-link">Figure 12.6.</a> Top 5 page builders.
+
+</figcaption>
+</figure>
+<p>Usage patterns are also shifting. Between 2024 and 2025, Elementor remained the most widely used page builder, but its share dropped from about 56% to 43%, pointing to a more fragmented ecosystem. The WordPress Block Editor grew to around 18%, while WPBakery fell from roughly 21% to 13%. Divi declined from about 14% to 10%, and Beaver Builder held a small but steady share of around 2%. These trends point to a gradual move away from older builders toward block-native or more performance-focused approaches.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-7">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/top-5-page-builder-bundles.png"  class="">
+      <img src="/static/images/2025/cms/top-5-page-builder-bundles.png" alt="Top 5 page builder bundles." aria-labelledby="fig-7-caption" aria-describedby="fig-7-description" width="600" height="371" data-width="600" data-height="371" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=2140205874&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=527845777">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/wordpress_page_builders.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/top-5-page-builder-bundles.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-7-description" data-show-text="Show description of Figure 12.7" data-hide-text="Hide description of Figure 12.7">Show description of Figure 12.7</button>
+  <div id="fig-7-description" class="hidden">Bar chart showing the percentage of web pages utilizing specific combinations of page builders for both desktop and mobile platforms. The Elementor and WordPress Block Editor bundle is the clear market leader, powering 5.0% of mobile sites and 4.7% of desktop sites. Other popular combinations, such as Elementor with wpBakery, see significantly lower adoption at around 1.3%, while the most modern combination of the WordPress Block Editor and Site Editor is currently used by only 0.2% of pages.</div>
+  <figcaption id="fig-7-caption">
+
+<a href="#fig-7" class="anchor-link">Figure 12.7.</a> Top 5 page builder bundles.
+
+</figcaption>
+</figure>
+<p>Overall, the data suggests that page builders are still a core part of the WordPress ecosystem, but their performance impact now depends heavily on how closely they align with WordPress core. Builders that reduce markup overhead, avoid global asset loading, and integrate deeply with the Block Editor tend to limit performance costs more effectively. As expectations continue to rise, the technical differences between builders may matter more than their visual feature sets.</p>
+<h2 id="cms-user-experience"><a href="#cms-user-experience" class="anchor-link">CMS user experience</a></h2>
+<p>The architectural and performance trade-offs described so far are shaped not just by platform design, but by how CMSs are actually used. The user experience of CMSs—especially for editors and administrators—remains a critical but often underexplored driver of real-world outcomes.</p>
+<p>Across platforms, editorial UX often emphasizes flexibility over structure, presenting users with many options but few guardrails. Effective CMS UX instead leans on structured components, sensible defaults, and role-based permissions to reduce cognitive load and support consistent publishing. As sites grow, additional needs—such as governance, approval workflows, taxonomy management, and localization—turn CMS UX from a design preference into an operational requirement.</p>
+<p>Although invisible to most visitors, CMS UX directly affects frontend quality. Poorly constrained editorial tools can result in inconsistent layouts, heavy pages, accessibility problems, and outdated content. In this way, backend UX indirectly shapes performance, discoverability, and accessibility for end users.</p>
+<p>One common response to these challenges has been the adoption of page builders, which aim to simplify layout and design through editor-friendly visual interfaces. Their impact echoes HTTP Archive findings that show wide performance variation for WordPress sites driven more by configuration and tooling choices than by core itself.</p>
+<h2 id="core-web-vitals"><a href="#core-web-vitals" class="anchor-link">Core Web Vitals</a></h2>
+<p>Core Web Vitals offer a practical way to see how CMS platforms perform under real-world conditions. Rather than showing theoretical best-case performance, these metrics capture the combined effects of platform defaults, hosting choices, themes, plugins, and page builders as experienced by actual users.</p>
+<p>This section looks at year-over-year Core Web Vitals performance across major CMS platforms, focusing on mobile, where constraints are tighter and differences are easier to see. The goal is not to crown a single &#8220;fastest&#8221; CMS, but to understand how varying levels of platform control and ecosystem complexity affect performance at scale.</p>
+<h3 id="year-over-year-trends"><a href="#year-over-year-trends" class="anchor-link">Year-over-year trends</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-8">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/mobile-year-over-year-core-web-vitals-performance-per-cms.png"  class="">
+      <img src="/static/images/2025/cms/mobile-year-over-year-core-web-vitals-performance-per-cms.png" alt="Mobile year-over-year Core Web Vitals performance per CMS." aria-labelledby="fig-8-caption" aria-describedby="fig-8-description" width="600" height="559" data-width="600" data-height="559" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=1431389142&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=12600581">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/core_web_vitals_yoy.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/mobile-year-over-year-core-web-vitals-performance-per-cms.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-8-description" data-show-text="Show description of Figure 12.8" data-hide-text="Hide description of Figure 12.8">Show description of Figure 12.8</button>
+  <div id="fig-8-description" class="hidden">Bar chart tracking the percentage of mobile websites achieving &#34;good&#34; scores across ten major platforms between 2024 and 2025. Duda is the top performer with 85% of its sites meeting the benchmarks, followed by TYPO3 CMS at 79% and Wix, which saw a significant jump from 55% to 74%. While most platforms showed steady improvement, Weebly was the only CMS to see a slight decline to 47%, and WordPress remains among the lowest-ranked with a pass rate of 45%.</div>
+  <figcaption id="fig-8-caption">
+
+<a href="#fig-8" class="anchor-link">Figure 12.8.</a> Mobile year-over-year Core Web Vitals performance per CMS.
+
+</figcaption>
+</figure>
+<p>From 2024 to 2025, most CMS platforms improved their overall Core Web Vitals performance, though by varying amounts. Platforms with more tightly managed environments see the largest gains—led by Wix (around +14% year over year) and Duda (+11%), followed by Squarespace (+8%) and Joomla (+7%). Several smaller platforms, including 1C-Bitrix, Tilda, and TYPO3, improved by about 5%.</p>
+<p>More extensible platforms improved less. WordPress and Drupal each gained around 4% year over year, while Weebly declined slightly (about -1%). These patterns highlight how difficult it is to propagate improvements evenly in ecosystems that allow more customization and diversity in implementation.</p>
+<h3 id="largest-contentful-paint-lcp"><a href="#largest-contentful-paint-lcp" class="anchor-link">Largest Contentful Paint (LCP)</a></h3>
+<p>Largest Contentful Paint measures how quickly the main content of a page appears and is one of the most important metrics for perceived load speed.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-9">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/mobile-year-over-year-cms-lcp-performance.png"  class="">
+      <img src="/static/images/2025/cms/mobile-year-over-year-cms-lcp-performance.png" alt="Mobile year-over-year CMS LCP performance." aria-labelledby="fig-9-caption" aria-describedby="fig-9-description" width="600" height="559" data-width="600" data-height="559" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=625293536&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=12600581">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/core_web_vitals_yoy.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/mobile-year-over-year-cms-lcp-performance.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-9-description" data-show-text="Show description of Figure 12.9" data-hide-text="Hide description of Figure 12.9">Show description of Figure 12.9</button>
+  <div id="fig-9-description" class="hidden">Bar chart, displaying the percentage of mobile websites per platform that achieved a &#34;good&#34; Largest Contentful Paint (LCP) score for 2024 and 2025. Duda leads with the highest performance, having 94% of its mobile sites meet the threshold, followed by TYPO3 CMS at 89% and Wix at 81%. While most platforms showed steady year-over-year progress—with Tilda reaching 56% and WordPress both reaching 53%—Weebly was the only CMS to experience a slight decline, falling to 52%.</div>
+  <figcaption id="fig-9-caption">
+
+<a href="#fig-9" class="anchor-link">Figure 12.9.</a> Mobile year-over-year CMS LCP performance.
+
+</figcaption>
+</figure>
+<p>In 2025, 54% of sites achieved a &#8220;good&#8221; LCP score, reflecting ongoing progress but also significant remaining variability.</p>
+<p>Most CMS platforms show year-over-year LCP improvements. Wix leads with roughly a 10% gain, followed by Squarespace (+7%) and Duda (+5%). WordPress, Joomla, and Drupal each improve by about 4%, while Weebly slips slightly (around -1%). These differences align with platform-level choices around asset loading, image optimization, and default configurations.</p>
+<h3 id="cumulative-layout-shift-cls"><a href="#cumulative-layout-shift-cls" class="anchor-link">Cumulative Layout Shift (CLS)</a></h3>
+<p>Cumulative Layout Shift captures how visually stable a page is while it loads, by measuring unexpected layout movements.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-10">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/mobile-year-over-year-cms-cls-performance.png"  class="">
+      <img src="/static/images/2025/cms/mobile-year-over-year-cms-cls-performance.png" alt="Mobile year-over-year CMS CLS performance." aria-labelledby="fig-10-caption" aria-describedby="fig-10-description" width="600" height="559" data-width="600" data-height="559" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=1790391969&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=12600581">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/core_web_vitals_yoy.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/mobile-year-over-year-cms-cls-performance.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-10-description" data-show-text="Show description of Figure 12.10" data-hide-text="Hide description of Figure 12.10">Show description of Figure 12.10</button>
+  <div id="fig-10-description" class="hidden">Bar chart comparing the percentage of mobile websites achieving a &#34;good&#34; Cumulative Layout Shift (CLS) score across ten platforms for 2024 and 2025. Wix shows the most significant improvement, rising from approximately 86% in 2024 to 95% in 2025, while Duda and Squarespace also maintain strong lead positions with scores of 93% and 89% respectively. Conversely, Weebly is the only platform showing a clear decline in layout stability, dropping to 58%, whereas WordPress and Joomla remain stable with scores around the 84% mark.</div>
+  <figcaption id="fig-10-caption">
+
+<a href="#fig-10" class="anchor-link">Figure 12.10.</a> Mobile year-over-year CMS CLS performance.
+
+</figcaption>
+</figure>
+<p>CLS remains one of the more uneven metrics across platforms, reflecting challenges in managing late-loading content, embeds, and dynamic layouts.</p>
+<p>Wix again shows the strongest year-over-year improvement (around +8%), followed by Duda (~+4%), then Joomla and 1C-Bitrix (each around +3%). Other platforms show little change, while Weebly experiences a notable decline (about -8%). Overall, CLS outcomes seem to depend heavily on implementation discipline, not just platform choice.</p>
+<h3 id="interaction-to-next-paint-inp"><a href="#interaction-to-next-paint-inp" class="anchor-link">Interaction to Next Paint (INP)</a></h3>
+<p>Interaction to Next Paint measures how responsive a page feels across all user interactions, not just at initial load.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-11">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/mobile-year-over-year-cms-inp-performance.png"  class="">
+      <img src="/static/images/2025/cms/mobile-year-over-year-cms-inp-performance.png" alt="Mobile year-over-year CMS INP performance." aria-labelledby="fig-11-caption" aria-describedby="fig-11-description" width="600" height="559" data-width="600" data-height="559" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=1672867090&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=12600581">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/core_web_vitals_yoy.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/mobile-year-over-year-cms-inp-performance.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-11-description" data-show-text="Show description of Figure 12.11" data-hide-text="Hide description of Figure 12.11">Show description of Figure 12.11</button>
+  <div id="fig-11-description" class="hidden">Bar chart displaying the percentage of mobile websites achieving a &#34;good&#34; Interaction to Next Paint (INP) score across ten different platforms for 2024 and 2025. Squarespace leads the group with an impressive 96% success rate, followed closely by TYPO3 CMS at 95% and Duda at 94%. While nearly all platforms showed year-over-year improvements—with Tilda making a notable jump from approximately 58% to 68%—1C-Bitrix and Weebly remain the lowest performers, both with scores of 71%.</div>
+  <figcaption id="fig-11-caption">
+
+<a href="#fig-11" class="anchor-link">Figure 12.11.</a> Mobile year-over-year CMS INP performance.
+
+</figcaption>
+</figure>
+<p>Compared with LCP and CLS, INP improvements are modest, underscoring how difficult it is to manage JavaScript, long tasks, and third-party scripts.</p>
+<p>In 2025, 1C-Bitrix leads in INP improvement (about +10%), followed by Squarespace and Duda (around +6%), Joomla and Tilda (about +5%), and Drupal (+3%). Weebly again sees a decline (-3%). Across the board, no CMS consistently delivers excellent INP at scale, suggesting that interaction latency remains a shared problem.</p>
+<h2 id="lighthouse-quality-metrics"><a href="#lighthouse-quality-metrics" class="anchor-link">Lighthouse quality metrics</a></h2>
+<p>Lighthouse offers a complementary, lab-based perspective on site quality across Performance, Accessibility, SEO, and Best Practices. While Lighthouse scores do not directly reflect real-user experience, they help compare typical implementations under consistent test conditions.</p>
+<h3 id="performance"><a href="#performance" class="anchor-link">Performance</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-12">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/median-lighthouse-performance-score.png"  class="">
+      <img src="/static/images/2025/cms/median-lighthouse-performance-score.png" alt="Median Lighthouse Performance score." aria-labelledby="fig-12-caption" aria-describedby="fig-12-description" width="600" height="559" data-width="600" data-height="559" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=1861912868&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=1453203753">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/lighthouse_category_scores_per_cms.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/median-lighthouse-performance-score.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-12-description" data-show-text="Show description of Figure 12.12" data-hide-text="Hide description of Figure 12.12">Show description of Figure 12.12</button>
+  <div id="fig-12-description" class="hidden">Bar chart showing the median performance results of various content management systems across desktop and mobile platforms. Wix achieves the highest median performance scores for both devices, reaching 87 on desktop and 64 on mobile, followed by Duda and Webflow with relatively high results. In contrast, platforms such as Squarespace, 1C-Bitrix, and PrestaShop exhibit the lowest performance on mobile, with scores ranging between 30 and 32.</div>
+  <figcaption id="fig-12-caption">
+
+<a href="#fig-12" class="anchor-link">Figure 12.12.</a> Median Lighthouse Performance score.
+
+</figcaption>
+</figure>
+<p>Median Lighthouse performance scores improved between 2024 and 2025 on both desktop and mobile, with desktop consistently scoring higher. On desktop, Wix (87) and Duda (81) are out in front, followed by Webflow (73). WordPress records a median score of 63, with several platforms close by.</p>
+<p>On mobile, scores are lower across the board. Wix leads with 64, followed by Webflow (58), Duda (57), and Shopify (52). WordPress (41) and Joomla (40) sit behind this group, while PrestaShop and 1C-Bitrix post the lowest scores. Year over year, Wix shows the biggest jump on mobile (from 55 to 64), while most other platforms see only modest movement or remain stable. These lab scores are best read as context, not as a proxy for real-user experience.</p>
+<h3 id="seo"><a href="#seo" class="anchor-link">SEO</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-13">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/median-lighthouse-seo-score.png"  class="">
+      <img src="/static/images/2025/cms/median-lighthouse-seo-score.png" alt="Median Lighthouse SEO score." aria-labelledby="fig-13-caption" aria-describedby="fig-13-description" width="600" height="559" data-width="600" data-height="559" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=2147163809&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=1453203753">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/lighthouse_category_scores_per_cms.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/median-lighthouse-seo-score.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-13-description" data-show-text="Show description of Figure 12.13" data-hide-text="Hide description of Figure 12.13">Show description of Figure 12.13</button>
+  <div id="fig-13-description" class="hidden">Bar chart displaying the SEO scores of ten major Content Management Systems on both desktop and mobile. Wix and Webflow are the top performers, both achieving perfect scores of 100 across both device types. Remarkably, every other CMS listed—including WordPress, Shopify, and Drupal—maintains an identical and high score of 92, showing no performance variation between desktop and mobile versions for any of the platforms featured.</div>
+  <figcaption id="fig-13-caption">
+
+<a href="#fig-13" class="anchor-link">Figure 12.13.</a> Median Lighthouse SEO score.
+
+</figcaption>
+</figure>
+<p>In 2025, Lighthouse SEO scores remain high across CMS platforms, with most clustered between 92 and 100 on both mobile and desktop. Webflow and Wix achieve perfect scores, while WordPress, Duda, and Joomla remain around 92. The small year-over-year changes suggest that basic SEO best practices are now widely baked into modern CMS platforms.</p>
+<h3 id="accessibility"><a href="#accessibility" class="anchor-link">Accessibility</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-14">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/median-lighthouse-accessibility-score.png"  class="">
+      <img src="/static/images/2025/cms/median-lighthouse-accessibility-score.png" alt="Median Lighthouse Accessibility score." aria-labelledby="fig-14-caption" aria-describedby="fig-14-description" width="600" height="559" data-width="600" data-height="559" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=2114036485&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=1453203753">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/lighthouse_category_scores_per_cms.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/median-lighthouse-accessibility-score.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-14-description" data-show-text="Show description of Figure 12.14" data-hide-text="Hide description of Figure 12.14">Show description of Figure 12.14</button>
+  <div id="fig-14-description" class="hidden">Bar chart showing the Accessibility scores of ten major Content Management Systems across desktop and mobile devices. Wix and Squarespace lead the group with outstanding scores of 95 and 94 respectively, demonstrating high consistency across both platforms. While most other systems like Webflow and Shopify maintain solid scores of 90 and 89 respectively, 1C-Bitrix trails the group with the lowest score of 76.</div>
+  <figcaption id="fig-14-caption">
+
+<a href="#fig-14" class="anchor-link">Figure 12.14.</a> Median Lighthouse Accessibility score.
+
+</figcaption>
+</figure>
+<p>Accessibility scores vary more than SEO but still show limited change year to year. In 2025, median scores range from 76 to 95, with Wix (95) and Squarespace (94) leading. WordPress and Joomla remain stable, while 1C-Bitrix trails at 76. Overall, improvements are gradual, indicating steady but not transformative progress.</p>
+<h3 id="best-practices"><a href="#best-practices" class="anchor-link">Best Practices</a></h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-15">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/median-lighthouse-best-practices-score.png"  class="">
+      <img src="/static/images/2025/cms/median-lighthouse-best-practices-score.png" alt="Median Lighthouse Best Practices score." aria-labelledby="fig-15-caption" aria-describedby="fig-15-description" width="600" height="559" data-width="600" data-height="559" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=630122711&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=1453203753">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/lighthouse_category_scores_per_cms.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/median-lighthouse-best-practices-score.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-15-description" data-show-text="Show description of Figure 12.15" data-hide-text="Hide description of Figure 12.15">Show description of Figure 12.15</button>
+  <div id="fig-15-description" class="hidden">Bar chart comparing the Best Practice scores across ten different CMS platforms for both desktop and mobile devices. Wix and Squarespace are the top performers, both achieving near-perfect scores of 96 on desktop, with Wix following closely at 93 on mobile. Most other platforms, including WordPress, Shopify, and Duda, maintain consistent scores in the high 70s to low 80s, while 1C-Bitrix trails the group with the lowest scores of 59 for desktop and 61 for mobile.</div>
+  <figcaption id="fig-15-caption">
+
+<a href="#fig-15" class="anchor-link">Figure 12.15.</a> Median Lighthouse Best Practices score.
+
+</figcaption>
+</figure>
+<p>Best practices scores show clearer separation. On mobile, Squarespace (96) and Wix (93) lead, followed by Drupal and PrestaShop (both 82). WordPress, Duda, and Joomla cluster around 79, and 1C-Bitrix ranks lowest at 61. Desktop results follow a similar pattern.</p>
+<p>Year-over-year, some platforms improve notably—particularly Wix (from 79 to 93) and Drupal (from 79 to 82)—while others barely move. These differences point to ongoing gaps in areas like modern API usage, security configuration, and error handling.</p>
+<h2 id="page-weight-and-resource-composition"><a href="#page-weight-and-resource-composition" class="anchor-link">Page weight and resource composition</a></h2>
+<p>&#8220;Page weight&#8221; is the total size of all resources a browser needs to download to render a page. Over the past decade, page weight has steadily increased.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-16">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/distribution-of-cms-page-weight.png"  class="">
+      <img src="/static/images/2025/cms/distribution-of-cms-page-weight.png" alt="Distribution of CMS page weight." aria-labelledby="fig-16-caption" aria-describedby="fig-16-description" width="600" height="371" data-width="600" data-height="371" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=1506051680&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=1551200507">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/page_weight_distribution.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/distribution-of-cms-page-weight.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-16-description" data-show-text="Show description of Figure 12.16" data-hide-text="Hide description of Figure 12.16">Show description of Figure 12.16</button>
+  <div id="fig-16-description" class="hidden">Bar chart showing the total page weight in kilobytes for five popular mobile CMS platforms across various percentiles. Squarespace produces the heaviest sites with a median (50th percentile) weight of 3,974 KB, while Joomla and WordPress are the lightest at 2,900 KB and 2,894 KB respectively. Across all platforms, there is a substantial increase in weight at the 90th percentile, with some mobile pages exceeding 8,000 KB.</div>
+  <figcaption id="fig-16-caption">
+
+<a href="#fig-16" class="anchor-link">Figure 12.16.</a> Distribution of CMS page weight.
+
+</figcaption>
+</figure>
+<p>In 2025, the average page is roughly 2.67 MB on desktop and 2.28 MB on mobile. Both figures exceed the commonly recommended range of 1–1.5 MB, reflecting continued bloat across the web.</p>
+<p>Most of this growth comes from images and JavaScript, while HTML remains a relatively small part of total transfer size. Despite growing awareness of performance issues, page weight keeps rising. Pages that take longer than three seconds to load tend to have much higher bounce rates, and additional delays are strongly linked to lower conversion rates. For mobile users on slow or metered connections, heavy pages can be a real barrier to access.</p>
+<p>Page weight is therefore more than a technical detail. It shapes user perception, accessibility, and business outcomes. Organizations that treat page weight as a first-class constraint generally see more predictable performance, while those that do not often struggle with sluggish experiences and reduced engagement.</p>
+<h3 id="total-page-weight-by-cms"><a href="#total-page-weight-by-cms" class="anchor-link">Total page weight by CMS</a></h3>
+<p>Total page weight varies widely between CMS platforms, influenced by default themes, asset pipelines, plugin ecosystems, and hosting models. While page weight has gone up across all platforms, CMS choice still affects both the median size and the spread of page weights.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-17">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/median-cms-page-weight.png"  class="">
+      <img src="/static/images/2025/cms/median-cms-page-weight.png" alt="Median CMS page weight." aria-labelledby="fig-17-caption" aria-describedby="fig-17-description" width="600" height="371" data-width="600" data-height="371" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=439542488&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=1256129490">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/resource_weights.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/median-cms-page-weight.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-17-description" data-show-text="Show description of Figure 12.17" data-hide-text="Hide description of Figure 12.17">Show description of Figure 12.17</button>
+  <div id="fig-17-description" class="hidden">Bar chart comparing the median total bytes loaded for five major platforms on both desktop and mobile devices. Squarespace produces the heaviest websites by a significant margin, with a median weight of 3,974 KB on mobile and even higher on desktop. In contrast, Joomla and WordPress remain the lightest platforms in the group, with mobile median weights of 2,900 KB and 2,894 KB respectively. Across all featured systems, desktop pages consistently carry a higher byte load than their mobile counterparts.</div>
+  <figcaption id="fig-17-caption">
+
+<a href="#fig-17" class="anchor-link">Figure 12.17.</a> Median CMS page weight.
+
+</figcaption>
+</figure>
+<p>Platforms in more controlled environments tend to show tighter distributions. More extensible CMSs show wider variation, with page weight driven less by core and more by the accumulated impact of themes, plugins, page builders, and third-party tools. As a result, two sites on the same CMS can have very different total transfer sizes.</p>
+<p>This variability mirrors the earlier performance patterns, reinforcing the link between page weight and broader performance outcomes.</p>
+<h3 id="resource-composition-images"><a href="#resource-composition-images" class="anchor-link">Resource composition: images</a></h3>
+<p>Images remain the largest contributor to page weight on all CMS platforms. Even as modern formats and responsive image techniques become more common, their benefits are often offset by a growing number of images and larger visual assets—especially on template-heavy and visually rich sites.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-18">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/median-cms-size-of-images.png"  class="">
+      <img src="/static/images/2025/cms/median-cms-size-of-images.png" alt="Median CMS size of images." aria-labelledby="fig-18-caption" aria-describedby="fig-18-description" width="600" height="371" data-width="600" data-height="371" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=1131984006&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=1256129490">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/resource_weights.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/median-cms-size-of-images.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-18-description" data-show-text="Show description of Figure 12.18" data-hide-text="Hide description of Figure 12.18">Show description of Figure 12.18</button>
+  <div id="fig-18-description" class="hidden">Bar chart showing the median total bytes of images loaded by five different Content Management Systems across desktop and mobile platforms. The data shows that Joomla and Squarespace have the highest median image weights, with Joomla leading at 1,612 KB on mobile, while Wix maintains the smallest footprint by a significant margin at only 194 KB on mobile. For every CMS listed, including WordPress and Shopify, the desktop version consistently loads a higher volume of image data than the mobile version.</div>
+  <figcaption id="fig-18-caption">
+
+<a href="#fig-18" class="anchor-link">Figure 12.18.</a> Median CMS size of images.
+
+</figcaption>
+</figure>
+<p>CMS platforms with stronger defaults for image handling generally produce smaller, more consistent image payloads. In more flexible systems, image optimization depends heavily on theme choices, plugin setups, and editorial habits, leading to greater variability.</p>
+<p>The continued growth in image payloads helps explain how some platforms can improve loading metrics yet still serve heavier pages overall.</p>
+<h3 id="resource-composition-javascript"><a href="#resource-composition-javascript" class="anchor-link">Resource composition: JavaScript</a></h3>
+<p>JavaScript is the fastest-growing part of page weight and one of the most important factors for runtime performance. JavaScript payloads reflect the combined cost of core CMS logic, themes, page builders, analytics, ads, and other third-party services.</p>
+<p>Page builders and component-based systems often increase JavaScript use by adding client-side rendering and interaction layers. While newer approaches try to load fewer unnecessary scripts, JavaScript remains a major driver of interaction latency and responsiveness issues discussed earlier.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-19">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/median-cms-size-of-javascript.png"  class="">
+      <img src="/static/images/2025/cms/median-cms-size-of-javascript.png" alt="Median CMS size of JavaScript." aria-labelledby="fig-19-caption" aria-describedby="fig-19-description" width="600" height="371" data-width="600" data-height="371" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=782647613&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=1256129490">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/resource_weights.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/median-cms-size-of-javascript.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-19-description" data-show-text="Show description of Figure 12.19" data-hide-text="Hide description of Figure 12.19">Show description of Figure 12.19</button>
+  <div id="fig-19-description" class="hidden">Bar chart showing the median amount of JavaScript bytes loaded across five major Content Management Systems for both desktop and mobile devices. Wix and Shopify exhibit the highest JavaScript payloads, with median mobile sizes of 1,634 KB and 1,615 KB, respectively. In contrast, Joomla and WordPress maintain significantly smaller JavaScript footprints, loading medians of 453 KB and 638 KB on mobile devices.</div>
+  <figcaption id="fig-19-caption">
+
+<a href="#fig-19" class="anchor-link">Figure 12.19.</a> Median CMS size of JavaScript.
+
+</figcaption>
+</figure>
+<p>As with overall page weight, JavaScript costs vary significantly within extensible CMS ecosystems. Implementation choices matter more than platform choice alone.</p>
+<h3 id="css-and-html"><a href="#css-and-html" class="anchor-link">CSS and HTML</a></h3>
+<p>CSS and HTML make up a smaller share of total page weight than images and JavaScript, but they still influence rendering. Large global stylesheets, duplicate rules, or unscoped styles can delay rendering and add blocking time.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-20">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/median-cms-size-of-html.png"  class="">
+      <img src="/static/images/2025/cms/median-cms-size-of-html.png" alt="Median CMS size of HTML." aria-labelledby="fig-20-caption" aria-describedby="fig-20-description" width="600" height="371" data-width="600" data-height="371" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=1793928495&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=1256129490">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/resource_weights.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/median-cms-size-of-html.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-20-description" data-show-text="Show description of Figure 12.20" data-hide-text="Hide description of Figure 12.20">Show description of Figure 12.20</button>
+  <div id="fig-20-description" class="hidden">Bar chart showing the median amount of HTML bytes loaded across five major Content Management Systems for both desktop and mobile platforms. Wix stands out as having the largest HTML footprint by a significant margin, with a median load of 163 KB for desktop and 162 KB for mobile. In contrast, Joomla and Squarespace maintain the smallest median sizes, with Joomla loading only 22 KB on desktop and 20 KB on mobile. Across all systems shown, the median size of HTML remains relatively consistent between device types, though desktop loads are slightly heavier in every instance.</div>
+  <figcaption id="fig-20-caption">
+
+<a href="#fig-20" class="anchor-link">Figure 12.20.</a> Median CMS size of HTML.
+
+</figcaption>
+</figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure id="fig-21">
+  <div class="figure-wrapper">
+    
+    <a href="/static/images/2025/cms/median-cms-size-of-css.png"  class="">
+      <img src="/static/images/2025/cms/median-cms-size-of-css.png" alt="Median CMS size of CSS." aria-labelledby="fig-21-caption" aria-describedby="fig-21-description" width="600" height="371" data-width="600" data-height="371" data-seamless="" data-frameborder="0" data-scrolling="no" data-iframe="https://docs.google.com/spreadsheets/d/e/2PACX-1vQl8kslfFxccGPgWkzCtjnDEtkWaZfqnxncddAaoIhMjAtkmY_1laqzaTbrq-9G-cCiQlzjqeXFk3P4/pubchart?oid=1384155263&amp;format=interactive" loading="lazy">
+    </a>
+    
+  
+  <div class="figure-dropdown nav-dropdown">
+    <button type="button" class="nav-dropdown-btn js-enable hidden" disabled aria-expanded="false" title="Explore the results">
+      <span class="visually-hidden">Explore the results</span>
+      <svg aria-hidden="true" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <path fill-rule="evenodd" d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0zm0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0z" />
+      </svg>
+    </button>
+    <ul class="figure-dropdown-list nav-dropdown-list floating-card hidden">
+      
+      <li>
+        
+        <a href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit#gid=1256129490">
+          View data
+        </a>
+        
+      </li>
+      
+      
+      <li>
+        <a href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/resource_weights.sql">
+          View query
+        </a>
+      </li>
+      
+      
+      <li>
+        <a href="/static/images/2025/cms/median-cms-size-of-css.png">
+          View image
+        </a>
+      </li>
+      
+    </ul>
+  </div>
+  
+
+  </div>
+  <button type="button" class="fig-description-button novisibility-until-js" aria-expanded="false" aria-controls="fig-21-description" data-show-text="Show description of Figure 12.21" data-hide-text="Hide description of Figure 12.21">Show description of Figure 12.21</button>
+  <div id="fig-21-description" class="hidden">Bar chart, showing the median bytes of CSS loaded across five Content Management Systems for desktop and mobile devices. Squarespace and WordPress load the most CSS, with Squarespace reaching a median of 165 KB on mobile and WordPress following at 119 KB. In stark contrast, Wix appears to load almost no external CSS files, showing a median value of only 1 KB for both device types.</div>
+  <figcaption id="fig-21-caption">
+
+<a href="#fig-21" class="anchor-link">Figure 12.21.</a> Median CMS size of CSS.
+
+</figcaption>
+</figure>
+<p>Block-based and component-driven systems increasingly generate CSS dynamically. When caching and reuse are done well, this can reduce unused styles. When handled poorly, it adds complexity and overhead. These trade-offs reflect the broader architectural themes explored earlier in the chapter.</p>
+<h3 id="page-weight-performance-and-variance"><a href="#page-weight-performance-and-variance" class="anchor-link">Page weight, performance, and variance</a></h3>
+<p>The relationship between page weight and performance is not strictly linear, but it is strong. Heavier pages are more likely to miss Core Web Vitals thresholds, especially on mobile devices where network and CPU limitations magnify inefficiencies.</p>
+<p>Across CMSs, page weight acts as a compounding factor rather than a single point of failure. Large image payloads, heavy JavaScript, and globally scoped assets accumulate over time, raising the chances of slow loads, visual instability, and sluggish interactions. Platforms that limit customization tend to reduce this risk through consistent defaults, while extensible systems shift more responsibility onto site owners and implementers.</p>
+<p>Overall, page weight reinforces a core idea of this chapter: CMS platforms shape performance indirectly, by influencing how resources are assembled and delivered. As pages grow more complex, managing what goes into them—and how it&#8217;s delivered—becomes critical to maintaining reliable performance</p>
+<h2 id="emerging-web-apis"><a href="#emerging-web-apis" class="anchor-link">Emerging web APIs</a></h2>
+<p>As CMS platforms mature, browser capabilities play a bigger role in shaping performance and user experience. New web APIs increasingly offer improvements that work across frameworks and CMSs, shifting some optimization work from servers to the browser itself. These APIs do not remove underlying costs, but they can reduce perceived latency and improve responsiveness when used thoughtfully.</p>
+<p>This section highlights browser-level capabilities that are starting to influence navigation speed, interaction responsiveness, and perceived performance across CMS-powered sites.</p>
+<h3 id="speculation-rules-api"><a href="#speculation-rules-api" class="anchor-link">Speculation Rules API</a></h3>
+<p>Navigation latency remains one of the most noticeable sources of slowness on content-heavy, multi-page sites—the kind many CMSs power. The Speculation Rules API addresses this by letting browsers anticipate likely navigations and prepare pages in advance, via prefetching or prerendering.</p>
+<p>Unlike traditional preloading, speculation rules allow developers to declare which navigations are likely and under what conditions the browser should act. Early usage shows measurable improvements in navigation performance, including lower First Contentful Paint and Largest Contentful Paint, and smoother page transitions for common browsing paths.</p>
+<p>For CMSs, the key value of the Speculation Rules API is that it improves perceived navigation speed without changing backend rendering logic. Because speculative loading happens in the browser, it can reduce the impact of database latency, plugin overhead, or page builder complexity—particularly on sites with predictable navigation flows. The API is currently supported in Chromium-based browsers and safely ignored elsewhere, making it suitable for progressive enhancement.</p>
+<h3 id="long-animation-frames-api-loaf"><a href="#long-animation-frames-api-loaf" class="anchor-link">Long Animation Frames API (LoAF)</a></h3>
+<p>While load performance has improved on many CMS platforms, interaction responsiveness is still a consistent pain point. The Long Animation Frames API builds on earlier long-task measurements by tracking delayed animation frames that block visual updates and user feedback. This directly feeds into understanding Interaction to Next Paint (INP).</p>
+<p>LoAF shifts attention from individual JavaScript tasks to full-frame delays, making it easier to pinpoint what truly affects responsiveness. By highlighting which scripts, layout operations, or rendering steps most often cause slow frames, LoAF helps teams uncover issues that may not show up in initial page-load tests.</p>
+<p>This is particularly relevant on CMS-driven sites, where sluggishness often results from cumulative complexity rather than a single blocking operation. Page builders, analytics, ads, and third-party tools can interact in ways that degrade responsiveness over time. LoAF enables teams to see these patterns in real-user monitoring and understand how interactions perform throughout a session, not just at load.</p>
+<h3 id="view-transitions-api"><a href="#view-transitions-api" class="anchor-link">View Transitions API</a></h3>
+<p>The View Transitions API enables smoother visual transitions between page states by allowing the browser to animate content changes. While this is more about visual continuity than raw speed, it can significantly improve perceived performance—especially on content-heavy sites where users navigate frequently.</p>
+<p>For CMS platforms, view transitions are important because they narrow the experiential gap between traditional multi-page sites and single-page applications. Combined with techniques like speculative loading, they let server-rendered, CMS-powered sites feel more fluid without adopting complex SPA architectures. Support is still uneven across browsers and usage is early, but initial adoption suggests growing interest in perceived performance improvements.</p>
+<h3 id="priority-hints-and-scheduling-apis"><a href="#priority-hints-and-scheduling-apis" class="anchor-link">Priority Hints and Scheduling APIs</a></h3>
+<p>As pages become more complex, resource prioritization plays a bigger role in performance. Priority Hints let developers indicate which resources (e.g., images, fonts, scripts) are more important, so browsers can adjust loading order under constrained conditions. When used well, this can improve key rendering milestones without shrinking total page weight.</p>
+<p>Similarly, new scheduling APIs provide more control over when main-thread work happens, making it easier to defer less critical tasks in favor of user-visible interactions. On CMS-driven pages with many layers of functionality, these tools help reduce contention during key interaction moments.</p>
+<h3 id="implications-for-cms-platforms"><a href="#implications-for-cms-platforms" class="anchor-link">Implications for CMS platforms</a></h3>
+<p>Together, these APIs signal a broader shift in how web performance improves over time. Instead of relying exclusively on backend changes or CMS-specific optimizations, platforms can increasingly lean on browser intelligence that adapts to user behavior and device capabilities. These APIs do not erase the costs of large payloads or heavy execution.</p>
+<p>For CMS ecosystems, this reinforces a familiar pattern: browser APIs can smooth some of the variability introduced by extensibility, but they cannot eliminate core trade-offs between flexibility and predictability. Their impact depends on careful configuration, realistic assumptions about user behavior, and fit with the existing architecture.</p>
+<p>As browsers continue to evolve, CMS platforms are likely to adopt these APIs gradually, using them to smooth navigation, improve responsiveness, and reduce perceived latency—without rebuilding their core designs. In that sense, emerging Web APIs act less as disruptive forces and more as multipliers for existing performance strategies.</p>
+<h2 id="artificial-intelligence-in-cms"><a href="#artificial-intelligence-in-cms" class="anchor-link">Artificial Intelligence in CMS</a></h2>
+<p>AI capabilities are becoming more common across CMS platforms, but they currently affect content workflows more than core delivery performance. In most cases, AI is used to support how content is created, organized, and enriched, rather than how it is rendered or delivered to users.</p>
+<p>Across ecosystems, AI adoption is uneven and mostly optional. AI typically appears as an assistive layer—through plugins, extensions, or external services—rather than as a fundamental change to CMS cores. Common uses include drafting and editing content, summarization, translation, image generation, tagging, and SEO metadata suggestions.</p>
+<p>Most AI workflows happen during authoring or on asynchronous backends, so they do not significantly affect page weight, resource composition, or Core Web Vitals. Where AI is used at runtime—for personalization, recommendations, or dynamic content—its impact is more likely to show up indirectly, through additional JavaScript or network requests, depending on implementation.</p>
+<p>One area where AI intersects with other CMS trends is editorial scale. By lowering the cost of uploading produced and updated content, and time to distribute to other channels, AI can lead to more pages, richer media, and more dynamic experiences. These shifts can intensify existing performance challenges around page weight, client-side execution, and caching, echoing patterns seen elsewhere in this chapter.</p>
+<p>For now, AI in CMS platforms is best understood as a workflow accelerator rather than a performance optimizer. Its effects on user experience are mediated through editorial practices, governance, and implementation discipline—not through direct, measurable gains in loading speed or responsiveness. As AI moves closer to runtime systems, its performance implications may grow, but current evidence suggests its main impact remains operational.</p>
+<h2 id="cms-in-the-era-of-llm-search"><a href="#cms-in-the-era-of-llm-search" class="anchor-link">CMS in the era of LLM search</a></h2>
+<p>The rise of large language model (LLM)-based search and answer engines is changing how CMS-generated content is evaluated and used. Unlike traditional search engines that focus on ranking pages, LLM systems extract, summarize, and recombine content. This increases the importance of structure, clarity, freshness, and machine-readable signals.</p>
+<p>From an HTTP Archive standpoint, these changes show up as greater use of structured data, clearer content hierarchies, and more consistent semantic markup. CMS platforms that promote well-structured HTML, logical heading order, and rich metadata are better positioned for their content to be interpreted and reused accurately by LLM systems.</p>
+<p>Indexing behavior also shifts. LLM-based tools tend to favor content that is regularly updated, clearly attributed, and easy to extract. CMSs that support rapid updates and programmatic metadata generation may gain indirect advantages. On the other hand, pages that rely heavily on client-side rendering, large JavaScript bundles, or delayed content hydration may be less visible, as extraction becomes slower or incomplete.</p>
+<p>These dynamics align closely with the performance patterns discussed earlier. CMSs that already struggle with JavaScript bloat, slow LCP, or poor INP may face compounding discoverability issues as LLM systems increasingly reward efficiency and clarity. LLM search does not replace traditional indexing, but it amplifies existing trade-offs between flexibility, performance, and content structure.</p>
+<h2 id="structured-data-evolution"><a href="#structured-data-evolution" class="anchor-link">Structured data evolution</a></h2>
+<p>Structured data has become a critical layer between CMS platforms, search engines, and AI-driven consumers. By 2025, it is no longer just a tool for rich snippets or enhanced search results. It increasingly serves as the machine-readable context that governs how content is interpreted, summarized, and surfaced across automated systems.</p>
+<p>HTTP Archive data shows steady growth in the use of structured data across CMSs, though implementation quality varies widely. Platforms with native schema support tend to generate more consistent and predictable markup. Those that rely heavily on plugins or custom implementations show greater variability, mirroring broader performance patterns where flexibility often comes at the cost of consistency.</p>
+<p>Structured data also interacts with performance and page weight. Poorly implemented schema can inflate HTML size and add DOM complexity without tangible benefits. Well-scoped structured data, by contrast, adds minimal overhead while making content far more interpretable. As CMSs automate more schema generation—often via AI-assisted tools—the risk shifts from not having structured data to having too much of it, where redundant or unnecessary markup adds weight without improving outcomes.</p>
+<p>In a world of evolving search and discovery systems, structured data acts as a stabilizing signal. CMS platforms that validate schema, limit redundancy, and integrate structured data into core templates—rather than scattering it across ad hoc plugins—are more likely to produce durable, machine-friendly content. Increasingly, structured data maturity is becoming a differentiator not only for SEO, but for long-term content resilience as automated consumption grows.</p>
+<h2 id="conclusion"><a href="#conclusion" class="anchor-link">Conclusion</a></h2>
+<p>The CMS landscape in 2025 reflects a mature, increasingly polarized web. HTTP Archive data shows that CMS platforms now power the vast majority of sites, while non-CMS sites keep shrinking as a share of the web. At the same time, adoption patterns, performance outcomes, and resource usage vary widely according to platform choice, hosting model, and implementation discipline.</p>
+<p>Market share data confirms that WordPress is still the dominant CMS, powering more than 60% of CMS-driven sites. Platforms like Shopify continue to grow quickly in specific niches, especially ecommerce, while many other hosted builders show signs of slowing down. Rank-based analysis reveals that these trends are uneven: open-source CMSs remain overrepresented among high-traffic sites, while SaaS builders dominate the long tail of smaller properties. This suggests that CMS selection is increasingly driven by organizational needs and constraints, not just general popularity.</p>
+<p>Performance data reinforces this split. Vertically integrated platforms tend to deliver more consistent Core Web Vitals, especially on mobile. Self-hosted CMSs show much wider variance, influenced by themes, plugins, and third-party integrations. Page weight and resource composition data further show that implementation decisions often matter more than platform defaults. Even within a single CMS, sites range from highly optimized to severely bloated, underscoring that performance is an ongoing practice, not a built-in guarantee.</p>
+<p>Together, the Core Web Vitals and Lighthouse results highlight a recurring theme: CMS choice influences performance mainly through the constraints, defaults, and tooling it provides. Platforms with more controlled environments tend to produce steadier outcomes. More extensible systems, in turn, allow for both excellent and poor implementations.</p>
+<p>These patterns do not point to simple winners and losers. Instead, they reflect trade-offs between flexibility, control, and predictability. As the CMS ecosystem diversifies, outcomes depend less on the logo at the bottom of the site and more on how well each platform&#8217;s tools and constraints fit the site&#8217;s complexity, the team&#8217;s capacity, and long-term maintenance goals.</p>
+<p>The rising importance of modern Web APIs, AI-assisted workflows, and LLM-based content consumption adds further pressure. Structured data, semantic markup, and efficient content delivery are no longer nice-to-have optimizations; they increasingly determine whether content is discoverable, interpretable, and performant across both traditional search and new AI interfaces. CMS platforms that promote consistent structure, limit unnecessary complexity, and embrace modern browser capabilities are better positioned to adapt.</p>
+<p>Overall, the 2025 CMS ecosystem is defined less by raw growth and more by trade-offs. Flexibility often increases performance variance. Ease of use can produce heavier pages. Automation introduces new governance and quality challenges. CMS platforms will continue to evolve, but the dominant factor in real-world outcomes remains implementation. As the web places greater emphasis on speed, stability, and machine-readable content, CMSs will remain core infrastructure—not because they hide complexity, but because they determine how that complexity shows up at scale.</p>
+
+
+        </article>
+        <div class="chapter-links">
+          
+  <h2 id="explore-results">
+    <a href="#explore-results" class="anchor-link">
+      Explore the results
+    </a>
+  </h2>
+  
+  <a class="alt btn" hreflang="en" href="https://docs.google.com/spreadsheets/d/1b3VLQPtJJOB7MmEx_RgmWSCef1BK8mrqpQT44UiMQyE/edit">
+    <svg width="18" height="18" role="img" aria-hidden="true">
+      <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#bar-chart-logo"></use>
+    </svg>
+    View results
+  </a>
+  <a class="alt btn" hreflang="en" href="https://github.com/HTTPArchive/almanac.httparchive.org/tree/main/sql/2025/cms/">
+    <svg width="18" height="18" role="img" aria-hidden="true">
+      <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#sql-logo"></use>
+    </svg>
+    View queries
+  </a>
+  <a class="alt btn" hreflang="en" href="https://github.com/HTTPArchive/almanac.httparchive.org/issues/new?assignees=&labels=bug%2C+writing&title=Issue+with+the+2025+cms+chapter">
+    <svg width="19" height="18" role="img" aria-hidden="true">
+      <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#github-logo"></use>
+    </svg>
+    Suggest edit
+  </a>
+  <a class="alt btn" hreflang="en" href="https://github.com/HTTPArchive/almanac.httparchive.org/issues/923/">
+    <svg width="18" height="18" role="img" aria-hidden="true">
+      <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#globe-logo"></use>
+    </svg>
+    Help translate
+  </a>
+
+        </div>
+        
+        <section class="webmentions js-enable hidden">
+          
+  <div id="reactions" class="no-reactions">
+    <h2>
+      <a href="#reactions" class="anchor-link">Reactions</a>
+    </h2>
+    <div class="reactions" data-source="View source">
+      <div class="reaction-tabs" role="tablist" aria-label="reactions">
+        <button id="likes-tab" role="tab" aria-selected="true" aria-controls="likes-panel" tabindex="0" class="no-reactions">
+          <span id="likes-count">0</span>
+          <span id="likes-label" data-singular="like" data-plural="likes" data-plural-alt="">likes</span>
+        </button>
+        <button id="reposts-tab" role="tab" aria-selected="false" aria-controls="reposts-panel" tabindex="-1" class="no-reactions">
+          <span id="reposts-count">0</span>
+          <span id="reposts-label" data-singular="repost" data-plural="reposts" data-plural-alt="">reposts</span>
+        </button>
+        <button id="replies-tab" role="tab" aria-selected="false" aria-controls="replies-panel" tabindex="-1" class="no-reactions">
+          <span id="replies-count">0</span>
+          <span id="replies-label" data-singular="reply" data-plural="replies" data-plural-alt="">replies</span>
+        </button>
+        <button id="mentions-tab" role="tab" aria-selected="false" aria-controls="mentions-panel" tabindex="-1" class="no-reactions">
+          <span id="mentions-count">0</span>
+          <span id="mentions-label" data-singular="mention" data-plural="mentions" data-plural-alt="">mentions</span>
+        </button>
+      </div>
+      <div id="likes-panel" role="tabpanel" tabindex="0" aria-labelledby="likes-tab">
+      </div>
+      <div id="reposts-panel" role="tabpanel" tabindex="0" aria-labelledby="reposts-tab" hidden>
+      </div>
+      <div id="replies-panel" role="tabpanel" tabindex="0" aria-labelledby="replies-tab" hidden>
+      </div>
+      <div id="mentions-panel" role="tabpanel" tabindex="0" aria-labelledby="mentions-tab" hidden>
+      </div>
+    </div>
+  </div>
+
+        </section>
+        
+        <section class="authors">
+            
+  
+    
+    <h2 id="authors">
+      <a href="#authors" class="anchor-link">
+      Author
+      </a>
+    </h2>
+    <ul>
+    
+      
+      
+      <li>
+          <div aria-hidden="true">
+            <a href="/en/2025/contributors#VaheSODP" tabindex="-1">
+              
+              <img class="avatar" alt="Vahe Arabian avatar" src="https://avatars.githubusercontent.com/u/74548327?v=4&s=200" height="200" width="200" loading="lazy">
+              
+            </a>
+          </div>
+          <div class="info">
+            <a href="/en/2025/contributors#VaheSODP"><span class="name">Vahe Arabian</span></a>
+              
+                <div class="social">
+                  
+                  
+                  
+                  
+                  <a class="github" href="https://github.com/VaheSODP" aria-labelledby="author-VaheSODP-github">
+                    <svg width="22" height="20">
+                      <title id="author-VaheSODP-github">VaheSODP on GitHub</title>
+                      <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#github-logo"></use>
+                    </svg>
+                    VaheSODP
+                  </a>
+                  
+                  
+                  <a class="linkedin" href="https://www.linkedin.com/in/ahearabian/" aria-labelledby="author-VaheSODP-linkedin">
+                    <svg width="22" height="22">
+                      <title id="author-VaheSODP-linkedin">Vahe Arabian on LinkedIn</title>
+                      <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#linkedin-logo"></use>
+                    </svg>
+                    ahearabian
+                  </a>
+                  
+                  
+                  <a class="website" href="https://www.stateofdigitalpublishing.com/" aria-labelledby="author-VaheSODP-website">
+                    <svg width="22" height="22">
+                      <title id="author-VaheSODP-website">Vahe Arabian website</title>
+                      <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#globe-logo"></use>
+                    </svg>
+                    https://www.stateofdigitalpublishing.com/
+                  </a>
+                  
+                </div>
+              
+              
+              
+                <div class="bio">
+                  Vahe Arabian is a digital publishing entrepreneur, growth strategist, and the founder of <a hreflang="en" href="https://www.stateofdigitalpublishing.com/">State of Digital Publishing</a> and <a hreflang="en" href="https://www.sodpmedia.com/">SODP Media</a>. He works with publishers, startups, and media organizations to drive sustainable growth across SEO, audience development, monetization, and product strategy. Vahe is a frequent speaker and writer on digital media trends, AI in publishing, and the evolving future of online journalism.
+                </div>
+              
+          </div>
+      </li>
+    
+  
+</ul>
+
+        </section>
+        <section class="citation-box">
+            
+<h2 id="cite">
+  <a href="#cite" class="anchor-link">Citation</a>
+</h2>
+<details>
+  <summary>BibTeX</summary>
+  <pre id="bibtex-citation">
+@inbook{WebAlmanac.2025.CMS,
+author = "Arabian, Vahe and Knauss, Dan and Güler, Onur and Kochba, Alon and Fatola, Samuel and Bhattacharya, Sreemoyee",
+title = "CMS",
+booktitle = "The 2025 Web Almanac",
+chapter = 12,
+publisher = "HTTP Archive",
+year = "2025",
+language = "English",
+doi = "10.5281/zenodo.18246656",
+url = "https://almanac.httparchive.org/en/2025/cms"
+}</pre>
+</details>
+
+        </section>
+        <div id="cta-container" class="invisible">
+          
+          <a class="alt btn chapter-cta comment-cta webmentions-cta hidden" href="#reactions">
+            <svg width="22" height="22" role="img" aria-hidden="true">
+              <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#comment-logo"></use>
+            </svg>
+            <span class="num-reactions"></span> <span class="reactions-label" data-singular="reaction" data-plural="reactions" data-plural-alt="">Reactions</span>
+          </a>
+          
+          <button class="alt btn chapter-cta share-cta hidden">
+            <svg width="22" height="22" role="img" aria-hidden="true" class="apple-icon hidden">
+              <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#share-apple-logo"></use>
+            </svg>
+            <svg width="22" height="22" role="img" aria-hidden="true" class="android-icon">
+              <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#share-android-logo"></use>
+            </svg>
+            Share
+          </button>
+        </div>
+        <nav aria-label="Previous and next chapter navigation" id="chapter-navigation">
+            
+  
+    
+      <a id="previous-chapter" title="Previous Chapter (press 'p' or ',')" href="/en/2025/pwa">
+          <span class="arrow" aria-hidden="true">&#8963;</span>
+          <span class="chapter-no">
+            Chapter 11
+          </span>
+          <span class="chapter-title">
+              PWA
+          </span>
+      </a>
+      
+  
+
+  
+    
+    <a id="next-chapter" title="Next Chapter (press 'n' or '.')" href="/en/2025/ecommerce">
+            <span class="arrow" aria-hidden="true">&#8963;</span>
+            <span class="chapter-no">
+              Chapter 13
+            </span>
+            <span class="chapter-title">
+              Ecommerce
+            </span>
+    </a>
+    
+  
+
+        </nav>
+    </div>
+  </main>
+
+    </div>
+  
+
+  
+    <footer id="footer" class="alt-bg">
+      <div class="container">
+        <div class="home-logo">
+          <a class="navigation-logo" href="/en/2025/">
+            
+  <span class="wa">Web Almanac</span>
+  <span class="line-group">
+    <span class="pre">By</span>
+    <span class="ha">HTTP Archive</span>
+  </span>
+
+          </a>
+        </div>
+        <hr>
+        <nav id="footer-nav-items" aria-label="Footer navigation" class="nav-items">
+          <ul>
+            
+
+<li><a href="/en/2025/contributors">Contributors</a></li>
+<li><a href="/en/2025/methodology">Methodology</a></li>
+
+
+            <li>
+              
+  
+  <a class="nav-dropdown-btn js-hide" href="/en/search">Search</a>
+  <div class="nav-dropdown footer search-nav js-enable hidden">
+    <button type="button" class="nav-dropdown-btn search-button" aria-expanded="false">
+      Search
+    </button>
+    <ul class="nav-dropdown-list align-right hidden footer-search">
+      <li class="nav-dropdown-list-part">
+        <form action="/en/search">
+          <label for="footer-search-box" class="visually-hidden">Search</label>
+          <input id="footer-search-box" class="search-input" type="search" name="q" placeholder="Search" title="Search" aria-label="Search">
+          <button class="search-button" type="submit">
+            <svg width="13" height="13" role="img" aria-labelledby="footer-search-icon">
+              <title id="footer-search-icon">Search</title>
+              <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#search-logo"></use>
+            </svg>
+          </button>
+        </form>
+      </li>
+    </ul>
+  </div>
+  
+
+            </li>
+            <li>
+              
+
+  
+    
+
+<a class="nav-dropdown-btn js-hide" href="/en/2025/table-of-contents">Table of Contents</a>
+<div class="nav-dropdown footer table-of-contents js-enable hidden">
+  <button type="button" class="nav-dropdown-btn" aria-expanded="false" aria-label="Table of Contents" >
+    Table of Contents
+  </button>
+  <ul class="nav-dropdown-list hidden footer-list">
+
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/">Home</a>
+    </li>
+    
+
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/table-of-contents">Table of Contents</a>
+    </li>
+    
+    
+    <li class="nav-dropdown-list-chapter foreword">
+      <a href="/en/2025/table-of-contents#foreword">Foreword</a>
+    </li>
+    
+
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/table-of-contents#part-1">Part I. Page Content</a>
+    </li>
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/fonts">
+          Chapter 1: Fonts
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/webassembly">
+          Chapter 2: WebAssembly
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/third-parties">
+          Chapter 3: Third Parties
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/generative-ai">
+          Chapter 4: Generative AI
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/table-of-contents#part-2">Part II. User Experience</a>
+    </li>
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/seo">
+          Chapter 5: SEO
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/accessibility">
+          Chapter 6: Accessibility
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/performance">
+          Chapter 7: Performance
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/privacy">
+          Chapter 8: Privacy
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/security">
+          Chapter 9: Security
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/capabilities">
+          Chapter 10: Capabilities
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/pwa">
+          Chapter 11: PWA
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/table-of-contents#part-3">Part III. Content Publishing</a>
+    </li>
+    
+    
+    
+    <li class="nav-dropdown-list-chapter nav-dropdown-list-current">
+      
+          
+          <span>
+            Chapter 12: CMS
+          </span>
+          
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/ecommerce">
+          Chapter 13: Ecommerce
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/table-of-contents#part-4">Part IV. Content Distribution</a>
+    </li>
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/page-weight">
+          Chapter 14: Page Weight
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/cdn">
+          Chapter 15: CDN
+        </a>
+        
+      
+    </li>
+    
+    
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+        
+        <a href="/en/2025/cookies">
+          Chapter 16: Cookies
+        </a>
+        
+      
+    </li>
+    
+    
+    
+
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/table-of-contents#appendices">Appendices</a>
+    </li>
+    
+    <li class="nav-dropdown-list-chapter">
+      
+      <a href="/en/2025/methodology">Methodology</a>
+      
+    </li>
+    
+    
+    <li class="nav-dropdown-list-chapter">
+      
+      <a href="/en/2025/contributors">Contributors</a>
+      
+    </li>
+    
+
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/search">Search</a>
+    </li>
+    
+
+    
+    <li class="nav-dropdown-list-part">
+      <a href="/en/2025/table-of-contents#ebook">Ebook</a>
+    </li>
+    <li class="nav-dropdown-list-chapter ebook">
+      <a href="https://cdn.httparchive.org/v1/static/almanac/ebooks/web_almanac_2025_en.pdf" data-event="ebook-click" data-label="toc-menu">Ebook PDF (12MB)</a>
+    </li>
+    
+  </ul>
+</div>
+
+  
+
+
+            </li>
+            <li>
+              
+    
+    
+      
+          
+  <div class="nav-dropdown footer">
+    <button type="button" class="nav-dropdown-btn js-enable" disabled aria-expanded="false" aria-label="Year Switcher">2025</button>
+    <ul class="nav-dropdown-list hidden footer-list">
+      
+        
+          
+        
+      
+        
+          
+            
+            <li>
+              <a href="/en/2024/cms">2024</a>
+            </li>
+          
+          
+        
+      
+        
+          
+            
+            <li>
+              <a href="/en/2022/cms">2022</a>
+            </li>
+          
+          
+        
+      
+        
+          
+            
+            <li>
+              <a href="/en/2021/cms">2021</a>
+            </li>
+          
+          
+        
+      
+        
+          
+            
+            <li>
+              <a href="/en/2020/cms">2020</a>
+            </li>
+          
+          
+        
+      
+        
+          
+            
+            <li>
+              <a href="/en/2019/cms">2019</a>
+            </li>
+          
+          
+        
+      
+    </ul>
+  </div>
+
+      
+    
+  
+            </li>
+            <li>
+              
+  
+    
+  <div class="nav-dropdown footer">
+    <button type="button" class="nav-dropdown-btn js-enable" disabled aria-expanded="false" aria-label="Language Switcher" >English</button>
+    <ul class="nav-dropdown-list hidden footer-list">
+      
+        
+      
+        
+          <li>
+            <a lang="ja" href="/ja/2025/cms">日本語</a>
+          </li>
+        
+      
+        
+          <li>
+            <a lang="zh-TW" href="/zh-TW/2025/cms">繁體中文</a>
+          </li>
+        
+      
+      
+      <li>
+        <a class="help-translate" href="https://github.com/HTTPArchive/almanac.httparchive.org/wiki/Translators'-Guide"><em>Help translate</em></a>
+      </li>
+      
+    </ul>
+  </div>
+
+  
+
+            </li>
+          </ul>
+        </nav>
+        <nav id="mobile-footer-nav-items" aria-label="Footer navigation" class="nav-items">
+          <ul>
+            
+
+<li><a href="/en/2025/contributors">Contributors</a></li>
+<li><a href="/en/2025/methodology">Methodology</a></li>
+
+
+            <li>
+              
+  
+  <form class="search-nav" action="/en/search">
+    <label for="mobile-footer-search-box" class="visually-hidden">Search</label>
+    <input id="mobile-footer-search-box" class="search-input" type="search" name="q" placeholder="Search" title="Search" aria-label="Search">
+    <button class="search-button" type="submit">
+      <svg width="13" height="13" role="img" aria-labelledby="mobile-footer-search-icon">
+        <title id="mobile-footer-search-icon">Search</title>
+        <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#search-logo"></use>
+      </svg>
+    </button>
+  </form>
+  
+
+            </li>
+            <li>
+              
+
+  
+    
+
+<a class="js-hide" href="/en/2025/table-of-contents">Table of Contents</a>
+<div class="table-of-contents-switcher js-enable hidden">
+  <label for="table-of-contents-switcher-mobile-footer" class="visually-hidden">
+    Table of Contents Switcher
+  </label>
+  <select id="table-of-contents-switcher-mobile-footer" data-label="toc-menu-mobile">
+    
+      <option value="/en/2025/">Home</option>
+    
+    
+      <option value="/en/2025/table-of-contents">Table of Contents</option>
+    
+    
+    <option value="/en/2025/table-of-contents#foreword">Foreword</option>
+    
+    
+    
+      
+      
+        
+          
+            <option value="/en/2025/fonts">
+              Chapter 1: Fonts
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/webassembly">
+              Chapter 2: WebAssembly
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/third-parties">
+              Chapter 3: Third Parties
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/generative-ai">
+              Chapter 4: Generative AI
+            </option>
+          
+        
+      
+    
+    
+    
+      
+      
+        
+          
+            <option value="/en/2025/seo">
+              Chapter 5: SEO
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/accessibility">
+              Chapter 6: Accessibility
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/performance">
+              Chapter 7: Performance
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/privacy">
+              Chapter 8: Privacy
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/security">
+              Chapter 9: Security
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/capabilities">
+              Chapter 10: Capabilities
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/pwa">
+              Chapter 11: PWA
+            </option>
+          
+        
+      
+    
+    
+    
+      
+      
+        
+          
+            <option disabled selected value="/en/2025/cms">
+              Chapter 12: CMS
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/ecommerce">
+              Chapter 13: Ecommerce
+            </option>
+          
+        
+      
+    
+    
+    
+      
+      
+        
+          
+            <option value="/en/2025/page-weight">
+              Chapter 14: Page Weight
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/cdn">
+              Chapter 15: CDN
+            </option>
+          
+        
+      
+    
+      
+      
+        
+          
+            <option value="/en/2025/cookies">
+              Chapter 16: Cookies
+            </option>
+          
+        
+      
+    
+    
+
+    
+    <option value="/en/2025/methodology">
+      Methodology
+    </option>
+    
+    
+    <option value="/en/2025/contributors">
+      Contributors
+    </option>
+    
+
+    
+    <option value="/en/search">
+      Search
+    </option>
+    
+
+    
+    <option value="https://cdn.httparchive.org/v1/static/almanac/ebooks/web_almanac_2025_en.pdf" data-event="ebook-click">
+      Ebook PDF (12MB)
+    </option>
+    
+  </select>
+</div>
+
+  
+
+
+            </li>
+            <li>
+              
+    
+    
+      
+          
+  <div class="year-switcher js-show">
+    <label for="year-switcher-mobile-footer" class="visually-hidden">Year Switcher</label>
+    <select id="year-switcher-mobile-footer">
+      
+        
+          
+            <option selected="selected" value="/en/2025/cms">
+              2025
+            </option>
+          
+        
+      
+        
+          
+            <option value="/en/2024/cms">
+              2024
+            </option>
+          
+        
+      
+        
+          
+            <option value="/en/2022/cms">
+              2022
+            </option>
+          
+        
+      
+        
+          
+            <option value="/en/2021/cms">
+              2021
+            </option>
+          
+        
+      
+        
+          
+            <option value="/en/2020/cms">
+              2020
+            </option>
+          
+        
+      
+        
+          
+            <option value="/en/2019/cms">
+              2019
+            </option>
+          
+        
+      
+    </select>
+  </div>
+
+        
+    
+  
+            </li>
+            <li>
+              
+  
+    
+  <div class="language-switcher js-show">
+    <label for="language-switcher-mobile-footer" class="visually-hidden">Language Switcher</label>
+    <select id="language-switcher-mobile-footer">
+      
+        
+          <option selected="selected" lang="en" value="/en/2025/cms">
+            English
+          </option>
+        
+      
+        
+          <option lang="ja" value="/ja/2025/cms">
+            日本語
+          </option>
+        
+      
+        
+          <option lang="zh-TW" value="/zh-TW/2025/cms">
+            繁體中文
+          </option>
+        
+      
+      <hr>
+      <option value="https://github.com/HTTPArchive/almanac.httparchive.org/wiki/Translators'-Guide">
+        Help translate
+      </option>
+    </select>
+  </div>
+
+  
+
+            </li>
+          </ul>
+        </nav>
+        <div id="footer-mobile-social-media" class="mobile-ha-social-media">
+          <a class="ha-logo" href="https://httparchive.org/" aria-labelledby="httparchive-logo-footer-mobile">
+            <svg width="70" height="35" role="img">
+              <title id="httparchive-logo-footer-mobile">HTTP Archive home</title>
+              <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#ha-logo"></use>
+            </svg>
+          </a>
+          <ul class="social-media">
+            <li>
+              <a href="https://x.com/HTTPArchive" aria-labelledby="twitter-logo-footer-mobile">
+                <svg width="20" height="20" role="img">
+                  <title id="twitter-logo-footer-mobile">Twitter</title>
+                  <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#twitter-logo"></use>
+                </svg>
+              </a>
+            </li>
+            <li>
+              <a href="https://bsky.app/profile/httparchive.org" aria-labelledby="bluesky-logo-footer-mobile">
+                <svg width="20" height="20" role="img">
+                  <title id="bluesky-logo-footer-mobile">Bluesky</title>
+                  <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#bluesky-logo"></use>
+                </svg>
+              </a>
+            </li>
+            <li>
+              <a href="https://github.com/HTTPArchive/almanac.httparchive.org" rel="me" aria-labelledby="github-logo-footer-mobile">
+                <svg width="22" height="20" role="img">
+                  <title id="github-logo-footer-mobile">GitHub</title>
+                  <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#github-logo"></use>
+                </svg>
+              </a>
+            </li>
+          </ul>
+        </div>
+        <hr>
+        <p class="copyright">
+          <span>© Web Almanac. Licensed under <a hreflang="en" href="https://github.com/HTTPArchive/almanac.httparchive.org/blob/main/LICENSE">Apache 2.0</a>.</span>
+          <br>
+          <a class="accessibility-statement" href="/en/accessibility-statement">Accessibility Statement</a>
+          <span class="footer-bullet">&bullet;</span>
+          <a class="rss-feed" href="/en/rss.xml">RSS Feed</a>
+        </p>
+        <a class="ha-logo not-mobile" href="https://httparchive.org/" aria-labelledby="ha-logo-footer">
+          <svg width="70" height="35" role="img">
+            <title id="ha-logo-footer">HTTP Archive home</title>
+            <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#ha-logo"></use>
+          </svg>
+        </a>
+        <ul class="social-media not-mobile">
+          <li>
+            <a href="https://x.com/HTTPArchive" aria-labelledby="twitter-logo-footer">
+              <svg width="20" height="20" role="img">
+                <title id="twitter-logo-footer">Twitter</title>
+                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#twitter-logo"></use>
+              </svg>
+            </a>
+          </li>
+          <li>
+            <a href="https://bsky.app/profile/httparchive.org" aria-labelledby="bluesky-logo-footer">
+              <svg width="20" height="20" role="img">
+                <title id="bluesky-logo-footer">Bluesky</title>
+                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#bluesky-logo"></use>
+              </svg>
+            </a>
+          </li>
+          <li>
+            <a href="https://github.com/HTTPArchive/almanac.httparchive.org" rel="me" aria-labelledby="github-logo-footer">
+              <svg width="22" height="20" role="img">
+                <title id="github-logo-footer">GitHub</title>
+                <use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#github-logo"></use>
+              </svg>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </footer>
+  
+  
+
+
+  <script async src="/static/js/almanac.js?v=fa418742db0ee3ef3f6f493962cd0dc7" nonce="WC_UqnvvqUMfcZrOY8JwCUop5y46DXiM"></script>
+  
+<script defer src="/static/js/webmentions.js?v=cf56c5c121abef69c642b7b3b206d138" nonce="WC_UqnvvqUMfcZrOY8JwCUop5y46DXiM"></script>
+
+
+
+    
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PQ5N2MZG5M" nonce="WC_UqnvvqUMfcZrOY8JwCUop5y46DXiM"></script>
+    <link rel="preconnect" href="https://www.google-analytics.com">
+    <script defer src="/static/js/web-vitals.js?v=0ccea1da4d4db62da0187072edfaac7a" nonce="WC_UqnvvqUMfcZrOY8JwCUop5y46DXiM"></script>
+    <script defer src="/static/js/send-web-vitals.js?v=67574c23a511f3149c90c88735c5a6f3" nonce="WC_UqnvvqUMfcZrOY8JwCUop5y46DXiM"></script>
+    
+
+
+<script type="speculationrules" nonce="WC_UqnvvqUMfcZrOY8JwCUop5y46DXiM">
+{
+  "prerender": [
+    {
+      "source": "document",
+      "where": {
+        "and": [
+          {"href_matches": "/*"},
+          {"not": {"href_matches": "/static/*"}}
+        ]
+      },
+      "eagerness": "moderate"
+    }
+  ]
+}
+</script>
+
+    
+  </body>
+</html>

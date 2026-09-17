@@ -1,0 +1,32 @@
+
+/tmp/claude-1000/-home-mm-git-stit-core-spa-frontend-template/898f0441-ccd2-421a-a06f-c178f88e788a/scratchpad/tooling-lab/a11y-exp/PageOne.vue
+   5:1   warning  Expected indentation of 2 spaces but found 0 spaces                                                        vue/html-indent
+   6:1   warning  Expected indentation of 4 spaces but found 2 spaces                                                        vue/html-indent
+   7:1   warning  Expected indentation of 6 spaces but found 4 spaces                                                        vue/html-indent
+   7:5   error    img elements must have an alt prop, either with meaningful text, or an empty string for decorative images  vuejs-accessibility/alt-text
+   8:1   warning  Expected indentation of 6 spaces but found 4 spaces                                                        vue/html-indent
+   8:5   error    Anchors must have content and the content must be accessible by a screen reader                            vuejs-accessibility/anchor-has-content
+   8:17  warning  Require self-closing on HTML elements (<a>)                                                                vue/html-self-closing
+   9:1   warning  Expected indentation of 6 spaces but found 4 spaces                                                        vue/html-indent
+   9:25  warning  Expected 1 line break after opening tag (`<div>`), but no line breaks found                                vue/singleline-html-element-content-newline
+   9:31  warning  Expected 1 line break before closing tag (`</div>`), but no line breaks found                              vue/singleline-html-element-content-newline
+  10:1   warning  Expected indentation of 6 spaces but found 4 spaces                                                        vue/html-indent
+  10:13  warning  Require self-closing on HTML elements (<button>)                                                           vue/html-self-closing
+  11:1   warning  Expected indentation of 6 spaces but found 4 spaces                                                        vue/html-indent
+  11:5   error    Avoid positive integer values for tabindex                                                                 vuejs-accessibility/tabindex-no-positive
+  12:1   warning  Expected indentation of 6 spaces but found 4 spaces                                                        vue/html-indent
+  12:5   error    Each form element must have a programmatically associated label element                                    vuejs-accessibility/form-control-has-label
+  13:1   warning  Expected indentation of 6 spaces but found 4 spaces                                                        vue/html-indent
+  13:5   error    Do not use <marquee> elements as they can create visual accessibility issues and are deprecated            vuejs-accessibility/no-distracting-elements
+  14:1   warning  Expected indentation of 6 spaces but found 4 spaces                                                        vue/html-indent
+  14:5   error    <iframe> elements must have a unique title property                                                        vuejs-accessibility/iframe-has-title
+  14:22  warning  Require self-closing on HTML elements (<iframe>)                                                           vue/html-self-closing
+  15:1   warning  Expected indentation of 4 spaces but found 2 spaces                                                        vue/html-indent
+  16:1   warning  Expected indentation of 2 spaces but found 0 spaces                                                        vue/html-indent
+
+/tmp/claude-1000/-home-mm-git-stit-core-spa-frontend-template/898f0441-ccd2-421a-a06f-c178f88e788a/scratchpad/tooling-lab/a11y-exp/p.svelte
+  5:3  error  Special body element is deprecated in v5, use svelte:body instead  svelte/no-raw-special-elements
+
+✖ 24 problems (7 errors, 17 warnings)
+  1 error and 17 warnings potentially fixable with the `--fix` option.
+

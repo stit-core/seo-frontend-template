@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    
+  
+  
+  
+    <title>HTTP Archive: Tech Report</title>
+    
+  <!-- Let's load our fonts nice and earlier to try to reduce the annoying swap as much as possible -->
+  <link rel="preload" href="/static/fonts/opensans-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/opensans-latin-700.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/css/bootstrap.min.css?v=ec3bb52a00e176a7181d454dffaea219">
+  <link rel="stylesheet" href="/static/css/styles.css?v=8f7b318621730dd02645db8f79a27640">
+  <script nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI">LUX = window.LUX || {}; LUX.samplerate = 100;</script>
+  <script async defer src="https://cdn.speedcurve.com/js/lux.js?id=104609804" nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI"></script>
+
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/static/css/techreport/general.css?v=fa9ac35ce7d238abc5cfdca8404defa4" />
+  <link rel="stylesheet" href="/static/css/techreport/techreport.css?v=203ec5059e1b972a22ff05b87780872f" />
+
+  <link rel="stylesheet" href="/static/css/techreport/landing.css?v=b08e41ab82aee1f65dab08b4c50f1756" />
+
+
+    
+<meta name="description" content="List of reports the HTTP Archive Tracks creates to track various aspects of the the web: State of the Web, State of JavaScript, State of Images, Loading Speed, Progressive Web Apps, Accessibility, SEO, Page Weight, Chrome User Experience Report, and Capabilities.">
+<meta property="og:title" content="HTTP Archive: Tech Report">
+<meta property="og:url" content="https://httparchive.org/reports/techreport/landing">
+<meta property="og:image" content="https://httparchive.org/static/img/ha.png">
+<meta property="og:image:height" content="160">
+<meta property="og:image:width" content="320">
+<meta property="og:type" content="article">
+<meta property="og:description" content="List of reports the HTTP Archive Tracks creates to track various aspects of the the web: State of the Web, State of JavaScript, State of Images, Loading Speed, Progressive Web Apps, Accessibility, SEO, Page Weight, Chrome User Experience Report, and Capabilities.">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@HTTPArchive">
+<meta name="twitter:title" content="HTTP Archive: Tech Report">
+<meta name="twitter:image" content="https://httparchive.org/static/img/ha.png">
+<meta name="twitter:description" content="List of reports the HTTP Archive Tracks creates to track various aspects of the the web: State of the Web, State of JavaScript, State of Images, Loading Speed, Progressive Web Apps, Accessibility, SEO, Page Weight, Chrome User Experience Report, and Capabilities.">
+
+<script type="application/ld+json">
+  {
+    "@context": "http://schema.org",
+    "@type": "Article",
+    "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": "https://httparchive.org/reports/techreport/landing"
+    },
+    "headline": "HTTP Archive: Tech Report",
+    "image": {
+        "@type": "ImageObject",
+        "url": "https://httparchive.org/static/img/ha.png",
+        "height": 160,
+        "width": 320
+    },
+    "publisher": {
+        "@type": "Organization",
+        "name": "HTTP Archive",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "https://httparchive.org/static/img/ha.png",
+            "height": 160,
+            "width": 320
+        },
+        "sameas": [
+          "https://httparchive.org",
+          "https://twitter.com/HTTPArchive",
+          "https://github.com/HTTPArchive"
+          ]
+      },
+      "description": "List of reports the HTTP Archive Tracks creates to track various aspects of the the web: State of the Web, State of JavaScript, State of Images, Loading Speed, Progressive Web Apps, Accessibility, SEO, Page Weight, Chrome User Experience Report, and Capabilities.",
+      "datePublished": "2026-09-15T13:18:33.697653+00:00",
+      "dateModified": "None"
+  }
+  </script>
+  
+
+
+    <link rel="shortcut icon" href="/static/img/favicon.ico">
+    <link rel="apple-touch-icon" href="/static/img/apple-touch-icon.png">
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-D66RRD8GF2" nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI"></script>
+    <script nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI">
+
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-D66RRD8GF2');
+    </script>
+
+  </head>
+  <body>
+    
+  
+
+  
+    
+  <a href="#main" class="skip main-btn">Skip to main content</a>
+  <a href="#results" class="skip main-btn">Skip to results</a>
+  <nav class="report-navigation">
+    <a href="/">
+      <img class="logo" src="/static/img/ha.png" width="320" height="160" alt="HTTP Archive"/>
+    </a>
+    <div class="hidden-xs">
+      
+      
+        
+        
+      
+      <ul id="desktop" class="navigation-items">
+        <li class="all-reports"><a href="/reports/"><span>All reports</span></a></li>
+        <li>
+          
+          
+          <a
+            href="/reports/techreport/landing"
+            aria-current="page"
+          >
+            <span>Home</span>
+          </a>
+        </li>
+        <li>
+          
+          
+          <a
+            href="/reports/techreport/tech?geo=ALL&amp;rank=ALL&tech=ALL"
+            aria-current="false"
+          >
+            <span>Technologies</span>
+          </a>
+        </li>
+        <li>
+          
+          
+          <a
+            href="/reports/techreport/category?geo=ALL&amp;rank=ALL&category=CMS"
+            aria-current="false"
+          >
+            <span>Categories</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div class="visible-xs">
+      <button class="hamburger">
+        <span class="sr-only">Menu</span>
+        <svg aria-hidden="true" version="1.1" viewBox="0 0 32 32" height="32px" width="32px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+          <path d="M4,10h24c1.104,0,2-0.896,2-2s-0.896-2-2-2H4C2.896,6,2,6.896,2,8S2.896,10,4,10z M28,14H4c-1.104,0-2,0.896-2,2  s0.896,2,2,2h24c1.104,0,2-0.896,2-2S29.104,14,28,14z M28,22H4c-1.104,0-2,0.896-2,2s0.896,2,2,2h24c1.104,0,2-0.896,2-2  S29.104,22,28,22z"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+  <nav id="mobile" class="hidden-sm hidden-md hidden-lg" aria-label="Mobile Menu"></nav>
+
+  
+
+  
+
+  <main id="main">
+    
+
+  
+  <div class="intro block-m">
+    <div>
+      <h1>
+        <span class="subtitle">Reports</span>
+        <span class="title">Tech Report</span>
+      </h1>
+      <p>
+        Track and compare web technology performance and adoption. Real-world Core Web Vitals performance data is provided by the Chrome UX Report at the origin level, and technologies are identified by HTTP Archive on the home page and one interior page.
+      </p>
+    </div>
+  </div>
+
+  <div class="report-content landing-content">
+    <div class="choices block-m">
+      <div class="card">
+        
+        
+        <h2><a href="/reports/techreport/tech?tech=ALL">Technology Drilldown</a></h2>
+        <p>Get detailed information about <strong>one</strong> technology. </p>
+      </div>
+      <div class="card">
+        
+        
+        <h2><a href="/reports/techreport/tech?tech=ALL,WordPress,Wix,Next.js">Technology Comparison</a></h2>
+        <p>Get detailed information about <strong>two to ten</strong> technologies. </p>
+      </div>
+      <div class="card">
+        <h2><a href="/reports/techreport/category?category=CMS">Category info</a></h2>
+        <p>Get detailed information about <strong>a category</strong> and its technologies. </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="caveats block-m" id="caveats">
+    <div>
+      <h2>
+        <a href="#caveats" class="anchor">A note of caution</a>
+      </h2>
+      <p>
+        <em>Web performance is based on a large number of factors and correlation does not equal causation. A technology being highly correlated with good (or poor) performance does not necessarily indicate that technology is the cause of that performance. Those technologies may be used on simpler or more complex sites, or in popular third-party components that may be more or less performant. We hope this data serves as an interesting jumping off point for delving into, and discussing, why the stats are the way they are rather than as a definitve grading of the technology.</em>
+      </p>
+    </div>
+  </div>
+
+
+  <div class="feedback" id="section-feedback">
+    <div class="block-m">
+      <h2><a href="#section-feedback" class="anchor">Feedback?</a></h2>
+      <p>
+        Please raise a <a href="https://github.com/HTTPArchive/httparchive.org/issues/new?template=tech-report.md">GitHub issue</a> if you spot any problems, or for any feature requests.
+      </p>
+    </div>
+  </div>
+
+  <div class="accessibility-options" id="section-accessibility-options">
+    <div class="wrapper block-m">
+      <h2><a href="#section-accessibility-options" class="anchor">Accessibility</a></h2>
+      <p>Change settings related to accessibility here</p>
+
+      <div class="setting">
+        <div class="check-wrapper">
+          <label for="indicators-check">Show markers</label>
+          <input type="checkbox" name="indicators-check" id="indicators-check" />
+        </div>
+      </div>
+
+      <div class="setting">
+        <button class="theme-switcher">🌚 Switch to dark mode</button>
+      </div>
+    </div>
+  </div>
+
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="col-lg-5 col-md-6 col-sm-12 col-xs-12">
+        <a href="/">
+          <img class="logo" src="/static/img/ha.png" width="320" height="160" alt="HTTP Archive" loading="lazy" /></a>
+        <a href="https://archive.org/">
+          <img src="/static/img/ia.png" width="110" height="107" alt="Internet Archive" loading="lazy" />
+        </a>
+      </div>
+
+      <div class="col-lg-7 col-md-6 col-sm-12 col-xs-12 clearfix">
+        <nav id="footer-links" aria-label="Footer links">
+          <a href="/reports">Reports</a>
+          <a href="https://discuss.httparchive.org">Discuss</a>
+          <a href="https://almanac.httparchive.org/">Web Almanac</a>
+          <a href="/about">About</a>
+          <a href="/about#mission">Mission</a>
+          <a href="/about#contact">Contact</a>
+          <a href="/faq">FAQ</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
+
+    
+  
+  
+    <script defer src="/static/js/web-vitals.js?v=2b4eece214d909ad20830bb41ef8ff65" nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI"></script>
+    <script defer src="/static/js/send-web-vitals.js?v=ab3c52a208f6ed195272017124837a54" nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI"></script>
+    <script type="speculationrules" nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI">
+      {
+        "prefetch": [{
+          "where": {
+            "href_matches": "/reports/*"
+          },
+          "eagerness": "eager"
+        }],
+        "prerender": [{
+          "where": {
+            "href_matches": "/*"
+          },
+          "eagerness": "moderate"
+        }]
+      }
+    </script>
+    
+  <script src="/static/js/main.js?v=2f99a9c6d75ff31d78aae669fb17dbea" nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI"></script>
+
+  <!-- Libraries -->
+  <script src="/static/js/highcharts.js?v=2bc563cd141851943c15d52a34379894" nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI"></script>
+  <script src="/static/js/exporting.js?v=2d92935c9a67ad644811dd0cb7c59dd8" nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI"></script>
+  <script src="/static/js/export-data.js?v=8bf4bd3a46a407db8981da5ccc6802e3" nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI"></script>
+  <script src="/static/js/accessibility.js?v=78966303745305d33cbf19e9d09b259d" nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI"></script>
+
+  <!-- Import general JS -->
+  <script src="/static/js/techreport/timeseries.js?v=174a513cecbcd2abfdfe1d4fdbd739e1" nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI"></script>
+  <script src="/static/js/techreport/geoBreakdown.js?v=1cd3ff621d8dcf69965f2c9ed07e0319" nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI"></script>
+  <script src="/static/js/techreport/cwvDistribution.js?v=d9721df034b07cd99460790b04aa711c" nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI"></script>
+  <script src="/static/js/techreport/section.js?v=c813fe60fb1bcd338221f72b64739701" nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI"></script>
+  <script src="/static/js/techreport.js?v=96309c8952d2da4eb86191c8e4dbb4c3" nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI"></script>
+
+  <script nonce="uBSONjjB2iaTqejZ0Nle5phueY0dYFRI">
+    const reportPage = {"config": {"default": {"app": ["WordPress", "Squarespace", "Drupal"], "series": {"breakdown": "client", "breakdown_values": [{"color": "#669E8E", "color_dark": "#fff000", "name": "desktop", "suffix": "%"}, {"color": "#BD6EBE", "color_dark": "#ff00f0", "name": "mobile", "suffix": "%"}]}}, "popular_tech": {"caption": "popular technologies table caption todo", "ctaLabel": "Compare technologies", "ctaUrl": "/reports/techreport/comparison?app=WordPress,Squarespace,Drupal", "description": "To write", "filters": {"app": ["WordPress", "Squarespace", "Drupal"]}, "id": "popular_tech", "title": "Popular technologies"}}, "data": {}, "description": "", "filters": {"app": ["WordPress", "Squarespace", "Drupal"], "category": "CMS", "end": "", "geo": "ALL", "last_page": false, "page": 1, "rank": "ALL", "rows": "10", "selected": null, "start": ""}, "id": "landing", "params": {"geo": "ALL", "rank": "ALL"}, "subtitle": "Report", "title": "Technology Report"};
+    const config = {"cwv_subcategories": ["CLS", "LCP", "FCP", "INP", "TTFB"], "cwv_thresholds": {"CLS": [{"label": "Good", "value": 0.1}, {"label": "Needs improvement", "value": 0.25}], "FCP": [{"label": "Good", "value": 1800}, {"label": "Needs improvement", "value": 3000}], "INP": [{"label": "Good", "value": 200}, {"label": "Needs improvement", "value": 500}], "LCP": [{"label": "Good", "value": 2500}, {"label": "Needs improvement", "value": 4000}], "TTFB": [{"label": "Good", "value": 800}, {"label": "Needs improvement", "value": 1800}]}, "default_apps": {"comparison": ["ALL", "WordPress", "Wix", "Next.js"], "drilldown": ["ALL"]}, "default_category": "CMS", "lighthouse_brackets": [{"max": 49, "min": 0, "name": "poor"}, {"max": 89, "min": 50, "name": "improvement"}, {"max": 100, "min": 90, "name": "good"}], "lighthouse_subcategories": ["accessibility", "best_practices", "performance", "seo"]};
+    const labels = {"metrics": {"adoption": {"adoption": {"description": "The amount of origins using this technology over time.", "title": "Adoption"}, "general": {"description": ""}}, "lighthouse": {"accessibility": {"description": "The Lighthouse Accessibility score is a weighted average of all accessibility audits. Weighting is based on axe user impact assessments. Each accessibility audit is pass or fail. Unlike the Performance audits, a page doesn\u0027t get points for partially passing an accessibility audit.", "title": "Accessibility"}, "best_practices": {"description": "This ensures that your page is built using modern web development best practices.", "title": "Best Practices"}, "general": {"description": "Lighthouse has audits for performance, accessibility, SEO, and more. Based on the audits, a score is calculated. Currently, this section visualizes median scores, but in the future you\u0027ll also be able to explore the details of the audits here."}, "performance": {"description": "In general, only metrics contribute to your Lighthouse Performance score, not the results of Opportunities or Diagnostics. ", "title": "Performance"}, "seo": {"description": "These checks ensure that your page is following basic search engine optimization advice. There are many additional factors Lighthouse does not score here that may affect your search ranking, including performance on Core Web Vitals.", "title": "SEO"}}, "pageWeight": {"general": {"description": ""}, "images": {"description": "", "title": "Image Weight"}, "js": {"description": "", "title": "JavaScript Transfer Size"}, "total": {"description": "", "title": "Total Page Weight"}}, "vitals": {"CLS": {"description": "The Cumulative Layout Shift (CLS) score is a unitless value based on a calculation of how much content is shifting and by how far. Sites should strive to have a CLS of 0.1 or less for at least 75% of page visits.", "label": "Good CLS", "title": "Good Cumulative Layout Shift"}, "FCP": {"description": "The percentage of origins with good FCP experiences, less than or equal to 1.8 seconds", "label": "Good FCP", "title": "Good First Contentful Paint", "value": "fcp"}, "INP": {"description": "INP is a metric that assesses a page\u0027s overall responsiveness to user interactions by observing the latency of all click, tap, and keyboard interactions that occur throughout the lifespan of a user\u0027s visit to a page. The final INP value is the longest interaction observed, ignoring outliers. A good experience is less than or equal to 200ms.", "label": "Good INP", "title": "Good Interaction to Next Paint"}, "LCP": {"description": "Largest Contentful Paint (LCP) is an important, stable Core Web Vital metric for measuring perceived load speed because it marks the point in the page load timeline when the page\u0027s main content has likely loaded\u2014a fast LCP helps reassure the user that the page is useful. Good experiences are less than or equal to 2.5 seconds.", "label": "Good LCP", "title": "Good Largest Contentful Paint"}, "TTFB": {"description": "TTFB is a metric that measures the time between the request for a resource and when the first byte of a response begins to arrive. A good TTFB is less than or equal to 800ms.", "label": "Good TTFB", "title": "Good Time To First Byte"}, "general": {"description": "Each of the Core Web Vitals represents a distinct facet of the user experience, is measurable in the field, and reflects the real-world experience of a critical user-centric outcome. A good threshold to measure is the 75th percentile of page loads, segmented across mobile and desktop devices."}, "overall": {"description": "The percentage of origins passing all three Core Web Vitals (LCP, INP, CLS) with a good experience. Note that if an origin is missing INP data, it\u0027s assessed based on the performance of the remaining metrics.", "label": "Good Core Web Vitals", "title": "Good Core Web Vitals"}}}, "values": {"client": "Client", "date": "Date", "median_bytes_image": "Median bytes image", "median_bytes_js": "Median bytes js", "median_bytes_total": "Median bytes total", "median_lighthouse_score_accessibility": "Median accessibility", "median_lighthouse_score_best_practices": "Median best practices", "median_lighthouse_score_performance": "Median performance", "median_lighthouse_score_pwa": "Median PWA", "median_lighthouse_score_seo": "Median SEO", "origins": "Origins", "origins_eligible_for_cls": "Eligible", "origins_eligible_for_cwv": "Eligible", "origins_eligible_for_fcp": "Eligible", "origins_eligible_for_inp": "Eligible", "origins_eligible_for_lcp": "Eligible", "origins_eligible_for_ttfb": "Eligible", "origins_with_good_cls": "Having good CLS", "origins_with_good_cwv": "Having good Core Web Vitals", "origins_with_good_fcp": "Having good FCP", "origins_with_good_inp": "Having good INP", "origins_with_good_lcp": "Having good LCP", "origins_with_good_ttfb": "Having good TTFB", "pct_good_cls": "% Good CLS", "pct_good_cwv": "% Good Core Web Vitals", "pct_good_fcp": "% Good FCP", "pct_good_inp": "% Good INP", "pct_good_lcp": "% Good LCP", "pct_good_ttfb": "% Good TTFB"}};
+
+    const techReport = new TechReport('landing', reportPage, config, labels);
+  </script>
+
+  </body>
+</html>

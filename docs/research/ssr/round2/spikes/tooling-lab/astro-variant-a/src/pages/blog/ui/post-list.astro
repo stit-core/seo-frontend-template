@@ -1,0 +1,4 @@
+---
+const { items = [] } = Astro.props
+---
+<ul>{items.map((i) => <li>{i}</li>)}</ul>

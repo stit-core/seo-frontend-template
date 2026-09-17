@@ -1,0 +1,28 @@
+---
+import DocumentLayout from '@/app/layouts/document.astro'
+import { t } from '@/shared/i18n'
+import { breadcrumbs, JsonLdScript, SeoHead } from '@/shared/seo'
+
+const locale = 'ru' as const
+---
+<DocumentLayout locale={locale}>
+  <Fragment slot="head">
+    <SeoHead
+      title={t(locale, 'about.title')}
+      description={t(locale, 'about.description')}
+      path="/about"
+      pathWithoutLocale="/about"
+      locale={locale}
+    />
+    <JsonLdScript data={breadcrumbs([{ name: t(locale, 'breadcrumbs.home'), path: '/' }, { name: t(locale, 'about.title'), path: '/about' }])} />
+  </Fragment>
+  <h1 class="text-heading-lg font-semibold text-ink">{t(locale, 'about.title')}</h1>
+  <p class="mt-4 text-body-md">
+    Демонстрационный контент-сайт: статика по умолчанию, серверный рендер только там,
+    где он действительно нужен, и ни одного килобайта JavaScript на страницах без интерактива.
+  </p>
+  <p class="mt-4 text-body-md">
+    Разметка страницы целиком приходит в первом HTML-ответе — проверяется e2e-тестом
+    с отключённым JavaScript и запросом от имени Googlebot.
+  </p>
+</DocumentLayout>

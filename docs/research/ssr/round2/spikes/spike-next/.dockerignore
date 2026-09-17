@@ -1,0 +1,14 @@
+node_modules
+.next
+.git
+e2e
+playwright-report
+test-results
+*.log
+server.pid
+server.log
+measure*.sh
+measure-browser.mjs
+build*.log
+install.log
+.home.html

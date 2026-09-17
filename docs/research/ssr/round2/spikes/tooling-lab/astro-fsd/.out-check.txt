@@ -1,0 +1,30 @@
+22:27:01 [content] Syncing content
+22:27:01 [content] Synced content
+22:27:01 [types] Generated 1.09s
+22:27:01 [check] Getting diagnostics for Astro files in /tmp/claude-1000/-home-mm-git-stit-core-spa-frontend-template/898f0441-ccd2-421a-a06f-c178f88e788a/scratchpad/tooling-lab/astro-fsd...
+[96msrc/app/content.config.ts[0m:[93m9[0m:[93m14[0m - [93mwarning[0m[90m ts(6385): [0m'z' is deprecated.
+
+[7m9[0m     pubDate: z.coerce.date(),
+[7m [0m [93m             ~[0m
+[96msrc/app/content.config.ts[0m:[93m8[0m:[93m18[0m - [93mwarning[0m[90m ts(6385): [0m'z' is deprecated.
+
+[7m8[0m     description: z.string(),
+[7m [0m [93m                 ~[0m
+[96msrc/app/content.config.ts[0m:[93m7[0m:[93m12[0m - [93mwarning[0m[90m ts(6385): [0m'z' is deprecated.
+
+[7m7[0m     title: z.string(),
+[7m [0m [93m           ~[0m
+[96msrc/app/content.config.ts[0m:[93m6[0m:[93m11[0m - [93mwarning[0m[90m ts(6385): [0m'z' is deprecated.
+
+[7m6[0m   schema: z.object({
+[7m [0m [93m          ~[0m
+[96msrc/app/content.config.ts[0m:[93m1[0m:[93m28[0m - [93mwarning[0m[90m ts(6385): [0m'z' is deprecated.
+
+[7m1[0m import { defineCollection, z } from 'astro:content'
+[7m [0m [93m                           ~[0m
+
+Result (13 files): 
+- 0 errors
+- 0 warnings
+- 5 hints
+

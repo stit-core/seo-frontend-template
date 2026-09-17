@@ -1,0 +1,31 @@
+---
+export const prerender = false
+
+import DocumentLayout from '@/app/layouts/document.astro'
+import { getRuntimeConfig } from '@/shared/config'
+import { t } from '@/shared/i18n'
+import { SeoHead } from '@/shared/seo'
+
+const locale = 'ru' as const
+const now = new Date()
+const { RELEASE } = getRuntimeConfig()
+
+Astro.response.headers.set('cache-control', 'no-cache')
+---
+<DocumentLayout locale={locale}>
+  <Fragment slot="head">
+    <SeoHead
+      title={t(locale, 'now.title')}
+      description="Страница рендерится на каждый запрос — время сервера в разметке."
+      path="/now"
+      pathWithoutLocale="/now"
+      locale={locale}
+      noindex
+    />
+  </Fragment>
+  <h1 class="text-heading-lg font-semibold text-ink">{t(locale, 'now.title')}</h1>
+  <p class="mt-4 text-body-md">
+    Время сервера: <time datetime={now.toISOString()}>{now.toISOString()}</time>
+  </p>
+  <p class="mt-2 text-body-sm text-muted">release: {RELEASE}</p>
+</DocumentLayout>

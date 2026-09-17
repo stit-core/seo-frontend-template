@@ -1,0 +1,185 @@
+
+┌ src/features/s-astro-fm/ui/v1_cross_slice_index.astro
+✘ Forbidden cross-import from slice "victim".
+│
+└ fsd/forbidden-imports: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/forbidden-imports
+
+┌ src/features/s-astro-fm/ui/v6_upward_index.astro
+✘ Forbidden import from higher layer "widgets".
+│
+└ fsd/forbidden-imports: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/forbidden-imports
+
+┌ src/features/s-svelte-in/ui/v1_cross_slice_index.svelte
+✘ Forbidden cross-import from slice "victim".
+│
+└ fsd/forbidden-imports: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/forbidden-imports
+
+┌ src/features/s-svelte-in/ui/v6_upward_index.svelte
+✘ Forbidden import from higher layer "widgets".
+│
+└ fsd/forbidden-imports: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/forbidden-imports
+
+┌ src/features/s-svelte-mod/ui/v1_cross_slice_index.svelte
+✘ Forbidden cross-import from slice "victim".
+│
+└ fsd/forbidden-imports: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/forbidden-imports
+
+┌ src/features/s-svelte-mod/ui/v6_upward_index.svelte
+✘ Forbidden import from higher layer "widgets".
+│
+└ fsd/forbidden-imports: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/forbidden-imports
+
+┌ src/features/s-ts/ui/v1_cross_slice_index.ts
+✘ Forbidden cross-import from slice "victim".
+│
+└ fsd/forbidden-imports: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/forbidden-imports
+
+┌ src/features/s-ts/ui/v6_upward_index.ts
+✘ Forbidden import from higher layer "widgets".
+│
+└ fsd/forbidden-imports: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/forbidden-imports
+
+┌ src/features/s-tsx/ui/v1_cross_slice_index.tsx
+✘ Forbidden cross-import from slice "victim".
+│
+└ fsd/forbidden-imports: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/forbidden-imports
+
+┌ src/features/s-tsx/ui/v6_upward_index.tsx
+✘ Forbidden import from higher layer "widgets".
+│
+└ fsd/forbidden-imports: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/forbidden-imports
+
+┌ src/features/s-vue-plain/ui/v1_cross_slice_index.vue
+✘ Forbidden cross-import from slice "victim".
+│
+└ fsd/forbidden-imports: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/forbidden-imports
+
+┌ src/features/s-vue-plain/ui/v6_upward_index.vue
+✘ Forbidden import from higher layer "widgets".
+│
+└ fsd/forbidden-imports: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/forbidden-imports
+
+┌ src/features/s-vue-setup/ui/v1_cross_slice_index.vue
+✘ Forbidden cross-import from slice "victim".
+│
+└ fsd/forbidden-imports: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/forbidden-imports
+
+┌ src/features/s-vue-setup/ui/v6_upward_index.vue
+✘ Forbidden import from higher layer "widgets".
+│
+└ fsd/forbidden-imports: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/forbidden-imports
+
+┌ src/features/s-astro-fm/ui/v2_deep_ts.astro
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-astro-fm/ui/v8_deep_tsx.astro
+✘ Forbidden sidestep of public API when importing from "@/entities/post/ui/card.tsx".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-astro-fm/ui/v9_dynamic_deep_ts.astro
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-svelte-in/ui/v2_deep_ts.svelte
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-svelte-in/ui/v8_deep_tsx.svelte
+✘ Forbidden sidestep of public API when importing from "@/entities/post/ui/card.tsx".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-svelte-in/ui/v9_dynamic_deep_ts.svelte
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-svelte-mod/ui/v2_deep_ts.svelte
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-svelte-mod/ui/v8_deep_tsx.svelte
+✘ Forbidden sidestep of public API when importing from "@/entities/post/ui/card.tsx".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-svelte-mod/ui/v9_dynamic_deep_ts.svelte
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-ts/ui/v2_deep_ts.ts
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-ts/ui/v8_deep_tsx.ts
+✘ Forbidden sidestep of public API when importing from "@/entities/post/ui/card.tsx".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-ts/ui/v9_dynamic_deep_ts.ts
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-tsx/ui/v2_deep_ts.tsx
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-tsx/ui/v8_deep_tsx.tsx
+✘ Forbidden sidestep of public API when importing from "@/entities/post/ui/card.tsx".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-tsx/ui/v9_dynamic_deep_ts.tsx
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-vue-plain/ui/v2_deep_ts.vue
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-vue-plain/ui/v8_deep_tsx.vue
+✘ Forbidden sidestep of public API when importing from "@/entities/post/ui/card.tsx".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-vue-plain/ui/v9_dynamic_deep_ts.vue
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-vue-setup/ui/v2_deep_ts.vue
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-vue-setup/ui/v8_deep_tsx.vue
+✘ Forbidden sidestep of public API when importing from "@/entities/post/ui/card.tsx".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/s-vue-setup/ui/v9_dynamic_deep_ts.vue
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/features/no-index
+✘ This slice is missing a public API.
+✔ Auto-fixable
+│
+└ fsd/public-api: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/public-api
+
+─────────────────────────────────────────────────────────
+ Found 36 errors (1 can be fixed automatically with --fix)
+

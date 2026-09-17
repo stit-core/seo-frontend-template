@@ -1,0 +1,10 @@
+---
+import { getCollection } from 'astro:content'
+import { PostCard } from '@/entities/post'
+const posts = await getCollection('post')
+---
+
+<section>
+  <h1>stit demo</h1>
+  {posts.map((p) => <PostCard title={p.data.title} href={`/blog/${p.id}`} />)}
+</section>

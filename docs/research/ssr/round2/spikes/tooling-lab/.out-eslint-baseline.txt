@@ -1,0 +1,40 @@
+
+/tmp/claude-1000/-home-mm-git-stit-core-spa-frontend-template/898f0441-ccd2-421a-a06f-c178f88e788a/scratchpad/tooling-lab/src/entities/post/ui/PostCard.vue
+  2:29  error  There is no policy allowing dependencies from elements of type "entities" and captured values: slice="post" to elements of type "entities" and captured values: slice="author"  boundaries/dependencies
+  3:22  error  There is no policy allowing dependencies from elements of type "entities" and captured values: slice="post" to elements of type "widgets" and captured values: slice="hero"     boundaries/dependencies
+
+/tmp/claude-1000/-home-mm-git-stit-core-spa-frontend-template/898f0441-ccd2-421a-a06f-c178f88e788a/scratchpad/tooling-lab/src/entities/post/ui/post-card.astro
+  2:29  error  There is no policy allowing dependencies from elements of type "entities" and captured values: slice="post" to elements of type "entities" and captured values: slice="author"  boundaries/dependencies
+  3:22  error  There is no policy allowing dependencies from elements of type "entities" and captured values: slice="post" to elements of type "widgets" and captured values: slice="hero"     boundaries/dependencies
+
+/tmp/claude-1000/-home-mm-git-stit-core-spa-frontend-template/898f0441-ccd2-421a-a06f-c178f88e788a/scratchpad/tooling-lab/src/entities/post/ui/post-card.svelte
+  2:31  error  There is no policy allowing dependencies from elements of type "entities" and captured values: slice="post" to elements of type "entities" and captured values: slice="author"  boundaries/dependencies
+  3:24  error  There is no policy allowing dependencies from elements of type "entities" and captured values: slice="post" to elements of type "widgets" and captured values: slice="hero"     boundaries/dependencies
+
+/tmp/claude-1000/-home-mm-git-stit-core-spa-frontend-template/898f0441-ccd2-421a-a06f-c178f88e788a/scratchpad/tooling-lab/src/entities/post/ui/post-meta.astro
+  8:24  error  There is no policy allowing dependencies from elements of type "entities" and captured values: slice="post" to elements of type "widgets" and captured values: slice="hero"           boundaries/dependencies
+  9:37  error  There is no policy allowing dependencies from elements of type "entities" and captured values: slice="post" to elements of type "features" and captured values: slice="contact-form"  boundaries/dependencies
+
+/tmp/claude-1000/-home-mm-git-stit-core-spa-frontend-template/898f0441-ccd2-421a-a06f-c178f88e788a/scratchpad/tooling-lab/src/features/contact-form/ui/ContactForm.vue
+  2:20  error  There is no policy allowing dependencies from elements of type "features" and captured values: slice="contact-form" to elements of type "features" and captured values: slice="search"  boundaries/dependencies
+  3:1   error  '@/entities/post/ui/PostCard.vue' import is restricted from being used by a pattern. Deep-импорт мимо public API запрещён                                                               no-restricted-imports
+
+/tmp/claude-1000/-home-mm-git-stit-core-spa-frontend-template/898f0441-ccd2-421a-a06f-c178f88e788a/scratchpad/tooling-lab/src/features/contact-form/ui/contact-form.astro
+  2:20  error  There is no policy allowing dependencies from elements of type "features" and captured values: slice="contact-form" to elements of type "features" and captured values: slice="search"  boundaries/dependencies
+  3:1   error  '@/entities/post/ui/post-card.astro' import is restricted from being used by a pattern. Deep-импорт мимо public API запрещён                                                            no-restricted-imports
+
+/tmp/claude-1000/-home-mm-git-stit-core-spa-frontend-template/898f0441-ccd2-421a-a06f-c178f88e788a/scratchpad/tooling-lab/src/features/contact-form/ui/contact-form.svelte
+  2:22  error  There is no policy allowing dependencies from elements of type "features" and captured values: slice="contact-form" to elements of type "features" and captured values: slice="search"  boundaries/dependencies
+  3:3   error  '@/entities/post/ui/post-card.svelte' import is restricted from being used by a pattern. Deep-импорт мимо public API запрещён                                                           no-restricted-imports
+
+/tmp/claude-1000/-home-mm-git-stit-core-spa-frontend-template/898f0441-ccd2-421a-a06f-c178f88e788a/scratchpad/tooling-lab/src/features/search/ui/search.svelte
+  3:37  error  There is no policy allowing dependencies from elements of type "features" and captured values: slice="search" to elements of type "features" and captured values: slice="contact-form"  boundaries/dependencies
+
+/tmp/claude-1000/-home-mm-git-stit-core-spa-frontend-template/898f0441-ccd2-421a-a06f-c178f88e788a/scratchpad/tooling-lab/src/pages/control.ts
+  1:1  error  '@/entities/post/model/schema' import is restricted from being used by a pattern. Deep-импорт мимо public API запрещён  no-restricted-imports
+
+/tmp/claude-1000/-home-mm-git-stit-core-spa-frontend-template/898f0441-ccd2-421a-a06f-c178f88e788a/scratchpad/tooling-lab/src/widgets/hero/ui/hero.astro
+  2:1  error  '@/entities/post/ui/post-card.astro' import is restricted from being used by a pattern. Deep-импорт мимо public API запрещён  no-restricted-imports
+
+✖ 17 problems (17 errors, 0 warnings)
+

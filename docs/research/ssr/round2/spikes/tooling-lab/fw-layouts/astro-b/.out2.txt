@@ -1,0 +1,34 @@
+
+┌ src/entities/post/ui/post-card.astro
+✘ Forbidden import from higher layer "widgets".
+│
+└ fsd/forbidden-imports: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/forbidden-imports
+
+┌ src/widgets/hero
+⚠ This slice has only one reference in slice "entities/post". Consider merging them.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/widgets/post-article
+⚠ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/widgets/post-list
+⚠ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/pages/index.astro
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+┌ src/pages/robots.txt.ts
+✘ Forbidden sidestep of public API when importing from "@/entities/post/model/schema".
+│
+└ fsd/no-public-api-sidestep: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-public-api-sidestep
+
+───────────────────────────────────────────────────────────────
+ Found 3 errors and 3 warnings (none can be fixed automatically)
+

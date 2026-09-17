@@ -1,0 +1,22 @@
+---
+import { type Locale, t } from '@/shared/i18n'
+import { localePath } from '@/shared/seo'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+---
+<section class="pb-10">
+  <h1 class="text-heading-lg font-semibold tracking-tight text-ink">{t(locale, 'home.hero')}</h1>
+  <p class="mt-4 text-body-md text-muted">{t(locale, 'home.lead')}</p>
+  <p class="mt-6">
+    <a
+      href={localePath(locale, '/blog')}
+      class="inline-block rounded-control bg-accent px-5 py-2.5 font-medium text-accent-ink no-underline"
+    >
+      {t(locale, 'home.cta')}
+    </a>
+  </p>
+</section>

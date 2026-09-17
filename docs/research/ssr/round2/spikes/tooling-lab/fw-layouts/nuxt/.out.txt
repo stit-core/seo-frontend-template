@@ -1,0 +1,29 @@
+
+┌ src/widgets/hero
+✘ This slice has only one reference in slice "pages". Consider merging them.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/widgets/post-article
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/widgets/post-list
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/pages/index.vue
+✘ Layer "pages" should not have an index file
+│
+└ fsd/no-layer-public-api: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-layer-public-api
+
+┌ src/pages/blog
+✘ This slice has no segments. Consider dividing the code inside into segments.
+│
+└ fsd/no-segmentless-slices: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/no-segmentless-slices
+
+────────────────────────────────────────────────
+ Found 5 errors (none can be fixed automatically)
+

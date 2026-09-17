@@ -1,0 +1,14 @@
+---
+import { Hero } from '@/widgets/hero'
+import { ContactFormAstro } from '@/features/contact-form'
+import type { Post } from '@/entities/post'
+const posts: Post[] = []
+---
+
+<html lang="ru">
+  <body>
+    <Hero />
+    <ContactFormAstro />
+    <p>{posts.length}</p>
+  </body>
+</html>

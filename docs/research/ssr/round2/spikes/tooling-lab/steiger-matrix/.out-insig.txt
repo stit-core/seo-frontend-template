@@ -1,0 +1,85 @@
+
+┌ src/features/no-index
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/features/pub-astro
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/features/pub-svelte
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/features/pub-vue
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/features/s-astro-cli
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/features/s-astro-fm
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/features/s-cts
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/features/s-mts
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/features/s-svelte-in
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/features/s-svelte-mod
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/features/s-ts
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/features/s-tsx
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/features/s-vue-plain
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/features/s-vue-setup
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/features/victim
+✘ This slice has no references. Consider removing it.
+│
+└ fsd/insignificant-slice: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/insignificant-slice
+
+┌ src/features/no-index
+✘ This slice is missing a public API.
+✔ Auto-fixable
+│
+└ fsd/public-api: https://github.com/feature-sliced/steiger/tree/master/packages/steiger-plugin-fsd/src/public-api
+
+─────────────────────────────────────────────────────────
+ Found 16 errors (1 can be fixed automatically with --fix)
+

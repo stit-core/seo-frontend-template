@@ -1,0 +1,48 @@
+---
+import { getRuntimeConfig, SITE_NAME } from '@/shared/config'
+import type { Locale } from '@/shared/i18n'
+import { absoluteUrl, alternates } from './urls'
+
+interface Props {
+  title: string
+  description: string
+  path: string
+  pathWithoutLocale: string
+  locale: Locale
+  ogType?: 'website' | 'article'
+  ogImage?: string | undefined
+  noindex?: boolean
+}
+
+const {
+  title,
+  description,
+  path,
+  pathWithoutLocale,
+  locale,
+  ogType = 'website',
+  ogImage,
+  noindex = false,
+} = Astro.props
+
+const { ROBOTS_POLICY } = getRuntimeConfig()
+const blocked = noindex || ROBOTS_POLICY === 'noindex'
+const canonical = absoluteUrl(path)
+const image = ogImage ? absoluteUrl(ogImage) : absoluteUrl('/og-default.png')
+const fullTitle = `${title} — ${SITE_NAME}`
+---
+<title>{fullTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonical} />
+{blocked && <meta name="robots" content="noindex, nofollow" />}
+{alternates(pathWithoutLocale).map((alt) => (
+  <link rel="alternate" hreflang={alt.hreflang} href={alt.href} />
+))}
+<meta property="og:type" content={ogType} />
+<meta property="og:title" content={fullTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={image} />
+<meta property="og:site_name" content={SITE_NAME} />
+<meta property="og:locale" content={locale === 'ru' ? 'ru_RU' : 'en_US'} />
+<meta name="twitter:card" content="summary_large_image" />

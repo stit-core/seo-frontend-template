@@ -1,0 +1,14 @@
+---
+import DocumentLayout from '@/app/layouts/document.astro'
+import { t } from '@/shared/i18n'
+
+const locale = 'ru' as const
+---
+<DocumentLayout locale={locale}>
+  <Fragment slot="head">
+    <title>404 — stit demo</title>
+    <meta name="robots" content="noindex" />
+  </Fragment>
+  <h1 class="text-heading-lg font-semibold text-ink">{t(locale, 'notFound.title')}</h1>
+  <p class="mt-4 text-body-md text-muted">{t(locale, 'notFound.lead')}</p>
+</DocumentLayout>

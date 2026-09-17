@@ -1,0 +1,47 @@
+{
+  "nav": { "home": "Home", "blog": "Blog", "about": "About", "contact": "Contact", "now": "Now" },
+  "home": {
+    "title": "stit demo — a content site built to be indexed",
+    "description": "A reference content site: SSR, locale prefixes, Markdown collections and zero unnecessary JavaScript.",
+    "heroTitle": "Content first, JavaScript only where needed",
+    "heroLead": "The stit ecosystem demo site: HTML-first, honest response codes and technical SEO out of the box.",
+    "cta": "Read the blog",
+    "latest": "Latest posts"
+  },
+  "blog": {
+    "title": "Blog",
+    "description": "Practical notes on SSR, SEO, infrastructure and frontend performance.",
+    "readMore": "Read",
+    "page": "Page",
+    "prev": "Previous",
+    "next": "Next",
+    "updated": "Updated",
+    "backToBlog": "All posts"
+  },
+  "about": {
+    "title": "About",
+    "description": "Why this demo site exists and what it verifies.",
+    "body": "This site is built as a reference: content in Markdown, pages served as ready HTML, interactivity limited to the contact form."
+  },
+  "contact": {
+    "title": "Contact",
+    "description": "A contact form with server-side handling and honeypot protection.",
+    "name": "Name",
+    "email": "Email",
+    "message": "Message",
+    "submit": "Send",
+    "sending": "Sending…",
+    "thanks": "Thank you! Your message has been received.",
+    "error": "Could not send. Please try again."
+  },
+  "now": {
+    "title": "Now",
+    "description": "A page rendered on every request.",
+    "serverTime": "Server time"
+  },
+  "error": {
+    "notFoundTitle": "404 — page not found",
+    "notFoundText": "Check the address or go back home.",
+    "home": "Go home"
+  }
+}

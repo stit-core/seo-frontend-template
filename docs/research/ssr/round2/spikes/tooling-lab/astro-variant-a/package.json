@@ -1,0 +1,1 @@
+{"name":"astro-fsd-probe","private":true,"type":"module","dependencies":{"@astrojs/check":"^0.9.10","astro":"^7.3.2"},"devDependencies":{"typescript":"^6.0.3"}}

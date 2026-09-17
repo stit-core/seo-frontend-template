@@ -1,0 +1,38 @@
+---
+import type { GetStaticPaths } from 'astro'
+import DocumentLayout from '@/app/layouts/document.astro'
+import { listPosts } from '@/entities/post'
+import { t } from '@/shared/i18n'
+import { paginateOnDemand } from '@/shared/lib'
+import { SeoHead } from '@/shared/seo'
+import { PostList } from '@/widgets/post-list'
+
+export const getStaticPaths = (async () => {
+  const posts = await listPosts()
+  const last = Math.max(1, Math.ceil(posts.length / 5))
+  return Array.from({ length: last - 1 }, (_, i) => ({ params: { page: String(i + 2) } }))
+}) satisfies GetStaticPaths
+
+const locale = 'en' as const
+const page = paginateOnDemand(await listPosts(), Astro.params.page, '/en/blog', 5)
+if (String(page.currentPage) !== Astro.params.page) return new Response(null, { status: 404 })
+const path = `/en/blog/page/${page.currentPage}`
+const title = `${t(locale, 'blog.title')} — ${t(locale, 'blog.page')} ${page.currentPage}`
+---
+<DocumentLayout locale={locale}>
+  <Fragment slot="head">
+    <SeoHead
+      title={title}
+      description={t(locale, 'blog.description')}
+      path={path}
+      pathWithoutLocale={path.replace('/en', '')}
+      locale={locale}
+    />
+  </Fragment>
+  <h1 class="text-heading-lg font-semibold text-ink">{title}</h1>
+  <div class="mt-8"><PostList posts={page.data} locale={locale} /></div>
+  <nav class="mt-10 flex gap-6 text-body-sm" aria-label="pagination">
+    {page.url.prev && <a href={page.url.prev}>{t(locale, 'blog.prev')}</a>}
+    {page.url.next && <a href={page.url.next}>{t(locale, 'blog.next')}</a>}
+  </nav>
+</DocumentLayout>
