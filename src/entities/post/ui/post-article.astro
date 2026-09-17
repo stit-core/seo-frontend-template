@@ -1,0 +1,37 @@
+---
+import { formatDate, isoDate, t } from '@/shared/i18n'
+import type { Post } from '../api/queries'
+import DraftBadge from './draft-badge.astro'
+import TagList from './tag-list.astro'
+
+interface Props {
+  post: Post
+}
+
+const { post } = Astro.props
+const { locale, data } = post
+---
+
+<article>
+  <header class="border-b border-divider pb-6">
+    <h1 class="text-heading-xl font-semibold tracking-tight">{data.title}</h1>
+    <p class="mt-4 text-body-lg text-muted">{data.description}</p>
+    <p class="mt-4 flex flex-wrap items-center gap-x-2 text-body-sm text-muted">
+      {data.draft && <DraftBadge locale={locale} />}
+      <span>
+        {t(locale, 'post.published')}{' '}
+        <time datetime={isoDate(data.pubDate)}>{formatDate(locale, data.pubDate)}</time>
+      </span>
+      {data.updatedDate && (
+        <span>
+          · {t(locale, 'post.updated')}{' '}
+          <time datetime={isoDate(data.updatedDate)}>{formatDate(locale, data.updatedDate)}</time>
+        </span>
+      )}
+    </p>
+    <TagList locale={locale} tags={data.tags} class="mt-4" />
+  </header>
+  <div class="prose mt-8">
+    <slot />
+  </div>
+</article>

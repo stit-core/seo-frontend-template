@@ -53,7 +53,8 @@ widget — только при ≥ 2 страницах. Server route — `src/p
 
 ## Сегменты слайса
 
-`ui/` `model/` `api/` `lib/` `config/` + `content/` (markdown-коллекция сущности).
+`ui/` `model/` `api/` `lib/` `config/` + `content/` (markdown-коллекция сущности:
+`content/<locale>/<slug>.md`, обложки в `content/covers/`).
 Группировка по типу (`components/`, `hooks/`, `utils/`, `types/`) запрещена — Steiger
 `no-reserved-folder-names`.
 
@@ -61,12 +62,15 @@ widget — только при ≥ 2 страницах. Server route — `src/p
 
 | что | где |
 |---|---|
-| документ-шелл, middleware, токены | `app/layouts/document.astro`, `app/middleware`, `app/styles/index.css` |
+| документ-шелл, middleware (лог, редиректы), токены | `app/layouts/document.astro`, `app/middleware`, `app/styles/index.css` |
 | runtime-конфиг, идентичность сайта | `shared/config` |
-| локали, пути с префиксом | `shared/i18n` |
+| локали, пути с префиксом, даты | `shared/i18n` |
 | тест-хелперы | `shared/lib/testing` |
+| таблица редиректов (данные → Map) | `shared/redirects` |
 | проектные UI-примитивы | `shared/ui/<name>/` |
-| каркас сайта | `widgets/site-header`, `widgets/site-footer` |
+| каркас сайта, список записей | `widgets/site-header`, `widgets/site-footer`, `widgets/post-list` |
+| коллекция контента: `.md`, схема, запросы, карточка/статья | `entities/post/{content,model,api,lib,ui}` |
+| секции страниц блога и их `getStaticPaths` (ru/en делят разметку и пути) | `src/pages/_blog/*.astro`, `src/pages/_blog/static-paths.ts` |
 
 ## Кто что проверяет
 

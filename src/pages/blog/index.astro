@@ -1,0 +1,9 @@
+---
+import { listPosts, paginate } from '@/entities/post'
+import BlogListPage from '../_blog/blog-list-page.astro'
+
+const locale = 'ru' as const
+const page = paginate(await listPosts(locale), 1)
+---
+
+<BlogListPage locale={locale} page={page} />

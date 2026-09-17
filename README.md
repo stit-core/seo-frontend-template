@@ -21,8 +21,9 @@ Astro 7 + Node-адаптер, Feature-Sliced Design под линтером, н
 ## Стек
 
 Astro 7.3 + `@astrojs/node` (`output: 'static'`, standalone) · TypeScript 6
-(`astro/tsconfigs/strictest`) · Tailwind v4 на собственном токен-слое · Zod 4 ·
-i18n `ru` (без префикса) + `en` (`/en`) · Biome 2 + Prettier (только `*.astro`) ·
+(`astro/tsconfigs/strictest`) · Tailwind v4 на собственном токен-слое · контент — Markdown
+в git внутри слайса (Content Layer + Zod 4) · i18n `ru` (без префикса) + `en` (`/en`) ·
+редиректы как данные (`content/redirects.yaml`) · Biome 2 + Prettier (только `*.astro`) ·
 ESLint 10 (`eslint-plugin-astro`, `boundaries`) + Steiger · Vitest 5 (Container API) +
 Playwright · size-limit · pnpm 10 · lefthook + commitlint.
 
@@ -58,9 +59,11 @@ pnpm test             # Vitest: unit + Container API (.astro) + axe
 pnpm test:e2e         # Playwright на prod-сборке (порт 3201)
 pnpm steiger          # структурный линтер FSD
 pnpm check:gate       # негативные фикстуры обязаны валить линтеры
+pnpm check:content    # контент-гейт: схема .md, тело, переводы, ссылки, redirects.yaml
+pnpm check:links      # после build: все внутренние ссылки в dist/client существуют
 pnpm size             # бюджеты CSS / HTML
 pnpm kin:diff         # сверка обвязки с ../spa-frontend-template (advisory)
-pnpm check            # gate: typecheck + lint + format + test + steiger + check:gate + build + size
+pnpm check            # gate: typecheck + lint + format + test + steiger + check:gate + check:content + build + check:links + size
 ```
 
 Перед claim «готово» / push — **`pnpm check`** (его же гоняет `lefthook pre-push`).
@@ -73,16 +76,28 @@ entities → shared`); между слайсами одного слоя — з�
 с заведомыми нарушениями входит в gate, чтобы линтеры не деградировали молча.
 
 ```
-src/app/          layouts/document.astro, middleware, styles/index.css (токены, тема)
-src/pages/        роутинг Astro = слой pages: index.astro, en/, 404.astro, healthz.ts
-src/widgets/      каркас: site-header, site-footer
-src/shared/       config (runtime env, Zod), i18n, lib (+ testing/a11y), ui
-src/{content.config,middleware,env.d}.ts   навязанные Astro entry — тонкие реэкспорты
+content/redirects.yaml   редиректы как данные: 301/308/410 одним хопом (обслуживает middleware)
+src/app/          layouts/document.astro, middleware (лог, X-Request-Id, редиректы), styles/index.css
+src/pages/        роутинг Astro = слой pages: index, blog/{index,[slug],page/[page],tag/[tag]}, en/…,
+                  404 (on-demand), healthz; секции страниц — _blog/
+src/widgets/      site-header, site-footer, post-list
+src/entities/post content/{ru,en}/*.md + covers/, model/{schema,collection}, api/queries, lib, ui
+src/shared/       config (runtime env, Zod), i18n, lib (+ testing), redirects, ui
+src/{content.config,middleware,env.d}.ts   навязанные Astro entry — тонкие входы
 docker/           Dockerfile (3 стадии), entrypoint.sh (штамповка SITE_URL), server.mjs
 e2e/              Playwright на prod-сборке
-scripts/          check-gate.mjs, kin-diff.mjs
+scripts/          check-gate, check-content, check-links, kin-diff
 .claude/          правила (path-scoped) и скиллы
 ```
+
+## Контент
+
+Записи — Markdown в `src/entities/post/content/<locale>/<slug>.md` с frontmatter под
+Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `translationKey`,
+`draft`, обложка с `alt`). Язык задаёт каталог; переводы связаны `translationKey`,
+непереведённое под `/en/` — 404, черновики видны только в `astro dev`. Списки — `/blog`,
+`/blog/page/N`, `/blog/tag/<tag>`; всё prerender, 0 JS. Инварианты и гейты — rule
+`.claude/rules/content-invariants.md`.
 
 ## Один образ на все среды
 

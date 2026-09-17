@@ -1,0 +1,29 @@
+---
+import DocumentLayout from '@/app/layouts/document.astro'
+import { findTranslation, type Post, PostArticle, postRoute, renderPost } from '@/entities/post'
+import { SITE_NAME } from '@/shared/config'
+import { SUPPORTED_LOCALES } from '@/shared/i18n'
+
+interface Props {
+  post: Post
+}
+
+const { post } = Astro.props
+const { Content } = await renderPost(post)
+
+// Ссылка на перевод — только при реальном twin по translationKey; slug перевода может отличаться.
+const other = SUPPORTED_LOCALES.find((candidate) => candidate !== post.locale)
+const twin = other ? await findTranslation(post, other) : undefined
+const alternatePath = twin ? postRoute(twin.slug) : undefined
+---
+
+<DocumentLayout locale={post.locale} alternatePath={alternatePath}>
+  <Fragment slot="head">
+    <title>{post.data.title} — {SITE_NAME}</title>
+    <meta name="description" content={post.data.description} />
+  </Fragment>
+
+  <PostArticle post={post}>
+    <Content />
+  </PostArticle>
+</DocumentLayout>

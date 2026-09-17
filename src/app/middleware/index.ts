@@ -1,5 +1,6 @@
 import { defineMiddleware } from 'astro:middleware'
 import { getRuntimeConfig } from '@/shared/config'
+import { matchRedirect, redirectResponse } from './redirects'
 
 const LEVELS = { debug: 10, info: 20, warn: 30, error: 40 } as const
 type Level = keyof typeof LEVELS
@@ -14,7 +15,8 @@ interface RequestLog {
 
 // Всё ниже действует только на on-demand маршрутах: prerendered-страницы отдаёт
 // статик-хендлер адаптера раньше приложения, и middleware их не видит. Поэтому
-// staging закрывается ещё и на Traefik (basicAuth + X-Robots-Tag).
+// staging закрывается ещё и на Traefik (basicAuth + X-Robots-Tag). Путь без файла
+// (в т.ч. любой из redirects.yaml) до приложения доходит — 404-страница on-demand.
 export const onRequest = defineMiddleware(async (context, next) => {
   if (context.isPrerendered) return next()
 
@@ -32,7 +34,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   let response: Response
   try {
-    response = await next()
+    // Редиректы — данные (content/redirects.yaml): один хоп, до роутинга.
+    const redirect = matchRedirect(context.url.pathname)
+    response = redirect ? redirectResponse(redirect, context.url.search) : await next()
   } catch (err) {
     // Ответ 500 строит Astro сам и сюда не возвращает: фиксируем rid для корреляции с трассой.
     log(500)

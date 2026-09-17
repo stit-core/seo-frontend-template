@@ -1,0 +1,13 @@
+---
+import { type Locale, t } from '@/shared/i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+---
+
+<span class="rounded-control bg-surface-muted px-2 py-0.5 text-body-sm font-medium text-muted">
+  {t(locale, 'post.draft')}
+</span>

@@ -41,3 +41,8 @@
 | Observability | JSON-логгер запросов на on-demand роутах + `/healthz`; Sentry server-side (`@sentry/node`) только при `SENTRY_DSN` через dynamic import; клиентского RUM нет (0 JS) | синтез §8, 12 §8 |
 | Тема | Переключатель темы — единственный остров v1: cookie `scheme` + `data-scheme` на `<html>` в первом байте, без FOUC | синтез §9.2, 13 §2.2 п. 4 |
 | Правила `.claude/rules` | Каждая фаза пишет правила своих инвариантов (фаза 1 — переписанные `fsd-architecture`/`env-local`/`tests-pipeline`/`shared-ui`; 2 — `content-invariants`; 3 — `render-safety`; 4 — `seo-invariants`); фаза 6 их только сверяет | агенты фаз 2–5 не должны работать по правилам SPA-стека |
+| 404 | `pages/404.astro` — on-demand (`prerender = false`): prerendered 404 адаптер отдаёт с диска до middleware, и редиректы из `redirects.yaml` на незнакомые пути не срабатывали бы; 404 получает `X-Request-Id`, JSON-лог и `X-Robots-Tag` | 08 §7.4; Astro `core/routing/handler.js` |
+| Черновики | `draft: true` виден только в `astro dev` (с пометкой); в сборке — ни в списках, ни по URL; HMAC-preview (C-5) в v1 нет — статика без on-demand рендера контента | «без замудрённостей» |
+| Язык записи | По каталогу `content/{ru,en}/`; поля `lang` во frontmatter нет (один источник истины) | 14 §2.9.1 |
+| Редиректы | `content/redirects.yaml` парсится на сборке (`js-yaml` — тот же парсер, которым Astro читает frontmatter; Vite-плагин в `astro.config.ts`), в серверный бандл попадает JSON; скрипты гейта читают YAML тем же пакетом | второй парсер YAML в коде не нужен |
+| Штамповка и контент | Литерал плейсхолдера origin запрещён в текстах контента (`check:content`): штамповка переписала бы его в HTML | 08 §5 |

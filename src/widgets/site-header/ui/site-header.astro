@@ -19,16 +19,21 @@ const other = SUPPORTED_LOCALES.find((candidate) => candidate !== locale)
     <a href={localePath(locale, '/')} class="font-semibold text-app-fg no-underline">
       {SITE_NAME}
     </a>
-    {other !== undefined && alternatePath !== undefined && (
-      <a
-        href={localePath(other, alternatePath)}
-        hreflang={other}
-        lang={other}
-        rel="alternate"
-        class="text-body-sm text-muted"
-      >
-        {t(other, 'lang.name')}
+    <div class="flex items-center gap-6 text-body-sm">
+      <a href={localePath(locale, '/blog')} class="text-app-fg">
+        {t(locale, 'nav.blog')}
       </a>
-    )}
+      {other !== undefined && alternatePath !== undefined && (
+        <a
+          href={localePath(other, alternatePath)}
+          hreflang={other}
+          lang={other}
+          rel="alternate"
+          class="text-muted"
+        >
+          {t(other, 'lang.name')}
+        </a>
+      )}
+    </div>
   </nav>
 </header>

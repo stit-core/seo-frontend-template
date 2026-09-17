@@ -364,7 +364,8 @@ title 25–65 / description 70–170, ровно один h1 не в теле, `
 Вход: фаза 2. Источники: 08 §5 (C), §7.4, §7.13; 14 §2.2, §4.2; синтез §6.2.
 
 Содержание: явные `export const prerender = false` только на служебных роутах (`healthz`, `now`,
-`api/*`, позже `robots/sitemap/rss`); `pages/now.astro` (dynamic: `Cache-Control: private, no-store`,
+`api/*`, позже `robots/sitemap/rss`) и на `404.astro` (иначе незнакомый путь не доходит до
+middleware и редиректы из `redirects.yaml` не работают — DECISIONS «404»); `pages/now.astro` (dynamic: `Cache-Control: private, no-store`,
 `noindex`, время сервера); `Cache-Control` на on-demand HTML (`no-cache`) и `X-Robots-Tag` — в middleware;
 нормализация: что даёт адаптер (301 на слеш) + правило для Traefik `/index.html` — в `deployment.md`;
 e2e: «`__site_origin__` отсутствует во всех страницах» (обход списка маршрутов), «в `<body>` нет

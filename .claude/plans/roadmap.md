@@ -18,7 +18,7 @@
   Docker (три стадии, штамповка `SITE_URL`, `server.mjs`), `/healthz`, kinship + `kin:diff`,
   правила `fsd-architecture`/`env-local`/`tests-pipeline`/`shared-ui`, `CLAUDE.md`, `README.md`,
   `docs/reference/deployment.md`
-- [ ] Фаза 2 — контент-слой: `entities/post` (ru/en, `translationKey`, `draft`), блог (список,
+- [x] Фаза 2 — контент-слой: `entities/post` (ru/en, `translationKey`, `draft`), блог (список,
   пост, пагинация, теги), `content/redirects.yaml`, `check:content`, `check:links`,
   правило `content-invariants`
 - [ ] Фаза 3 — рендер: prerender per route, `now`, `X-Robots-Tag`/`Cache-Control` на on-demand,

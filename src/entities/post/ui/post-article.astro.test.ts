@@ -1,0 +1,64 @@
+import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import { expectNoA11yViolations } from '@/shared/lib/testing'
+import type { Post } from '../api/queries'
+import PostArticle from './post-article.astro'
+
+const post: Post = {
+  id: 'ru/odin-obraz-na-vse-sredy',
+  locale: 'ru',
+  slug: 'odin-obraz-na-vse-sredy',
+  data: {
+    title: 'Один Docker-образ на все среды',
+    description:
+      'Сборка не знает адреса сайта: в HTML печётся плейсхолдер, а entrypoint штампует реальный SITE_URL.',
+    pubDate: new Date('2026-09-08'),
+    updatedDate: new Date('2026-09-10'),
+    tags: ['deploy'],
+    draft: false,
+    translationKey: 'one-image-all-envs',
+  },
+}
+
+describe('PostArticle', () => {
+  it('рендерит один h1, обе даты и слот с телом; пометки черновика нет', async () => {
+    const container = await AstroContainer.create()
+    const html = await container.renderToString(PostArticle, {
+      props: { post },
+      slots: { default: '<h2>Раздел</h2><p>Тело записи.</p>' },
+    })
+    expect(html.match(/<h1[\s>]/g)).toHaveLength(1)
+    expect(html).toContain('Один Docker-образ на все среды')
+    expect(html).toContain('datetime="2026-09-08"')
+    expect(html).toContain('datetime="2026-09-10"')
+    expect(html).toContain('обновлено')
+    expect(html).toContain('<p>Тело записи.</p>')
+    expect(html).toContain('href="/blog/tag/deploy"')
+    expect(html).not.toContain('Черновик')
+  })
+
+  it('без updatedDate второй даты нет', async () => {
+    const container = await AstroContainer.create()
+    const { updatedDate: _omit, ...data } = post.data
+    const html = await container.renderToString(PostArticle, { props: { post: { ...post, data } } })
+    expect(html).not.toContain('обновлено')
+    expect(html.match(/<time[\s>]/g)).toHaveLength(1)
+  })
+
+  it('черновик (astro dev) помечен', async () => {
+    const container = await AstroContainer.create()
+    const html = await container.renderToString(PostArticle, {
+      props: { post: { ...post, locale: 'en', data: { ...post.data, draft: true } } },
+    })
+    expect(html).toContain('Draft')
+  })
+
+  it('не имеет нарушений доступности', async () => {
+    const container = await AstroContainer.create()
+    await expectNoA11yViolations(
+      await container.renderToString(PostArticle, {
+        props: { post },
+        slots: { default: '<p>Тело.</p>' },
+      }),
+    )
+  })
+})

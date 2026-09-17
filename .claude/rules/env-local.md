@@ -10,7 +10,8 @@ globs: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/pl
 Всё, что меняется между средами, — env Node-процесса контейнера; читается через
 `getRuntimeConfig()` (`shared/config`, Zod по `process.env`). `import.meta.env`/`VITE_*`
 для среды не используется: сборка среды не знает. Пустое значение ключа равносильно
-незаданному — берётся дефолт.
+незаданному — берётся дефолт. `import.meta.env.DEV` — признак `astro dev` (черновики
+контента), не конфигурация среды.
 
 На prerender `getRuntimeConfig()` видит значения **сборки**; на on-demand
 (`prerender = false`) и в middleware — живой `process.env`.

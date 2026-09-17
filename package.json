@@ -22,9 +22,11 @@
     "test:e2e": "playwright test -c e2e/playwright.config.ts",
     "steiger": "steiger src",
     "check:gate": "node scripts/check-gate.mjs",
+    "check:content": "node scripts/check-content.mjs",
+    "check:links": "node scripts/check-links.mjs",
     "size": "size-limit",
     "kin:diff": "node scripts/kin-diff.mjs",
-    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm steiger && pnpm check:gate && pnpm build && pnpm size",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm steiger && pnpm check:gate && pnpm check:content && pnpm build && pnpm check:links && pnpm size",
     "prepare": "lefthook install"
   },
   "pnpm": {
@@ -52,6 +54,7 @@
     "@playwright/test": "1.63.0",
     "@size-limit/file": "14.0.0",
     "@tailwindcss/vite": "4.3.3",
+    "@types/js-yaml": "4.0.9",
     "@types/node": "24.13.5",
     "@vitest/coverage-v8": "5.0.1",
     "astro-eslint-parser": "3.1.0",
@@ -63,6 +66,7 @@
     "eslint-plugin-jsx-a11y": "6.10.2",
     "globals": "17.12.0",
     "happy-dom": "20.14.5",
+    "js-yaml": "4.3.2",
     "lefthook": "2.1.14",
     "prettier": "3.9.7",
     "prettier-plugin-astro": "1.0.1",

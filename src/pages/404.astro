@@ -1,4 +1,8 @@
 ---
+// On-demand: путь без статического файла тогда доходит до app/middleware (редиректы из
+// redirects.yaml, X-Request-Id, лог); prerendered 404.html адаптер отдал бы с диска до него.
+export const prerender = false
+
 import DocumentLayout from '@/app/layouts/document.astro'
 import { SITE_NAME } from '@/shared/config'
 import { t } from '@/shared/i18n'

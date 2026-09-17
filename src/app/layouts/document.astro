@@ -7,7 +7,7 @@ import { SiteHeader } from '@/widgets/site-header'
 interface Props {
   locale: Locale
   // Путь перевода без префикса локали; без него ссылки на другую локаль в шапке нет.
-  alternatePath?: string
+  alternatePath?: string | undefined
 }
 
 const { locale, alternatePath } = Astro.props

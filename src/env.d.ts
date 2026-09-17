@@ -6,3 +6,10 @@ declare module '*.astro' {
   const component: AstroComponentFactory
   export default component
 }
+
+// Данные репозитория (content/*.yaml) как модули: разобраны на сборке плагином yaml-modules
+// из astro.config.ts; форму проверяет Zod в месте импорта (shared/redirects).
+declare module '*.yaml' {
+  const data: unknown
+  export default data
+}

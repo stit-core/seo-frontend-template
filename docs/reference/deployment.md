@@ -27,7 +27,10 @@ docker build -f docker/Dockerfile --secret id=npmrc,src=$HOME/.npmrc \
   `ENTRYPOINT entrypoint.sh`, `CMD node ./docker/server.mjs`
 
 В контекст сборки попадают только `package.json`, `pnpm-lock.yaml`, `.npmrc`,
-`astro.config.ts`, `tsconfig.json`, `src/`, `public/`, `docker/` (`.dockerignore`).
+`astro.config.ts`, `tsconfig.json`, `src/` (включая контент `src/entities/*/content/**`),
+`public/`, `content/` (`redirects.yaml` разбирается на сборке, в серверный бандл попадают
+данные), `docker/`
+(`.dockerignore`; его `*.md` исключает только корневые файлы).
 
 ## Запуск
 
@@ -93,13 +96,17 @@ whitelist `PUBLIC_CONFIG_KEYS`. Шаблон локального `.env` — `.e
   приложения: middleware, `X-Robots-Tag`, JSON-лог их не видят. Staging закрывается на
   Traefik (`basicAuth` + `customResponseHeaders: X-Robots-Tag`); `/index.html` и
   `/en/index.html` отвечают 200 — дубли главных, прикрываются `redirectRegex` там же
-- **On-demand** (`prerender = false`: `/healthz`) проходит через `app/middleware`:
-  `X-Request-Id` (принимается или генерируется), JSON-лог одной строкой
-  (`ts, lvl, method, path, status, dur_ms, rid`, без PII; успешный `/healthz` — только на
-  `debug`; ошибка рендера логируется со статусом 500 и тем же `rid`, ответ строит Astro),
-  `X-Robots-Tag` при `ROBOTS_POLICY=noindex`
-- Нормализация: `/en/` → 301 `/en` (адаптер), `/about.html` → 404 при
-  `build.format: 'directory'`
+- **On-demand** (`prerender = false`: `/healthz`, `404.astro` — то есть любой путь без
+  статического файла) проходит через `app/middleware`: редиректы из
+  `content/redirects.yaml` (301/308 с `Location`, query сохраняется; 410 с минимальным
+  телом и `X-Robots-Tag: noindex`; один хоп, до роутинга), `X-Request-Id` (принимается или
+  генерируется), JSON-лог одной строкой (`ts, lvl, method, path, status, dur_ms, rid`, без
+  PII; успешный `/healthz` — только на `debug`; 404/410 — `warn`; ошибка рендера
+  логируется со статусом 500 и тем же `rid`, ответ строит Astro), `X-Robots-Tag` при
+  `ROBOTS_POLICY=noindex`
+- Нормализация: `/en/` → 301 `/en` (адаптер — для каталогов `dist/client`, Astro — для
+  остальных путей до middleware, поэтому `/old/` → `/old` → правило из `redirects.yaml`),
+  `/about.html` → 404 при `build.format: 'directory'`
 - Сжатия в процессе нет — жмёт Traefik (`compress`)
 - Security-заголовки (`Strict-Transport-Security`, `X-Content-Type-Options: nosniff`,
   `X-Frame-Options: DENY`, `Referrer-Policy`) ставит Traefik (`secure-headers@file`);

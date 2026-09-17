@@ -1,0 +1,36 @@
+---
+import DocumentLayout from '@/app/layouts/document.astro'
+import { blogPath, listByTag, type Post, tagRoute } from '@/entities/post'
+import { SITE_NAME } from '@/shared/config'
+import { type Locale, SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import { PostList } from '@/widgets/post-list'
+
+interface Props {
+  locale: Locale
+  tag: string
+  posts: readonly Post[]
+}
+
+const { locale, tag, posts } = Astro.props
+
+// Тег есть в другой локали — только если там есть опубликованные записи с ним.
+const other = SUPPORTED_LOCALES.find((candidate) => candidate !== locale)
+const alternatePath = other && (await listByTag(other, tag)).length > 0 ? tagRoute(tag) : undefined
+
+const heading = `${t(locale, 'blog.tagLead')} #${tag}`
+---
+
+<DocumentLayout locale={locale} alternatePath={alternatePath}>
+  <Fragment slot="head">
+    <title>{t(locale, 'blog.tag')} #{tag} — {t(locale, 'blog.title')} — {SITE_NAME}</title>
+    <meta name="description" content={`${heading}. ${t(locale, 'blog.lead')}`} />
+  </Fragment>
+
+  <p class="text-body-sm text-muted">
+    <a href={blogPath(locale)}>{t(locale, 'blog.title')}</a>
+  </p>
+  <h1 class="mt-2 text-heading-xl font-semibold tracking-tight">{heading}</h1>
+  <div class="mt-10">
+    <PostList locale={locale} posts={posts} />
+  </div>
+</DocumentLayout>

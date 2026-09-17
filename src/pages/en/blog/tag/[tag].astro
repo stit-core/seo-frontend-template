@@ -1,0 +1,19 @@
+---
+import type { GetStaticPaths } from 'astro'
+import type { Post } from '@/entities/post'
+import type { Locale } from '@/shared/i18n'
+import { tagPaths } from '../../../_blog/static-paths'
+import TagPage from '../../../_blog/tag-page.astro'
+
+export const getStaticPaths = (() => tagPaths('en')) satisfies GetStaticPaths
+
+interface Props {
+  locale: Locale
+  tag: string
+  posts: Post[]
+}
+
+const { locale, tag, posts } = Astro.props
+---
+
+<TagPage locale={locale} tag={tag} posts={posts} />

@@ -1,0 +1,59 @@
+---
+import DocumentLayout from '@/app/layouts/document.astro'
+import {
+  blogPath,
+  blogRoute,
+  listPosts,
+  listTags,
+  type Page,
+  type Post,
+  pageCount,
+  TagList,
+} from '@/entities/post'
+import { SITE_NAME } from '@/shared/config'
+import { type Locale, SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import { PostList } from '@/widgets/post-list'
+
+interface Props {
+  locale: Locale
+  page: Page<Post>
+}
+
+const { locale, page } = Astro.props
+const tags = await listTags(locale)
+
+// Ссылка на другую локаль — только если у неё есть такая же страница списка.
+const other = SUPPORTED_LOCALES.find((candidate) => candidate !== locale)
+const alternatePath =
+  other && page.current <= pageCount((await listPosts(other)).length)
+    ? blogRoute(page.current)
+    : undefined
+
+// Страницы 2…N — свой сниппет выдачи: суффикс «— страница N» в h1, title и description.
+const pageSuffix = page.current === 1 ? '' : ` — ${t(locale, 'blog.page')} ${page.current}`
+const heading = `${t(locale, 'blog.title')}${pageSuffix}`
+const description = `${t(locale, 'blog.description')}${pageSuffix}`
+---
+
+<DocumentLayout locale={locale} alternatePath={alternatePath}>
+  <Fragment slot="head">
+    <title>{heading} — {SITE_NAME}</title>
+    <meta name="description" content={description} />
+  </Fragment>
+
+  <h1 class="text-heading-xl font-semibold tracking-tight">{heading}</h1>
+  <p class="mt-4 text-body-lg text-muted">{t(locale, 'blog.lead')}</p>
+  <TagList locale={locale} tags={tags} class="mt-6" />
+  <div class="mt-10">
+    <PostList
+      locale={locale}
+      posts={page.items}
+      pagination={{
+        current: page.current,
+        last: page.last,
+        newerHref: page.current > 1 ? blogPath(locale, page.current - 1) : undefined,
+        olderHref: page.current < page.last ? blogPath(locale, page.current + 1) : undefined,
+      }}
+    />
+  </div>
+</DocumentLayout>

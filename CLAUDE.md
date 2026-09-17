@@ -2,7 +2,8 @@
 
 Шаблон индексируемого сайта: **static-first, SSR по необходимости**. Astro 7.3 +
 `@astrojs/node` (`output: 'static'`, `standalone`) / TypeScript 6 (`astro/tsconfigs/strictest`)
-/ Tailwind v4 на собственном токен-слое / Zod 4 / FSD под линтером (ESLint 10
+/ Tailwind v4 на собственном токен-слое / контент — Markdown в git внутри слайса сущности
+(Content Layer `glob`, Zod 4-схема) / i18n `ru` + `en` / FSD под линтером (ESLint 10
 `boundaries` + `no-restricted-imports`; Steiger — структура) / Biome 2 + Prettier (только
 `*.astro`) / Vitest 5 (Container API) + Playwright на prod-сборке / size-limit /
 pnpm 10 / lefthook. Один Node-образ на все среды: origin штампуется при старте.
@@ -37,9 +38,11 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 | `pnpm test:e2e` | Playwright на prod-сборке через `docker/entrypoint.sh` + `server.mjs` (3201) |
 | `pnpm steiger` | структурный линтер FSD |
 | `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome |
-| `pnpm size` | бюджеты `.size-limit.cjs` (CSS, HTML главной) |
+| `pnpm check:content` | контент-гейт до build: схема каждого `.md`, тело, переводы, ссылки, `content/redirects.yaml` |
+| `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` существуют |
+| `pnpm size` | бюджеты `.size-limit.cjs` (CSS, HTML главной и поста) |
 | `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
-| `pnpm check` | **gate**: typecheck → lint → format:check → test → steiger → check:gate → build → size |
+| `pnpm check` | **gate**: typecheck → lint → format:check → test → steiger → check:gate → check:content → build → check:links → size |
 
 Перед claim «готово» / push — **`pnpm check`** (его же гоняет `lefthook pre-push`).
 
@@ -48,6 +51,7 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 | Тема | Где |
 |---|---|
 | FSD под Astro: слои, навязанные entry, public API, server-only | rule `fsd-architecture` |
+| Контент: frontmatter и бюджеты, один h1, черновики, переводы, `redirects.yaml`, контент-гейты | rule `content-invariants` |
 | env, `SITE_URL`, плейсхолдер и штамповка, whitelist в HTML | rule `env-local` |
 | Тесты: два проекта Vitest, Container API, axe, Playwright | rule `tests-pipeline` |
 | UI на токенах, тема, scoped-CSS, 0 JS | rule `shared-ui` |
@@ -58,8 +62,10 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 ## Инварианты
 
 - `astro.config.ts`: `output: 'static'`, `build.format: 'directory'`, `trailingSlash: 'never'`,
-  `session: false`, `prefetch: false`; без `<ClientRouter/>`, без `@astrojs/react` /
-  `@astrojs/sitemap`; `cache`/`routeRules` не задаются
+  `session: false`, `prefetch: false`, `markdown.syntaxHighlight: false` (Shiki инлайнит
+  сырые цвета мимо токен-слоя), плагин `yaml-modules` (`content/*.yaml` → данные на
+  сборке); без `<ClientRouter/>`, без `@astrojs/react` / `@astrojs/sitemap`;
+  `cache`/`routeRules` не задаются
 - **Границы FSD держит `pnpm lint`** (ESLint с резолвером), Steiger — структура: он fail-open
   на `.astro`-целях. Негативные фикстуры `.gate-fixtures/` — часть gate
 - Public API — `index.ts` с explicit re-exports (`.ts` и `.astro`); в `index.ts` нет
@@ -67,7 +73,15 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 - Навязанные Astro entry (`src/{content.config.ts,middleware.ts,actions/**,env.d.ts}`) —
   тонкие входы (реэкспорт, пустое объявление, декларация типов); коллекции импортируются
   напрямую из модуля слайса
-- Единственный импорт вверх — `pages → app/layouts` (документ-шелл)
+- Единственный импорт вверх — `pages → app/layouts` (документ-шелл); секции страницы —
+  `src/pages/_<name>/` (вне роутинга)
+- Контент — `src/entities/<name>/content/<locale>/<slug>.md`; язык — каталог; `draft: true`
+  виден только в `astro dev`, в сборке — нигде; непереведённое под чужой локалью — 404;
+  бюджеты `title`/`description` — в Zod-схеме; литерал плейсхолдера origin в контенте запрещён
+- Редиректы — данные `content/redirects.yaml` (301/308/410, один хоп; query сохраняется;
+  слеш-вариант `/old/` Astro сначала нормализует 301-м), обслуживает `app/middleware`;
+  `404.astro` — on-demand, чтобы путь без файла доходил до middleware; `meta refresh` и
+  `redirects` в `astro.config.ts` не используются
 - `SITE_URL` — runtime: сборка печёт `https://__site_origin__`, `docker/entrypoint.sh`
   штампует `dist/client` при старте, `server.mjs` с плейсхолдером не стартует; HTML не
   предсжимать; абсолютные URL только в `<head>`/JSON-LD/фидах/sitemap
@@ -92,6 +106,8 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 - **Изменение — через план** (skill `/plan`). Отклонение — осознанное
 - Cross-feature — только через подъём в entities/shared или композицию в widget/page
 - Новое правило границ — фикстура в `.gate-fixtures/` + строка в `expected.json`
+- Новая коллекция контента — `model/{schema,collection}.ts`, импорт в `src/content.config.ts`
+  напрямую из модуля, строка в реестре `scripts/check-content.mjs`
 - Новый env-ключ — `shared/config` + `.env.example` + таблица в `deployment.md`
 
 ### Сначала спросить

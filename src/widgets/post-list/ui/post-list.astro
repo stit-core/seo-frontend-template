@@ -1,0 +1,53 @@
+---
+import { type Post, PostCard } from '@/entities/post'
+import { type Locale, t } from '@/shared/i18n'
+
+interface Props {
+  locale: Locale
+  posts: readonly Post[]
+  pagination?:
+    | {
+        current: number
+        last: number
+        newerHref?: string | undefined
+        olderHref?: string | undefined
+      }
+    | undefined
+}
+
+const { locale, posts, pagination } = Astro.props
+---
+
+{posts.length === 0 ? (
+  <p class="text-body-md text-muted">{t(locale, 'blog.empty')}</p>
+) : (
+  <div class="flex flex-col gap-8">
+    {posts.map((post) => (
+      <PostCard post={post} />
+    ))}
+  </div>
+)}
+{pagination && pagination.last > 1 && (
+  <nav
+    aria-label={t(locale, 'blog.pagination')}
+    class="mt-10 flex items-center justify-between gap-6 text-body-sm"
+  >
+    <span>
+      {pagination.newerHref && (
+        <a href={pagination.newerHref} rel="prev">
+          ← {t(locale, 'blog.newer')}
+        </a>
+      )}
+    </span>
+    <span class="text-muted">
+      {pagination.current} / {pagination.last}
+    </span>
+    <span>
+      {pagination.olderHref && (
+        <a href={pagination.olderHref} rel="next">
+          {t(locale, 'blog.older')} →
+        </a>
+      )}
+    </span>
+  </nav>
+)}
