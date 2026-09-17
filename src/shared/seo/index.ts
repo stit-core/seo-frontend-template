@@ -1,5 +1,5 @@
-export type { Crumb, JsonLd } from './json-ld'
-export { blogPosting, breadcrumbList, organization, webSite } from './json-ld'
+export type { Crumb, JsonLd, LocalBusinessInput } from './json-ld'
+export { blogPosting, breadcrumbList, localBusiness, organization, webSite } from './json-ld'
 export { default as JsonLdScript } from './json-ld.astro'
 export type { OgImage } from './meta'
 export { buildRobotsTxt } from './robots'

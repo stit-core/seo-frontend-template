@@ -1,0 +1,91 @@
+---
+import DocumentLayout from '@/app/layouts/document.astro'
+import { COMPANY, CompanyContacts } from '@/entities/company'
+import { type Locale, localePath, t } from '@/shared/i18n'
+import { breadcrumbList, localBusiness } from '@/shared/seo'
+import { Breadcrumbs } from '@/widgets/breadcrumbs'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+
+const COPY = {
+  ru: {
+    description:
+      'Организация reference-набора: чем занимается, где находится, когда работает и как с ней связаться. Разметка LocalBusiness собирается из этих же фактов.',
+    lead: 'Небольшая студия: делаем сайты, которые видно в поиске. Тексты живут в git, страницы собираются заранее, сервер отдаёт готовые файлы.',
+    work: 'Чем занимаемся',
+    works: [
+      'Сайты-визитки, блоги и справочные разделы: структура, тексты, вёрстка, публикация.',
+      'Техническая сторона поиска: карта сайта, разметка, скорость, честные коды ответов.',
+      'Поддержка: обновления контента, слежение за доступностью, разбор обращений из формы.',
+    ],
+    details: 'Реквизиты и контакты',
+    legalNameLabel: 'Юридическое лицо',
+    note: 'Данные на этой странице — демонстрационные: название, телефон, адрес и часы работы заменяются при развёртывании шаблона в проект.',
+  },
+  en: {
+    description:
+      'The organisation of the reference set: what it does, where it is, when it works and how to reach it. The LocalBusiness markup is built from the same facts.',
+    lead: 'A small studio that builds sites you can find in search. Texts live in git, pages are built ahead of time, the server ships ready files.',
+    work: 'What we do',
+    works: [
+      'Brochure sites, blogs and reference sections: structure, copy, markup, publishing.',
+      'The technical side of search: sitemaps, structured data, speed, honest status codes.',
+      'Support: content updates, uptime watch, handling the requests that arrive by form.',
+    ],
+    details: 'Details and contacts',
+    legalNameLabel: 'Legal entity',
+    note: 'The data on this page is demonstration data: the name, phone, address and office hours are replaced when the template becomes a project.',
+  },
+} satisfies Record<Locale, unknown>
+
+const copy = COPY[locale]
+const title = t(locale, 'nav.about')
+const crumbs = [{ name: t(locale, 'nav.home'), href: localePath(locale, '/') }, { name: title }]
+const address = COMPANY.address[locale]
+---
+
+<DocumentLayout
+  locale={locale}
+  title={title}
+  description={copy.description}
+  alternatePath="/about"
+  jsonLd={[
+    localBusiness({
+      name: COMPANY.legalName,
+      description: copy.lead,
+      email: COMPANY.email,
+      telephone: COMPANY.phone,
+      address: {
+        country: COMPANY.addressCountry,
+        postalCode: address.postalCode,
+        locality: address.locality,
+        street: address.street,
+      },
+      openingHours: COMPANY.openingHours,
+    }),
+    breadcrumbList(crumbs),
+  ]}
+>
+  <Breadcrumbs locale={locale} items={crumbs} class="mb-4" />
+  <h1 class="text-heading-xl font-semibold tracking-tight">{title}</h1>
+  <p class="mt-4 text-body-lg text-muted">{copy.lead}</p>
+
+  <h2 class="section-title mt-12 text-heading-md font-semibold">{copy.work}</h2>
+  <ul class="mt-6 grid gap-4 text-body-md">
+    {copy.works.map((item) => (
+      <li class="border-l-2 border-divider pl-4">{item}</li>
+    ))}
+  </ul>
+
+  <h2 class="section-title mt-14 text-heading-md font-semibold">{copy.details}</h2>
+  <dl class="mt-6 grid gap-x-8 gap-y-3 text-body-md sm:grid-cols-[9rem_minmax(0,1fr)]">
+    <dt class="text-muted">{copy.legalNameLabel}</dt>
+    <dd>{COMPANY.legalName}</dd>
+  </dl>
+  <CompanyContacts locale={locale} class="mt-3" />
+  <p class="note mt-8">{copy.note}</p>
+</DocumentLayout>

@@ -1,0 +1,55 @@
+---
+// Обработчик формы: on-demand, потому что ему нужны тело запроса, его заголовки и живой
+// конфиг доставки. Успех — PRG-303 на страницу подтверждения (F5 не переотправляет заявку),
+// ошибка — та же страница контактов с сохранёнными полями и честным статусом. Маршрут —
+// страница, а не endpoint: без JS ответ на POST обязан быть разметкой, а не JSON.
+export const prerender = false
+
+import { handleContactRequest } from '@/features/contact-form'
+import { localePath } from '@/shared/i18n'
+import ContactsPage from '../_contacts/contacts-page.astro'
+
+// Отказ до разбора заявки — короткий текст, а не страница: возвращать в форму нечего.
+const REFUSALS = {
+  forbidden: { status: 403, text: 'Заявка отклонена: запрос пришёл с чужого адреса.' },
+  'bad-request': { status: 400, text: 'Заявка отклонена: тело запроса — не форма.' },
+  'too-large': { status: 413, text: 'Заявка отклонена: тело запроса слишком велико.' },
+} as const
+
+// Адрес обработчика в адресной строке — не страница: GET возвращает на форму.
+if (Astro.request.method !== 'POST') return Astro.redirect('/contacts', 303)
+
+const outcome = await handleContactRequest(Astro.request, { rid: Astro.locals.rid })
+
+if (
+  outcome.status === 'forbidden' ||
+  outcome.status === 'bad-request' ||
+  outcome.status === 'too-large'
+) {
+  const { status, text } = REFUSALS[outcome.status]
+  return new Response(text, {
+    status,
+    headers: {
+      'content-type': 'text/plain; charset=utf-8',
+      'cache-control': 'private, no-store',
+      'x-robots-tag': 'noindex',
+    },
+  })
+}
+
+if (outcome.status === 'accepted') {
+  return Astro.redirect(localePath(outcome.locale, '/contacts/spasibo'), 303)
+}
+
+// Ответ персональный — в полях то, что прислал человек: ни кешу, ни индексу он не достаётся.
+Astro.response.status = outcome.status === 'failed' ? 500 : 200
+Astro.response.headers.set('cache-control', 'private, no-store')
+---
+
+<ContactsPage
+  locale={outcome.locale}
+  values={outcome.values}
+  errors={outcome.status === 'invalid' ? outcome.errors : undefined}
+  notice={outcome.notice}
+  noindex
+/>

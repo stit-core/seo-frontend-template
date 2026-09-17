@@ -27,19 +27,21 @@
   рецепт D в `docs/reference/rendering.md`, правило `render-safety`
 - [x] Фаза 4 — SEO-слой: `shared/seo/*`, `robots.txt`/`sitemap.xml`/`rss.xml`, JSON-LD + Zod,
   `widgets/breadcrumbs`, `e2e/seo.spec.ts`, `seo:check`, правило `seo-invariants`
-- [ ] Фаза 5 — reference-слайсы и визуальный уровень: about, contacts + spasibo (форма без JS,
+- [x] Фаза 5 — reference-слайсы и визуальный уровень: about, contacts + spasibo (форма без JS,
   `FORM_DELIVERY`), legal/privacy, 500, тема (единственный остров), картинки build-time,
   аналитика после idle, e2e forms/a11y
 - [ ] Фаза 6 — обвязка: `docs/stack` 12 kinds + `_templates`, скиллы (`smartdev`, `init-service`,
   `stack-deep-dive`, `de-template`, `scaffold`, `release`, `seo-audit`, `content`),
   `docs/reference/*`, `getting-started.md`, финальные `CLAUDE.md`/`README.md`
-- [ ] Фаза 7 — инфра и экосистема (cross-repo): `compose/site.yml` + дефекты infra,
-  `ecosystem.md`, sweep «6 → 7», `stit-public`
+- [ ] Фаза 7 — in-repo часть: `docs/reference/ecosystem.md`, sweep «6 → 7», handoff-документ
+  для infra (`compose/site.yml`, staging `basicAuth` + `X-Robots-Tag`, дефекты infra) —
+  cross-repo правки (`project-infra-template-compose`, `corp-infra-template`,
+  `spa-frontend-template`, `stit-public`) владелец ведёт отдельными сессиями
 
 ## Backlog
 
 - Нормализация регистра URL одним 308 (канон I-5) — middleware; сейчас URL чувствительны
   к регистру, canonical = реальный адрес
-- Verification-теги Search Console/Вебмастера из env: штамповка токенов в
-  `docker/entrypoint.sh` (правка `docker/*`, решение владельца) — иначе остаётся подтверждение
-  файлом в `public/` или DNS TXT
+- Cross-repo часть фазы 7 (`project-infra-template-compose`: `compose/site.yml`, дефекты infra;
+  `corp-infra-template/docs/ecosystem.md`; `spa-frontend-template`; `stit-public`) — по
+  handoff-документу фазы 7, отдельными сессиями в тех репо

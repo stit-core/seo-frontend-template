@@ -5,6 +5,8 @@
 / Tailwind v4 на собственном токен-слое / контент — Markdown в git внутри слайса сущности
 (Content Layer `glob`, Zod 4-схема) / i18n `ru` + `en` / SEO-слой `shared/seo` (canonical,
 hreflang, OG, JSON-LD; `robots.txt`/`sitemap.xml`/`rss.xml` on-demand на runtime origin) /
+форма обратной связи без JS (PRG, антиспам-лестница, один канал доставки) / тема — единственный
+остров / картинки `astro:assets` /
 FSD под линтером (ESLint 10
 `boundaries` + `no-restricted-imports`; Steiger — структура) / Biome 2 + Prettier (только
 `*.astro`) / Vitest 5 (Container API) + Playwright на prod-сборке / size-limit /
@@ -59,7 +61,8 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 | env, `SITE_URL`, плейсхолдер и штамповка, whitelist в HTML | rule `env-local` |
 | Режимы рендера, карта маршрутов, кеш-заголовки, рецепт D | `docs/reference/rendering.md` + rule `render-safety` |
 | Тесты: два проекта Vitest, Container API, axe, Playwright | rule `tests-pipeline` |
-| UI на токенах, тема, scoped-CSS, 0 JS | rule `shared-ui` |
+| UI на токенах, тема-остров, картинки и LCP, scoped-CSS, 0 JS | rule `shared-ui` |
+| Форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка | rule `forms-antispam` |
 | Deployment: образ, entrypoint, `server.mjs`, env-контракт | `docs/reference/deployment.md` |
 | SEO: head через `DocumentLayout`, hreflang, OG, JSON-LD, `robots.txt`/`sitemap.xml`/фиды/ключ IndexNow, staging в три контура, гейты `seo:check`/`seo.spec.ts` | rule `seo-invariants` |
 | Родство с SPA-шаблоном | `docs/reference/kinship.md` + `pnpm kin:diff` |
@@ -70,8 +73,10 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 - `astro.config.ts`: `output: 'static'`, `build.format: 'directory'`, `trailingSlash: 'never'`,
   `session: false`, `prefetch: false`, `markdown.syntaxHighlight: false` (Shiki инлайнит
   сырые цвета мимо токен-слоя), плагин `yaml-modules` (`content/*.yaml` → данные на
-  сборке); без `<ClientRouter/>`, без `@astrojs/react` / `@astrojs/sitemap`;
-  `cache`/`routeRules` не задаются
+  сборке), `bodySizeLimit` адаптера (дефолт 1 ГиБ выше потолка памяти процесса);
+  `security.checkOrigin` выключен осознанно — origin проверяет `contact-form` против runtime
+  `SITE_URL` (за прокси URL запроса — `http://<Host>`); без `<ClientRouter/>`, без
+  `@astrojs/react` / `@astrojs/sitemap`; `cache`/`routeRules` не задаются
 - **Границы FSD держит `pnpm lint`** (ESLint с резолвером), Steiger — структура: он fail-open
   на `.astro`-целях. Негативные фикстуры `.gate-fixtures/` — часть gate
 - Public API — `index.ts` с explicit re-exports (`.ts` и `.astro`); в `index.ts` нет
@@ -98,7 +103,18 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
   отдаёт адаптер (`public, max-age=0` + ETag), middleware и `X-Robots-Tag` его не видят.
   Request-only API (`Astro.request`, cookies, `url.search`) не в prerender; `cached` (D) —
   рецепт в `rendering.md`, кода нет
-- 0 JS на контентных страницах; остров — по решению, строка в `.size-limit.cjs`
+- 0 JS на контентных страницах; остров — по решению: файл в `dist` — строка в
+  `.size-limit.cjs`, инлайн — байты в своём unit-тесте. Единственный остров шаблона — тема:
+  инлайн-`<script>` в `<head>` (cookie `scheme` + `data-scheme` на `<html>`; её читает только
+  он сам), в `<body>` скриптов нет вовсе; сторонний счётчик — одна точка `app/analytics`,
+  после `requestIdleCallback` и только при заданном `METRIKA_ID`
+- Форма — нативный POST на `/api/contact` (страница `prerender = false`): origin-check →
+  лимит и форма тела (413/400) → honeypot → валидация (`consent: z.literal(true)`) → шов капчи
+  → доставка с ретраями; успех — 303 на `/contacts/spasibo`, тело заявки не логируется
+- Лог процесса — один `log()` (`shared/observability`): одна JSON-строка, порог `LOG_LEVEL`,
+  без PII; `console.*` мимо него не пишут ни middleware, ни маршруты
+- Публичные per-site идентификаторы (`METRIKA_ID`, `SITE_VERIFICATION`) — поля
+  `shared/config/site.ts`, не env: prerendered печатается на сборке, образ собирается без env
 - SEO: каждая страница — через `DocumentLayout` с уникальными `title`/`description` (служебная —
   `noindex`); абсолютные URL — только `absoluteUrl()` из `shared/seo`; hreflang — только для
   реальных переводов, взаимно, + `x-default`; JSON-LD — в `<head>` через проп `jsonLd` layout'а,
@@ -133,7 +149,8 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
   + явный `Cache-Control` + `noindex` + вне sitemap
 - Новая страница — через `DocumentLayout` (`title`, `description`, `alternatePath` при переводе);
   вложенная — один массив крошек в `<Breadcrumbs>` и в `jsonLd={[breadcrumbList(crumbs)]}`;
-  `seo:check` держит head и уникальность сниппетов
+  `seo:check` держит head и уникальность сниппетов. Индексируемая страница вне коллекций — ещё и
+  строка в `STATIC_ROUTES` (`pages/sitemap.xml.ts`); служебная — проп `noindex` и вне карты
 
 ### Сначала спросить
 - Правка `docker/*`, `.npmrc`, `package.json#dependencies`

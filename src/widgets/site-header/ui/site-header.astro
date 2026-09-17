@@ -1,6 +1,7 @@
 ---
+import { ThemeToggle } from '@/features/theme'
 import { SITE_NAME } from '@/shared/config'
-import { type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import { type DictKey, type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 
 interface Props {
   locale: Locale
@@ -9,31 +10,64 @@ interface Props {
 
 const { locale, alternatePath } = Astro.props
 const other = SUPPORTED_LOCALES.find((candidate) => candidate !== locale)
+
+// Путь страницы: на prerendered это её собственный маршрут, на on-demand — запрошенный.
+const path = Astro.url.pathname
+const items: Array<{ route: string; key: DictKey }> = [
+  { route: '/blog', key: 'nav.blog' },
+  { route: '/about', key: 'nav.about' },
+  { route: '/contacts', key: 'nav.contacts' },
+]
+const isCurrent = (route: string): boolean => {
+  const href = localePath(locale, route)
+  return path === href || path.startsWith(`${href}/`)
+}
 ---
 
 <header class="border-b border-divider">
-  <nav
-    aria-label={t(locale, 'nav.label')}
-    class="mx-auto flex max-w-content items-center justify-between gap-6 px-6 py-4"
-  >
-    <a href={localePath(locale, '/')} class="font-semibold text-app-fg no-underline">
+  <div class="mx-auto flex max-w-page flex-wrap items-center justify-between gap-x-8 gap-y-3 px-6 py-4">
+    <a
+      href={localePath(locale, '/')}
+      class="font-semibold tracking-tight text-app-fg no-underline hover:text-accent"
+    >
       {SITE_NAME}
     </a>
-    <div class="flex items-center gap-6 text-body-sm">
-      <a href={localePath(locale, '/blog')} class="text-app-fg">
-        {t(locale, 'nav.blog')}
-      </a>
-      {other !== undefined && alternatePath !== undefined && (
-        <a
-          href={localePath(other, alternatePath)}
-          hreflang={other}
-          lang={other}
-          rel="alternate"
-          class="text-muted"
-        >
-          {t(other, 'lang.name')}
-        </a>
-      )}
-    </div>
-  </nav>
+    <nav aria-label={t(locale, 'nav.label')} class="w-full sm:w-auto">
+      {/* На узком экране навигация занимает вторую строку целиком и расходится по краям. */}
+      <ul class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-body-sm sm:justify-end sm:gap-x-6">
+        {items.map((item) => (
+          <li>
+            <a
+              href={localePath(locale, item.route)}
+              aria-current={isCurrent(item.route) ? 'page' : undefined}
+              class:list={[
+                'no-underline hover:text-app-fg',
+                isCurrent(item.route)
+                  ? 'text-app-fg underline decoration-accent decoration-2 underline-offset-8'
+                  : 'text-muted',
+              ]}
+            >
+              {t(locale, item.key)}
+            </a>
+          </li>
+        ))}
+        {other !== undefined && alternatePath !== undefined && (
+          <li>
+            <a
+              href={localePath(other, alternatePath)}
+              hreflang={other}
+              lang={other}
+              rel="alternate"
+              class="text-muted no-underline hover:text-app-fg"
+            >
+              {t(other, 'lang.name')}
+            </a>
+          </li>
+        )}
+        <li class="flex items-center">
+          <ThemeToggle locale={locale} />
+        </li>
+      </ul>
+    </nav>
+  </div>
 </header>

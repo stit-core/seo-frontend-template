@@ -2,22 +2,21 @@ import type { APIContext, MiddlewareNext } from 'astro'
 import type * as SharedConfig from '@/shared/config'
 import type { RuntimeConfig } from '@/shared/config'
 
-// Живой process.env подменяется целиком: middleware читает политику и уровень лога на запрос.
+// Живой process.env подменяется целиком; из конфига middleware и наблюдаемость читают
+// ровно эти ключи — остальные в тесте не участвуют.
 const { env } = vi.hoisted(() => {
-  const env: RuntimeConfig = {
+  const env: Pick<RuntimeConfig, 'SITE_URL' | 'ROBOTS_POLICY' | 'LOG_LEVEL' | 'SENTRY_DSN'> = {
     SITE_URL: 'https://demo.example',
     ROBOTS_POLICY: 'index',
-    RELEASE: 'unknown',
     LOG_LEVEL: 'info',
-    INDEXNOW_KEY: '',
-    AI_TRAINING: 'allow',
+    SENTRY_DSN: '',
   }
   return { env }
 })
 
 vi.mock('@/shared/config', async (importOriginal) => ({
   ...(await importOriginal<typeof SharedConfig>()),
-  getRuntimeConfig: () => env,
+  getRuntimeConfig: () => env as RuntimeConfig,
 }))
 
 const { onRequest } = await import('./index')
@@ -47,6 +46,8 @@ async function run(
     isPrerendered: prerendered,
     request: new Request(url, { headers }),
     url,
+    // rid отсюда забирают on-demand маршруты для своих событий.
+    locals: {} as App.Locals,
   } as unknown as APIContext
   return (await onRequest(context, next)) as Response
 }

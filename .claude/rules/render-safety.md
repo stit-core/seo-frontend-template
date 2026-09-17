@@ -40,7 +40,8 @@ globs: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
   явному решению: оно общее для всех запросов процесса, живёт до рестарта и не видно второй
   реплике. Иммутабельные данные сборки (таблица редиректов) — допустимое исключение
 - `getRuntimeConfig()` на on-demand — живой `process.env` контейнера; в лог — одна JSON-строка
-  без PII, query, cookie и тел запросов
+  без PII, query, cookie и тел запросов, и только через `log()` из `shared/observability`
+  (порог `LOG_LEVEL`): `console.*` напрямую мимо порога не пишут ни middleware, ни маршруты
 - 404/410 — честный статус, не soft-404, с `noindex`; `X-Robots-Tag` staging действует только
   на on-demand — на prerendered его ставит Traefik
 
@@ -50,6 +51,8 @@ globs: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
   `.size-limit.cjs` (rule `shared-ui`); его импорты линтит ESLint как обычный модуль
 - Server islands (`server:defer`) — не для индексируемого контента: бот видит заглушку, а не
   данные; в reference-наборе их нет
+- Cookie темы читает только остров: `Astro.cookies` на prerendered — значение сборки, поэтому
+  сервер о выборе темы не знает и знать не может
 - Hydration mismatch не актуален: фреймворка островов нет, разметку рисует только сервер
 
 ## Конфиг
@@ -58,3 +61,8 @@ globs: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
 `session: false`, `prefetch: false`, `experimentalDisableStreaming: true`; `cache`/`routeRules`
 не задаются — рецепт D (`cached`) описан в `docs/reference/rendering.md` и включается решением
 проекта, не шаблона.
+
+Два значения там же живут ради единственного POST-маршрута: `security.checkOrigin: false`
+(за прокси адаптер строит URL запроса как `http://<Host>` — origin сверяет `contact-form` с
+runtime `SITE_URL`) и `bodySizeLimit` адаптера (дефолт 1 ГиБ выше потолка памяти процесса).
+Правило — `.claude/rules/forms-antispam.md`.

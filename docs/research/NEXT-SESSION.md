@@ -1,4 +1,4 @@
-# Промпт для следующей сессии: сборка `ssr-frontend-template`, фазы 5–7
+# Промпт для следующей сессии: сборка `ssr-frontend-template`, фазы 6–7
 
 > Как использовать: открыть Claude Code в `/home/mm/git/stit-core/ssr-frontend-template` и
 > написать одной строкой: «Прочитай `docs/research/NEXT-SESSION.md` целиком и действуй по нему».
@@ -37,7 +37,7 @@
 Соседний `spa-frontend-template`: там незакоммиченная правка `.claude/plans/roadmap.md`
 (указатель на этот репо и follow-up'ы) — владелец решил коммитить её сам.
 
-## 2. Цикл одной фазы (повторять для 5 → 6 → 7)
+## 2. Цикл одной фазы (повторять для 6 → 7)
 
 1. **Промпт агента** = brief §5 «Фаза N» (дословно объём, гейт, «не делать») + принципы и
    решения владельца (дословно) + «Контекст предыдущих фаз» (раздел 6 отчёта `reports/phase-(N-1).md`)
@@ -118,7 +118,9 @@
 - **Фаза 6 (обвязка)**: 12 kinds (DECISIONS #11), `/de-template` обязан падать на плейсхолдерах
   оператора в политике ПДн и чистить reference-набор по prune-листу из отчёта фазы 5;
   гейт фазы — прогон `/init-service` → `/de-template` на тест-форке и `/scaffold page`.
-- **Фаза 7 (infra, cross-repo)**: отдельные сессии по порядку синтеза §9.5; в
+- **Фаза 7**: в этом репо — только in-repo часть (`ecosystem.md`, sweep «6 → 7», handoff-документ
+  для infra); соседние репо для агентов read-only — их правки владелец ведёт отдельными
+  сессиями по порядку синтеза §9.5. Для handoff: в
   `project-infra-template-compose` — `compose/site.yml` без `read_only: true` для `site`
   (штамповка пишет в `/app/dist/client`), `stop_grace_period` ≥ `SHUTDOWN_TIMEOUT_MS` + запас,
   `/index.html` → `redirectRegex`, `secure-headers` владеет security-заголовками, Traefik

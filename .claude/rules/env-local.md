@@ -38,15 +38,23 @@ globs: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/pl
 
 Только `PUBLIC_CONFIG_KEYS` через `getPublicConfig()`; `process.env` целиком не
 сериализуется. Новый ключ в HTML — строка в whitelist + строка в таблице
-`docs/reference/deployment.md` (колонка «в HTML?»). `INDEXNOW_KEY` в HTML не попадает — файл
+`docs/reference/deployment.md` (колонка «в HTML?»).
+
+**Публичный per-site идентификатор — не env, а поле `shared/config/site.ts`** (`METRIKA_ID`,
+`SITE_VERIFICATION`, при появлении — site-key капчи): prerendered-страница печатается на
+сборке, образ собирается без env, и runtime-значение до неё не доходит. Пустое значение
+означает «ничего не печатать»; проектные подставляет `/de-template`. Секреты — наоборот, только
+env: их читает on-demand код (`api/contact`, наблюдаемость), где `process.env` живой. `INDEXNOW_KEY` в HTML не попадает — файл
 `/<ключ>.txt` (on-demand); `AI_TRAINING` и `ROBOTS_POLICY` читает `robots.txt`.
 
 ## Файлы и секреты
 
 - `.env.example` — закоммичен, описывает runtime env с дефолтами; `.env*` — в `.gitignore`;
   локальный `.env` читает только `pnpm start`, в образ он не попадает
-- Секреты — только env контейнера; в логах — без PII и без тел запросов
-  (`app/middleware`); Sentry DSN public by design
+- Секреты — только env контейнера (`SMTP_URL`, `FORM_BACKEND_URL`, `CAPTCHA_SECRET`); в логах —
+  без PII, без тел запросов и без тела заявки. Пишет один `log()` (`shared/observability`) с
+  порогом `LOG_LEVEL` — и middleware, и форма; Sentry DSN public by design, но пустой по
+  умолчанию — пакет тогда не грузится вовсе
 
 ## Что нельзя
 

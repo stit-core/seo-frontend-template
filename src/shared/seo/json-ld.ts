@@ -35,6 +35,28 @@ const WebSiteSchema = z.object({
   inLanguage: z.string().min(2),
 })
 
+const PostalAddressSchema = z.object({
+  '@type': z.literal('PostalAddress'),
+  addressCountry: z.string().length(2),
+  postalCode: z.string().min(1),
+  addressLocality: z.string().min(1),
+  streetAddress: z.string().min(1),
+})
+
+const LocalBusinessSchema = z.object({
+  '@context': z.literal(CONTEXT),
+  '@type': z.literal('LocalBusiness'),
+  name: z.string().min(1),
+  description: z.string().min(1),
+  url: absolute,
+  image: absolute,
+  email: z.email(),
+  telephone: z.string().min(1),
+  address: PostalAddressSchema,
+  openingHours: z.string().min(1),
+  sameAs: z.array(absolute),
+})
+
 const BreadcrumbListSchema = z.object({
   '@context': z.literal(CONTEXT),
   '@type': z.literal('BreadcrumbList'),
@@ -67,6 +89,7 @@ const BlogPostingSchema = z.object({
 export const JsonLdSchema = z.discriminatedUnion('@type', [
   OrganizationSchema,
   WebSiteSchema,
+  LocalBusinessSchema,
   BreadcrumbListSchema,
   BlogPostingSchema,
 ])
@@ -76,6 +99,17 @@ export interface Crumb {
   name: string
   // Корневой путь; у последней крошки (текущая страница) ссылки нет.
   href?: string | undefined
+}
+
+export interface LocalBusinessInput {
+  // Всё перечисленное страница показывает читателю: разметка не добавляет фактов,
+  // которых нет в тексте.
+  name: string
+  description: string
+  email: string
+  telephone: string
+  address: { country: string; postalCode: string; locality: string; street: string }
+  openingHours: string
 }
 
 export interface BlogPostingInput {
@@ -114,6 +148,30 @@ export function webSite(): JsonLd {
     description: SITE_DESCRIPTION,
     url: absoluteUrl('/'),
     inLanguage: DEFAULT_LOCALE,
+  }
+}
+
+// Организация с адресом и часами работы — разметка страницы «о компании»; на остальных
+// страницах её нет, дублировать Organization она не должна.
+export function localBusiness(input: LocalBusinessInput): JsonLd {
+  return {
+    '@context': CONTEXT,
+    '@type': 'LocalBusiness',
+    name: input.name,
+    description: input.description,
+    url: absoluteUrl('/'),
+    image: absoluteUrl(SITE_LOGO_PATH),
+    email: input.email,
+    telephone: input.telephone,
+    address: {
+      '@type': 'PostalAddress',
+      addressCountry: input.address.country,
+      postalCode: input.address.postalCode,
+      addressLocality: input.address.locality,
+      streetAddress: input.address.street,
+    },
+    openingHours: input.openingHours,
+    sameAs: [...SITE_SAME_AS],
   }
 }
 

@@ -24,7 +24,18 @@ const yamlModules = {
 export default defineConfig({
   site: process.env.SITE_URL,
   output: 'static',
-  adapter: node({ mode: 'standalone', experimentalDisableStreaming: true }),
+  // Дефолтный лимит тела у адаптера — 1 ГиБ, а разбор формы буферизует тело в heap процесса
+  // (`--max-old-space-size=384`): предел на порядок ниже потолка памяти. Свой, куда более
+  // тесный предел формы держит `features/contact-form`.
+  adapter: node({
+    mode: 'standalone',
+    experimentalDisableStreaming: true,
+    bodySizeLimit: 1024 * 1024,
+  }),
+  // За TLS-терминирующим прокси адаптер строит URL запроса как `http://<Host>`, и встроенная
+  // проверка отвечала бы 403 на любой POST формы из браузера. Origin заявки сверяет
+  // `features/contact-form` — с runtime `SITE_URL`, до которого прокси не дотягивается.
+  security: { checkOrigin: false },
   trailingSlash: 'never',
   // 'file' + node-адаптер = 404 на /blog и /en (статик-хендлер видит каталог); только 'directory'.
   build: { format: 'directory' },

@@ -1,17 +1,7 @@
 import { defineMiddleware } from 'astro:middleware'
 import { getRuntimeConfig } from '@/shared/config'
+import { captureServerError, type LogLevel, log } from '@/shared/observability'
 import { matchRedirect, redirectResponse } from './redirects'
-
-const LEVELS = { debug: 10, info: 20, warn: 30, error: 40 } as const
-type Level = keyof typeof LEVELS
-
-interface RequestLog {
-  method: string
-  path: string
-  status: number
-  dur_ms: number
-  rid: string
-}
 
 // Всё ниже действует только на on-demand маршрутах: prerendered-страницы отдаёт
 // статик-хендлер адаптера раньше приложения (со своими `Cache-Control: public, max-age=0`
@@ -23,9 +13,11 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   const startedAt = performance.now()
   const rid = context.request.headers.get('x-request-id') ?? crypto.randomUUID()
-  const { ROBOTS_POLICY, LOG_LEVEL } = getRuntimeConfig()
-  const log = (status: number) =>
-    logRequest(LOG_LEVEL, {
+  // Маршрут кладёт этот же rid в свои события (форма), и они сходятся со строкой запроса.
+  context.locals.rid = rid
+  const { ROBOTS_POLICY } = getRuntimeConfig()
+  const logRequest = (status: number) =>
+    log(levelOf(status, context.url.pathname), {
       method: context.request.method,
       path: context.url.pathname,
       status,
@@ -40,7 +32,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     response = redirect ? redirectResponse(redirect, context.url.search) : await next()
   } catch (err) {
     // Ответ 500 строит Astro сам и сюда не возвращает: фиксируем rid для корреляции с трассой.
-    log(500)
+    logRequest(500)
+    await captureServerError(err, { rid, path: context.url.pathname })
     throw err
   }
 
@@ -54,7 +47,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   if (ROBOTS_POLICY === 'noindex') {
     response.headers.set('x-robots-tag', 'noindex, nofollow')
   }
-  log(response.status)
+  logRequest(response.status)
   return response
 })
 
@@ -62,20 +55,10 @@ function isHtml(response: Response): boolean {
   return (response.headers.get('content-type') ?? '').startsWith('text/html')
 }
 
-// Одна JSON-строка на запрос, без PII: без IP (он в access-log Traefik), без cookie,
-// без query-строки. Успешный /healthz (docker HEALTHCHECK каждые 30 с) — только на debug.
-function logRequest(minLevel: Level, entry: RequestLog): void {
-  const lvl: Level =
-    entry.status >= 500
-      ? 'error'
-      : entry.status >= 400
-        ? 'warn'
-        : entry.path === '/healthz'
-          ? 'debug'
-          : 'info'
-  if (LEVELS[lvl] < LEVELS[minLevel]) return
-  const line = JSON.stringify({ ts: new Date().toISOString(), lvl, ...entry })
-  if (lvl === 'error') console.error(line)
-  else if (lvl === 'warn') console.warn(line)
-  else console.info(line)
+// Успешный /healthz (docker HEALTHCHECK каждые 30 с) — только на debug: иначе он один и
+// заполняет лог. Порог уровня и формат строки — `shared/observability`.
+function levelOf(status: number, path: string): LogLevel {
+  if (status >= 500) return 'error'
+  if (status >= 400) return 'warn'
+  return path === '/healthz' ? 'debug' : 'info'
 }

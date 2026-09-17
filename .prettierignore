@@ -6,3 +6,7 @@ node_modules/
 dist/
 .astro/
 .gate-fixtures/
+
+# Тело инлайн-острова темы уезжает в <head> каждой страницы как есть: отступы и переносы
+# форматтера — это байты в каждом документе. Что делает скрипт, описано в его frontmatter.
+src/features/theme/ui/theme-init.astro

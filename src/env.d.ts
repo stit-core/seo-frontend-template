@@ -7,6 +7,14 @@ declare module '*.astro' {
   export default component
 }
 
+// Locals запроса: on-demand маршруты берут отсюда идентификатор запроса для своих
+// событий — тот же, что middleware отдаёт заголовком X-Request-Id.
+declare namespace App {
+  interface Locals {
+    rid: string
+  }
+}
+
 // Данные репозитория (content/*.yaml) как модули: разобраны на сборке плагином yaml-modules
 // из astro.config.ts; форму проверяет Zod в месте импорта (shared/redirects).
 declare module '*.yaml' {

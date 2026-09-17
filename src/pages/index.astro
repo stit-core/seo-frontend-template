@@ -1,8 +1,35 @@
 ---
 import DocumentLayout from '@/app/layouts/document.astro'
+import { blogPath, listPosts } from '@/entities/post'
+import { type Locale, localePath, t } from '@/shared/i18n'
 import { organization, webSite } from '@/shared/seo'
+import { PostList } from '@/widgets/post-list'
 
-const locale = 'ru' as const
+const locale: Locale = 'ru'
+const latest = (await listPosts(locale)).slice(0, 3)
+
+const facts = [
+  {
+    term: 'Рендер',
+    text: 'Prerender по умолчанию: HTML собран на сборке. On-demand — только там, где ответ зависит от запроса.',
+  },
+  {
+    term: 'JavaScript',
+    text: 'Ноль на контентных страницах и в записях. Единственный островок — переключатель темы: инлайн, без загрузки.',
+  },
+  {
+    term: 'Поиск',
+    text: 'Canonical, hreflang, OG и JSON-LD в первом HTML; карта сайта, фиды и robots.txt — на живом origin.',
+  },
+  {
+    term: 'Развёртывание',
+    text: 'Один Docker-образ на все среды: канонический адрес сайта штампуется при старте контейнера.',
+  },
+  {
+    term: 'Архитектура',
+    text: 'Feature-Sliced Design под линтером: границы слоёв держит ESLint, структуру — Steiger, гейт — pnpm check.',
+  },
+]
 ---
 
 <DocumentLayout
@@ -12,30 +39,40 @@ const locale = 'ru' as const
   description="Static-first шаблон сайта на Astro 7: prerender по умолчанию, ноль JavaScript на контентных страницах, один Docker-образ на все среды."
   jsonLd={[organization(), webSite()]}
 >
-  <h1 class="text-heading-xl font-semibold tracking-tight">Шаблон индексируемого сайта</h1>
-  <p class="mt-4 text-body-lg text-muted">
-    Static-first: страницы собираются заранее и отдаются Node-процессом как есть; серверный рендер —
-    только там, где нужен рантайм.
+  <h1 class="text-heading-xl font-semibold tracking-tight sm:text-display">
+    Шаблон индексируемого сайта
+  </h1>
+  <p class="mt-5 text-body-lg text-muted">
+    Страницы собираются заранее и отдаются Node-процессом как файлы. Серверный рендер включается
+    там, где без запроса не обойтись: редиректы, карта сайта, форма.
+  </p>
+  <p class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+    <a class="button" href={blogPath(locale)}>
+      {t(locale, 'blog.all')}
+    </a>
+    <a href={localePath(locale, '/contacts')}>{t(locale, 'nav.contacts')}</a>
   </p>
 
-  <h2 class="mt-10 text-heading-md font-semibold">Что внутри</h2>
-  <ul class="mt-4 list-disc space-y-2 pl-5 text-body-md">
-    <li>Astro 7 с Node-адаптером: prerender по умолчанию, on-demand — по явному признаку.</li>
-    <li>Ноль JavaScript на контентных страницах — эта страница не загружает ни одного скрипта.</li>
-    <li>Один Docker-образ на все среды: канонический origin штампуется при старте контейнера.</li>
-    <li>Feature-Sliced Design под линтером: границы держит ESLint, структуру — Steiger.</li>
-    <li>
-      Две локали: русская без префикса и{' '}
-      <a href="/en" hreflang="en">
-        английская под /en
-      </a>
-      .
-    </li>
-  </ul>
+  <h2 class="section-title mt-16 text-heading-md font-semibold">Что внутри</h2>
+  <dl class="mt-6 grid gap-x-8 gap-y-5 text-body-md sm:grid-cols-[8rem_minmax(0,1fr)]">
+    {facts.map((fact) => (
+      <Fragment>
+        <dt class="font-medium text-app-fg">{fact.term}</dt>
+        <dd class="text-muted">{fact.text}</dd>
+      </Fragment>
+    ))}
+  </dl>
 
-  <h2 class="mt-10 text-heading-md font-semibold">Что дальше</h2>
-  <p class="mt-4 text-body-md">
-    Это стартовая страница шаблона — замените её содержимым своего сайта. Команды, структура
-    репозитория и путь потребителя описаны в README.
+  <h2 class="section-title mt-16 text-heading-md font-semibold">{t(locale, 'blog.latest')}</h2>
+  <div class="mt-6">
+    <PostList locale={locale} posts={latest} />
+  </div>
+  <p class="mt-8">
+    <a href={blogPath(locale)}>{t(locale, 'blog.all')}</a>
+  </p>
+
+  <p class="note mt-16">
+    Это стартовая страница шаблона: замените текст и записи своими. Команды, структура репозитория и
+    путь потребителя описаны в README.
   </p>
 </DocumentLayout>

@@ -1,0 +1,16 @@
+---
+// Остров темы целиком: применяет выбор до первой отрисовки и обслуживает переключатель
+// делегированием — скрипт живёт в <head>, в <body> их не ждут ни бот, ни гейт. Выбор хранится
+// в cookie `scheme` (техническая, согласия не требует); читает её только этот скрипт — сервер
+// тему не знает и на prerendered знать не может. Без выбора тему берёт CSS из
+// prefers-color-scheme. Признак `data-js` на <html> — для CSS: переключатель бесполезен, когда
+// скрипт не выполнился.
+// Тело уезжает в <head> каждой страницы как есть — поэтому оно плотное, без комментариев и
+// прагм, и его не трогает форматтер (.prettierignore); размер держит theme-init.astro.test.ts.
+---
+
+<script is:inline>{const d=document,s=d.documentElement.dataset,m=/(^|; )scheme=(light|dark)/.exec(d.cookie)
+if(m)s.scheme=m[2]
+s.js='on'
+d.addEventListener('click',e=>{if(e.target.closest?.('[data-theme-toggle]')){s.scheme=(s.scheme?s.scheme==='dark':matchMedia('(prefers-color-scheme:dark)').matches)?'light':'dark'
+d.cookie=`scheme=${s.scheme};path=/;max-age=31536000;samesite=lax${location.protocol==='https:'?';secure':''}`}})}</script>

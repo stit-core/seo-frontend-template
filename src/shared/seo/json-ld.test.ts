@@ -2,6 +2,7 @@ import {
   blogPosting,
   breadcrumbList,
   JsonLdSchema,
+  localBusiness,
   organization,
   serializeJsonLd,
   webSite,
@@ -29,6 +30,34 @@ describe('seo/json-ld', () => {
       '@type': 'WebSite',
       url: 'https://demo.example/',
       inLanguage: 'ru',
+    })
+    expect(JsonLdSchema.parse(data)).toEqual(data)
+  })
+
+  it('LocalBusiness: адрес разложен по PostalAddress, url — корень сайта, проходит схему', () => {
+    const data = localBusiness({
+      name: 'ООО «Пример»',
+      description: 'Небольшая студия',
+      email: 'hello@example.com',
+      telephone: '+7 495 000-00-00',
+      address: {
+        country: 'RU',
+        postalCode: '101000',
+        locality: 'Москва',
+        street: 'ул. Примерная, 1',
+      },
+      openingHours: 'Mo-Fr 10:00-19:00',
+    })
+    expect(data).toMatchObject({
+      '@type': 'LocalBusiness',
+      url: 'https://demo.example/',
+      image: 'https://demo.example/icon-512.png',
+      address: {
+        '@type': 'PostalAddress',
+        addressCountry: 'RU',
+        addressLocality: 'Москва',
+        streetAddress: 'ул. Примерная, 1',
+      },
     })
     expect(JsonLdSchema.parse(data)).toEqual(data)
   })

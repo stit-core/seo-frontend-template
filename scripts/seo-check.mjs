@@ -1,11 +1,14 @@
 // SEO-гейт на прод-сборке (после build): у каждой prerendered-страницы dist/client — ровно один
 // <title> и один <h1>, description с непустым content, self-canonical абсолютным URL, lang по
-// локали пути, полный OG с существующей картинкой, без noindex и keywords; title и description
+// локали пути, полный OG с существующей картинкой, без keywords. Служебная prerendered-страница
+// (подтверждение заявки, 500) закрыта одним noindex — тогда canonical, OG и hreflang запрещены,
+// и в пары переводов она не входит; title и description
 // уникальны среди всех страниц; hreflang — полный взаимный набор (self + x-default) у каждой пары
 // переводов (главные, списки и теги под обоими префиксами локалей; записи — twin по
 // translationKey) и ни одной ссылки на отсутствующую страницу; JSON-LD парсится, содержит только
 // допустимые типы, Organization/WebSite на главной и правильно устроенный BreadcrumbList там, где
-// он есть. On-demand ответы (robots.txt, sitemap.xml, фиды) проверяет e2e — им нужен сервер.
+// он есть, и ни одного HTML-комментария в разметке. On-demand ответы (robots.txt, sitemap.xml,
+// фиды) проверяет e2e — им нужен сервер.
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { relative, resolve, sep } from 'node:path'
 import { load } from 'js-yaml'
@@ -23,7 +26,13 @@ if (!existsSync(client)) {
 
 // Reference-набор печатает только эти типы; FAQPage/HowTo/SearchAction — не «по умолчанию»
 // (rich results сняты), их появление в шаблоне — ошибка.
-const ALLOWED_TYPES = new Set(['Organization', 'WebSite', 'BreadcrumbList', 'BlogPosting'])
+const ALLOWED_TYPES = new Set([
+  'Organization',
+  'WebSite',
+  'LocalBusiness',
+  'BreadcrumbList',
+  'BlogPosting',
+])
 const FORBIDDEN_TYPES = ['FAQPage', 'HowTo', 'SearchAction']
 
 const errors = []
@@ -85,6 +94,8 @@ for (const file of walk(client).filter((path) => path.endsWith('index.html'))) {
   const path = `/${rel.replace(/\/?index\.html$/, '')}`
   const where = `dist/client/${rel}`
   const html = readFileSync(file, 'utf8')
+  // Комментарий в разметке уезжает в каждую страницу и виден в исходнике: они живут во frontmatter.
+  if (html.includes('<!--')) fail(where, 'HTML-комментарий в выходе')
   const tags = headTags(html)
   const meta = (name) => tags.filter((item) => item.tag === 'meta' && item.name === name)
   const property = (name) => tags.filter((item) => item.tag === 'meta' && item.property === name)
@@ -107,16 +118,14 @@ for (const file of walk(client).filter((path) => path.endsWith('index.html'))) {
   const lang = /<html lang="([^"]*)"/.exec(html)?.[1]
   if (lang !== locale) fail(where, `<html lang="${lang}"> не совпадает с локалью пути (${locale})`)
 
-  // Prerendered — по определению индексируемая: noindex здесь — ошибка сборки, не режим.
-  for (const robots of meta('robots')) {
-    if (/noindex|none/.test(robots.content ?? '')) fail(where, `meta robots «${robots.content}»`)
-  }
+  // Служебная prerendered-страница (подтверждение заявки, 500) закрыта одним noindex и не
+  // печатает ни canonical, ни OG, ни hreflang: разрешающие и запрещающие директивы не
+  // смешиваются. Всё остальное prerendered — индексируемое, и noindex там ошибка сборки.
+  const noindex = meta('robots').some((robots) => /noindex|none/.test(robots.content ?? ''))
   if (meta('keywords').length > 0) fail(where, 'meta keywords не используется никогда')
 
-  const canonical = single(
-    tags.filter((item) => item.tag === 'link' && item.rel === 'canonical'),
-    'canonical',
-  )?.href
+  const canonicalTags = tags.filter((item) => item.tag === 'link' && item.rel === 'canonical')
+  const canonical = noindex ? undefined : single(canonicalTags, 'canonical')?.href
   if (canonical !== undefined) {
     if (!absolute(canonical)) fail(where, `canonical не абсолютный: ${canonical}`)
     else if (pathOf(canonical) !== path) fail(where, `canonical ${canonical} не self (${path})`)
@@ -148,32 +157,38 @@ for (const file of walk(client).filter((path) => path.endsWith('index.html'))) {
   }
 
   const og = (name) => single(property(name), name)?.content
-  const ogType = og('og:type')
-  if (ogType !== undefined && !['website', 'article'].includes(ogType))
-    fail(where, `og:type «${ogType}»`)
-  if (og('og:title') !== title) fail(where, 'og:title не равен <title>')
-  const ogDescription = og('og:description')
-  if (!ogDescription) fail(where, 'og:description без content или пустой')
-  else if (ogDescription !== description) fail(where, 'og:description не равен description')
-  const ogUrl = og('og:url')
-  if (!ogUrl) fail(where, 'og:url пуст')
-  else if (ogUrl !== canonical) fail(where, 'og:url не равен canonical')
-  if (!og('og:site_name')) fail(where, 'og:site_name пуст')
-  const ogLocale = og('og:locale')
-  if (ogLocale !== undefined && !new RegExp(`^${locale}_[A-Z]{2}$`).test(ogLocale)) {
-    fail(where, `og:locale «${ogLocale}» не соответствует локали ${locale}`)
+  if (noindex) {
+    if (canonicalTags.length > 0) fail(where, 'noindex-страница с canonical')
+    if (hrefs.size > 0) fail(where, 'noindex-страница с hreflang')
+    if (tags.some((item) => item.property?.startsWith('og:'))) fail(where, 'noindex-страница с OG')
+  } else {
+    const ogType = og('og:type')
+    if (ogType !== undefined && !['website', 'article'].includes(ogType))
+      fail(where, `og:type «${ogType}»`)
+    if (og('og:title') !== title) fail(where, 'og:title не равен <title>')
+    const ogDescription = og('og:description')
+    if (!ogDescription) fail(where, 'og:description без content или пустой')
+    else if (ogDescription !== description) fail(where, 'og:description не равен description')
+    const ogUrl = og('og:url')
+    if (!ogUrl) fail(where, 'og:url пуст')
+    else if (ogUrl !== canonical) fail(where, 'og:url не равен canonical')
+    if (!og('og:site_name')) fail(where, 'og:site_name пуст')
+    const ogLocale = og('og:locale')
+    if (ogLocale !== undefined && !new RegExp(`^${locale}_[A-Z]{2}$`).test(ogLocale)) {
+      fail(where, `og:locale «${ogLocale}» не соответствует локали ${locale}`)
+    }
+    const image = og('og:image')
+    if (image !== undefined) {
+      if (!absolute(image)) fail(where, `og:image не абсолютный: ${image}`)
+      else if (!existsInDist(image))
+        fail(where, `og:image ${new URL(image).pathname} нет в dist/client`)
+    }
+    for (const side of ['og:image:width', 'og:image:height']) {
+      if (!/^[1-9]\d*$/.test(og(side) ?? '')) fail(where, `${side} не целое число`)
+    }
+    if (!og('og:image:alt')) fail(where, 'og:image:alt пуст')
+    if (!meta('twitter:card')[0]?.content) fail(where, 'twitter:card отсутствует')
   }
-  const image = og('og:image')
-  if (image !== undefined) {
-    if (!absolute(image)) fail(where, `og:image не абсолютный: ${image}`)
-    else if (!existsInDist(image))
-      fail(where, `og:image ${new URL(image).pathname} нет в dist/client`)
-  }
-  for (const side of ['og:image:width', 'og:image:height']) {
-    if (!/^[1-9]\d*$/.test(og(side) ?? '')) fail(where, `${side} не целое число`)
-  }
-  if (!og('og:image:alt')) fail(where, 'og:image:alt пуст')
-  if (!meta('twitter:card')[0]?.content) fail(where, 'twitter:card отсутствует')
 
   const types = []
   for (const [, json] of html.matchAll(
@@ -202,7 +217,7 @@ for (const file of walk(client).filter((path) => path.endsWith('index.html'))) {
     }
   }
 
-  pages.set(path, { where, title, description, canonical, hrefs })
+  pages.set(path, { where, title, description, canonical, hrefs, noindex })
 }
 
 if (pages.size === 0) {
@@ -253,8 +268,9 @@ for (const collection of collections) {
     pair(`${collection.name}:${data.translationKey}`, locale, path)
   }
 }
-for (const path of pages.keys()) {
-  if (!entryPaths.has(path)) pair(`route:${routeOf(path)}`, localeOf(path), path)
+for (const [path, page] of pages) {
+  // Служебные страницы hreflang не выводят: у пары noindex-страниц нечего сверять.
+  if (!entryPaths.has(path) && !page.noindex) pair(`route:${routeOf(path)}`, localeOf(path), path)
 }
 let pairs = 0
 for (const group of groups.values()) {

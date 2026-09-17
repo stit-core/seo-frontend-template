@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { type HeadTag, headTags } from '../scripts/lib/html.mjs'
-import { E2E_INDEXNOW_KEY, prerenderedPaths } from './site'
+import { E2E_INDEXNOW_KEY, indexablePaths, prerenderedPaths } from './site'
 
 // Slug'и reference-контента (src/entities/post/content). /de-template заменит вместе с ним.
 const POST = { ru: '/blog/chestnye-404-i-410', en: '/en/blog/honest-404-and-410' }
@@ -8,7 +8,16 @@ const UNTRANSLATED = '/blog/kartinki-avif-webp'
 const NO_COVER = '/blog/prerender-po-umolchaniyu'
 const UPDATED = { path: '/blog/odin-obraz-na-vse-sredy', lastmod: '2026-09-10' }
 const DRAFT = 'redirekty-kak-dannye'
-const NOT_IN_SITEMAP = ['/now', '/healthz', '/old', '/blog/staraya-zametka', '/rss.xml', DRAFT]
+const NOT_IN_SITEMAP = [
+  '/now',
+  '/healthz',
+  '/old',
+  '/blog/staraya-zametka',
+  '/rss.xml',
+  '/contacts/spasibo',
+  '/api/contact',
+  DRAFT,
+]
 // Googlebot качает первые 2 МБ и молча обрезает остальное; потолок шаблона сильно ниже.
 const HTML_SIZE_LIMIT = 300_000
 
@@ -173,12 +182,12 @@ test.describe('SEO: сырой HTML, как его видит краулер', (
     }
   })
 
-  test('служебные страницы 404 и /now: noindex, без canonical, OG и hreflang', async ({
-    request,
-  }) => {
+  test('служебные страницы: noindex, без canonical, OG и hreflang', async ({ request }) => {
     for (const [path, status] of [
       ['/xx', 404],
       ['/now', 200],
+      // Подтверждение заявки — prerendered, но служебное: закрыто одним noindex.
+      ['/contacts/spasibo', 200],
     ] as const) {
       const response = await request.get(path)
       expect(response.status(), path).toBe(status)
@@ -229,7 +238,7 @@ test.describe('robots.txt, sitemap.xml, фиды, IndexNow', () => {
     expect(body).not.toMatch(/Host:|Crawl-delay:|GPTBot|ClaudeBot|__site_origin__/)
   })
 
-  test('sitemap.xml: ровно prerendered-страницы сборки, все отвечают 200, lastmod только из updatedDate', async ({
+  test('sitemap.xml: ровно индексируемые страницы сборки, все отвечают 200, lastmod только из updatedDate', async ({
     request,
     baseURL,
   }) => {
@@ -250,7 +259,7 @@ test.describe('robots.txt, sitemap.xml, фиды, IndexNow', () => {
       .map(({ loc }) => new URL(loc).pathname)
       .map((path) => (path !== '/' && path.endsWith('/') ? path.slice(0, -1) : path))
       .sort()
-    expect(paths).toEqual(prerenderedPaths())
+    expect(paths).toEqual(indexablePaths())
     for (const excluded of NOT_IN_SITEMAP) expect(xml, excluded).not.toContain(excluded)
     expect(
       entries

@@ -1,5 +1,7 @@
 ---
 import '@/app/styles/index.css'
+import Metrika from '@/app/analytics/metrika.astro'
+import { ThemeInit } from '@/features/theme'
 import { type Locale, t } from '@/shared/i18n'
 import { type JsonLd, JsonLdScript, type OgImage, SeoHead } from '@/shared/seo'
 import { SiteFooter } from '@/widgets/site-footer'
@@ -12,8 +14,8 @@ interface Props {
   description: string
   // Путь перевода без префикса локали; без него нет ни ссылки на другую локаль в шапке, ни hreflang.
   alternatePath?: string | undefined
-  // Служебная страница (404, /now): noindex, без canonical, OG и hreflang.
-  noindex?: boolean
+  // Служебная страница (404, /now, подтверждение заявки): noindex, без canonical, OG и hreflang.
+  noindex?: boolean | undefined
   ogType?: 'website' | 'article'
   ogImage?: OgImage | undefined
   article?: { published: Date; modified?: Date | undefined } | undefined
@@ -57,6 +59,8 @@ const {
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
+    <ThemeInit />
+    <Metrika />
     <slot name="head" />
   </head>
   <body class="flex min-h-dvh flex-col">

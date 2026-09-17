@@ -16,6 +16,20 @@ const RuntimeConfigSchema = z.object({
     .regex(INDEXNOW_KEY_RE, '8–128 символов a-z, A-Z, 0-9 и дефис')
     .default(''),
   AI_TRAINING: z.enum(['allow', 'deny']).default('allow'),
+  SENTRY_DSN: z.string().default(''),
+  SENTRY_ENVIRONMENT: z.string().min(1).default('production'),
+  // Доставка заявки: один канал. Адрес и учётные данные канала проверяются при отправке —
+  // сайт без настроенной формы обязан подниматься и отдавать контент.
+  FORM_DELIVERY: z.enum(['smtp', 'backend']).default('smtp'),
+  FORM_BACKEND_URL: z.string().default(''),
+  SMTP_URL: z.string().default(''),
+  FORM_TO: z.string().default(''),
+  FORM_FROM: z.string().default(''),
+  // Шов капчи: реализаций провайдеров в шаблоне нет, ступени honeypot и origin-check от неё
+  // не зависят. Провайдер добавляется вместе со значением enum (shared/antispam).
+  CAPTCHA_PROVIDER: z.enum(['none']).default('none'),
+  CAPTCHA_SECRET: z.string().default(''),
+  CAPTCHA_FAIL_MODE: z.enum(['open', 'closed']).default('open'),
 })
 
 export type RuntimeConfig = z.infer<typeof RuntimeConfigSchema>
@@ -36,6 +50,16 @@ export function getRuntimeConfig(env: RuntimeEnv = process.env): RuntimeConfig {
     LOG_LEVEL: unset(env.LOG_LEVEL),
     INDEXNOW_KEY: unset(env.INDEXNOW_KEY),
     AI_TRAINING: unset(env.AI_TRAINING),
+    SENTRY_DSN: unset(env.SENTRY_DSN),
+    SENTRY_ENVIRONMENT: unset(env.SENTRY_ENVIRONMENT),
+    FORM_DELIVERY: unset(env.FORM_DELIVERY),
+    FORM_BACKEND_URL: unset(env.FORM_BACKEND_URL),
+    SMTP_URL: unset(env.SMTP_URL),
+    FORM_TO: unset(env.FORM_TO),
+    FORM_FROM: unset(env.FORM_FROM),
+    CAPTCHA_PROVIDER: unset(env.CAPTCHA_PROVIDER),
+    CAPTCHA_SECRET: unset(env.CAPTCHA_SECRET),
+    CAPTCHA_FAIL_MODE: unset(env.CAPTCHA_FAIL_MODE),
   })
 }
 

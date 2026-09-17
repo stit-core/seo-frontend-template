@@ -1,4 +1,5 @@
 ---
+import { Picture } from 'astro:assets'
 import { formatDate, isoDate, t } from '@/shared/i18n'
 import type { Post } from '../api/queries'
 import DraftBadge from './draft-badge.astro'
@@ -10,9 +11,24 @@ interface Props {
 
 const { post } = Astro.props
 const { locale, data } = post
+// Обложка — LCP-элемент записи: грузится сразу и с приоритетом, размеры заданы.
+const cover = data.cover && data.coverAlt ? { src: data.cover, alt: data.coverAlt } : undefined
 ---
 
 <article>
+  {cover && (
+    <Picture
+      src={cover.src}
+      alt={cover.alt}
+      widths={[480, 800, 1200]}
+      sizes="(min-width: 40rem) 40rem, 100vw"
+      formats={['avif', 'webp']}
+      loading="eager"
+      fetchpriority="high"
+      decoding="async"
+      class="mb-8 rounded-panel border border-divider"
+    />
+  )}
   <header class="border-b border-divider pb-6">
     <h1 class="text-heading-xl font-semibold tracking-tight">{data.title}</h1>
     <p class="mt-4 text-body-lg text-muted">{data.description}</p>

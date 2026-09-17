@@ -86,16 +86,25 @@ docker run --rm -p 3000:3000 -e SITE_URL=https://example.com <image>
 | `KEEP_ALIVE_TIMEOUT_MS` / `SHUTDOWN_TIMEOUT_MS` | обёртка сервера | `65000` / `15000` | нет |
 | `INDEXNOW_KEY` | ключ IndexNow (8–128 символов `a-zA-Z0-9-`), подтверждается файлом `/<ключ>.txt` | `''` — файла нет | нет (файл `.txt`) |
 | `AI_TRAINING` | `allow` \| `deny` — запрет обучающих AI-краулеров в `robots.txt` | `allow` | нет (`robots.txt`) |
+| `FORM_DELIVERY` | канал доставки заявки: `smtp` \| `backend` | `smtp` | нет |
+| `SMTP_URL` | строка подключения SMTP (`smtps://user:pass@host`) — канал `smtp` | `''` | нет (секрет) |
+| `FORM_TO` / `FORM_FROM` | получатель и отправитель письма с заявкой — канал `smtp` | `''` | нет |
+| `FORM_BACKEND_URL` | адрес внутреннего сервиса, принимающего заявку JSON-ом — канал `backend` | `''` | нет |
+| `CAPTCHA_PROVIDER` | шов капчи; реализаций провайдеров в шаблоне нет | `none` | нет |
+| `CAPTCHA_SECRET` / `CAPTCHA_FAIL_MODE` | ключ верификации и поведение при недоступности провайдера (`open` \| `closed`) | `''` / `open` | нет (секрет) |
+| `SENTRY_DSN` / `SENTRY_ENVIRONMENT` | отправка серверных исключений; пусто — `@sentry/node` не грузится | `''` / `production` | нет |
 
 Пустое значение (`ROBOTS_POLICY=`) равносильно незаданному — берётся дефолт. Чтение —
 `src/shared/config` (`getRuntimeConfig()`, Zod по `process.env`); в HTML попадает только
 whitelist `PUBLIC_CONFIG_KEYS`. Шаблон локального `.env` — `.env.example`; его читает
 `pnpm start` (`node --env-file-if-exists=.env`), в образе файла нет.
 
-Подтверждение домена в Search Console / Вебмастере — HTML-файлом в `public/`
-(`google<token>.html`, `yandex_<token>.html`) или DNS TXT: meta-тег из env на
-prerendered-страницах недостижим (значение сборки, а образ собирается без env), поэтому
-env-ключа для него нет.
+Публичные идентификаторы сайта — счётчик Метрики (`METRIKA_ID`) и токены подтверждения
+домена (`SITE_VERIFICATION`) — живут не в env, а полями `src/shared/config/site.ts`:
+prerendered-страница печатается на сборке, а образ собирается без env, и runtime-значение до
+неё не доходит. `/de-template` подставляет проектные; пустое значение означает «ничего не
+печатать» — ни счётчика, ни тега. Альтернатива для подтверждения домена — HTML-файл в
+`public/` (`google<token>.html`, `yandex_<token>.html`) или запись DNS TXT.
 
 ## Что отдаёт процесс
 
@@ -123,6 +132,26 @@ env-ключа для него нет.
 - Security-заголовки (`Strict-Transport-Security`, `X-Content-Type-Options: nosniff`,
   `X-Frame-Options: DENY`, `Referrer-Policy`) ставит Traefik (`secure-headers@file`);
   приложение их не дублирует
+
+## Требования к прокси (чек-лист оператора)
+
+- **Rate-limit на `/api/contact` — обязателен до того, как форма открыта наружу.** Это
+  публичный POST-эндпоинт, и одна принятая заявка = одно письмо (или один запрос в бэкенд):
+  без ограничителя один бот превращает форму в рассылку. Ставится на Traefik, в приложении
+  счётчика нет — он не переживает рестарт и не виден второй реплике. Значения — пример,
+  а не догма: middleware `rateLimit` с `average: 10`, `period: 1m`, `burst: 5`,
+  `sourceCriterion.ipStrategy.depth: 1` на роутер этого пути
+- `X-Forwarded-Proto` (и `X-Forwarded-For`) от прокси обязателен: TLS терминируется снаружи,
+  и процесс видит запрос как `http://<Host>`. Схему прокси адаптер не читает, поэтому
+  канонический origin приложение берёт только из `SITE_URL`, а origin заявки сверяет с ним
+  `features/contact-form` (`security.checkOrigin` Astro выключен — он отвечал бы 403 на любой
+  POST формы из браузера)
+- Тело запроса прокси ограничивает своим лимитом; приложение отвечает `413` на
+  `Content-Length` больше 64 КБ и не читает такое тело, а `bodySizeLimit` адаптера —
+  последний рубеж
+- Staging закрывается там же: `basicAuth` + `customResponseHeaders: X-Robots-Tag` (prerendered
+  до приложения не доходит), `redirectRegex` для `/index.html` и `/en/index.html`,
+  `www` → apex и `http` → `https`, `compress`, `secure-headers@file`
 
 ## `/healthz`
 

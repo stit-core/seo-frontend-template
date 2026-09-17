@@ -1,5 +1,5 @@
 ---
-import { SITE_NAME } from '@/shared/config'
+import { SITE_NAME, SITE_VERIFICATION } from '@/shared/config'
 import { isoDate, type Locale, localePath, t } from '@/shared/i18n'
 import { defaultOgImage, OG_LOCALE, type OgImage, pageTitle } from './meta'
 import { absoluteUrl, alternates } from './urls'
@@ -65,6 +65,12 @@ const feedTitle = `${t(locale, 'blog.title')} — ${SITE_NAME}`
       <meta property="article:modified_time" content={isoDate(article.modified)} />
     )}
     <meta name="twitter:card" content="summary_large_image" />
+    {SITE_VERIFICATION.google !== '' && (
+      <meta name="google-site-verification" content={SITE_VERIFICATION.google} />
+    )}
+    {SITE_VERIFICATION.yandex !== '' && (
+      <meta name="yandex-verification" content={SITE_VERIFICATION.yandex} />
+    )}
   </Fragment>
 )}
 <link

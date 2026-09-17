@@ -1,0 +1,76 @@
+---
+import DocumentLayout from '@/app/layouts/document.astro'
+import { CompanyContacts } from '@/entities/company'
+import { type ContactErrors, ContactForm, type ContactValues } from '@/features/contact-form'
+import { type DictKey, type Locale, localePath, t } from '@/shared/i18n'
+import { breadcrumbList } from '@/shared/seo'
+import { Breadcrumbs } from '@/widgets/breadcrumbs'
+
+interface Props {
+  locale: Locale
+  // Заполненные поля и ошибки приходят с ответа обработчика формы; на самой странице их нет.
+  values?: ContactValues | undefined
+  errors?: ContactErrors | undefined
+  notice?: DictKey | undefined
+  // Ответ обработчика персональный (в полях — присланное) и служебный: только noindex.
+  noindex?: boolean | undefined
+}
+
+const { locale, values, errors, notice, noindex } = Astro.props
+
+const COPY = {
+  ru: {
+    title: 'Контакты',
+    description:
+      'Форма обратной связи, которая работает без JavaScript: браузер отправляет POST, сервер проверяет заявку и отвечает редиректом. Почта, телефон и адрес — рядом.',
+    lead: 'Напишите — ответим на почту. Форма отправляется обычным POST-запросом: без JavaScript, без внешних сервисов и без потерянных заявок.',
+    form: 'Заявка',
+    other: 'Другие способы связи',
+    note: 'Имя, почту и текст заявки оператор использует только для ответа. Условия обработки — в политике; согласие на неё подтверждается галочкой в форме.',
+  },
+  en: {
+    title: 'Contacts',
+    description:
+      'A contact form that works without JavaScript: the browser sends a POST, the server validates the request and answers with a redirect. Email, phone and address are next to it.',
+    lead: 'Write to us and we answer by email. The form is a plain POST request: no JavaScript, no third-party services, no lost requests.',
+    form: 'Request',
+    other: 'Other ways to reach us',
+    note: 'The name, email and text of the request are used only to answer it. The terms are in the personal data policy; the checkbox in the form confirms consent to them.',
+  },
+} satisfies Record<Locale, Record<string, string>>
+
+const copy = COPY[locale]
+const crumbs = [
+  { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
+  { name: copy.title },
+]
+---
+
+<DocumentLayout
+  locale={locale}
+  title={copy.title}
+  description={copy.description}
+  alternatePath="/contacts"
+  noindex={noindex}
+  jsonLd={noindex ? [] : [breadcrumbList(crumbs)]}
+>
+  <Breadcrumbs locale={locale} items={crumbs} class="mb-4" />
+  <h1 class="text-heading-xl font-semibold tracking-tight">{copy.title}</h1>
+  <p class="mt-4 text-body-lg text-muted">{copy.lead}</p>
+
+  <h2 class="section-title mt-12 text-heading-md font-semibold">{copy.form}</h2>
+  <div class="mt-6">
+    <ContactForm
+      locale={locale}
+      action="/api/contact"
+      policyHref="/legal/privacy"
+      values={values}
+      errors={errors}
+      notice={notice}
+    />
+  </div>
+
+  <h2 class="section-title mt-14 text-heading-md font-semibold">{copy.other}</h2>
+  <CompanyContacts locale={locale} class="mt-6" />
+  <p class="note mt-8">{copy.note}</p>
+</DocumentLayout>

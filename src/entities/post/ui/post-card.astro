@@ -1,4 +1,5 @@
 ---
+import { Picture } from 'astro:assets'
 import { formatDate, isoDate } from '@/shared/i18n'
 import type { Post } from '../api/queries'
 import { postPath } from '../lib/paths'
@@ -11,18 +12,37 @@ interface Props {
 
 const { post } = Astro.props
 const { locale, slug, data } = post
+// Миниатюра дублирует заголовок-ссылку, поэтому для чтеца она пустая; грузится лениво.
+const cover = data.cover && data.coverAlt ? data.cover : undefined
 ---
 
-<article class="border-b border-divider pb-8">
-  <h2 class="text-heading-md font-semibold tracking-tight">
-    <a href={postPath(locale, slug)} class="text-app-fg no-underline hover:underline">
-      {data.title}
-    </a>
-  </h2>
-  <p class="mt-1 flex flex-wrap items-center gap-x-2 text-body-sm text-muted">
-    {data.draft && <DraftBadge locale={locale} />}
-    <time datetime={isoDate(data.pubDate)}>{formatDate(locale, data.pubDate)}</time>
-  </p>
-  <p class="mt-3 text-body-md">{data.description}</p>
-  <TagList locale={locale} tags={data.tags} class="mt-3" />
+<article class="flex items-start justify-between gap-6 border-b border-divider pb-8">
+  <div class="min-w-0">
+    <h2 class="text-heading-md font-semibold tracking-tight">
+      <a href={postPath(locale, slug)} class="text-app-fg no-underline hover:text-accent">
+        {data.title}
+      </a>
+    </h2>
+    <p class="mt-1.5 flex flex-wrap items-center gap-x-2 text-body-sm text-muted">
+      {data.draft && <DraftBadge locale={locale} />}
+      <time datetime={isoDate(data.pubDate)}>{formatDate(locale, data.pubDate)}</time>
+    </p>
+    <p class="mt-3 text-body-md">{data.description}</p>
+    <TagList locale={locale} tags={data.tags} class="mt-3" />
+  </div>
+  {cover && (
+    // Ширину держит обёртка: адаптивные стили картинки задают ей width: 100%.
+    <div class="hidden w-40 shrink-0 sm:block">
+      <Picture
+        src={cover}
+        alt=""
+        width={160}
+        height={90}
+        formats={['avif', 'webp']}
+        loading="lazy"
+        decoding="async"
+        class="rounded-control border border-divider"
+      />
+    </div>
+  )}
 </article>

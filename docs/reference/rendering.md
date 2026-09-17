@@ -32,6 +32,12 @@ HTML-ответе; `dynamic` в reference-наборе — всегда `noindex
 | `/blog/page/N`, `/en/blog/page/N` | `blog/page/[page].astro`, `en/blog/page/[page].astro` | `static`, пути из `getStaticPaths` | то же | да | да |
 | `/blog/<slug>`, `/en/blog/<slug>` | `blog/[slug].astro`, `en/blog/[slug].astro` | `static`, пути из контента (без черновиков) | то же | да | да |
 | `/blog/tag/<tag>`, `/en/blog/tag/<tag>` | `blog/tag/[tag].astro`, `en/blog/tag/[tag].astro` | `static`, теги видимых записей | то же | да | да |
+| `/about`, `/en/about` | `about.astro`, `en/about.astro` | `static` | то же | да | да |
+| `/contacts`, `/en/contacts` | `contacts/index.astro`, `en/contacts/index.astro` | `static` | то же | да | да |
+| `/contacts/spasibo`, `/en/contacts/spasibo` | `contacts/spasibo.astro`, `en/contacts/spasibo.astro` | `static` | то же | нет — `noindex` | нет |
+| `/legal/privacy` | `legal/privacy.astro` | `static` | то же | да | да |
+| `/api/contact` | `api/contact.astro` (страница: без JS ответ на POST — разметка) | `dynamic` | `private, no-store` (роут) | нет — `noindex` | нет |
+| `/500` | `500.astro` (адаптер читает файл с диска при исключении в on-demand) | `static` | `public, max-age=0` + ETag | нет — `noindex` | нет |
 | `/now` | `now.astro` | `dynamic` | `private, no-store` (роут) | нет — `noindex` | нет |
 | `/healthz` | `healthz.ts` (endpoint) | `dynamic` | `no-store` (роут) | нет | нет |
 | `/robots.txt` | `robots.txt.ts` (endpoint) | `dynamic` | `public, max-age=300` (роут) | — (текст; `X-Robots-Tag: noindex`) | нет |
@@ -40,13 +46,22 @@ HTML-ответе; `dynamic` в reference-наборе — всегда `noindex
 | `/<INDEXNOW_KEY>.txt` и любой другой корневой `/*.txt` | `[key].txt.ts` (endpoint; параметризованный — перехватывает весь корневой `*.txt`, кроме статического `robots.txt`) | `dynamic` | `public, max-age=300` (роут); пустой ключ или чужое имя — 404 `text/plain` с `no-cache`, не `404.astro` | — (`X-Robots-Tag: noindex` на обоих ответах) | нет |
 | любой путь без файла → 404 | `404.astro` | `dynamic` | `no-cache` (middleware) | нет — статус 404 + `noindex` | нет |
 | адреса из `content/redirects.yaml` | `app/middleware/redirects.ts`, до роутинга | `dynamic` | 301/308 — без кеш-заголовка; 410 — `no-cache` | нет | нет |
-| ошибка рендера on-demand → 500 | ответ строит Astro; middleware пишет лог со статусом 500 и тем же `rid` | `dynamic` | нет | нет | нет |
+| ошибка рендера on-demand → 500 | `500.astro` — адаптер читает `dist/client/500.html` с диска; middleware пишет лог со статусом 500 и тем же `rid` | `dynamic` | нет | нет | нет |
 | `/_astro/*` | ассеты сборки | статика | `public, max-age=31536000, immutable` (адаптер) | — | нет |
 | `/favicon.ico`, `/icon.svg`, … | `public/` как есть | статика | `public, max-age=0` + ETag (адаптер) | — | нет |
 
-`/now` — единственная on-demand HTML-страница reference-набора: образец режима `dynamic`
-(серверное время в разметке, `noindex`, `private, no-store`, 0 JS, только `ru`). Ссылка на неё —
-в подвале, не в основной навигации.
+`/now` — образец режима `dynamic` (серверное время в разметке, `noindex`, `private, no-store`,
+0 JS, только `ru`). Ссылка на неё — в подвале, не в основной навигации.
+
+`/api/contact` — второй on-demand HTML: обработчик формы. Он маршрут-страница, а не endpoint,
+потому что без JavaScript ответ на POST обязан быть разметкой: успех — 303 на
+`/contacts/spasibo` (F5 не переотправляет заявку), ошибка — та же страница контактов с
+сохранёнными полями (200) или честный 500 при сбое канала доставки. Отказ до разбора заявки —
+короткий текст с теми же заголовками: 403 (чужой или отсутствующий `Origin`), 400 (тело не
+форма), 413 (`Content-Length` больше лимита формы). В полях ответа — то, что прислал человек,
+поэтому `private, no-store` и `noindex`; GET возвращает на `/contacts` редиректом. Правила
+лестницы — `.claude/rules/forms-antispam.md`, требования к прокси (rate-limit) —
+`deployment.md`.
 
 `robots.txt`, `sitemap.xml`, фиды и файл ключа IndexNow — on-demand, потому что их содержимое
 зависит от runtime env: `SITE_URL` (абсолютные URL), `ROBOTS_POLICY` (staging — `Disallow: /`),

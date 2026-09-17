@@ -117,6 +117,23 @@ test.describe('режимы рендера', () => {
     }
   })
 
+  test('скрипты страницы: ни одного внешнего, инлайн — только остров темы в <head>', async ({
+    request,
+  }) => {
+    for (const path of ['/', POST, '/contacts', '/about', '/now']) {
+      const html = await (await request.get(path)).text()
+      const head = html.slice(0, html.indexOf('</head>'))
+      const executable = [...html.matchAll(/<script[^>]*>/g)]
+        .map((match) => match[0])
+        .filter((tag) => !tag.includes('application/ld+json'))
+      expect(executable, path).toHaveLength(1)
+      expect(executable[0], path).not.toContain('src=')
+      // Единственный скрипт — применение темы и делегированный обработчик переключателя.
+      expect(head, path).toContain('data-theme-toggle')
+      expect(bodyOf(html), path).not.toContain('<script')
+    }
+  })
+
   test('/now не грузит ни одного script-ресурса', async ({ page }) => {
     const scripts: string[] = []
     page.on('response', (response) => {

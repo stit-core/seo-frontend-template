@@ -1,0 +1,29 @@
+---
+import { METRIKA_ID } from '@/shared/config'
+
+// Единственная точка подключения аналитики. Идентификатор счётчика — поле site.ts, а не env:
+// prerendered-страница печатается на сборке и runtime env не видит. Пусто (дефолт шаблона) —
+// разметка чиста, сторонних скриптов на сайте нет вообще.
+// Сам счётчик — 95 КБ чужого кода, поэтому он грузится после простоя браузера, не конкурируя
+// с контентом, и ровно один раз. `init` без параметров: просмотр страницы он засчитывает сам,
+// остальное настраивается в панели Метрики, а не здесь.
+---
+
+{METRIKA_ID !== '' && <script is:inline define:vars={{ counterId: METRIKA_ID }}>
+  {
+    const load = () => {
+      if (window.ym) return
+      window.ym = (...args) => {
+        ;(window.ym.a = window.ym.a || []).push(args)
+      }
+      window.ym.l = Date.now()
+      const script = document.createElement('script')
+      script.async = true
+      script.src = 'https://mc.yandex.ru/metrika/tag.js'
+      document.head.append(script)
+      window.ym(counterId, 'init')
+    }
+    if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 5000 })
+    else setTimeout(load, 2000)
+  }
+</script>}

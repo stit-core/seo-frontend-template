@@ -1,0 +1,185 @@
+---
+import { type DictKey, type Locale, t } from '@/shared/i18n'
+import {
+  type ContactErrors,
+  type ContactValues,
+  EMPTY_CONTACT_VALUES,
+  HONEYPOT_FIELD,
+  LOCALE_FIELD,
+  MESSAGE_LENGTH,
+  NAME_LENGTH,
+} from '../model/schema'
+
+interface Props {
+  locale: Locale
+  // Маршрут обработчика знает страница: слайс не решает, как устроен роутинг.
+  action: string
+  // Значения и ошибки приходят от обработчика формы; на самой странице контактов их нет.
+  values?: ContactValues | undefined
+  errors?: ContactErrors | undefined
+  notice?: DictKey | undefined
+  policyHref: string
+}
+
+const {
+  locale,
+  action,
+  values = EMPTY_CONTACT_VALUES,
+  errors = {},
+  notice,
+  policyHref,
+} = Astro.props
+
+const failures = [
+  { field: 'name', id: 'contact-name', key: errors.name },
+  { field: 'email', id: 'contact-email', key: errors.email },
+  { field: 'message', id: 'contact-message', key: errors.message },
+  { field: 'consent', id: 'contact-consent', key: errors.consent },
+].filter((item): item is { field: string; id: string; key: DictKey } => item.key !== undefined)
+
+const describedBy = (id: string, failed: boolean): string | undefined =>
+  failed ? `${id}-error` : undefined
+---
+
+{(failures.length > 0 || notice) && (
+  <div
+    role="alert"
+    class="mb-6 rounded-control border-l-2 border-danger bg-danger-soft px-4 py-3 text-body-md"
+  >
+    <p>{notice ? t(locale, notice) : t(locale, 'form.summary')}</p>
+    {failures.length > 0 && (
+      <ul class="mt-2 list-disc space-y-1 pl-5 text-body-sm">
+        {failures.map((failure) => (
+          <li>
+            <a href={`#${failure.id}`}>{t(locale, failure.key)}</a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+)}
+
+<form method="post" action={action} class="grid gap-5">
+  <input type="hidden" name={LOCALE_FIELD} value={locale} />
+
+  <div>
+    <label class="block text-body-sm font-medium" for="contact-name">
+      {t(locale, 'form.name')}
+    </label>
+    <input
+      class="field mt-1.5"
+      id="contact-name"
+      name="name"
+      type="text"
+      value={values.name}
+      required
+      minlength={NAME_LENGTH.min}
+      maxlength={NAME_LENGTH.max}
+      autocomplete="name"
+      aria-invalid={errors.name ? 'true' : undefined}
+      aria-describedby={describedBy('contact-name', errors.name !== undefined)}
+    />
+    {errors.name && (
+      <p class="mt-1.5 text-body-sm text-danger" id="contact-name-error">
+        {t(locale, errors.name)}
+      </p>
+    )}
+  </div>
+
+  <div>
+    <label class="block text-body-sm font-medium" for="contact-email">
+      {t(locale, 'form.email')}
+    </label>
+    <input
+      class="field mt-1.5"
+      id="contact-email"
+      name="email"
+      type="email"
+      value={values.email}
+      required
+      maxlength={254}
+      autocomplete="email"
+      aria-invalid={errors.email ? 'true' : undefined}
+      aria-describedby={describedBy('contact-email', errors.email !== undefined)}
+    />
+    {errors.email && (
+      <p class="mt-1.5 text-body-sm text-danger" id="contact-email-error">
+        {t(locale, errors.email)}
+      </p>
+    )}
+  </div>
+
+  <div>
+    <label class="block text-body-sm font-medium" for="contact-message">
+      {t(locale, 'form.message')}
+    </label>
+    <textarea
+      class="field mt-1.5 resize-y"
+      id="contact-message"
+      name="message"
+      rows="6"
+      required
+      minlength={MESSAGE_LENGTH.min}
+      maxlength={MESSAGE_LENGTH.max}
+      aria-invalid={errors.message ? 'true' : undefined}
+      aria-describedby={describedBy('contact-message', errors.message !== undefined)}
+    >{values.message}</textarea>
+    {errors.message && (
+      <p class="mt-1.5 text-body-sm text-danger" id="contact-message-error">
+        {t(locale, errors.message)}
+      </p>
+    )}
+  </div>
+
+  <div class="honeypot" aria-hidden="true">
+    <label for="contact-company">{t(locale, 'form.honeypot')}</label>
+    <input
+      id="contact-company"
+      name={HONEYPOT_FIELD}
+      type="text"
+      tabindex="-1"
+      autocomplete="off"
+    />
+  </div>
+
+  <div class="note">
+    <label class="flex items-start gap-3" for="contact-consent">
+      <input
+        class="mt-0.5 size-4 shrink-0"
+        id="contact-consent"
+        name="consent"
+        type="checkbox"
+        value="1"
+        required
+        checked={values.consent}
+        aria-invalid={errors.consent ? 'true' : undefined}
+        aria-describedby={describedBy('contact-consent', errors.consent !== undefined)}
+      />
+      <span>
+        {t(locale, 'form.consent')} — <a href={policyHref}>{t(locale, 'form.consentPolicy')}</a>
+      </span>
+    </label>
+    {errors.consent && (
+      <p class="mt-2 text-body-sm text-danger" id="contact-consent-error">
+        {t(locale, errors.consent)}
+      </p>
+    )}
+  </div>
+
+  <div>
+    <button class="button" type="submit">
+      {t(locale, 'form.submit')}
+    </button>
+  </div>
+</form>
+
+<style>
+  /* Ловушка для ботов: человек её не видит и не встретит с клавиатуры. */
+  .honeypot {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+</style>

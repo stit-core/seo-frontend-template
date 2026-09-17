@@ -20,9 +20,10 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   слеша (`absoluteUrl()` нормализует путь сам), `<meta name="robots">` не печатается; полный OG
   (`type/title/description/url/site_name/locale` + `image` с `width/height/alt`), `twitter:card`.
   Регистр пути не нормализуется; cross-domain canonical запрещён
-- Служебная страница (404, `/now`) — проп `noindex` layout'а: только `<meta name="robots"
-  content="noindex">`, без canonical/OG/hreflang; разрешающие и запрещающие директивы не
-  смешиваются (Яндекс выбирает разрешающую). На prerendered мета — значение сборки, поэтому
+- Служебная страница (404, `/now`, подтверждение заявки, ответ обработчика формы, `500`) — проп
+  `noindex` layout'а: только `<meta name="robots" content="noindex">`, без canonical/OG/hreflang;
+  разрешающие и запрещающие директивы не смешиваются (Яндекс выбирает разрешающую). Prerendered
+  служебная страница вне карты сайта и вне пар hreflang — это держит `seo:check`. На prerendered мета — значение сборки, поэтому
   staging закрывают `ROBOTS_POLICY` (`robots.txt` + `X-Robots-Tag` на on-demand) и Traefik
   (`basicAuth` + `X-Robots-Tag`) — три контура
 - hreflang — только при реальном переводе (`alternatePath` из `findTranslation` и списков):
@@ -30,9 +31,10 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   ни одной `<link hreflang>`; canonical внутри локали; авторедиректов по `Accept-Language` нет
 - `og:image` — обложка записи (исходный PNG из `_astro/`, `immutable`) или `public/og-default.png`
   1200×630 (`OG_DEFAULT_IMAGE`, `shared/config/site.ts`); URL абсолютный, файл есть в сборке
-- Подтверждение домена в Search Console / Вебмастере — HTML-файлом в `public/`
-  (`google<token>.html`, `yandex_<token>.html`) или DNS TXT: meta-тег из env на prerendered
-  недостижим (значение сборки, образ собирается без env), поэтому его нет
+- Публичные идентификаторы сайта — поля `shared/config/site.ts`, не env: prerendered печатается
+  на сборке, а образ собирается без env. `SITE_VERIFICATION.google`/`.yandex` — токены Search
+  Console и Вебмастера (пусто — тега нет; альтернатива — HTML-файл в `public/` или DNS TXT),
+  `METRIKA_ID` — счётчик (пусто — ни одного стороннего скрипта)
 - `<meta name="keywords">` — никогда; RSS autodiscovery `<link rel="alternate"
   type="application/rss+xml">` — на каждой странице, фид своей локали
 
@@ -41,9 +43,9 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
 - Печатает layout в `<head>` из пропа `jsonLd` (`<JsonLdScript>`: `<script
   type="application/ld+json">`, `<` экранируется; data block не исполняется, nonce ему не нужен).
   В `<body>` скриптов нет — ни исполняемых, ни data block
-- Только `Organization` + `WebSite` (корень `/`; `/en` — `Organization`), `BreadcrumbList`,
-  `BlogPosting` (запись). `FAQPage`, `HowTo`, `SearchAction` не генерируются — `seo:check` валит
-  сборку
+- Только `Organization` + `WebSite` (корень `/`; `/en` — `Organization`), `LocalBusiness`
+  (страница «О компании» — ровно те факты, что видны в тексте), `BreadcrumbList`, `BlogPosting`
+  (запись). `FAQPage`, `HowTo`, `SearchAction` не генерируются — `seo:check` валит сборку
 - `BreadcrumbList` — норма вложенной страницы: страница строит один массив крошек и отдаёт его и
   в `<Breadcrumbs>` (`widgets/breadcrumbs`, видимые), и в `jsonLd={[breadcrumbList(crumbs)]}`;
   `seo:check` проверяет форму блока там, где он есть (позиции с 1, абсолютные `item` у предков,
@@ -63,8 +65,10 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   поисково-ответные не трогаются; `Host`/`Crawl-delay` не выводятся; `Clean-param` — строкой в
   `buildRobotsTxt`, когда появятся проектные трекинг-параметры (`utm_*`, `ysclid`, `yrclid` Яндекс
   срезает сам)
-- `sitemap.xml`: ровно prerendered-страницы сборки (главные, списки, записи без черновиков, теги) —
-  e2e сверяет с `dist/client`; on-demand маршруты вне карты; адрес из `redirects.yaml` не может
+- `sitemap.xml`: ровно индексируемые prerendered-страницы сборки (главные, статические страницы
+  из списка `STATIC_ROUTES` в `pages/sitemap.xml.ts`, списки, записи без черновиков, теги) — e2e
+  сверяет с `dist/client` за вычетом `noindex`; новая индексируемая страница вне коллекций —
+  строка в этом списке; on-demand маршруты вне карты; адрес из `redirects.yaml` не может
   быть живым маршрутом — держит `check:content`, поэтому в карте его нет; `lastmod` только из
   `updatedDate`, `changefreq`/`priority` нет; > 50 000 URL — `buildSitemap` бросает: нужен sitemap
   index с шардами; hreflang в карте не дублируется

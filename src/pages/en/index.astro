@@ -1,9 +1,36 @@
 ---
 import DocumentLayout from '@/app/layouts/document.astro'
+import { blogPath, listPosts } from '@/entities/post'
+import { type Locale, localePath, t } from '@/shared/i18n'
 import { organization } from '@/shared/seo'
+import { PostList } from '@/widgets/post-list'
 
-const locale = 'en' as const
+const locale: Locale = 'en'
+const latest = (await listPosts(locale)).slice(0, 3)
+
 // WebSite печатает только корень домена (/): оттуда Google читает имя сайта.
+const facts = [
+  {
+    term: 'Rendering',
+    text: 'Prerendered by default: the HTML is built once. On-demand rendering only where the answer depends on the request.',
+  },
+  {
+    term: 'JavaScript',
+    text: 'None on content pages. The single island is the theme switch: inline, with nothing to download.',
+  },
+  {
+    term: 'Search',
+    text: 'Canonical, hreflang, OG and JSON-LD in the first HTML; sitemap, feeds and robots.txt on the live origin.',
+  },
+  {
+    term: 'Deployment',
+    text: 'One Docker image for every environment: the canonical site address is stamped in at container start.',
+  },
+  {
+    term: 'Architecture',
+    text: 'Feature-Sliced Design under lint: ESLint guards the layer boundaries, Steiger the structure, pnpm check the rest.',
+  },
+]
 ---
 
 <DocumentLayout
@@ -13,32 +40,40 @@ const locale = 'en' as const
   description="Static-first site template on Astro 7: prerendered by default, zero JavaScript on content pages, one Docker image for every environment."
   jsonLd={[organization()]}
 >
-  <h1 class="text-heading-xl font-semibold tracking-tight">Indexable site template</h1>
-  <p class="mt-4 text-body-lg text-muted">
-    Static-first: pages are built ahead of time and served by the Node process as they are; server
-    rendering only where the runtime is needed.
+  <h1 class="text-heading-xl font-semibold tracking-tight sm:text-display">
+    Indexable site template
+  </h1>
+  <p class="mt-5 text-body-lg text-muted">
+    Pages are built ahead of time and served by the Node process as files. Server rendering turns on
+    where a request is unavoidable: redirects, the sitemap, the contact form.
+  </p>
+  <p class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+    <a class="button" href={blogPath(locale)}>
+      {t(locale, 'blog.all')}
+    </a>
+    <a href={localePath(locale, '/contacts')}>{t(locale, 'nav.contacts')}</a>
   </p>
 
-  <h2 class="mt-10 text-heading-md font-semibold">What is inside</h2>
-  <ul class="mt-4 list-disc space-y-2 pl-5 text-body-md">
-    <li>Astro 7 with the Node adapter: prerendered by default, on-demand by explicit opt-in.</li>
-    <li>Zero JavaScript on content pages — this page loads no scripts at all.</li>
-    <li>
-      One Docker image for every environment: the canonical origin is stamped at container start.
-    </li>
-    <li>Feature-Sliced Design under lint: ESLint guards the boundaries, Steiger the structure.</li>
-    <li>
-      Two locales:{' '}
-      <a href="/" hreflang="ru">
-        Russian without a prefix
-      </a>{' '}
-      and English under /en.
-    </li>
-  </ul>
+  <h2 class="section-title mt-16 text-heading-md font-semibold">What is inside</h2>
+  <dl class="mt-6 grid gap-x-8 gap-y-5 text-body-md sm:grid-cols-[8rem_minmax(0,1fr)]">
+    {facts.map((fact) => (
+      <Fragment>
+        <dt class="font-medium text-app-fg">{fact.term}</dt>
+        <dd class="text-muted">{fact.text}</dd>
+      </Fragment>
+    ))}
+  </dl>
 
-  <h2 class="mt-10 text-heading-md font-semibold">What comes next</h2>
-  <p class="mt-4 text-body-md">
-    This is the template's starting page — replace it with your own site. Commands, repository
-    layout and the consumer path are described in the README.
+  <h2 class="section-title mt-16 text-heading-md font-semibold">{t(locale, 'blog.latest')}</h2>
+  <div class="mt-6">
+    <PostList locale={locale} posts={latest} />
+  </div>
+  <p class="mt-8">
+    <a href={blogPath(locale)}>{t(locale, 'blog.all')}</a>
+  </p>
+
+  <p class="note mt-16">
+    This is the template's starting page: replace the text and the notes with your own. Commands,
+    repository layout and the consumer path are described in the README.
   </p>
 </DocumentLayout>

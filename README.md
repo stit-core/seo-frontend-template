@@ -83,13 +83,17 @@ entities → shared`); между слайсами одного слоя — з�
 content/redirects.yaml   редиректы как данные: 301/308/410 одним хопом (обслуживает middleware)
 public/           иконки, manifest, og-default.png (социальная карточка 1200×630)
 src/app/          layouts/document.astro (<head> из props: SeoHead + JSON-LD), middleware, styles/index.css
-src/pages/        роутинг Astro = слой pages: index, blog/{index,[slug],page/[page],tag/[tag]}, en/…
-                  (prerender); 404, healthz, now, robots.txt, sitemap.xml, rss.xml, en/rss.xml,
-                  [key].txt (on-demand); секции страниц — _blog/
+src/pages/        роутинг Astro = слой pages: index, about, contacts/{index,spasibo},
+                  legal/privacy, blog/{index,[slug],page/[page],tag/[tag]}, en/… , 500 (prerender);
+                  404, healthz, now, robots.txt, sitemap.xml, rss.xml, en/rss.xml, [key].txt,
+                  api/contact (on-demand); секции страниц — _blog/, _about/, _contacts/
 src/widgets/      site-header, site-footer, post-list, breadcrumbs (видимые крошки)
-src/entities/post content/{ru,en}/*.md + covers/, model/{schema,collection}, api/queries, lib, ui
+src/features/     contact-form (форма без JS и её обработчик), theme (единственный остров)
+src/entities/     post: content/{ru,en}/*.md + covers/, model, api, lib, ui; company: реквизиты
+                  оператора для «О компании» и LocalBusiness
 src/shared/       config (runtime env, Zod; идентичность сайта), i18n, lib (+ testing), redirects,
-                  seo (absoluteUrl, hreflang, SeoHead, JSON-LD, robots/sitemap/rss), ui
+                  seo (absoluteUrl, hreflang, SeoHead, JSON-LD, robots/sitemap/rss), antispam
+                  (шов капчи), observability (JSON-лог с порогом LOG_LEVEL, Sentry по DSN), ui
 src/{content.config,middleware,env.d}.ts   навязанные Astro entry — тонкие входы
 docker/           Dockerfile (3 стадии), entrypoint.sh (штамповка SITE_URL), server.mjs
 e2e/              Playwright на prod-сборке
@@ -109,10 +113,22 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 ## Режимы рендера
 
 Всё prerender по умолчанию; on-demand (`export const prerender = false`) — только служебное:
-`404`, `/healthz`, `/now` (единственная on-demand HTML-страница: время сервера, `noindex`,
-`private, no-store`), `robots.txt`, `sitemap.xml`, `rss.xml`, файл ключа IndexNow. Кеш-заголовки,
+`404`, `/healthz`, `/now` (время сервера, `noindex`, `private, no-store`), `robots.txt`,
+`sitemap.xml`, `rss.xml`, файл ключа IndexNow и обработчик формы `/api/contact`. Кеш-заголовки,
 карта маршрутов и рецепт кеша процесса для контента из CMS —
 [`docs/reference/rendering.md`](docs/reference/rendering.md).
+
+## Форма обратной связи
+
+`/contacts` — обычная HTML-форма без JavaScript: браузер шлёт POST на `/api/contact`, сервер
+проходит лестницу origin-check → лимит и форма тела → honeypot → валидация (согласие на
+обработку ПДн проверяется и на сервере) → шов капчи и доставляет заявку одним каналом
+(`FORM_DELIVERY=smtp|backend`, три попытки). Успех — 303 на `/contacts/spasibo`, ошибка — та же
+страница с сохранёнными полями, сбой канала — честный 500; отказ до разбора заявки — короткий
+текст (403, 400, 413). Тело заявки не логируется. Rate-limit на этот путь ставится на прокси —
+строка в чек-листе [`deployment.md`](docs/reference/deployment.md). Правило —
+`.claude/rules/forms-antispam.md`; политика обработки ПДн — `/legal/privacy` с плейсхолдерами
+реквизитов оператора.
 
 ## SEO
 
@@ -139,8 +155,11 @@ shutdown под Traefik и отказывается стартовать без 
 
 Внешней дизайн-системы нет — компоненты пишутся в проекте как `.astro` на собственном
 токен-слое (`src/app/styles/index.css`: Tailwind v4 `@theme` + семантические переменные,
-тема через `light-dark()` и `data-scheme`). Контентные страницы не грузят JavaScript —
-это проверяет e2e.
+тема через `light-dark()` и `data-scheme`). Ни одна страница не грузит внешних скриптов: из
+JavaScript в шаблоне только остров темы — инлайн-`<script>` в `<head>`, который применяет выбор
+до первой отрисовки и обслуживает переключатель. Картинки — `astro:assets` (`<Picture>`:
+AVIF/WebP с фолбэком, размеры заданы, обложка записи грузится с приоритетом). Всё это
+проверяет e2e, включая axe в обеих темах.
 
 ## Документация
 
@@ -150,6 +169,7 @@ shutdown под Traefik и отказывается стартовать без 
 | [`docs/reference/rendering.md`](docs/reference/rendering.md) | режимы рендера, карта маршрутов, кеш-заголовки, рецепт D |
 | [`docs/reference/deployment.md`](docs/reference/deployment.md) | образ, entrypoint, server.mjs, env-контракт |
 | [`docs/reference/kinship.md`](docs/reference/kinship.md) | родство с `spa-frontend-template` |
+| [`.claude/rules/forms-antispam.md`](.claude/rules/forms-antispam.md) | форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка |
 | [`CLAUDE.md`](CLAUDE.md) | гайд для агента (ядро + роутер) |
 
 ## Часть экосистемы stit
