@@ -25,7 +25,7 @@
   правило `content-invariants`
 - [x] Фаза 3 — рендер: prerender per route, `now`, `X-Robots-Tag`/`Cache-Control` на on-demand,
   рецепт D в `docs/reference/rendering.md`, правило `render-safety`
-- [ ] Фаза 4 — SEO-слой: `shared/seo/*`, `robots.txt`/`sitemap.xml`/`rss.xml`, JSON-LD + Zod,
+- [x] Фаза 4 — SEO-слой: `shared/seo/*`, `robots.txt`/`sitemap.xml`/`rss.xml`, JSON-LD + Zod,
   `widgets/breadcrumbs`, `e2e/seo.spec.ts`, `seo:check`, правило `seo-invariants`
 - [ ] Фаза 5 — reference-слайсы и визуальный уровень: about, contacts + spasibo (форма без JS,
   `FORM_DELIVERY`), legal/privacy, 500, тема (единственный остров), картинки build-time,
@@ -38,4 +38,8 @@
 
 ## Backlog
 
-_пусто_
+- Нормализация регистра URL одним 308 (канон I-5) — middleware; сейчас URL чувствительны
+  к регистру, canonical = реальный адрес
+- Verification-теги Search Console/Вебмастера из env: штамповка токенов в
+  `docker/entrypoint.sh` (правка `docker/*`, решение владельца) — иначе остаётся подтверждение
+  файлом в `public/` или DNS TXT

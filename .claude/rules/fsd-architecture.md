@@ -63,14 +63,16 @@ widget — только при ≥ 2 страницах. Server route — `src/p
 | что | где |
 |---|---|
 | документ-шелл, middleware (лог, редиректы), токены | `app/layouts/document.astro`, `app/middleware`, `app/styles/index.css` |
-| runtime-конфиг, идентичность сайта | `shared/config` |
+| runtime-конфиг, идентичность сайта (`SITE_NAME`, `sameAs`, `OG_DEFAULT_IMAGE`) | `shared/config` |
 | локали, пути с префиксом, даты | `shared/i18n` |
+| SEO: `absoluteUrl`/hreflang, `SeoHead`, фабрики JSON-LD + `JsonLdScript`, генераторы robots/sitemap/rss | `shared/seo` |
 | тест-хелперы | `shared/lib/testing` |
 | таблица редиректов (данные → Map) | `shared/redirects` |
 | проектные UI-примитивы | `shared/ui/<name>/` |
-| каркас сайта, список записей | `widgets/site-header`, `widgets/site-footer`, `widgets/post-list` |
+| каркас сайта, список записей, хлебные крошки (видимые; `BreadcrumbList` из того же массива печатает layout в `<head>`) | `widgets/site-header`, `widgets/site-footer`, `widgets/post-list`, `widgets/breadcrumbs` |
 | коллекция контента: `.md`, схема, запросы, карточка/статья | `entities/post/{content,model,api,lib,ui}` |
-| секции страниц блога и их `getStaticPaths` (ru/en делят разметку и пути) | `src/pages/_blog/*.astro`, `src/pages/_blog/static-paths.ts` |
+| секции страниц блога, их `getStaticPaths` и фид (ru/en делят разметку, пути и фид) | `src/pages/_blog/*.astro`, `src/pages/_blog/static-paths.ts`, `src/pages/_blog/feed.ts` |
+| on-demand SEO-маршруты | `src/pages/{robots.txt,sitemap.xml,rss.xml,[key].txt}.ts`, `src/pages/en/rss.xml.ts` |
 
 ## Кто что проверяет
 

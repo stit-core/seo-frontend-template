@@ -1,6 +1,6 @@
 ---
 description: Контент в git — frontmatter и бюджеты, один h1, alt, переводы и черновики, редиректы как данные (YAML → данные на сборке), контентные гейты check:content / check:links.
-globs: ["src/entities/*/content/**", "src/entities/*/model/schema.ts", "src/entities/*/api/**", "src/shared/redirects/**", "src/app/middleware/redirects.ts", "astro.config.ts", "content/**", "scripts/check-content.mjs", "scripts/check-links.mjs"]
+globs: ["src/entities/*/content/**", "src/entities/*/model/schema.ts", "src/entities/*/api/**", "src/shared/redirects/**", "src/app/middleware/redirects.ts", "astro.config.ts", "content/**", "scripts/check-content.mjs", "scripts/check-links.mjs", "scripts/lib/content.mjs"]
 ---
 
 # Контент-инварианты
@@ -17,7 +17,8 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
   `<locale>/<slug>`, URL — `/blog/<slug>` (`/en/blog/<slug>`)
 - Frontmatter — строгая мапа (неизвестное поле, в т.ч. опечатка, — ошибка):
   `title` (25–65 символов), `description` (70–170), `pubDate`, `updatedDate?` (не раньше
-  `pubDate`), `cover?` + `coverAlt?` (только вместе), `tags` (slug'и, без дублей),
+  `pubDate`; единственный источник `lastmod` в sitemap и `dateModified` в JSON-LD), `cover?` +
+  `coverAlt?` (только вместе; обложка — и `og:image` записи), `tags` (slug'и, без дублей),
   `draft` (по умолчанию `false`), `translationKey` (slug, общий для переводов)
 - Бюджеты `title`/`description` — часть схемы: это ширина сниппета выдачи, не «пожелание».
   `title` и `description` уникальны внутри локали — у каждой страницы свой сниппет
@@ -90,5 +91,5 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
   поэтому импортируют только «листовые» модули без `@/`-алиасов и относительных импортов:
   `model/schema.ts`, `lib/paginate.ts`, `shared/redirects/table.ts`, `shared/i18n/locale.ts`,
   `shared/config/runtime.ts`
-- Новая коллекция — строка в реестре `collections` скрипта `check-content.mjs` (каталог,
+- Новая коллекция — запись в реестре `collections` модуля `scripts/lib/content.mjs` (каталог,
   схема, порождаемые маршруты)

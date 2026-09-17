@@ -1,19 +1,17 @@
 ---
 import DocumentLayout from '@/app/layouts/document.astro'
-import { SITE_NAME } from '@/shared/config'
+import { organization, webSite } from '@/shared/seo'
 
 const locale = 'ru' as const
 ---
 
-<DocumentLayout locale={locale} alternatePath="/">
-  <Fragment slot="head">
-    <title>Шаблон индексируемого сайта — {SITE_NAME}</title>
-    <meta
-      name="description"
-      content="Static-first шаблон сайта на Astro 7: prerender по умолчанию, ноль JavaScript на контентных страницах, один Docker-образ на все среды."
-    />
-  </Fragment>
-
+<DocumentLayout
+  locale={locale}
+  alternatePath="/"
+  title="Шаблон индексируемого сайта"
+  description="Static-first шаблон сайта на Astro 7: prerender по умолчанию, ноль JavaScript на контентных страницах, один Docker-образ на все среды."
+  jsonLd={[organization(), webSite()]}
+>
   <h1 class="text-heading-xl font-semibold tracking-tight">Шаблон индексируемого сайта</h1>
   <p class="mt-4 text-body-lg text-muted">
     Static-first: страницы собираются заранее и отдаются Node-процессом как есть; серверный рендер —

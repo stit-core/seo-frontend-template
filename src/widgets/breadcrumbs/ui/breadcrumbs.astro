@@ -1,0 +1,29 @@
+---
+import { type Locale, t } from '@/shared/i18n'
+import type { Crumb } from '@/shared/seo'
+
+interface Props {
+  locale: Locale
+  // Последняя крошка — текущая страница, без href. Тот же массив страница отдаёт в
+  // breadcrumbList() — JSON-LD печатает layout в <head>.
+  items: readonly Crumb[]
+  class?: string | undefined
+}
+
+const { locale, items, class: className } = Astro.props
+---
+
+<nav aria-label={t(locale, 'nav.breadcrumbs')} class:list={['text-body-sm text-muted', className]}>
+  <ol class="flex flex-wrap items-center gap-x-2">
+    {items.map((item, index) => (
+      <li class="flex items-center gap-x-2">
+        {index > 0 && <span aria-hidden="true">›</span>}
+        {item.href ? (
+          <a href={item.href}>{item.name}</a>
+        ) : (
+          <span aria-current="page">{item.name}</span>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>

@@ -4,7 +4,6 @@
 export const prerender = false
 
 import DocumentLayout from '@/app/layouts/document.astro'
-import { SITE_NAME } from '@/shared/config'
 import { formatDateTime } from '@/shared/i18n'
 
 const locale = 'ru' as const
@@ -14,16 +13,12 @@ const now = new Date()
 Astro.response.headers.set('cache-control', 'private, no-store')
 ---
 
-<DocumentLayout locale={locale}>
-  <Fragment slot="head">
-    <title>Время сервера — {SITE_NAME}</title>
-    <meta
-      name="description"
-      content="Служебная on-demand страница: время сервера на момент запроса."
-    />
-    <meta name="robots" content="noindex" />
-  </Fragment>
-
+<DocumentLayout
+  locale={locale}
+  title="Время сервера"
+  description="Служебная on-demand страница: время сервера на момент запроса."
+  noindex
+>
   <h1 class="text-heading-xl font-semibold tracking-tight">Время сервера</h1>
   <p class="mt-4 text-body-lg">
     <time datetime={now.toISOString()}>{formatDateTime(locale, now)}</time>

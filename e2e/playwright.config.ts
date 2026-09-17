@@ -1,5 +1,6 @@
 import { resolve } from 'node:path'
 import { defineConfig, devices } from '@playwright/test'
+import { E2E_INDEXNOW_KEY } from './site'
 
 const PORT = 3201
 const ORIGIN = `http://127.0.0.1:${PORT}`
@@ -23,12 +24,14 @@ export default defineConfig({
     cwd: resolve(import.meta.dirname, '..'),
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
+    // Прод-профиль: индексация разрешена, ключ IndexNow задан (файл /<ключ>.txt существует).
     env: {
       DIST_DIR: 'dist',
       HOST: '127.0.0.1',
       PORT: String(PORT),
       SITE_URL: ORIGIN,
       ROBOTS_POLICY: 'index',
+      INDEXNOW_KEY: E2E_INDEXNOW_KEY,
     },
   },
 })

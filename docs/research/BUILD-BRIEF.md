@@ -189,7 +189,8 @@ export default defineConfig({
 | `FORM_TIME_TRAP_SECRET` | подпись метки времени формы | — | нет | 5 |
 | `CAPTCHA_PROVIDER` / `CAPTCHA_SITE_KEY` / `CAPTCHA_SECRET` / `CAPTCHA_FAIL_MODE` | шов капчи | `none` / — / — / `open` | site-key да | 5 |
 | `ANALYTICS` / `METRIKA_ID` | `metrika \| none` | `none` | да | 5 |
-| `GOOGLE_SITE_VERIFICATION` / `YANDEX_VERIFICATION` / `INDEXNOW_KEY` / `AI_TRAINING` | SEO | `''` / `''` / `''` / `allow` | да (кроме ключа IndexNow — файл) | 4 |
+| `INDEXNOW_KEY` / `AI_TRAINING` | SEO: ключ IndexNow (файл `/<key>.txt`), политика обучающих AI-краулеров в `robots.txt` | `''` / `allow` | нет (ключ — файлом) | 4 |
+| — | verification-теги Search Console/Вебмастера из env не реализуются: на prerendered это значение сборки (образ без env); подтверждение — HTML-файл в `public/` или DNS TXT (DECISIONS) | — | — | 4 |
 
 Чтение — `src/shared/config/index.ts`: Zod по `process.env`, одна функция `getRuntimeConfig()`;
 на prerender попадают значения сборки (плейсхолдер), на on-demand — живой `process.env`.
@@ -385,7 +386,7 @@ e2e: «`__site_origin__` отсутствует во всех страницах
 
 Содержание: `shared/seo/{index.ts,urls.ts (absoluteUrl, alternates, normalizePath — runtime origin),
 seo-head.astro (title-шаблон, description, canonical, robots, OG полный, twitter:card, hreflang, RSS
-autodiscovery, verification-теги из env), json-ld.ts (+ json-ld.astro; фабрики organization/webSite/
+autodiscovery; verification-тегов из env нет — файл в `public/` или DNS TXT, см. DECISIONS), json-ld.ts (+ json-ld.astro; фабрики organization/webSite/
 breadcrumbList/article; Zod-схемы; без FAQPage/HowTo/SearchAction), robots.ts, sitemap.ts, rss.ts,
 *.test.ts}`; `shared/config/site.ts` (идентичность шаблона: имя, description, локали, `sameAs` —
 демо-значения, которые `/de-template` заменяет); `pages/{robots.txt,sitemap.xml,rss.xml}.ts`,

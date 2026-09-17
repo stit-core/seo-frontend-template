@@ -5,7 +5,9 @@ import type { Locale } from './locale'
 const ru = {
   'nav.label': 'Основная навигация',
   'nav.skip': 'К содержимому',
+  'nav.home': 'Главная',
   'nav.blog': 'Блог',
+  'nav.breadcrumbs': 'Хлебные крошки',
   'lang.name': 'Русский',
   'footer.note': 'шаблон индексируемого сайта',
   'footer.now': 'время сервера',
@@ -37,7 +39,9 @@ type Dict = Record<DictKey, string>
 const en: Dict = {
   'nav.label': 'Main navigation',
   'nav.skip': 'Skip to content',
+  'nav.home': 'Home',
   'nav.blog': 'Blog',
+  'nav.breadcrumbs': 'Breadcrumbs',
   'lang.name': 'English',
   'footer.note': 'indexable site template',
   'footer.now': 'server time',

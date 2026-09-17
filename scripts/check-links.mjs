@@ -6,6 +6,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import { relative, resolve, sep } from 'node:path'
 import { load } from 'js-yaml'
 import { buildRedirectTable } from '../src/shared/redirects/table.ts'
+import { decode } from './lib/html.mjs'
 import { pageRoutes, walk } from './lib/routes.mjs'
 
 const root = resolve(import.meta.dirname, '..')
@@ -25,11 +26,6 @@ const redirects = buildRedirectTable(
 )
 
 const ATTR_RE = /\b(href|src|srcset)=("([^"]*)"|'([^']*)')/gi
-const decode = (value) =>
-  value
-    .replace(/&amp;/g, '&')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
 
 function targets(html) {
   const out = []

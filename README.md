@@ -23,7 +23,9 @@ Astro 7 + Node-адаптер, Feature-Sliced Design под линтером, н
 Astro 7.3 + `@astrojs/node` (`output: 'static'`, standalone) · TypeScript 6
 (`astro/tsconfigs/strictest`) · Tailwind v4 на собственном токен-слое · контент — Markdown
 в git внутри слайса (Content Layer + Zod 4) · i18n `ru` (без префикса) + `en` (`/en`) ·
-редиректы как данные (`content/redirects.yaml`) · Biome 2 + Prettier (только `*.astro`) ·
+редиректы как данные (`content/redirects.yaml`) · SEO-слой `shared/seo` (canonical, hreflang,
+OG, JSON-LD; `robots.txt`/`sitemap.xml`/`rss.xml` on-demand на runtime origin) · Biome 2 +
+Prettier (только `*.astro`) ·
 ESLint 10 (`eslint-plugin-astro`, `boundaries`) + Steiger · Vitest 5 (Container API) +
 Playwright · size-limit · pnpm 10 · lefthook + commitlint.
 
@@ -61,10 +63,11 @@ pnpm steiger          # структурный линтер FSD
 pnpm check:gate       # негативные фикстуры обязаны валить линтеры
 pnpm check:content    # контент-гейт: схема .md, тело, переводы, ссылки, redirects.yaml
 pnpm check:links      # после build: все внутренние ссылки в dist/client существуют
+pnpm seo:check        # после build: head каждой страницы (title/description/canonical/lang/h1/OG/hreflang/JSON-LD)
 pnpm size             # бюджеты CSS / HTML
 pnpm kin:diff         # сверка обвязки с ../spa-frontend-template (advisory)
 pnpm ttfb <origin> …  # TTFB запущенного сервера: медиана/p90 20 запросов
-pnpm check            # gate: typecheck + lint + format + test + steiger + check:gate + check:content + build + check:links + size
+pnpm check            # gate: typecheck + lint + format + test + steiger + check:gate + check:content + build + check:links + seo:check + size
 ```
 
 Перед claim «готово» / push — **`pnpm check`** (его же гоняет `lefthook pre-push`).
@@ -78,16 +81,19 @@ entities → shared`); между слайсами одного слоя — з�
 
 ```
 content/redirects.yaml   редиректы как данные: 301/308/410 одним хопом (обслуживает middleware)
-src/app/          layouts/document.astro, middleware (лог, X-Request-Id, редиректы), styles/index.css
+public/           иконки, manifest, og-default.png (социальная карточка 1200×630)
+src/app/          layouts/document.astro (<head> из props: SeoHead + JSON-LD), middleware, styles/index.css
 src/pages/        роутинг Astro = слой pages: index, blog/{index,[slug],page/[page],tag/[tag]}, en/…
-                  (prerender); 404, healthz, now (on-demand); секции страниц — _blog/
-src/widgets/      site-header, site-footer, post-list
+                  (prerender); 404, healthz, now, robots.txt, sitemap.xml, rss.xml, en/rss.xml,
+                  [key].txt (on-demand); секции страниц — _blog/
+src/widgets/      site-header, site-footer, post-list, breadcrumbs (видимые крошки)
 src/entities/post content/{ru,en}/*.md + covers/, model/{schema,collection}, api/queries, lib, ui
-src/shared/       config (runtime env, Zod), i18n, lib (+ testing), redirects, ui
+src/shared/       config (runtime env, Zod; идентичность сайта), i18n, lib (+ testing), redirects,
+                  seo (absoluteUrl, hreflang, SeoHead, JSON-LD, robots/sitemap/rss), ui
 src/{content.config,middleware,env.d}.ts   навязанные Astro entry — тонкие входы
 docker/           Dockerfile (3 стадии), entrypoint.sh (штамповка SITE_URL), server.mjs
 e2e/              Playwright на prod-сборке
-scripts/          check-gate, check-content, check-links, kin-diff, ttfb
+scripts/          check-gate, check-content, check-links, seo-check, kin-diff, ttfb
 .claude/          правила (path-scoped) и скиллы
 ```
 
@@ -104,8 +110,22 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 
 Всё prerender по умолчанию; on-demand (`export const prerender = false`) — только служебное:
 `404`, `/healthz`, `/now` (единственная on-demand HTML-страница: время сервера, `noindex`,
-`private, no-store`). Кеш-заголовки, карта маршрутов и рецепт кеша процесса для контента из
-CMS — [`docs/reference/rendering.md`](docs/reference/rendering.md).
+`private, no-store`), `robots.txt`, `sitemap.xml`, `rss.xml`, файл ключа IndexNow. Кеш-заголовки,
+карта маршрутов и рецепт кеша процесса для контента из CMS —
+[`docs/reference/rendering.md`](docs/reference/rendering.md).
+
+## SEO
+
+`<head>` каждой страницы собирает `DocumentLayout` из props (`title`, `description`,
+`alternatePath`, `jsonLd`): title-шаблон, self-canonical, полный OG (`og:image` — обложка записи
+или `public/og-default.png`), `twitter:card`, hreflang только для реальных переводов (взаимно, +
+`x-default`), RSS autodiscovery. JSON-LD — в `<head>`: `Organization`/`WebSite` на главной,
+`BreadcrumbList` на вложенных (из того же массива, что видимые крошки `widgets/breadcrumbs`),
+`BlogPosting` у записи; в `<body>` ни одного `<script>`. `robots.txt`
+(`ROBOTS_POLICY`, `AI_TRAINING`), `sitemap.xml` (ровно prerendered-страницы, `lastmod` из
+`updatedDate`), `rss.xml`/`en/rss.xml` и `/<INDEXNOW_KEY>.txt` — on-demand на runtime
+`SITE_URL`. Гейты: `pnpm seo:check` в `pnpm check`, `e2e/seo.spec.ts`; правило —
+`.claude/rules/seo-invariants.md`.
 
 ## Один образ на все среды
 

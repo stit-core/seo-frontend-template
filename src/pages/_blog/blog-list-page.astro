@@ -10,8 +10,9 @@ import {
   pageCount,
   TagList,
 } from '@/entities/post'
-import { SITE_NAME } from '@/shared/config'
-import { type Locale, SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import { type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import { breadcrumbList } from '@/shared/seo'
+import { Breadcrumbs } from '@/widgets/breadcrumbs'
 import { PostList } from '@/widgets/post-list'
 
 interface Props {
@@ -33,14 +34,26 @@ const alternatePath =
 const pageSuffix = page.current === 1 ? '' : ` — ${t(locale, 'blog.page')} ${page.current}`
 const heading = `${t(locale, 'blog.title')}${pageSuffix}`
 const description = `${t(locale, 'blog.description')}${pageSuffix}`
+
+const crumbs = [
+  { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
+  ...(page.current === 1
+    ? [{ name: t(locale, 'blog.title') }]
+    : [
+        { name: t(locale, 'blog.title'), href: blogPath(locale) },
+        { name: `${t(locale, 'blog.page')} ${page.current}` },
+      ]),
+]
 ---
 
-<DocumentLayout locale={locale} alternatePath={alternatePath}>
-  <Fragment slot="head">
-    <title>{heading} — {SITE_NAME}</title>
-    <meta name="description" content={description} />
-  </Fragment>
-
+<DocumentLayout
+  locale={locale}
+  alternatePath={alternatePath}
+  title={heading}
+  description={description}
+  jsonLd={[breadcrumbList(crumbs)]}
+>
+  <Breadcrumbs locale={locale} items={crumbs} class="mb-4" />
   <h1 class="text-heading-xl font-semibold tracking-tight">{heading}</h1>
   <p class="mt-4 text-body-lg text-muted">{t(locale, 'blog.lead')}</p>
   <TagList locale={locale} tags={tags} class="mt-6" />

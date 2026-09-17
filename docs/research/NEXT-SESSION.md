@@ -1,4 +1,4 @@
-# Промпт для следующей сессии: сборка `ssr-frontend-template`, фазы 4–7
+# Промпт для следующей сессии: сборка `ssr-frontend-template`, фазы 5–7
 
 > Как использовать: открыть Claude Code в `/home/mm/git/stit-core/ssr-frontend-template` и
 > написать одной строкой: «Прочитай `docs/research/NEXT-SESSION.md` целиком и действуй по нему».
@@ -37,7 +37,7 @@
 Соседний `spa-frontend-template`: там незакоммиченная правка `.claude/plans/roadmap.md`
 (указатель на этот репо и follow-up'ы) — владелец решил коммитить её сам.
 
-## 2. Цикл одной фазы (повторять для 4 → 5 → 6 → 7)
+## 2. Цикл одной фазы (повторять для 5 → 6 → 7)
 
 1. **Промпт агента** = brief §5 «Фаза N» (дословно объём, гейт, «не делать») + принципы и
    решения владельца (дословно) + «Контекст предыдущих фаз» (раздел 6 отчёта `reports/phase-(N-1).md`)
@@ -94,6 +94,10 @@
   локально уже есть.
 - Скиллы `/init-service`, `/de-template`, `/scaffold`, `/stack-deep-dive`, `/release`, `/smartdev`
   в этом репо до фазы 6 остаются SPA-версиями — на них не опираться.
+- Ревью фазы 4 (три агента) дало 25 находок при зелёном гейте, принято 15; вход фазы 5 —
+  `reports/phase-4.md` §6 (пропсы `DocumentLayout`, крошки + `jsonLd` из одного массива,
+  `getPublicConfig()` для публичных ключей, e2e «в `<body>` ни одного `<script>`» — остров темы
+  потребует явного исключения в `seo.spec.ts`/`rendering.spec.ts` + строки в `.size-limit.cjs`).
 
 ## 5. Заметки к оставшимся фазам (сверх brief)
 
@@ -109,8 +113,8 @@
   `localStorage`, CSS `light-dark()` уже в токен-слое, `[data-scheme]` переключает); форма —
   `FORM_DELIVERY=smtp|backend` (один канал, ретраи, `nodemailer` только для smtp), PRG 303, тело
   заявки не логировать; `legal/privacy` с плейсхолдерами `{{OPERATOR_*}}`; `og-default.png`;
-  картинки — `<Picture>` build-time (обложки уже в `entities/post/content/covers`); приёмка —
-  визуально в браузере обязательна.
+  картинки — `<Picture>` build-time (обложки уже в `entities/post/content/covers`); `og-default.png`
+  сейчас плейсхолдер из токен-слоя — нужен дизайн 1200×630; приёмка — визуально в браузере обязательна.
 - **Фаза 6 (обвязка)**: 12 kinds (DECISIONS #11), `/de-template` обязан падать на плейсхолдерах
   оператора в политике ПДн и чистить reference-набор по prune-листу из отчёта фазы 5;
   гейт фазы — прогон `/init-service` → `/de-template` на тест-форке и `/scaffold page`.

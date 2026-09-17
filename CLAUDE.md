@@ -3,7 +3,9 @@
 Шаблон индексируемого сайта: **static-first, SSR по необходимости**. Astro 7.3 +
 `@astrojs/node` (`output: 'static'`, `standalone`) / TypeScript 6 (`astro/tsconfigs/strictest`)
 / Tailwind v4 на собственном токен-слое / контент — Markdown в git внутри слайса сущности
-(Content Layer `glob`, Zod 4-схема) / i18n `ru` + `en` / FSD под линтером (ESLint 10
+(Content Layer `glob`, Zod 4-схема) / i18n `ru` + `en` / SEO-слой `shared/seo` (canonical,
+hreflang, OG, JSON-LD; `robots.txt`/`sitemap.xml`/`rss.xml` on-demand на runtime origin) /
+FSD под линтером (ESLint 10
 `boundaries` + `no-restricted-imports`; Steiger — структура) / Biome 2 + Prettier (только
 `*.astro`) / Vitest 5 (Container API) + Playwright на prod-сборке / size-limit /
 pnpm 10 / lefthook. Один Node-образ на все среды: origin штампуется при старте.
@@ -40,10 +42,11 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 | `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome |
 | `pnpm check:content` | контент-гейт до build: схема каждого `.md`, тело, переводы, ссылки, `content/redirects.yaml` |
 | `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` существуют |
+| `pnpm seo:check` | после build: у каждой страницы `dist/client` title/description (уникальные), self-canonical, `lang`, один h1, OG с картинкой, hreflang у каждой пары переводов, валидный JSON-LD |
 | `pnpm size` | бюджеты `.size-limit.cjs` (CSS, HTML главной и поста) |
 | `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
 | `pnpm ttfb <origin> <path…>` | TTFB запущенного сервера: медиана/p90 20 запросов (`scripts/ttfb.mjs`) |
-| `pnpm check` | **gate**: typecheck → lint → format:check → test → steiger → check:gate → check:content → build → check:links → size |
+| `pnpm check` | **gate**: typecheck → lint → format:check → test → steiger → check:gate → check:content → build → check:links → seo:check → size |
 
 Перед claim «готово» / push — **`pnpm check`** (его же гоняет `lefthook pre-push`).
 
@@ -58,6 +61,7 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 | Тесты: два проекта Vitest, Container API, axe, Playwright | rule `tests-pipeline` |
 | UI на токенах, тема, scoped-CSS, 0 JS | rule `shared-ui` |
 | Deployment: образ, entrypoint, `server.mjs`, env-контракт | `docs/reference/deployment.md` |
+| SEO: head через `DocumentLayout`, hreflang, OG, JSON-LD, `robots.txt`/`sitemap.xml`/фиды/ключ IndexNow, staging в три контура, гейты `seo:check`/`seo.spec.ts` | rule `seo-invariants` |
 | Родство с SPA-шаблоном | `docs/reference/kinship.md` + `pnpm kin:diff` |
 | Forward-only, комментарии | rules `forward-only`, `comments` |
 
@@ -89,12 +93,19 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
   предсжимать; абсолютные URL только в `<head>`/JSON-LD/фидах/sitemap
 - Режимы: prerender по умолчанию (`static`); `export const prerender = false` (`dynamic`) —
   только служебные маршруты (`404`, `healthz`, `now`, `robots.txt`/`sitemap.xml`/`rss.xml`,
-  `api/*`) со строкой в карте `docs/reference/rendering.md`. On-demand HTML — `no-cache` по
+  `[key].txt`, `api/*`) со строкой в карте `docs/reference/rendering.md`. On-demand HTML — `no-cache` по
   умолчанию (`app/middleware`), живой/персональный — `private, no-store` в роуте; prerendered
   отдаёт адаптер (`public, max-age=0` + ETag), middleware и `X-Robots-Tag` его не видят.
   Request-only API (`Astro.request`, cookies, `url.search`) не в prerender; `cached` (D) —
   рецепт в `rendering.md`, кода нет
 - 0 JS на контентных страницах; остров — по решению, строка в `.size-limit.cjs`
+- SEO: каждая страница — через `DocumentLayout` с уникальными `title`/`description` (служебная —
+  `noindex`); абсолютные URL — только `absoluteUrl()` из `shared/seo`; hreflang — только для
+  реальных переводов, взаимно, + `x-default`; JSON-LD — в `<head>` через проп `jsonLd` layout'а,
+  только `Organization`/`WebSite` (главная), `BreadcrumbList` (вложенные), `BlogPosting`;
+  в `<body>` ни одного `<script>`; `robots.txt`/`sitemap.xml`/
+  `rss.xml`/`/<INDEXNOW_KEY>.txt` — on-demand на runtime `SITE_URL`, `ROBOTS_POLICY`,
+  `AI_TRAINING`; sitemap = prerendered-страницы сборки, `lastmod` только из `updatedDate`
 - Biome formatter + ESLint flat + Prettier для `*.astro`; TypeScript strict без `as any`
   без причины
 - UI — `.astro` на токен-слое `src/app/styles/index.css`, без внешней DS
@@ -116,10 +127,13 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 - Cross-feature — только через подъём в entities/shared или композицию в widget/page
 - Новое правило границ — фикстура в `.gate-fixtures/` + строка в `expected.json`
 - Новая коллекция контента — `model/{schema,collection}.ts`, импорт в `src/content.config.ts`
-  напрямую из модуля, строка в реестре `scripts/check-content.mjs`
+  напрямую из модуля, запись в реестре `scripts/lib/content.mjs`
 - Новый env-ключ — `shared/config` + `.env.example` + таблица в `deployment.md`
 - Новый on-demand маршрут (`prerender = false`) — строка в карте `docs/reference/rendering.md`
-  + явный `Cache-Control` + `noindex`
+  + явный `Cache-Control` + `noindex` + вне sitemap
+- Новая страница — через `DocumentLayout` (`title`, `description`, `alternatePath` при переводе);
+  вложенная — один массив крошек в `<Breadcrumbs>` и в `jsonLd={[breadcrumbList(crumbs)]}`;
+  `seo:check` держит head и уникальность сниппетов
 
 ### Сначала спросить
 - Правка `docker/*`, `.npmrc`, `package.json#dependencies`
@@ -134,6 +148,8 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 - Импорт внешней дизайн-системы; сырые цвета/размеры вместо токенов
 - `Astro.site`/`astro:i18n` для абсолютных URL; `import.meta.env.VITE_*` для среды
 - Предсжатие HTML на сборке; `build.format: 'file'`; `cache`/`routeRules` в `astro.config.ts`
+- `<meta name="keywords">`; canonical на другой домен; `FAQPage`/`HowTo`/`SearchAction` в JSON-LD;
+  `@astrojs/sitemap` (build-time origin)
 - `prerender = false` на контентной странице; server islands для индексируемого контента
 
 ## Forward-only

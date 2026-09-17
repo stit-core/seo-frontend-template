@@ -9,6 +9,8 @@ const { env } = vi.hoisted(() => {
     ROBOTS_POLICY: 'index',
     RELEASE: 'unknown',
     LOG_LEVEL: 'info',
+    INDEXNOW_KEY: '',
+    AI_TRAINING: 'allow',
   }
   return { env }
 })

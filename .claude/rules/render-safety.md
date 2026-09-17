@@ -14,7 +14,9 @@ globs: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
 
 - Frontmatter prerender-страницы исполняется один раз на `astro build`: `new Date()`,
   `getRuntimeConfig()`, `process.env` дают значения **сборки** (origin — плейсхолдер, который
-  штампует entrypoint). Год в подвале — год релиза, это честно; «текущее время» — нет
+  штампует entrypoint). Год в подвале — год релиза, это честно; «текущее время» — нет.
+  `<meta name="robots">` prerendered-страницы — тоже значение сборки: staging закрывают
+  `ROBOTS_POLICY` на on-demand (`robots.txt`, `X-Robots-Tag`) и Traefik
 - Request-only API не в prerender-маршрутах: `Astro.request.headers` там пустой (Astro пишет
   warn), `Astro.url.search` и тело запроса — пустые, `Astro.clientAddress` бросает,
   `Astro.cookies` и `Astro.response.headers` ни на что не влияют. Нужен запрос — маршрут
@@ -30,7 +32,7 @@ globs: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
 ## Запрос (on-demand)
 
 - `export const prerender = false` — только для служебных маршрутов (`404`, `healthz`, `now`,
-  `robots.txt`/`sitemap.xml`/`rss.xml`, `api/*`) и только со строкой в карте маршрутов
+  `robots.txt`/`sitemap.xml`/`rss.xml`, `[key].txt`, `api/*`) и только со строкой в карте маршрутов
   `docs/reference/rendering.md` и явным решением о `Cache-Control`: публичный HTML —
   `no-cache` (умолчание `app/middleware`, 404/410 включительно), живой или персональный —
   `private, no-store` в самом роуте (`Astro.response.headers`), middleware его не перебивает

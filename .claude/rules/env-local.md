@@ -38,7 +38,8 @@ globs: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/pl
 
 Только `PUBLIC_CONFIG_KEYS` через `getPublicConfig()`; `process.env` целиком не
 сериализуется. Новый ключ в HTML — строка в whitelist + строка в таблице
-`docs/reference/deployment.md` (колонка «в HTML?»).
+`docs/reference/deployment.md` (колонка «в HTML?»). `INDEXNOW_KEY` в HTML не попадает — файл
+`/<ключ>.txt` (on-demand); `AI_TRAINING` и `ROBOTS_POLICY` читает `robots.txt`.
 
 ## Файлы и секреты
 

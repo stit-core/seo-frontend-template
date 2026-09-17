@@ -2,16 +2,16 @@
 // инварианты (h1 только из title, alt у картинок, корневые ссылки на существующие маршруты),
 // переводы и content/redirects.yaml согласованы с маршрутами. Падает раньше и понятнее сборки.
 // YAML читает js-yaml (им же Astro читает frontmatter); TS-модули — только «листовые»
-// (без alias-импортов), их Node исполняет напрямую.
+// (без alias-импортов), их Node исполняет напрямую. Реестр коллекций — scripts/lib/content.mjs.
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, extname, relative, resolve, sep } from 'node:path'
 import { load, YAMLException } from 'js-yaml'
 import { z } from 'zod'
-import { POSTS_PER_PAGE, pageCount } from '../src/entities/post/lib/paginate.ts'
-import { postSchema, SLUG_RE } from '../src/entities/post/model/schema.ts'
+import { SLUG_RE } from '../src/entities/post/model/schema.ts'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
 import { localePath, SUPPORTED_LOCALES } from '../src/shared/i18n/locale.ts'
 import { buildRedirectTable, isExternalTarget } from '../src/shared/redirects/table.ts'
+import { collections, splitFrontmatter } from './lib/content.mjs'
 import { pageRoutes, walk } from './lib/routes.mjs'
 
 const root = resolve(import.meta.dirname, '..')
@@ -19,35 +19,11 @@ const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.svg', '.
 // Голый хост плейсхолдера: ловит и полный URL, и упоминание без схемы.
 const PLACEHOLDER = new URL(SITE_ORIGIN_PLACEHOLDER).hostname
 
-// Реестр коллекций: где лежит контент, чем валидируется, какие маршруты порождает
-// (без префикса локали — его подставляет localePath).
-const collections = [
-  {
-    name: 'post',
-    dir: 'src/entities/post/content',
-    schema: postSchema,
-    routes: ({ slugs, tags }) => [
-      '/blog',
-      ...Array.from(
-        { length: pageCount(slugs.length, POSTS_PER_PAGE) - 1 },
-        (_, index) => `/blog/page/${index + 2}`,
-      ),
-      ...slugs.map((slug) => `/blog/${slug}`),
-      ...tags.map((tag) => `/blog/tag/${tag}`),
-    ],
-  },
-]
-
 const errors = []
 const fail = (where, message) => {
   errors.push(`${where}: ${message}`)
 }
 const rel = (path) => relative(root, path).split(sep).join('/')
-
-function splitFrontmatter(source) {
-  const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(source)
-  return match ? { frontmatter: match[1], body: match[2] } : undefined
-}
 
 // js-yaml нумерует строки от нуля внутри фрагмента; frontmatter начинается со второй строки файла.
 function yamlFailure(where, err, lineOffset) {
@@ -226,7 +202,7 @@ for (const collection of collections) {
       routes.add(localePath(locale, route))
     }
     for (const doc of own.filter((item) => item.data.draft)) {
-      draftRoutes.add(localePath(locale, `/blog/${doc.slug}`))
+      draftRoutes.add(localePath(locale, collection.entryRoute(doc.slug)))
     }
   }
 }

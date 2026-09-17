@@ -60,7 +60,7 @@ test.describe('блог: сырой HTML', () => {
 
   test('непереведённая запись: без ссылки на перевод, под /en/ — 404', async ({ request }) => {
     const html = await (await request.get(`/blog/${UNTRANSLATED}`)).text()
-    expect(html).not.toContain('rel="alternate"')
+    expect(html).not.toContain('hreflang="en"')
     expect((await request.get(`/en/blog/${UNTRANSLATED}`)).status()).toBe(404)
     expect((await request.get(`/en/blog/${POST.slug}`)).status()).toBe(404)
   })

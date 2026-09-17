@@ -1,19 +1,18 @@
 ---
 import DocumentLayout from '@/app/layouts/document.astro'
-import { SITE_NAME } from '@/shared/config'
+import { organization } from '@/shared/seo'
 
 const locale = 'en' as const
+// WebSite печатает только корень домена (/): оттуда Google читает имя сайта.
 ---
 
-<DocumentLayout locale={locale} alternatePath="/">
-  <Fragment slot="head">
-    <title>Indexable site template — {SITE_NAME}</title>
-    <meta
-      name="description"
-      content="Static-first site template on Astro 7: prerendered by default, zero JavaScript on content pages, one Docker image for every environment."
-    />
-  </Fragment>
-
+<DocumentLayout
+  locale={locale}
+  alternatePath="/"
+  title="Indexable site template"
+  description="Static-first site template on Astro 7: prerendered by default, zero JavaScript on content pages, one Docker image for every environment."
+  jsonLd={[organization()]}
+>
   <h1 class="text-heading-xl font-semibold tracking-tight">Indexable site template</h1>
   <p class="mt-4 text-body-lg text-muted">
     Static-first: pages are built ahead of time and served by the Node process as they are; server

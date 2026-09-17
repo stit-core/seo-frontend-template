@@ -40,6 +40,7 @@
 - [`reference/observability.md`](./reference/observability.md) — Sentry, web-vitals
 - [`reference/rendering.md`](./reference/rendering.md) — режимы `static | dynamic`, карта маршрутов, кеш-заголовки, вариант C, рецепт D
 - [`reference/deployment.md`](./reference/deployment.md) — Node-образ, штамповка `SITE_URL`, `server.mjs`, env-контракт
+- SEO — правило [`.claude/rules/seo-invariants.md`](../.claude/rules/seo-invariants.md): head через layout, hreflang, OG, JSON-LD, `robots.txt`/`sitemap.xml`/фиды on-demand, гейты `seo:check` и `seo.spec.ts`
 - [`reference/kinship.md`](./reference/kinship.md) — родство с `spa-frontend-template`, `pnpm kin:diff`
 - [`getting-started.md`](./getting-started.md) — для потребителя шаблона (META, удаляется в de-template)
 - [`contributing.md`](./contributing.md) — устройство `.claude`-системы (наследуется форком)

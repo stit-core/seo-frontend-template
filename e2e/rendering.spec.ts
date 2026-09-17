@@ -1,8 +1,8 @@
 import { spawnSync } from 'node:child_process'
-import { readdirSync } from 'node:fs'
-import { resolve, sep } from 'node:path'
+import { resolve } from 'node:path'
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
+import { prerenderedPaths } from './site'
 
 const PLACEHOLDER = '__site_origin__'
 // Slug reference-контента (src/entities/post/content). /de-template заменит вместе с ним.
@@ -12,19 +12,15 @@ const ON_DEMAND = [
   { path: '/healthz', status: 200 },
   { path: '/xx', status: 404 },
   { path: '/blog/staraya-zametka', status: 410 },
+  { path: '/robots.txt', status: 200 },
+  { path: '/sitemap.xml', status: 200 },
+  { path: '/rss.xml', status: 200 },
+  { path: '/en/rss.xml', status: 200 },
 ]
 
 const root = resolve(import.meta.dirname, '..')
 
-// Все prerendered-страницы — из выхода сборки: ровно то, что статик-хендлер отдаёт в
-// контейнере. Читается внутри теста: при загрузке спеков dist/ ещё может не быть.
-const prerenderedPaths = () =>
-  readdirSync(resolve(root, 'dist/client'), { recursive: true, encoding: 'utf8' })
-    .map((file) => file.split(sep).join('/'))
-    .filter((file) => file.endsWith('index.html'))
-    .map((file) => `/${file.replace(/\/?index\.html$/, '')}`)
-    .sort()
-
+// Абсолютные URL допустимы только в <head> (canonical, og:*, hreflang, JSON-LD), фидах и sitemap.
 const bodyOf = (html: string) => {
   const start = html.indexOf('<body')
   const end = html.lastIndexOf('</body>')
