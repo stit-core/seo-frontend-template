@@ -1,0 +1,16 @@
+node_modules
+dist
+coverage
+.git
+.vite
+.vitest-attachments
+test-results
+playwright-report
+.playwright
+*.log
+.env
+.env.*
+!.env.example
+!.env.local.example
+.DS_Store
+docker/Dockerfile

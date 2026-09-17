@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+/*
+ * Собственный токен-слой SPA. Компоненты опираются только на эти семантические
+ * утилиты/переменные — это и делает их design-system-agnostic и темизируемыми:
+ * тема переключается сменой data-scheme на <html> (features/theme), значения
+ * семантических цветов переопределяются ниже.
+ */
+
+@theme {
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  --text-body-sm: 0.8125rem;
+  --text-body-sm--line-height: 1.25rem;
+  --text-body-md: 0.9375rem;
+  --text-body-md--line-height: 1.5rem;
+  --text-heading-lg: 1.5rem;
+  --text-heading-lg--line-height: 2rem;
+
+  --radius-control: 0.5rem;
+}
+
+/* Цвета — семантические; утилита компилируется в var(--scheme-*), значение
+ * которого зависит от data-scheme (см. блоки ниже). */
+@theme inline {
+  --color-app-bg: var(--scheme-app-bg);
+  --color-app-fg: var(--scheme-app-fg);
+  --color-surface-muted: var(--scheme-surface-muted);
+  --color-divider: var(--scheme-divider);
+  --color-muted: var(--scheme-muted);
+  --color-danger: var(--scheme-danger);
+  --color-action-bg: var(--scheme-action-bg);
+  --color-action-fg: var(--scheme-action-fg);
+}
+
+:root,
+[data-scheme="light"] {
+  --scheme-app-bg: #fafafa;
+  --scheme-app-fg: #0a0a0a;
+  --scheme-surface-muted: #f4f4f5;
+  --scheme-divider: #e4e4e7;
+  --scheme-muted: #71717a;
+  --scheme-danger: #dc2626;
+  --scheme-action-bg: #18181b;
+  --scheme-action-fg: #fafafa;
+}
+
+[data-scheme="dark"] {
+  --scheme-app-bg: #0a0a0a;
+  --scheme-app-fg: #fafafa;
+  --scheme-surface-muted: #18181b;
+  --scheme-divider: #27272a;
+  --scheme-muted: #a1a1aa;
+  --scheme-danger: #f87171;
+  --scheme-action-bg: #fafafa;
+  --scheme-action-fg: #18181b;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--scheme-app-bg);
+  color: var(--scheme-app-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
