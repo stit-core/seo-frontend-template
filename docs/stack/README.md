@@ -1,46 +1,88 @@
 # Stack-артефакты
 
-Дизайн платформы/стека фронта — **первичный source of truth** и **вход для
-скила `/de-template`**: 8 singleton-артефактов, по одному на kind,
-заполняются через `/stack-deep-dive`.
+Дизайн платформы сайта — **первичный source of truth** и **вход скила
+`/de-template`**: singleton-артефакт на kind, заполняется через
+`/stack-deep-dive`.
 
-Где FSD-карта в `../strategy` (`docs/projects/<slug>/fsd/<surface>/`)
-отвечает на «как нарезано», `docs/stack/` отвечает на «на какой платформе
-крутится»: какой runtime, какие env, какие deps, как версионируется, как
-деплоится.
+Где FSD-карта в `../strategy` (`docs/projects/<slug>/fsd/<surface>/`) отвечает
+на «как нарезано», `docs/stack/` отвечает на «на какой платформе крутится»:
+откуда контент, какие маршруты и режимы рендера, какой origin, какие env, как
+собирается и деплоится образ.
+
+В каноническом репозитории шаблона заполненных `docs/stack/<kind>.md` нет —
+только формы в `_templates/`. Формы приходят **с дефолтами шаблона**: Astro 7
+(`output: 'static'`), контент — Markdown в git, i18n `ru` + `en`, один Node-образ
+и штамповка `SITE_URL` при старте, 0 JS на контентных страницах. Потребитель
+подтверждает дефолт или меняет его — и тогда меняет код по `Generates`.
 
 ## Kinds
 
-| kind | файл | что описывает |
-|---|---|---|
-| `service` | `service.md` | имя, scope (`@org/<service>`), repository URL, image registry |
-| `runtime` | `runtime.md` | node version, browser support, polyfills, target |
-| `config` | `config.md` | runtime config keys, env, секреты-классы |
-| `routing` | `routing.md` | TanStack Router конфигурация, layouts |
-| `api` | `api.md` | HTTP-клиент, zod-контракты, mock-стратегия, auth scheme |
-| `styling` | `styling.md` | токен-слой, темы, layout-конвенции |
-| `observability` | `observability.md` | Sentry, web-vitals |
-| `dependencies` | `dependencies.md` | внешние deps вне базовой подборки, reasoning |
+| kind | файл | обязателен | что описывает |
+|---|---|---|---|
+| `service` | `service.md` | да | имя, scope, repository, registry, `infra-svc`, резолв strategy |
+| `runtime` | `runtime.md` | да | Node-процесс: адаптер, порт, graceful shutdown, `/healthz`, память |
+| `content` | `content.md` | да | источник контента, коллекции и схемы, локали, черновики, картинки, **кто редактирует** |
+| `routing` | `routing.md` | да | URL-карта: происхождение маршрутов, локали, слеши, редиректы, 404/410 |
+| `rendering` | `rendering.md` | да | режим на маршрут, кеш-заголовки, абсолютные URL, острова |
+| `seo` | `seo.md` | да | идентичность сайта, OG, JSON-LD, hreflang, robots, sitemap, фиды, верификации |
+| `styling` | `styling.md` | да | токен-слой, тема, шрифты, бюджеты CSS |
+| `api` | `api.md` | **условный** | обработчики форм и внешние источники данных |
+| `analytics` | `analytics.md` | **условный** | счётчики, пиксели, баннер согласия |
+| `observability` | `observability.md` | да | JSON-лог процесса, `X-Request-Id`, `/healthz`, Sentry |
+| `config` | `config.md` | да | роллап env + колонка «в HTML?» и публичные идентификаторы сайта |
+| `dependencies` | `dependencies.md` | да | пакеты вне базовой подборки и бюджеты `size-limit` |
 
-Каждый артефакт обязан иметь секцию **Generates** — что из него родится.
+Условный kind заводится по ответу в первой волне `/stack-deep-dive`:
+
+- сайт принимает что-то от посетителя (форма, подписка) или берёт данные извне
+  (CMS, бэкенд) ⇒ `api.md`;
+- на сайте будет счётчик, пиксель или баннер согласия ⇒ `analytics.md`.
+
+Незаведённый условный kind — нормальное состояние, а не дыра: файла просто нет.
+
+Отдельного kind `images` нет — пайплайн картинок описывает секция «Картинки»
+артефакта `content.md`: у контентного сайта картинки приходят вместе с текстом.
+
+## Порядок волн
+
+```
+service → runtime → content → routing → rendering → seo → styling
+        → api (усл.) → analytics (усл.) → observability → config → dependencies
+```
+
+Порядок не произвольный: маршруты выводятся из коллекций (`content` → `routing`),
+режим — из маршрутов (`routing` → `rendering`), индексируемость — из режима
+(`rendering` → `seo`), а `config` собирает env, которые родились в предыдущих
+волнах, поэтому идёт предпоследним.
 
 ## Frontmatter
 
 ```yaml
-id: stack.<name>
-kind: <name>
-name: <name>
+id: stack.<kind>
+kind: <kind>
+name: <kind>
 status: draft
 ```
 
+`status` — `draft` (заполняется) или `stable` (принят, по нему работает
+`/de-template`). Третьего значения нет.
+
 ## Workflow
 
-1. Скопировать `_templates/<kind>.md` → `docs/stack/<kind>.md` (8 штук)
-2. `/stack-deep-dive` — заполнить волнами поверх базовых выборов шаблона
+1. Скопировать нужные `_templates/<kind>.md` → `docs/stack/<kind>.md`
+2. `/stack-deep-dive` — волнами подтвердить дефолты и записать проектные решения
 3. Промоушн `draft → stable`
 4. `/de-template` читает stable-артефакты и разворачивает фундамент
 
 ## Gate
 
-`/de-template` не запускается, пока не все 8 артефактов `stable`.
-Зеркалит FSD-gate.
+`/de-template` не запускается, пока не выполнено всё:
+
+- все обязательные kinds — `status: stable`;
+- все **заведённые** условные kinds — `status: stable`;
+- у каждого артефакта секция `Generates` непуста;
+- нет открытых `**blocker**` в `.claude/skills/stack-deep-dive/state/`;
+- cross-kind инварианты сходятся: каждая страница FSD-карты есть в карте
+  маршрутов `rendering.md`; `indexable` не противоречит `guard`; каждый env,
+  объявленный любым kind'ом, доехал в `config.md`; редактор без git ⇒ источник
+  контента не `git`.

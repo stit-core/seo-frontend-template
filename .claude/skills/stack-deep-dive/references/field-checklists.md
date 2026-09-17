@@ -1,140 +1,201 @@
 # Чек-листы полей по kind
 
-По разделу на каждый из 8 stack-kinds. В каждом разделе:
+Выжимка для скилла: что должно быть непусто к `stable`, что правит `/de-template`,
+куда роллапится решение, на чём чаще всего спотыкаются. Полный канон — формы
+`docs/stack/_templates/<kind>.md` и каталог `docs/stack/README.md`.
 
-- **Обязательные секции** — что должно быть и непусто к stable.
-- **Что в Generates** — конкретика, которую правит `de-template`.
-- **Cross-kind ссылки** — куда роллапается решение.
-- **Главные anti-patterns**.
-
-Полный канон — `docs/stack/README.md` + `_templates/<kind>.md`. Здесь — выжимка
-для скилла. Базовые выборы шаблона уже зашиты; здесь — проектные вариации.
+Дефолты шаблона уже зашиты в формы; волна спрашивает только проектные вариации.
 
 ---
 
 ## service
 
-**Обязательные секции**: `Идентичность`, `Связь с экосистемой`, `Generates`.
+**Секции**: `Идентичность`, `Домены`, `Связь с экосистемой`, `Generates`.
 
-**Generates содержит**: `package.json#name`, README-шапка, registry-путь
-образа, `docker/Dockerfile` LABEL.
+**Generates**: `package.json#name`, шапка `README.md`, registry-путь образа для `/release`,
+`SITE_NAME`/`SITE_SAME_AS` в `src/shared/config/site.ts`.
 
-**Cross-kind**: registry/имя сервиса — якорь для `deployment.md`;
-`project-slug` / `strategy-path` (дефолт `../strategy`) / `surface` — резолв
-FSD-карты и продуктового контекста в соседнем `<org>/strategy`
-(`<strategy-path>/docs/projects/<slug>/`), по ним ходят `/scaffold` и
-`/de-template`.
+**Cross-kind**: `infra-svc` → `make bump SVC=<…>` в handoff `/release`; канонический хост
+из `Домены` → `seo.md § Идентичность` и `SITE_URL`; `project-slug`/`strategy-path`/`surface`
+— резолв FSD-карты для `/scaffold` и `/de-template`.
 
-**Anti-patterns**:
-- `package.json#name` остался шаблонным (`@stit/spa-frontend-template`).
-- Image-теги `:latest`/`:edge`.
+**Anti-patterns**: имя пакета осталось `@stit/ssr-frontend-template`; теги `:latest`/`:edge`;
+два «канонических» хоста.
 
 ---
 
 ## runtime
 
-**Обязательные секции**: `Node`, `Browser`, `React`, `Generates`.
+**Секции**: `Процесс`, `Сборка`, `Браузеры`, `Generates`.
 
-**Generates содержит**: `.nvmrc`/`engines`, browserslist target, React Compiler
-mode в `vite.config.ts`.
+**Generates**: `.nvmrc`/`engines`, `docker/Dockerfile`, таймауты `docker/server.mjs`,
+строки для compose в `<org>/infra`.
 
-**Cross-kind**: browser target ↔ `styling.md` (Tailwind target).
+**Cross-kind**: `SHUTDOWN_TIMEOUT_MS` ≤ `stop_grace_period` сервиса; `mem_limit` ↔
+`NODE_OPTIONS=--max-old-space-size` (≈ 75 %); порт ↔ `HEALTHCHECK`.
 
-**Anti-patterns**:
-- React Compiler выключен без обоснования.
-- Browser target шире, чем поддерживает DS.
+**Anti-patterns**: предсжатие HTML на сборке (штамповка не заглянет внутрь архива);
+`read_only: true` у сервиса (штамповка пишет в `/app/dist/client`).
 
 ---
 
-## config
+## content
 
-**Обязательные секции**: `Runtime config keys`, `Build-time env (VITE_*)`,
-`Секреты`, `Generates`.
+**Секции**: `Источник`, `Кто редактирует`, `Коллекции`, `Локали контента`, `Черновики`,
+`Картинки`, `Редиректы`, `Поиск по сайту`, `Generates`.
 
-**Generates содержит**: `shared/config` Zod-схема, `nginx-entrypoint.sh` →
-`config.js`, `.env.example`.
+**Generates**: слайс коллекции (`content/`, `model/{schema,collection}.ts`, `api/queries.ts`,
+`ui/`), регистрация в `src/content.config.ts` и в реестре `scripts/lib/content.mjs`,
+страницы списка и записи, источник sitemap/фидов/hreflang, `content/redirects.yaml`.
 
-**Cross-kind (роллап)**: каждый env/DSN, объявленный любым kind'ом, обязан быть
-здесь. `API_BASE_URL` совпадает с тем, что использует `shared/config`.
+**Cross-kind (блокирующий)**: `Кто редактирует` = «редактор без git» при источнике `git` —
+`**blocker**`: публикация записи означает релиз образа. Либо редактор идёт через PR, либо
+источник `cms`/`api`, и тогда его маршруты в `rendering.md` — `cached`/`dynamic`.
 
-**Anti-patterns**:
-- Секрет в `VITE_*` (попадает в публичный бандл).
-- `SENTRY_DSN` объявлен в `observability.md`, но не в `Runtime config keys`.
+**Anti-patterns**: поле `lang` во frontmatter (язык задаёт каталог); fallback «показать
+русскую версию под `/en`» (это дубль, нужен 404); коллекция без записи в реестре
+`scripts/lib/content.mjs` — гейты её не увидят.
 
 ---
 
 ## routing
 
-**Обязательные секции**: `TanStack Router`, `Layouts`, `Guards`, `Generates`.
+**Секции**: `Как устроены маршруты`, `Локали в URL`, `Карта страниц`, `Редиректы и
+нештатные коды`, `Навигация`, `Generates`.
 
-**Generates содержит**: `routeTree.gen.ts` (vite-плагин), layout-роуты,
-guard-обвязка.
+**Generates**: файлы `src/pages/**` и `getStaticPaths()`, секции `src/pages/_<name>/`,
+`content/redirects.yaml`, строки в `STATIC_ROUTES` (`src/pages/sitemap.xml.ts`), подписи
+навигации в `src/shared/i18n/dict.ts`.
 
-**Cross-kind**: guards ↔ `api.md § Auth scheme`; layouts ↔ `app.md` (fsd).
+**Cross-kind**: каждая строка `pages.md` FSD-карты — строка здесь; каждая строка отсюда —
+режим в `rendering.md`.
 
-**Anti-patterns**:
-- Guard в рендере вместо `beforeLoad`.
-- File-based маршрут без соответствия page в `fsd/pages.md`.
+**Anti-patterns**: хвостовой слеш в ссылках и в `from` редиректа; цепочка редиректов
+(`to` совпал с чьим-то `from`); адрес из `redirects.yaml`, ставший живым маршрутом.
 
 ---
 
-## api
+## rendering
 
-**Обязательные секции**: `HTTP-клиент`, `Контракт API`, `Auth scheme`,
-`Mock-стратегия`, `Generates`.
+**Секции**: `Режимы`, `Карта маршрутов`, `Абсолютные URL и один образ на все среды`,
+`Интерактивность (острова)`, `Generates`.
 
-**Generates содержит**: `shared/api/client.ts`, `entities/*/model/schema.ts`,
-mock-handlers.
+**Generates**: `export const prerender` и заголовки в `src/pages/**`, строки в
+`docs/reference/rendering.md`, бюджеты `.size-limit.cjs`, `e2e/rendering.spec.ts`.
 
-**Cross-kind**: контракт API ↔ `backend/openapi.json` (референс); mock-сущности ↔
-`fsd/entities.md`.
+**Cross-kind**: `indexable: да` ⇒ режим `static` или `cached` (никогда `dynamic`/`client`);
+каждый остров ⇒ строка бюджета; источник контента не `git` ⇒ у его маршрутов режим не `static`.
 
-**Anti-patterns**:
-- Вторая линия HTTP-клиента (пакет-обёртка) рядом со своим fetch-враппером.
-- Схема без парса ответа в `queryFn`/`mutationFn`.
+**Anti-patterns**: `prerender = false` на контентной странице; request-only API
+(`Astro.request`, cookies, `url.search`) в prerender-маршруте; `Astro.site` для
+абсолютных URL; server islands на индексируемой странице.
+
+---
+
+## seo
+
+**Секции**: `Идентичность сайта`, `Социальные карточки`, `Структурированные данные`,
+`Локали и hreflang`, `robots-политика`, `Sitemap и фиды`, `Верификация`, `Generates`.
+
+**Generates**: `src/shared/config/site.ts`, `src/shared/seo/*`, маршруты
+`robots.txt`/`sitemap.xml`/фидов/ключа IndexNow, `STATIC_ROUTES`, `e2e/seo.spec.ts`.
+
+**Cross-kind**: канонический хост ↔ `service.md § Домены` ↔ `SITE_URL` в `config.md`;
+`ROBOTS_POLICY`, `AI_TRAINING`, `INDEXNOW_KEY` — в `config.md`; набор локалей ↔ `content.md`.
+
+**Anti-patterns**: `<meta name="keywords">`; canonical на другой домен; `FAQPage`/`HowTo`/
+`SearchAction` «ради rich results»; hreflang на несуществующий перевод; verification-токен
+в env (prerendered его не увидит — он в `site.ts`).
 
 ---
 
 ## styling
 
-**Обязательные секции**: `Источники`, `Корневой импорт`, `Темизация — оси`,
-`Layout-конвенции проекта`, `Generates`.
+**Секции**: `Источники`, `Палитра и семантика`, `Тема`, `Шрифты`, `Типографика и колонки`,
+`Бюджет`, `Generates`.
 
-**Generates содержит**: Tailwind v4 config, активные оси темизации
-(scheme/brand/density), корневой CSS-импорт.
+**Generates**: `src/app/styles/index.css`, бюджеты CSS/HTML в `.size-limit.cjs`,
+`src/features/theme/**`.
 
-**Cross-kind**: оси темизации ↔ токен-слой `app/styles/index.css` (rule `shared-ui`).
+**Cross-kind**: веб-шрифт ⇒ строка веса в `dependencies.md § Бюджеты`; остров темы ⇒
+строка в `rendering.md § Интерактивность`.
 
-**Anti-patterns**:
-- Хардкод сырых цветов/размеров вместо семантических токенов `index.css`.
-- Произвольный CSS вместо Tailwind-утилит без обоснования.
+**Anti-patterns**: сырой цвет или размер в компоненте вместо токена; цвета в scoped-CSS;
+веб-шрифт без сабсета кириллицы.
+
+---
+
+## api (условный)
+
+**Секции**: `Входящие обработчики`, `Антиспам-лестница`, `Доставка заявки`,
+`Внешние источники данных`, `Generates`.
+
+**Generates**: `src/pages/api/**`, слайс формы, шов капчи, строки в карте маршрутов и в
+чек-листе прокси `deployment.md`, `e2e/forms.spec.ts`, env формы в `config.md`.
+
+**Cross-kind**: rate-limit на публичный POST — **требование деплоя**, строка в
+`deployment.md`; согласие на ПДн ⇒ страница политики в `routing.md`; внешний источник,
+читаемый на запрос ⇒ `cached`/`dynamic` в `rendering.md`.
+
+**Anti-patterns**: обработчик формы как `.ts`-endpoint (без JS ответом на POST обязана быть
+разметка); счётчик rate-limit в памяти процесса; тело заявки в логе; зарубежный
+форм-сервис как канал доставки.
+
+---
+
+## analytics (условный)
+
+**Секции**: `Счётчики`, `Что не работает в РФ`, `Согласие`, `Бюджет`, `Generates`.
+
+**Generates**: `src/app/analytics/*`, идентификаторы в `site.ts`, баннер согласия и его
+строка бюджета, e2e-проверка «сторонних скриптов столько-то».
+
+**Cross-kind**: идентификатор счётчика — поле `site.ts`, не env (`config.md § Публичные
+идентификаторы`); баннер — остров, строка в `rendering.md` и в `.size-limit.cjs`.
+
+**Anti-patterns**: счётчик синхронно в `<head>`; подключение из виджета или страницы мимо
+единственной точки `app/analytics`; GA4 как основная аналитика для российской аудитории.
 
 ---
 
 ## observability
 
-**Обязательные секции**: `Sentry`, `Web Vitals`, `Generates`.
+**Секции**: `Лог процесса`, `Ошибки`, `Клиентская телеметрия`, `Здоровье`, `Generates`.
 
-**Generates содержит**: Sentry init (conditional), web-vitals репортер.
+**Generates**: `src/shared/observability/*`, строка лога в `app/middleware`,
+`src/pages/healthz.ts`, env в `config.md`.
 
-**Cross-kind**: `SENTRY_DSN` ↔ `config.md § Runtime config keys`.
+**Cross-kind**: `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `LOG_LEVEL`, `RELEASE` — в `config.md`;
+алерты — в handoff `<org>/infra`.
 
-**Anti-patterns**:
-- Секрет-токен в фронт-бандле.
-- Sentry активен, но DSN не объявлен в `config.md`.
+**Anti-patterns**: `console.*` мимо `log()`; PII, query, cookie или тело запроса в логе;
+RUM-скрипт на контентной странице ради метрик.
+
+---
+
+## config
+
+**Секции**: `Runtime env контейнера`, `Публичные идентификаторы сайта`, `Секреты`, `Generates`.
+
+**Generates**: `src/shared/config/{runtime,site}.ts`, `.env.example`,
+`docs/reference/deployment.md § Env-контракт`, список ключей для `.env` VPS.
+
+**Cross-kind (роллап)**: env, объявленный любым kind'ом, обязан быть здесь; расхождение —
+`**blocker**` в `state/config.md`.
+
+**Anti-patterns**: секрет с пометкой «в HTML: да»; чтение `process.env` мимо
+`shared/config`; публичный идентификатор сайта, заведённый как env (prerendered его не увидит).
 
 ---
 
 ## dependencies
 
-**Обязательные секции**: `Базовая подборка (наследуется из шаблона)`,
-`Проектные добавления`, `Запрещено`, `Generates`.
+**Секции**: `Базовая подборка`, `Проектные добавления`, `Запрещено`, `Бюджеты`, `Generates`.
 
-**Generates содержит**: проектные записи `package.json` + обоснование каждой.
+**Generates**: `package.json`, строки `.size-limit.cjs`, прунинг в `docker/Dockerfile`.
 
-**Cross-kind**: проектные deps не противоречат `package.json`; внешние сервисы
-↔ `api.md`/`observability.md`.
+**Cross-kind**: каждый пакет, упомянутый другим kind'ом, — строка здесь; бюджеты ↔
+`styling.md` и `rendering.md`.
 
-**Anti-patterns**:
-- Проектная dep без обоснования в `Проектные добавления`.
-- Dep, дублирующая то, что уже даёт базовая подборка.
+**Anti-patterns**: пакет без обоснования; дубль того, что уже даёт базовая подборка;
+инструмент разработки в `dependencies` (уедет в прод-образ).

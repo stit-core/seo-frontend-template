@@ -30,7 +30,7 @@
 - [x] Фаза 5 — reference-слайсы и визуальный уровень: about, contacts + spasibo (форма без JS,
   `FORM_DELIVERY`), legal/privacy, 500, тема (единственный остров), картинки build-time,
   аналитика после idle, e2e forms/a11y
-- [ ] Фаза 6 — обвязка: `docs/stack` 12 kinds + `_templates`, скиллы (`smartdev`, `init-service`,
+- [x] Фаза 6 — обвязка: `docs/stack` 12 kinds + `_templates`, скиллы (`smartdev`, `init-service`,
   `stack-deep-dive`, `de-template`, `scaffold`, `release`, `seo-audit`, `content`),
   `docs/reference/*`, `getting-started.md`, финальные `CLAUDE.md`/`README.md`
 - [ ] Фаза 7 — in-repo часть: `docs/reference/ecosystem.md`, sweep «6 → 7», handoff-документ

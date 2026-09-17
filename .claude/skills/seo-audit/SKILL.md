@@ -1,0 +1,91 @@
+---
+name: seo-audit
+description: Прогнать SEO-аудит сайта существующими гейтами — прод-сборка, pnpm seo:check по dist/client, e2e/seo.spec.ts на поднятом сервере, curl по живому домену (статусы, robots, sitemap, нормализация URL) — и собрать короткий отчёт с тем, что чинить. Активируй когда юзер говорит "/seo-audit", "проверь SEO", "почему не индексируется", "проверь выдачу", а также после выката новой версии.
+---
+
+# Skill: seo-audit
+
+Тонкий скилл: **своих парсеров и проверок не пишет** — запускает те, что уже в репо, и
+читает их вывод. Всё, что он может найти, держат `pnpm seo:check`, `e2e/seo.spec.ts` и
+десяток curl'ов; ценность скилла — в порядке прогона и в сведении результата.
+
+Инварианты, которые проверяются, — `.claude/rules/seo-invariants.md`.
+
+## Когда применять
+
+- «/seo-audit», «проверь SEO», «проверь выдачу»
+- «страница не индексируется», «в выдаче не тот заголовок»
+- После выката новой версии (шаг 6 `/release`)
+
+## Что НЕ делать
+
+- ❌ Писать разовые скрипты-парсеры HTML — парсер `<head>` один, `scripts/lib/html.mjs`
+- ❌ Чинить найденное молча: сначала отчёт, потом правки по решению юзера
+- ❌ Ходить на чужие домены и в сервисы за пределами задачи
+
+## Прогон
+
+### 1. Локальные гейты по сборке
+
+```bash
+pnpm build          # плейсхолдер origin, как в образе
+pnpm check:links    # каждый внутренний href/src в dist/client существует
+pnpm seo:check      # head каждой страницы: title/description, canonical, lang, h1, OG, hreflang, JSON-LD
+pnpm size           # бюджеты HTML и CSS
+```
+
+`seo:check` падает построчно и человекочитаемо — вывод кладётся в отчёт как есть.
+
+### 2. Поведение на поднятом сервере
+
+```bash
+pnpm test:e2e e2e/seo.spec.ts   # или весь набор: pnpm test:e2e
+```
+
+Спек поднимает прод-сборку через `docker/entrypoint.sh` + `docker/server.mjs` и проверяет
+сырой HTML (в том числе под `User-Agent: Googlebot`): статусы, мета, взаимный hreflang,
+JSON-LD в `<head>` и отсутствие `<script>` в `<body>`, `og:image`, `robots.txt` ↔
+`sitemap.xml` ↔ `dist/client`, фиды, ключ IndexNow, вес HTML.
+
+### 3. Живой домен (или запущенный контейнер)
+
+Порядок пунктов — чек-лист релиза, короткая версия. `ORIGIN` — прод-домен или
+`http://127.0.0.1:<порт>`.
+
+```bash
+curl -sI  $ORIGIN/                        # 200, нет X-Robots-Tag: noindex
+curl -s   $ORIGIN/robots.txt              # политика, абсолютный Sitemap:, нет Disallow: / на проде
+curl -s   $ORIGIN/sitemap.xml | grep -c '<loc>'   # ожидаемое число, все URL на своём домене по https
+curl -sI  $ORIGIN/net-takogo-puti         # 404 — не 200 и не редирект на главную
+curl -sI  $ORIGIN/about/                  # один 301 на /about (хвостовой слеш)
+curl -s   $ORIGIN/ | grep -oE '<link rel="canonical"[^>]*>|<html[^>]*>|<h1'   # canonical, lang, один h1
+```
+
+Признак беды, который эти шесть строк ловят чаще всего: `noindex` уехал в прод
+(`ROBOTS_POLICY` не переключён после staging), canonical на плейсхолдере или на чужом
+домене (штамповка не отработала), 404 отвечает 200 (soft-404), sitemap пуст.
+
+### 4. Внешние валидаторы (руками, ссылки в отчёт)
+
+- Rich Results Test — `search.google.com/test/rich-results`
+- Schema Markup Validator — `validator.schema.org`
+- Микроразметка Яндекса — `webmaster.yandex.ru/site/tools/microtest/`
+- PageSpeed Insights (mobile) по 2–3 ключевым URL
+
+## Отчёт
+
+Коротко, без пересказа вывода целиком:
+
+```
+seo-audit · <домен или dist/client>
+
+зелёное: build, check:links (802 ссылки), seo:check (34 страницы, 11 пар hreflang), size
+красное:
+  • /services — description дублирует /about (seo:check)
+  • /old-price — 200 вместо 410: строка есть в redirects.yaml, но файл страницы вернулся
+чинить: 1) переписать description /services; 2) удалить src/pages/old-price.astro
+дальше руками: Rich Results Test по /blog/<slug>, PSI mobile по главной
+```
+
+Правки — отдельным проходом, после «да» юзера: description и title живут рядом со
+страницей или во frontmatter записи, маршруты — в `docs/reference/rendering.md`.

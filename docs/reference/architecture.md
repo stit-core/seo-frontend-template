@@ -1,98 +1,115 @@
 # Архитектура
 
-## Слои FSD
+Feature-Sliced Design поверх файлового роутинга Astro. Нормативная часть — правило
+`.claude/rules/fsd-architecture.md` (его держит `pnpm lint`); здесь — карта и объяснения.
+
+## Слои
 
 ```
 app → pages → widgets → features → entities → shared
 ```
 
-Импорт строго **нисходящий**. `app` и `shared` — sliceless (слой == слайс,
-внутри сегменты могут импортировать друг друга свободно). Остальные слои —
-со слайсами, между слайсами **импорт запрещён**.
-
-### Ответственности
+Импорт строго **нисходящий**. `app` и `shared` — sliceless (слой = слайс, сегменты внутри
+видят друг друга). У остальных слоёв есть слайсы, и **между слайсами одного слоя импорт
+запрещён**: общее либо поднимается в `entities`/`shared`, либо композируется в widget или
+на странице.
 
 | слой | что лежит |
 |---|---|
-| `app/` | bootstrap (`main.tsx`, `init.ts`), providers, router-config, root-стили |
-| `pages/` | 1 page = 1 route (file-based TanStack Router); page-локальная композиция |
-| `widgets/` | переиспользуемые UI-блоки на ≥2 pages (Header, Sidebar, AppShell…) |
-| `features/` | пользовательские сценарии (LoginForm, CreateTodo, ThemeSwitcher) |
-| `entities/` | доменные сущности (Session, User, Todo) — schema + queries + ui-presenter |
-| `shared/` | инфра: api-клиент, mock-слой, config, i18n, lib, ui-компоненты |
+| `app/` | документ-шелл `layouts/document.astro`, `middleware` (лог, редиректы, заголовки), токен-слой `styles/index.css`, единственная точка аналитики |
+| `pages/` | роутинг: 1 файл = 1 URL; секции страниц — рядом, в `_<name>/` |
+| `widgets/` | блоки каркаса и переиспользуемые блоки: шапка, подвал, список записей, крошки |
+| `features/` | пользовательские сценарии: форма обратной связи, переключатель темы |
+| `entities/` | доменные сущности: коллекция контента `post` (с текстами внутри слайса), реквизиты `company` |
+| `shared/` | инфраструктура: config, i18n, seo, redirects, observability, antispam, lib, ui |
 
-## Сегменты слайса
+### Единственный импорт вверх
 
-```
-features/<slice>/
-├─ ui/         React-компоненты
-├─ model/      стор, schema, types, бизнес-логика
-├─ api/        запросы и мапперы
-├─ lib/        хелперы слайса
-├─ config/     константы, feature-flags
-└─ index.ts    public API (explicit re-exports)
-```
+`pages → app/layouts`. Astro не оборачивает страницы снаружи: документ-шелл (`<html>`,
+`<head>`, лендмарки) страница импортирует сама. Остальной `app` из `pages` недоступен —
+политика в `eslint.config.js`.
 
-**Запрещены** сегменты группировки по типу: `components/`, `hooks/`,
-`utils/`, `types/`. Группировка — только по назначению.
+## `src/pages` = роутинг
+
+`index.astro` → `/`, `en/index.astro` → `/en`, `healthz.ts` → `/healthz`. Подпапки —
+сегменты URL, а не слайсы, поэтому правила слайсов Steiger на `pages` выключены.
+
+Секции одной страницы живут рядом с ней: `src/pages/_<name>/` — префикс `_` исключает
+каталог из роутинга. Widget заводится, когда блок нужен ≥ 2 страницам; иначе Steiger
+поймает `insignificant-slice`. Локали делят одну разметку: `pages/about.astro` и
+`pages/en/about.astro` — тонкие обёртки над `pages/_about/about-page.astro` с разным
+`locale`.
+
+## Навязанные Astro точки входа
+
+`src/content.config.ts`, `src/middleware.ts`, `src/env.d.ts` (и `src/actions/**`, если
+появятся) — не слои, а тонкие входы: реэкспорт, декларация типов, регистрация коллекций.
+Логика — в `app/middleware`, `entities/<x>/model`, `features/<x>/api`.
+
+`content.config.ts` импортирует коллекцию **напрямую из модуля** слайса: через баррель
+dev-сервер теряет конфиг контента.
 
 ## Public API
 
-- `index.ts` обязателен на каждом слайсе **и** сегменте sliceless-слоя
-- Explicit re-exports, не `export *`
-- Внутри слайса — относительные пути, снаружи — только через `index.ts`
-- В `shared/ui` и `shared/lib` — отдельный `index.ts` на компонент/утилиту
-  (для tree-shake)
+`index.ts` на каждом слайсе и каждом сегменте `shared` — explicit re-exports, включая
+компоненты:
 
-## Pages-first
+```ts
+export { default as PostCard } from './ui/post-card.astro'
+```
 
-При декомпозиции новой функциональности — **начинать с pages**, спускаться
-вниз только при реальном переиспользовании. Не выносить «на будущее» —
-Steiger ловит `insignificant-slice`.
+Внутри `index.ts` нет импортов, объявлений и вызовов: баррель с вычисленным значением
+тянет zod и контент в любой граф, который его коснулся. Server-only символы (`astro:*`,
+`node:*`) из барреля не реэкспортируются — серверный entry слайса импортирует их сам.
 
-## Cross-feature
+Сегменты `app` (`layouts`, `middleware`, `styles`) — модули, а не баррели: у них один
+потребитель и нет смысла в промежуточном файле.
 
-Фича A не импортирует фичу B напрямую. Варианты:
+## Дерево
 
-1. Поднять общее в `entities/` или `shared/` (предпочтительно)
-2. Композировать в `widget` или `page` (родитель видит обе)
-3. `@x`-нотация **только для `entities/`** (`entities/song/@x/playlist.ts`),
-   не для `features/`
+```
+src/
+├─ app/           layouts/document.astro · middleware/ · styles/index.css · analytics/
+├─ pages/         index · about · contacts/{index,spasibo} · legal/privacy · blog/**
+│                 en/** · 404 · 500 · now · healthz · robots.txt · sitemap.xml
+│                 rss.xml · [key].txt · api/contact · секции _about/ _blog/ _contacts/
+├─ widgets/       site-header · site-footer · post-list · breadcrumbs
+├─ features/      contact-form · theme
+├─ entities/      post (content/{ru,en}/*.md + covers, model, api, lib, ui) · company
+└─ shared/        config · i18n · seo · redirects · observability · antispam · lib · ui
+```
 
-## UI-компоненты
+## Сегменты слайса
 
-Внешней дизайн-системы нет — все компоненты пишутся в проекте и делаются
-design-system-agnostic: опираются только на собственный токен-слой
-(`app/styles/index.css` — Tailwind v4 `@theme` + семантические переменные,
-тема через `data-scheme`), не на вендорную DS.
+`ui/` `model/` `api/` `lib/` `config/` и — у сущности с текстами — `content/`.
+Группировка по типу (`components/`, `hooks/`, `utils/`, `types/`) запрещена: Steiger
+`no-reserved-folder-names`. Внутри слайса — относительные пути, снаружи —
+`@/<layer>/<slice>`.
 
-- `shared/ui/` — переиспользуемые примитивы и обёртки с layout-/biz-семантикой
-  (PageHeader, DataTable…)
-- слайс-локальный UI — в `ui/`-сегменте слайса, поднимается в `shared/ui/`
-  при реальном переиспользовании
-
-Дисциплина — rule `shared-ui`.
-
-## Линт-стек
+## Кто что проверяет
 
 | инструмент | задача |
 |---|---|
-| TypeScript strict | типы (verbatimModuleSyntax, noUncheckedIndexedAccess, …) |
-| Biome 2 | format + базовые JS/TS правила |
-| ESLint 9 flat | React, jsx-a11y, react-compiler, testing-library, boundaries |
-| Steiger | архитектурный линтер FSD (forbidden-imports, public-api, slice-discipline) |
-| size-limit | бандл-бюджеты на entry-чанки |
+| ESLint 10 (`boundaries` + `no-restricted-imports`) | **границы FSD**: направление импортов, deep-import, server-only в баррелях, клиентские `<script>` |
+| Steiger | структура: public API, сегменты, имена, значимость слайса; на `.astro`-целях fail-open |
+| `astro check` | типы (`astro/tsconfigs/strictest`) |
+| Biome + Prettier | формат и базовые правила; `.astro` форматирует Prettier |
+| `.gate-fixtures/` + `pnpm check:gate` | заведомые нарушения обязаны валить линтеры — иначе гейт деградирует молча |
+
+Новое правило границ = новая фикстура в `.gate-fixtures/` и строка в `expected.json`.
 
 ## Тесты
 
-- Unit/component — рядом со слайсом (`*.test.tsx`)
-- E2E — отдельный `e2e/` (Playwright) вне FSD-графа
-- A11y — `vitest-axe` на компонент-уровне, `@axe-core/playwright` на критичных flow
+Рядом с модулем: `<name>.test.ts` (unit, happy-dom), `<name>.astro.test.ts` (Container
+API + axe), `<name>.server.test.ts` (node-окружение, родные `Request`/`Response`).
+E2E — `e2e/` вне FSD-графа, на прод-сборке. Дисциплина — правило
+`.claude/rules/tests-pipeline.md`.
 
-## Gate `pnpm check`
+## Гейт
 
 ```
-typecheck → lint → format:check → test → steiger → size → build
+typecheck → lint → format:check → test → steiger → check:gate → check:content
+          → build → check:links → seo:check → size
 ```
 
-E2E и visual-regression — отдельные таргеты, не в gate (платформозависимы).
+`pnpm test:e2e` — отдельный stage: тянет браузер.

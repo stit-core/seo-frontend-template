@@ -1,58 +1,91 @@
 ---
 name: stack-deep-dive
-description: Проектирование стека SPA — заполняет 8 артефактов docs/stack/{service,runtime,config,routing,api,styling,observability,dependencies}.md поверх базовых выборов шаблона, через волны интерактивных вопросов. Активируй когда юзер говорит "/stack-deep-dive", "спроектируй стек", "что в платформе", или когда оркестратор /init-service пришёл к этапу 2.
+description: Проектирование платформы сайта — заполняет артефакты docs/stack/{service,runtime,content,routing,rendering,seo,styling,api,analytics,observability,config,dependencies}.md поверх дефолтов шаблона, через волны интерактивных вопросов. Активируй когда юзер говорит "/stack-deep-dive", "спроектируй стек", "что в платформе", или когда оркестратор /init-service пришёл к этапу 2.
 ---
 
 # Skill: stack-deep-dive
 
-Интервьюер по платформе. Базовые выборы шаблона уже зафиксированы (Vite 8,
-React 19.2, TanStack, Tailwind v4, MSW, …) — здесь решаем **проектные**
-вариации: имя сервиса, registry, конкретный список env, какие проектные deps.
+Интервьюер по платформе. Дефолты шаблона уже зафиксированы (Astro 7 `output: 'static'`,
+контент — Markdown в git, i18n `ru` + `en`, один Node-образ со штамповкой `SITE_URL`,
+0 JS на контентных страницах) — здесь решаются **проектные** вариации: имя и registry,
+какие коллекции контента и кто их редактирует, какие маршруты и режимы, канонический
+хост и бренд, куда уходит форма, какие env.
+
+Каталог kinds, порядок волн и гейт — `docs/stack/README.md`.
 
 ## Когда применять
 
-- "/stack-deep-dive"
-- Юзер: «настроим стек», «выберем версии», «что в платформе»
+- «/stack-deep-dive» / «настроим стек» / «что в платформе»
 - Оркестратор `/init-service` пришёл к этапу 2
 
 ## Pre-flight
 
 - [ ] FSD-карта поверхности в `../strategy` (`docs/projects/<slug>/fsd/<surface>/`)
-      заведена (хотя бы draft) — `shared-api.md` карты нужен для `stack/api.md`
+      заведена хотя бы как draft — из `entities.md` растут коллекции, из `pages.md` — маршруты
 - [ ] `docs/stack/*.md` существуют (или скопированы из `_templates/`)
 
-## Порядок (от внутреннего к внешнему)
+## Первая волна решает состав
 
-1. **`service.md`** — имя сервиса, scope, repo URL, registry, owners
-2. **`runtime.md`** — node, browser target, React Compiler mode
-3. **`config.md`** — все env (runtime + build-time), их дефолты, источники
-4. **`routing.md`** — layouts, guards, default preload
-5. **`api.md`** — контракт API (zod-схемы), auth scheme, mock-сущности
-6. **`styling.md`** — какие оси темизации активны (scheme/brand/density)
-7. **`observability.md`** — Sentry SaaS/self-hosted, web-vitals
-8. **`dependencies.md`** — проектные добавления вне базовой подборки
+Два вопроса до всего остального — они определяют, заводятся ли условные kinds:
 
-Обязательные секции, Generates и anti-patterns по каждому kind —
-`references/field-checklists.md`. Режимы входа (заведение / сырьё /
-углубление) и cross-kind drift — `references/workflow-patterns.md`.
+1. «Сайт принимает что-то от посетителя (форма, подписка) или берёт данные извне
+   (CMS, бэкенд)?» → да ⇒ завести `api.md`
+2. «На сайте будет счётчик, пиксель или баннер согласия?» → да ⇒ завести `analytics.md`
 
-## Волны (3-5 за раз)
+Незаведённый условный kind — нормальное состояние: файла просто нет, гейт его не ждёт.
 
-Те же принципы что у `/fsd-deep-dive`. По каждому артефакту:
+## Порядок волн
 
-1. Подсветить базовые выборы шаблона (что уже зашито)
-2. Спросить проектные вариации
-3. Заполнить таблицу + `Generates`
-4. Открытые вопросы / решения / следующие шаги → `state/<kind>.md`
+```
+service → runtime → content → routing → rendering → seo → styling
+        → api (усл.) → analytics (усл.) → observability → config → dependencies
+```
+
+1. **`service`** — имя, scope, repository, registry, `infra-svc: site`, домены, резолв strategy
+2. **`runtime`** — память контейнера, число реплик, таймауты обёртки
+3. **`content`** — источник, коллекции и их поля, локали, **кто редактирует**, картинки
+4. **`routing`** — адреса страниц и их происхождение, локали в URL, редиректы
+5. **`rendering`** — режим каждого маршрута, кеш-заголовки, острова
+6. **`seo`** — канонический хост, бренд, OG, JSON-LD, robots, sitemap, верификации
+7. **`styling`** — палитра, тема, шрифты, бюджеты
+8. **`api`** (усл.) — обработчики, антиспам, канал доставки заявки, внешние источники
+9. **`analytics`** (усл.) — счётчики, согласие, бюджет сторонних скриптов
+10. **`observability`** — порог лога, приёмник ошибок, алерты
+11. **`config`** — роллап env: каждый ключ из волн выше + колонка «в HTML?»
+12. **`dependencies`** — проектные пакеты и бюджеты
+
+Обязательные секции, `Generates` и anti-patterns по каждому kind —
+`references/field-checklists.md`. Режимы входа и cross-kind drift —
+`references/workflow-patterns.md`.
+
+## Волны (3–5 вопросов за раз)
+
+По каждому артефакту:
+
+1. Подсветить дефолт шаблона (что уже работает в коде)
+2. Спросить проектные вариации — только то, что шаблон не может угадать
+3. Заполнить таблицы + `Generates`
+4. Открытые вопросы, решения, следующие шаги → `state/<kind>.md`
    (формат — `references/state-format.md`)
+
+## Cross-kind проверки (обязательны перед промоушном)
+
+- каждая страница `pages.md` FSD-карты — строка в `routing.md` и режим в `rendering.md`
+- `indexable` не противоречит `guard`: `guard ≠ public` ⇒ `noindex` + `private, no-store` + вне sitemap
+- **редактор без git ⇒ маршруты его коллекций не `static`**: `content.md § Кто редактирует`
+  = «редактор без git» при источнике `git` — `**blocker**`, потому что публикация = релиз образа
+- каждый env, объявленный любым kind'ом, есть в `config.md`; секрет не помечен «в HTML: да»
+- `seo.md § Идентичность` не противоречит `service.md § Домены` (канонический хост один)
+- новый остров в `rendering.md § Интерактивность` имеет строку бюджета в `dependencies.md`
 
 ## Промоушн draft → stable
 
-См. `references/draft-stable.md`. Контракт зеркалит fsd-deep-dive.
+См. `references/draft-stable.md`.
 
 ## Что НЕ делать
 
-- ❌ Спорить о базовых выборах шаблона (Vite vs Webpack, TanStack vs RR) —
-  это решено в BLUEPRINT, обсуждение — отдельный issue в шаблонном репо
-- ❌ Не активировать `/de-template` до stable всех 8
-- ❌ Не добавлять проектные deps без записи в `dependencies.md`
+- ❌ Спорить о дефолтах шаблона (Astro vs Next, static-first vs SSR) — это решено;
+  несогласие — issue в шаблонном репо, не волна интервью
+- ❌ Запускать `/de-template` до stable всех обязательных и заведённых условных
+- ❌ Добавлять проектные пакеты без записи в `dependencies.md`
+- ❌ Выдумывать имена env, хостов и версий — их называет архитектор

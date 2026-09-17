@@ -1,115 +1,199 @@
 ---
 name: de-template
-description: Развернуть форк spa-frontend-template в самостоятельный проект по stable-артефактам — локальный docs/stack + FSD-карта из соседнего <org>/strategy (docs/projects/<slug>/fsd/<surface>/) — переименовать пакет, обновить README, runtime config defaults, nginx entrypoint, prune reference-слайсов auth/profile/todos/theme. Активируй когда юзер форкнул шаблон и говорит "/de-template", "разверни фундамент", "де-темплейтизируй", "сделай из шаблона свой проект", или когда init-service дошёл до этапа 3 (FSD-карта в strategy + стек stable). Движок skill-only: и механика, и wiring — reviewable edits под этой процедурой. НЕ запускать на каноническом репозитории шаблона.
+description: Развернуть форк ssr-frontend-template в самостоятельный сайт по stable-артефактам — локальный docs/stack + FSD-карта из соседнего <org>/strategy (docs/projects/<slug>/fsd/<surface>/) — переименовать пакет, подставить идентичность сайта и реквизиты оператора в политику ПДн, переписать README, вычистить демо-контент и лишнюю часть reference-набора. Активируй когда юзер форкнул шаблон и говорит "/de-template", "разверни фундамент", "де-темплейтизируй", "сделай из шаблона свой сайт", или когда init-service дошёл до этапа 3 (FSD-карта в strategy + стек stable). Движок skill-only: и механика, и wiring — reviewable edits под этой процедурой. НЕ запускать на каноническом репозитории шаблона.
 ---
 
 # Skill: de-template (движок развёртывания)
 
-Превращает форк шаблона в проект, который ничего не помнит про
-`spa-frontend-template`. Читает **stable**-артефакты — локальный `docs/stack`
-(секции `Generates`) и FSD-карту поверхности из соседнего `<org>/strategy`
+Превращает форк в сайт, который ничего не помнит про `ssr-frontend-template`.
+Читает **stable**-артефакты — локальный `docs/stack` (секции `Generates`) и
+FSD-карту поверхности из соседнего `<org>/strategy`
 (`<strategy-path>/docs/projects/<slug>/fsd/<surface>/`; резолв — поля в
 `docs/stack/service.md`, дефолт `../strategy`) — и разворачивает фундамент.
 
-Запускается **один раз** на форке. Финал — зелёный `pnpm check` и проект
-без следов шаблона.
+Запускается **один раз** на форке. Финал — зелёный `pnpm check` и сайт без следов
+шаблона.
 
 ## Когда применять
 
-- "/de-template" / «разверни фундамент» / «сделай из шаблона свой проект»
-- `/init-service` дошёл до этапа 3 (FSD-карта в strategy + стек stable,
-  валидаторы зелёные)
+- «/de-template» / «разверни фундамент» / «сделай из шаблона свой сайт»
+- `/init-service` дошёл до этапа 3 (FSD-карта в strategy + стек stable)
 
 ## Когда НЕ применять
 
-- Стек не `stable` или FSD-карта в strategy не готова — сначала
-  `/stack-deep-dive` здесь и `/fsd-deep-dive` в `<org>/strategy`
-- Проект уже де-темплейтизирован (свой `package.json#name`, reference-слайсы
-  удалены) — обычный день-в-день через `/smartdev`
+- Стек не `stable` или FSD-карта не готова — сначала `/stack-deep-dive` здесь и
+  `/fsd-deep-dive` в `<org>/strategy`
+- Проект уже развёрнут (своё имя пакета, плейсхолдеров оператора нет) — обычный
+  день-в-день через `/smartdev`
 - **Канонический репозиторий шаблона** — никогда (guard ниже)
 
 ## Gate (проверить ДО любых правок)
 
 1. **Не канонический шаблон.** `package.json#name` ещё
-   `@stit/spa-frontend-template` И каталог — не временная копия/форк → СТОП.
-   Спроси юзера явно подтвердить, что это форк/тест-копия.
+   `@stit/ssr-frontend-template` **и** каталог — не форк/тест-копия → СТОП, спроси
+   юзера явно подтвердить.
 
-2. **Артефакты stable.** Все 8 stack-kind имеют `status: stable`, все
-   `Generates` непусты:
+2. **Артефакты stable.** Все обязательные kinds и все заведённые условные:
    ```bash
-   for k in service runtime config routing api styling observability dependencies; do
+   for k in service runtime content routing rendering seo styling observability config dependencies; do
      grep -q '^status: stable' "docs/stack/$k.md" || { echo "STOP: docs/stack/$k.md не stable"; exit 1; }
    done
+   for k in api analytics; do
+     [ -f "docs/stack/$k.md" ] && { grep -q '^status: stable' "docs/stack/$k.md" || echo "STOP: docs/stack/$k.md не stable"; }
+   done
    ```
-   FSD-карта: `fsd/<surface>/` в strategy существует; записи, нужные первому
-   развороту (Phase B), — `status: stable` (проверить по колонке `status`
-   их таблиц; сомнение → `/fsd-audit <slug>` на стороне strategy).
+   FSD-карта: `fsd/<surface>/` в strategy существует, записи первого разворота — `stable`.
 
-3. **State stack-deep-dive чист** (blocker'ы FSD-карты живут в дереве state
-   strategy — их проверяет его `/fsd-audit`):
+3. **State чист**:
    ```bash
    grep -RlE '\*\*blocker\*\*' .claude/skills/stack-deep-dive/state/ 2>/dev/null \
-     && echo "STOP: открытые blocker'ы в state — добей сначала" \
-     || echo "OK"
+     && echo "STOP: открытые blocker'ы в state — добей сначала" || echo "OK"
    ```
 
-## Phase A — детерминированная механика
+4. **Реквизиты оператора персональных данных.** Спроси четыре значения: название
+   (или ФИО ИП), ИНН, адрес, почта для обращений по ПДн. Их печатает
+   `/legal/privacy`, они же — обязанность прямой нормы 152-ФЗ. Юзер не может их
+   назвать → **СТОП**: сайт с формой без политики выпускать нельзя, и скилл не
+   продолжает. Проверка:
+   ```bash
+   grep -rn '{{OPERATOR_' src/ && echo "STOP: политика ПДн с плейсхолдерами"
+   ```
 
-### A.1 Имя пакета и module path
+5. **Режим прунинга.** Спроси одним вопросом: сайт **с блогом** (коллекция `post`
+   остаётся, демо-записи заменяются своими) или **без блога** (коллекция и её
+   маршруты удаляются целиком). Подробности — `references/prune.md`.
 
-Источник: `docs/stack/service.md § Идентичность` (поля `scope`, `repository`).
+## Этап A — детерминированная механика
+
+Каждый шаг — reviewable edit: показывай дифф, не «сделал молча».
+
+### A.1 Имя пакета
+
+Источник: `docs/stack/service.md § Идентичность` (`scope`).
 
 ```bash
 NEW_NAME=<scope из service.md>
-git grep -lF '@stit/spa-frontend-template' | xargs sed -i "s|@stit/spa-frontend-template|$NEW_NAME|g"
-pnpm install
+git grep -lF '@stit/ssr-frontend-template' -- ':!.claude' ':!docs/research' \
+  | xargs sed -i "s|@stit/ssr-frontend-template|$NEW_NAME|g"
 ```
 
-Проверь `head -2 package.json` — `"name": "$NEW_NAME"`.
+`.claude/skills/**` из замены исключён намеренно: имя шаблона там — **триггер**
+скиллов онбординга («форк ещё не развёрнут»), и переименованный триггер сработал бы на
+уже развёрнутом проекте. Эти скиллы уходят целиком на шаге A.10.
 
-### A.2 README
+Проверь `head -3 package.json`. `pnpm install` — только если менялись зависимости.
 
-Из `docs/stack/service.md`: имя, scope, назначение, ссылки на родственные
-репо. Замени шаблонную шапку `README.md` на проектную. Убери упоминания
-«шаблон»/«template»/«форкни».
+### A.2 Идентичность сайта → `src/shared/config/site.ts`
 
-### A.3 Runtime config defaults
+Источник: `seo.md § Идентичность сайта`, `§ Верификация`, `service.md`.
 
-Из `docs/stack/config.md § Runtime config keys`: обнови
-`docker/nginx-entrypoint.sh` и `public/config.js` (dev-заглушка) — добавь
-новые ключи с дефолтами проекта. Обнови `src/shared/config/index.ts`
-(Zod-схему) под новые поля.
+| поле | чем заменить |
+|---|---|
+| `SITE_NAME` | бренд из `seo.md` |
+| `SITE_DESCRIPTION` | описание сайта, 70–170 символов |
+| `SITE_SAME_AS` | профили организации (репозиторий шаблона отсюда уходит) |
+| `SITE_LOGO_PATH` | логотип из `public/` |
+| `PRIVACY_POLICY_VERSION` | дата редакции своей политики, `YYYY-MM-DD` |
+| `METRIKA_ID` | id счётчика из `analytics.md`; нет счётчика — пустая строка |
+| `SITE_VERIFICATION` | токены Search Console и Вебмастера; нет — пустые строки |
+| `OG_DEFAULT_IMAGE.alt` | описание своей социальной карточки на обеих локалях |
 
-### A.4 Strip шаблонной меты
+### A.3 Политика ПДн → `src/pages/legal/privacy.astro`
 
-- Удали `docs/getting-started.md` ([META])
-- `docs/contributing.md` — оставь (система наследуется), переформулируй
-  «шаблон» → имя проекта
-- Сбрось `.claude/plans/roadmap.md` к пустому fork-start (history шаблона —
-  не история форка)
+Подставь четыре значения из Gate-4 вместо `{{OPERATOR_NAME}}`, `{{OPERATOR_INN}}`,
+`{{OPERATOR_ADDRESS}}`, `{{OPERATOR_EMAIL}}`. Прочитай текст целиком и приведи в
+соответствие с реальными процессами проекта: какие данные собираются, куда уходит
+заявка, сколько хранится. Напомни юзеру два действия вне репо: показать текст юристу
+и подать уведомление в РКН о намерении обрабатывать ПДн.
 
-### A.5 Prune reference-слайсов
+Секция «Это заготовка шаблона…» удаляется вместе с плейсхолдерами.
 
-Учебные слайсы `features/auth`, `pages/profile`, `pages/todos`,
-`features/theme`, `features/create-todo`, `entities/session`, `entities/user`,
-`entities/todo` — удаляются **после того как свои слайсы спроектированы и
-сгенерированы** (иначе теряешь живой образец). Полный чеклист prune —
-см. **`references/prune.md`**.
+### A.4 Реквизиты организации → `src/entities/company/model/company.ts`
 
-## Phase B — doc-driven wiring
+Источник: `seo.md § Структурированные данные` (`LocalBusiness`) и страница «о компании»
+в `routing.md`. Заменить: `legalName`, `email`, `phone` + `phoneHref`, `address` на обеих
+локалях, `openingHours` + `hours`. Разметка `LocalBusiness` обязана совпадать с тем, что
+видно в тексте страницы: нет офиса с приёмом — убери адрес и часы и из данных, и из типа.
 
-По stable-записям FSD-карты strategy
-(`<strategy-path>/docs/projects/<slug>/fsd/<surface>/`) чейнить `/scaffold`
-для собственных слайсов:
+### A.5 Социальная карточка и иконки → `public/`
 
-- `entities/*` из `entities.md` карты (по таблице)
-- `features/*` из `features.md`
-- `widgets/*` из `widgets.md`
-- `pages/*` из `pages.md`
+`og-default.png` 1200×630 — свой; `favicon.ico`, `icon.svg`, `icon-512.png`,
+`apple-touch-icon.png`, `manifest.webmanifest` — свои имя и цвета. Файлы бинарные:
+скилл их не рисует — назови юзеру список и размеры, дождись подмены.
 
-После каждого `/scaffold` — `pnpm steiger src` должен оставаться зелёным.
+### A.6 Тексты reference-страниц
+
+Главная (`src/pages/{index,en/index}.astro`), «о компании»
+(`src/pages/_about/about-page.astro`), контакты (`src/pages/_contacts/*.astro`) написаны
+про шаблон. Перепиши под проект по `interface/<surface>/` и `screens/<surface>/` из
+strategy; врезки «это страница шаблона» удали. Тексты — на обеих локалях.
+
+### A.7 Редиректы → `content/redirects.yaml`
+
+Демо-записи удалить. Свои — адреса старого сайта: `{ from, to, status }`, один хоп.
+
+Два теста ходят по этому файлу и переезжают вместе с ним:
+`src/app/middleware/index.server.test.ts` (кейс «редиректы до роутинга» знает демо-адреса
+`/old` и `/blog/staraya-zametka` — подставить свои) и
+`src/app/middleware/redirects.test.ts` (условие «таблица непуста» — если своих редиректов
+нет, файл остаётся с одним комментарием, а условие меняется на «таблица строится»:
+пустая таблица валидна).
+
+### A.8 Env-контракт
+
+Источник: `config.md`. Для каждого нового ключа — три места: Zod-схема
+`src/shared/config/runtime.ts`, `.env.example`, таблица `docs/reference/deployment.md`
+(колонка «в HTML?»). Ключ, который должен попасть в разметку, — ещё и
+`PUBLIC_CONFIG_KEYS`. Таблицу контракта не дублируй в `docs/stack/config.md` — ссылайся.
+
+Ключи, которые оператор обязан задать на VPS, собери списком для handoff: как минимум
+`SITE_URL`, плюс канал доставки формы и `ROBOTS_POLICY` для staging.
+
+### A.9 Прунинг reference-набора
+
+По режиму из Gate-5 — чек-лист `references/prune.md`. Делается **после** того, как
+собственные страницы спроектированы: reference-набор до этого момента живой образец.
+
+### A.10 Шаблонная мета
+
+- `README.md` — переписать под проект: что это за сайт, как поднять, команды, ссылки
+  на `docs/`. Упоминания «шаблон», «template», «форкни» уходят
+- `CONTRIBUTING.md` — про вклад в шаблон; либо переписать под свою команду, либо удалить
+- `docs/getting-started.md` — удалить: это путь потребителя шаблона
+- `docs/reference/kinship.md`, `scripts/kin-diff.mjs`, `package.json#scripts.kin:diff`
+  и строки о них в `README.md`/`CLAUDE.md`/`docs/README.md`/`docs/reference/ecosystem.md` —
+  удалить: родство двух канонических шаблонов проекта не касается
+- `docs/reference/ecosystem.md` — оставить соседей и контракты (strategy, infra, registry,
+  handoff), убрать разделы про родство шаблонов и «шаблон vs проект»
+- `docs/research/**` — удалить: исследование, из которого вырос шаблон, не часть проекта
+- `.claude/skills/{init-service,de-template}` — удалить: одноразовые скиллы онбординга
+  отработали, а их триггеры («свежий форк») на развёрнутом проекте только мешают.
+  Остальные (`smartdev`, `plan`, `stack-deep-dive`, `scaffold`, `content`, `seo-audit`,
+  `release`) остаются — это рабочий инструмент проекта
+- `.claude/plans/roadmap.md` — сбросить к пустому (`## Active` без секций, `## Backlog`
+  со своими задачами): история шаблона — не история проекта
+- `CLAUDE.md` — снять упоминания «шаблон» там, где речь о проекте; правила, команды и
+  инварианты остаются: они и есть то, ради чего форк брали
+- `SECURITY.md` — контакт и скоуп свои
+
+## Этап B — doc-driven wiring
+
+По stable-записям FSD-карты чейнить `/scaffold`:
+
+- `entities.md` → `/scaffold collection` (коллекция контента) либо `entity`
+- `pages.md` → `/scaffold page` (ru + en) и `/scaffold route` (служебный маршрут)
+- `features.md` → `/scaffold feature`
+- `widgets.md` → `/scaffold widget`
+
+После каждого — `pnpm typecheck && pnpm lint && pnpm steiger` зелёные.
 
 ## Финал
 
-`pnpm check` зелёный. Сообщи юзеру: онбординг закрыт, дальше через
-`/smartdev` → `/plan` → `/scaffold`.
+```bash
+grep -rn '{{OPERATOR_' src/ && echo "STOP: плейсхолдеры остались"
+grep -rniE 'ssr-frontend-template|@stit/' --include='*.ts' --include='*.astro' --include='*.md' src docs README.md
+pnpm check
+```
+
+Зелёный `pnpm check`, ни одного плейсхолдера, ни одного упоминания шаблона →
+сообщи юзеру: онбординг закрыт, дальше `/smartdev` → `/plan` → `/scaffold` → `/content`.

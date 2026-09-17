@@ -1,54 +1,109 @@
-# Prune reference-слайсов
+# Прунинг reference-набора
 
-Учебные слайсы шаблона — это **живой образец**, не «технический долг».
-Удаляются **после** того как собственные слайсы (из FSD-карты strategy
-через `/scaffold`) уже сгенерированы и работают.
+Reference-набор шаблона — **живой образец**, а не технический долг: по нему видно, как
+устроены коллекция, страница, форма, остров и служебный маршрут. Чистится он **после**
+того, как собственные страницы спроектированы и сгенерированы.
 
-## Что удалить (8 точек)
+Режим выбирается в Gate-5 `/de-template`.
 
-1. `src/features/auth/` — Login-форма
-2. `src/features/create-todo/`
-3. `src/features/theme/` — оставить, если планируется i18n+тема (часто полезно)
-4. `src/entities/session/`
-5. `src/entities/user/`
-6. `src/entities/todo/`
-7. `src/pages/login.tsx`, `src/pages/profile.tsx`, `src/pages/todos.tsx`
-8. `src/widgets/app-shell/` — **проверь**, что свой AppShell готов, иначе
-   оставь как baseline и допиши под себя
+## Что остаётся в любом режиме
 
-## Что заменить (не удалять)
+`src/pages/{index,about,contacts/*,legal/privacy,404,500,now,healthz,robots.txt,sitemap.xml,[key].txt,api/contact}`,
+секции `_about/`, `_contacts/`, `src/features/{contact-form,theme}`,
+`src/entities/company`, `src/widgets/{site-header,site-footer,breadcrumbs}`,
+`src/shared/**`, `src/app/**`, `.gate-fixtures/`, `docker/`, `scripts/`, гейты.
 
-- `src/pages/index.tsx` — переписать под главную проекта (PageHeader + контент
-  из своих widget/feature)
-- `src/pages/__root.tsx` — оставить, но AppShell может быть свой
+Форма и политика ПДн — не «демо»: это минимум сайта, который принимает заявки. Страница
+`/now` — образец режима `dynamic`; удаляется вместе со строкой в карте маршрутов
+`docs/reference/rendering.md`, если проекту она не нужна.
 
-## Mock-handlers
+---
 
-В `src/shared/api/mock/handlers/`:
+## Режим «с блогом»
 
-- `auth.ts`, `todos.ts`, `users.ts` — удалить (если auth не оставляем)
-- `error.ts` — оставить (универсальный сценарий)
-- Заменить на свои handlers по `shared-api.md § Сценарии данных` FSD-карты
-  strategy (`fsd/<surface>/shared-api.md`)
+Коллекция `post` остаётся, меняется её содержимое.
 
-`src/shared/api/mock/db.ts` — пересоздать factory под свои сущности
-(см. `entities.md` FSD-карты strategy).
+1. Удалить демо-записи и обложки: `src/entities/post/content/{ru,en}/*.md`,
+   `src/entities/post/content/covers/*.png`
+2. Написать свои — `/content` (минимум по одной записи на локаль, иначе списки пусты)
+3. `content/redirects.yaml` — демо-записи убрать, вписать адреса своего старого сайта
+4. `e2e/{seo,rendering,content,a11y}.spec.ts` — слаги в шапках спеков заменить своими
+5. Проверить бюджет «HTML поста» в `.size-limit.cjs`: своя вёрстка записи может весить иначе
+6. Переименовать коллекцию под свой домен (`post` → `article`, `case`, `vacancy`) — если
+   переименовываешь: каталог слайса, `src/content.config.ts`, реестр `scripts/lib/content.mjs`,
+   импорты `@/entities/post`, маршруты `src/pages/blog/**`
 
-`src/shared/api/mock/seeds/factories.ts` — заменить `makeUser`/`makeTodo` на
-свои `make<Entity>`.
+---
 
-`src/shared/api/mock/scenarios/index.ts` — переписать `seedPopulated` /
-`seedAuthenticated` под свои сущности.
+## Режим «без блога»
 
-## Тесты reference-слайсов
+Коллекций контента не остаётся вовсе; сайт — набор статических страниц и формы.
 
-Удалить `*.test.tsx` из удалённых слайсов. Свои тесты пишет `/scaffold`.
+### Удалить
 
-## После prune
+```
+src/entities/post/            слайс коллекции целиком (контент, схема, запросы, ui, тесты)
+src/widgets/post-list/
+src/pages/blog/  src/pages/en/blog/  src/pages/_blog/
+src/pages/rss.xml.ts  src/pages/en/rss.xml.ts
+src/shared/seo/rss.ts  src/shared/seo/rss.test.ts
+e2e/content.spec.ts
+```
+
+### Поправить (порядок удобный, не обязательный)
+
+| файл | что |
+|---|---|
+| `src/content.config.ts` | убрать импорт коллекции → `export const collections = {}` |
+| `scripts/lib/content.mjs` | `collections = []`, убрать импорты из удалённого слайса |
+| `scripts/check-content.mjs` | импорт `SLUG_RE` вёл в слайс — заменить локальной константой `const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/` |
+| `src/pages/sitemap.xml.ts` | убрать импорт `@/entities/post` и блоговые ветки; остаётся цикл по `STATIC_ROUTES` |
+| `src/pages/{index,en/index}.astro` | убрать `listPosts`/`PostList` и блок «свежие заметки»; CTA — на свою страницу |
+| `src/widgets/site-header/ui/site-header.astro` | убрать пункт `/blog` из `items` (+ пути в его тесте) |
+| `src/widgets/site-footer/ui/site-footer.astro` | убрать ссылку RSS |
+| `src/shared/seo/seo-head.astro` | убрать `<link rel="alternate" type="application/rss+xml">` и `feedTitle` — иначе `check:links` упадёт на несуществующем `/rss.xml` |
+| `src/shared/seo/index.ts` | убрать реэкспорт `buildFeed` |
+| `src/shared/seo/seo-head.astro.test.ts` | убрать ожидания RSS-ссылки |
+| `src/shared/i18n/dict.ts` | убрать ключи `blog.*`, `post.*`, `footer.rss` в обеих локалях |
+| `.size-limit.cjs` | убрать бюджет «HTML поста» и вычисление самой тяжёлой записи |
+| `content/redirects.yaml` | демо-записи (их цель `/blog` больше не существует — `check:content` это поймает) |
+| `src/app/middleware/redirects.test.ts` | если таблица пустая — условие «непуста» меняется на «строится» |
+| `src/app/middleware/index.server.test.ts` | кейс «редиректы до роутинга» ходит по демо-адресам `/old` и `/blog/staraya-zametka` — заменить своими из `redirects.yaml` (нет `410` — убрать его половину кейса) |
+| `e2e/{seo,rendering,a11y}.spec.ts` | убрать слаги записей, проверки фидов, тегов и страниц списка |
+| `docs/reference/rendering.md` | убрать строки блога и фидов из карты маршрутов |
+
+### Что при этом **не** трогать
+
+`shared/seo/{urls,sitemap,json-ld,robots}` и `widgets/breadcrumbs` — они про любую
+страницу, а не про блог. `POSTS_PER_PAGE`/`paginate` уходят вместе со слайсом: своя
+пагинация появится вместе со своей коллекцией.
+
+---
+
+## Демо-значения (любой режим)
+
+Идентичность заменяется на этапе A `/de-template`, но проверить стоит здесь же —
+поиском по репозиторию:
 
 ```bash
-pnpm steiger src     # должно быть зелёным — нет insignificant-slice
-pnpm typecheck       # нет битых импортов
-pnpm test            # тесты собственных слайсов проходят
-pnpm build           # бандл собирается
+grep -rn 'ssr-frontend-template' --include='*.ts' --include='*.astro' --include='*.md' src docs README.md CLAUDE.md
+grep -rn 'example.com\|Пример\|+7 495 000' src/
+grep -rn '{{OPERATOR_' src/
 ```
+
+Литералы, которые не находит переименование пакета: имя сайта в
+`src/shared/seo/seo-head.astro.test.ts`, город в
+`src/entities/company/ui/company-contacts.astro.test.ts`, тексты reference-страниц.
+
+## После прунинга
+
+```bash
+pnpm typecheck        # нет битых импортов
+pnpm lint             # границы и формат
+pnpm steiger          # структура без осиротевших слайсов
+pnpm test             # тесты удалённых слайсов ушли вместе с ними
+pnpm check            # полный гейт, включая check:content → build → check:links → seo:check
+```
+
+`pnpm check` зелёный — прунинг закончен. `seo:check` при этом подтверждает, что в
+`dist/client` не осталось страниц со ссылками в никуда и дублей `title`/`description`.

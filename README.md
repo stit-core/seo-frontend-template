@@ -67,6 +67,7 @@ pnpm seo:check        # после build: head каждой страницы (ti
 pnpm size             # бюджеты CSS / HTML
 pnpm kin:diff         # сверка обвязки с ../spa-frontend-template (advisory)
 pnpm ttfb <origin> …  # TTFB запущенного сервера: медиана/p90 20 запросов
+pnpm accept:image <image>   # приёмка собранного образа до пуша в registry
 pnpm check            # gate: typecheck + lint + format + test + steiger + check:gate + check:content + build + check:links + seo:check + size
 ```
 
@@ -97,8 +98,9 @@ src/shared/       config (runtime env, Zod; идентичность сайта)
 src/{content.config,middleware,env.d}.ts   навязанные Astro entry — тонкие входы
 docker/           Dockerfile (3 стадии), entrypoint.sh (штамповка SITE_URL), server.mjs
 e2e/              Playwright на prod-сборке
-scripts/          check-gate, check-content, check-links, seo-check, kin-diff, ttfb
-.claude/          правила (path-scoped) и скиллы
+scripts/          check-gate, check-content, check-links, seo-check, kin-diff, ttfb, accept-image
+docs/stack/       формы платформенных артефактов (12 kinds) — заполняет /stack-deep-dive
+.claude/          правила (path-scoped) и скиллы (init-service, scaffold, content, release…)
 ```
 
 ## Контент
@@ -161,13 +163,26 @@ JavaScript в шаблоне только остров темы — инлайн
 AVIF/WebP с фолбэком, размеры заданы, обложка записи грузится с приоритетом). Всё это
 проверяет e2e, включая axe в обеих темах.
 
+## Из шаблона — в свой сайт
+
+Форк проходит путь «онбординг → платформа → разворот → свои страницы»: `/init-service`
+ведёт по этапам, `/stack-deep-dive` заполняет `docs/stack/*.md`, `/de-template`
+подставляет идентичность и реквизиты оператора и чистит reference-набор, `/scaffold` и
+`/content` добавляют своё, `/seo-audit` и `/release` выпускают. Путь целиком —
+[`docs/getting-started.md`](docs/getting-started.md).
+
 ## Документация
 
 | Документ | О чём |
 |---|---|
 | [`docs/README.md`](docs/README.md) | карта документации |
-| [`docs/reference/rendering.md`](docs/reference/rendering.md) | режимы рендера, карта маршрутов, кеш-заголовки, рецепт D |
-| [`docs/reference/deployment.md`](docs/reference/deployment.md) | образ, entrypoint, server.mjs, env-контракт |
+| [`docs/getting-started.md`](docs/getting-started.md) | путь потребителя: форк → свой сайт |
+| [`docs/reference/architecture.md`](docs/reference/architecture.md) | FSD под Astro: слои, public API, кто держит границы |
+| [`docs/reference/rendering.md`](docs/reference/rendering.md) | режимы рендера, карта маршрутов, кеш-заголовки, рецепт кеша процесса |
+| [`docs/reference/seo.md`](docs/reference/seo.md) | что держит шаблон, чек-лист страницы, три контура staging |
+| [`docs/reference/deployment.md`](docs/reference/deployment.md) | образ, entrypoint, server.mjs, env-контракт, требования к прокси |
+| [`docs/reference/observability.md`](docs/reference/observability.md) | JSON-лог, `X-Request-Id`, `/healthz`, Sentry |
+| [`docs/reference/ecosystem.md`](docs/reference/ecosystem.md) | место среди шаблонов stit и контракты с соседями |
 | [`docs/reference/kinship.md`](docs/reference/kinship.md) | родство с `spa-frontend-template` |
 | [`.claude/rules/forms-antispam.md`](.claude/rules/forms-antispam.md) | форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка |
 | [`CLAUDE.md`](CLAUDE.md) | гайд для агента (ядро + роутер) |

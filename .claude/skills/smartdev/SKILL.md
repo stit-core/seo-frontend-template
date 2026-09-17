@@ -1,6 +1,6 @@
 ---
 name: smartdev
-description: Cockpit сессии — сводка состояния (ветка, drift, активный план roadmap, валидаторы docs, gate'ы) и подсказка следующего режима/скила. Активируй в начале сессии, после /clear, или когда не уверен с чего начать. Не делает правок сам — ориентирует.
+description: Cockpit сессии — сводка состояния (ветка, drift, активный план roadmap, состояние docs/stack, гейты) и подсказка следующего скила. Активируй в начале сессии, после /clear, или когда не уверен с чего начать. Не делает правок сам — ориентирует.
 ---
 
 # Skill: smartdev (cockpit сессии)
@@ -13,27 +13,36 @@ description: Cockpit сессии — сводка состояния (ветк�
 - В начале новой сессии Claude Code
 - После `/clear` — чтобы быстро восстановить контекст
 - Когда юзер пишет «продолжаем», «что у нас», «с чего начать»
-- Когда не уверен, какой режим/скил активировать
+- Когда не уверен, какой скил активировать
 
-## Что показать
+## Что собрать
 
 1. **Состояние git**: `git status --short` + `git log -3 --oneline`
-2. **Активный план**: первая Active-секция `.claude/plans/roadmap.md` (если есть)
+2. **Активный план**: первая `### `-секция под `## Active` в `.claude/plans/roadmap.md`
 3. **Шаблонное ли состояние** репо:
-   - `head -1 package.json` показывает `"name": "@stit/spa-frontend-template"` (форк не разворачивался)
-   - reference-слайсы на месте (`src/features/auth`, `src/pages/profile`, `src/pages/todos`, `src/features/theme`)
-   - `docs/stack/*.md` — все ли `status: stable`; FSD-карта в `../strategy`
-     (`docs/projects/<slug>/fsd/<surface>/`) заведена (если нет — `/init-service`)
-4. **Gate-состояние**: можно ли запустить `pnpm check` (без выполнения — только подсказка)
-5. **Следующий шаг** — конкретная команда:
+   ```bash
+   grep -m1 '"name"' package.json                    # @stit/ssr-frontend-template ⇒ форк не развёрнут
+   grep -rl '{{OPERATOR_' src/pages/legal/ | wc -l   # >0 ⇒ политика ПДн с плейсхолдерами
+   ls docs/stack/*.md 2>/dev/null | wc -l            # 0 ⇒ стек не проектировался
+   ```
+   плюс демо-идентичность: `SITE_NAME` в `src/shared/config/site.ts`, `COMPANY` в
+   `src/entities/company/model/company.ts`, демо-записи в `content/redirects.yaml`
+4. **Стек**: какие `docs/stack/<kind>.md` есть и какие ещё `draft`
+   (`grep -l '^status: draft' docs/stack/*.md`); FSD-карта поверхности в
+   `../strategy` (`docs/projects/<slug>/fsd/<surface>/`) заведена или нет
+5. **Гейты**: какие есть и когда их гонять — `pnpm check` (перед push),
+   `pnpm test:e2e` (отдельный stage), `pnpm kin:diff` (advisory). Не запускать
+6. **Следующий шаг** — один конкретный:
    - форк не развёрнут → `/init-service`
+   - стек `draft` → `/stack-deep-dive`
+   - стек `stable`, референс-набор на месте → `/de-template`
    - есть Active-план → продолжать его
-   - есть открытые `**blocker**`-вопросы в state скилов → закрыть их
+   - нужна новая страница/слайс → `/scaffold`, новая запись → `/content`
    - всё чисто → ждать запроса юзера
 
 ## Что не делать
 
-- ❌ Не запускать `pnpm check` — это тяжёлый gate, юзер сам решит
+- ❌ Не запускать `pnpm check` / `pnpm build` / e2e — это тяжёлые гейты, юзер решает сам
 - ❌ Не править файлы — это диагностика
 - ❌ Не задавать вопросы — это резюме, не интервью
 
@@ -42,9 +51,10 @@ description: Cockpit сессии — сводка состояния (ветк�
 Компактная сводка (≤ 200 слов):
 
 ```
-ветка: feature/login (5 коммитов сверх main, чисто)
-план: 'Реализовать /reset-password' — на шаге 2/4
-шаблон: развёрнут (de-template прошёл, reference-слайсы убраны)
-docs: stack/* stable; FSD-карта в ../strategy (fsd/<surface>/) заведена
-следующий шаг: продолжить план через /plan или начать сценарий через /scaffold
+ветка: main (чисто, 3 коммита сверх origin)
+план: «Раздел услуг» — шаг 2/4
+шаблон: развёрнут (пакет @acme/site, плейсхолдеров оператора нет)
+стек: 10 из 10 обязательных stable; api заведён, analytics нет
+карта: ../strategy/docs/projects/acme/fsd/web/ — на месте
+следующий шаг: /scaffold page /services (ru + en)
 ```

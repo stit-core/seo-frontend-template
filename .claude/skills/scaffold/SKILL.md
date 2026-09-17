@@ -1,128 +1,172 @@
 ---
 name: scaffold
-description: Интерактивно разложить один FSD-слайс (entity/feature/widget/page) по канону — папка с ui/model/api/lib/config + index.ts + пустые тесты + (для page) route + (если просит) mock-handler. Источник слайса — stable-запись FSD-карты в соседнем <org>/strategy (docs/projects/<slug>/fsd/<surface>/); src/-пути скилл выводит сам из kind + slug. Активируй когда юзер говорит "/scaffold", "создай слайс X", "добавь страницу Y", "новый widget Z", или когда оркестратор /init-service / /de-template чейнит этап реализации.
+description: Разложить один артефакт сайта по канону за один проход — page (страница ru + en через DocumentLayout), collection (коллекция контента со схемой, запросами и маршрутами), feature, widget, route (служебный on-demand маршрут). Источник — stable-запись FSD-карты в соседнем <org>/strategy (docs/projects/<slug>/fsd/<surface>/); src/-пути скилл выводит сам из kind и slug. Активируй когда юзер говорит "/scaffold", "создай страницу X", "новая коллекция Y", "добавь виджет Z", или когда оркестратор /init-service / /de-template чейнит этап реализации.
 ---
 
 # Skill: scaffold
 
-Раскладывает один слайс по FSD-канону за один проход. Не интервьюирует про
-бизнес — карта слайсов проектируется в `<org>/strategy` (его
-`/fsd-deep-dive`). Скилл детерминированно создаёт файлы по stable-записи
-из `<strategy-path>/docs/projects/<slug>/fsd/<surface>/<kind>.md`
-(резолв — поля `project-slug`/`strategy-path`/`surface` в
-`docs/stack/service.md`, дефолт `../strategy`); `src/`-пути выводит сам из
-kind + slug — в карте их нет.
+Создаёт файлы одного артефакта по канону этого шаблона и оставляет гейт зелёным.
+Не интервьюирует про бизнес — карта слайсов проектируется в `<org>/strategy` (его
+`/fsd-deep-dive`), платформенные решения — в `docs/stack` (`/stack-deep-dive`).
+
+Резолв карты — поля `project-slug` / `strategy-path` / `surface` в
+`docs/stack/service.md` (дефолт `../strategy`). Готовые скелеты файлов —
+`references/templates.md`.
 
 ## Когда применять
 
-- "/scaffold" + аргумент (slice / page / widget / entity / feature)
-- Юзер: «создай слайс X», «добавь страницу Y», «новый widget Z»
-- Оркестратор `/init-service` или `/de-template` чейнит этап «свои слайсы»
+- «/scaffold <kind> <имя>» — `page` · `collection` · `feature` · `widget` · `route`
+- «создай страницу услуг», «добавь коллекцию вакансий», «нужен виджет отзывов»
+- `/init-service` или `/de-template` чейнит этап «свои слайсы»
 
 ## Pre-flight
 
-- [ ] Запись слайса есть в FSD-карте strategy (`fsd/<surface>/<kind>.md`) со
-      `status: stable`; нет соседа/записи — next-step «спроектируй в
-      `<org>/strategy` (/fsd-deep-dive)», не выдумывать слайс здесь
-- [ ] Имя слайса в kebab-case, не конфликтует с существующими
+- [ ] Запись есть в FSD-карте (`fsd/<surface>/<kind>.md`) со `status: stable`.
+      Нет соседа или записи — next-step «спроектируй в `<org>/strategy`
+      (`/fsd-deep-dive`)»; выдумывать слайс здесь нельзя
+- [ ] Имя в kebab-case, не конфликтует с существующим
+- [ ] Для `page`/`route` — решён режим рендера в `docs/stack/rendering.md`
 
-## Вопросы юзеру (≤ 3, не интервью)
+## Вопросы юзеру (≤ 3, это не интервью)
 
-1. **Тип** — `entity | feature | widget | page` (из `/scaffold <type>`-аргумента)
-2. **Имя слайса** — kebab-case (`create-todo`, `payment-status`)
-3. **Что нужно** — какие сегменты создать:
-   - `ui/` (всегда для feature/widget/page; опционально для entity)
-   - `model/` (всегда для entity; для feature если есть store/schema)
-   - `api/` (для entity всегда; для feature если есть mutation; для widget/page редко)
-   - `lib/` (опционально)
-4. **Сопутствующее** — нужен ли:
-   - test stub (`*.test.tsx`) — да по умолчанию
-   - mock-handler в `shared/api/mock/handlers/<slice>.ts` (для entity/feature
-     с API) — да если есть `api/`
-   - route в `pages/` (только для page) — обязательно
+1. **Индексируется?** (для `page`/`route`) — от этого `noindex`, строка в
+   `STATIC_ROUTES` и участие в карте сайта
+2. **Есть перевод?** — страница заводится сразу на обеих локалях или только на `ru`
+3. **Что внутри** — какие сегменты слайса нужны (`ui`, `model`, `api`, `lib`)
 
-## Раскладка
+---
 
-### entity
+## page
 
 ```
-src/entities/<slug>/
-├─ model/types.ts          # Zod schema + type
-├─ api/queries.ts          # queryOptions + мутации
-├─ ui/<slug>-card.tsx      # presenter (опционально)
-├─ index.ts                # public API
-└─ model/types.test.ts     # schema-тест
+src/pages/_<name>/<name>-page.astro   разметка страницы (общая для локалей)
+src/pages/<path>.astro                ru-обёртка: locale = 'ru'
+src/pages/en/<path>.astro             en-обёртка: locale = 'en'
 ```
 
-### feature
+Обязательное:
+
+- страница рендерится через `DocumentLayout` с уникальными `title` и `description`
+  (бюджеты сниппета: title ≤ 65, description 70–170 — их держит `seo:check`)
+- есть перевод → `alternatePath="<путь без префикса локали>"`; нет — проп не ставится,
+  и hreflang не печатается
+- вложенная страница → один массив крошек: он же в `<Breadcrumbs>`, он же в
+  `jsonLd={[breadcrumbList(crumbs)]}`
+- служебная (подтверждение, результат, техническая) → проп `noindex`, **без** строки
+  в `STATIC_ROUTES`
+- индексируемая вне коллекций → строка в `STATIC_ROUTES` (`src/pages/sitemap.xml.ts`)
+  на каждую локаль, в которой она есть
+- тексты — в объекте `COPY` секции на обе локали; подписи навигации — в
+  `src/shared/i18n/dict.ts`
+
+Не нужно: править `e2e/site.ts` — списки страниц он выводит из `dist/client`. Ключевую
+страницу стоит добавить в `PAGES` спека `e2e/a11y.spec.ts`.
+
+## collection
 
 ```
-src/features/<slug>/
-├─ ui/<slug>-form.tsx      # основной компонент
-├─ model/schema.ts         # Zod input schema (если форма)
-├─ api/<slug>.ts           # mutation (если есть)
-├─ index.ts
-└─ ui/<slug>-form.test.tsx
+src/entities/<name>/
+├─ content/<locale>/<slug>.md      записи; обложки — content/covers/<translationKey>.png
+├─ model/schema.ts                 Zod-схема frontmatter (прямой import { z } from 'zod')
+├─ model/collection.ts             defineCollection + glob({ base })
+├─ api/queries.ts                  списки, запись, перевод; фильтр draft и локали
+├─ lib/paths.ts                    маршруты коллекции
+├─ ui/<name>-card.astro            карточка списка
+└─ index.ts                        explicit re-export без server-only символов
 ```
 
-### widget
+Плюс три точки регистрации, без них коллекции «нет»:
+
+1. `src/content.config.ts` — импорт **напрямую из модуля** (`@/entities/<name>/model/collection`)
+2. `scripts/lib/content.mjs` — запись в реестре `collections` (каталог, схема, порождаемые
+   маршруты): по нему работают `check:content` и `seo:check`
+3. страницы списка и записи в `src/pages/**` (обе локали) + строки в карте маршрутов
+
+Схема обязана дать: бюджеты `title`/`description`, `pubDate`, `draft` с дефолтом `false`,
+`translationKey`. Первая запись — через `/content`, иначе списки пустые и `getStaticPaths`
+не порождает ни одного пути.
+
+## feature
 
 ```
-src/widgets/<slug>/
-├─ ui/<slug>.tsx
-├─ index.ts
-└─ ui/<slug>.test.tsx
+src/features/<name>/
+├─ ui/<name>.astro
+├─ model/schema.ts    если есть ввод от человека
+├─ api/<name>.ts      если есть серверная сторона
+└─ index.ts
 ```
 
-### page
+Сценарий с результатом («отправить заявку», «подписаться»). По умолчанию — **без
+JavaScript**: форма шлёт нативный POST, ответ рисует сервер. Остров заводится решением
+проекта: строка в `docs/stack/rendering.md § Интерактивность` и бюджет (файл в `dist` —
+строка в `.size-limit.cjs`, инлайн — байты в unit-тесте).
+
+## widget
 
 ```
-src/pages/<slug>.tsx       # TanStack Router file-based
-└─ test (опционально — e2e лучше для page-уровня)
+src/widgets/<name>/
+├─ ui/<name>.astro
+├─ ui/<name>.astro.test.ts    Container API + expectNoA11yViolations
+└─ index.ts
 ```
 
-После записи файла page — `pnpm gen` регенерирует `routeTree.gen.ts`.
+Widget заводится при **≥ 2 страницах-потребителях** или если это часть каркаса сайта.
+Блок одной страницы живёт рядом с ней — в `src/pages/_<name>/`; иначе Steiger поймает
+`insignificant-slice`.
 
-## Public API (обязательно)
+## route
 
-`index.ts` — explicit re-exports:
+`src/pages/<name>.ts` (endpoint) или `src/pages/<name>.astro` (если ответ — разметка):
 
 ```ts
-export { LoginForm } from './ui/login-form'
-export { useLoginMutation } from './api/login'
-export { LoginSchema, type LoginInput } from './model/schema'
+export const prerender = false
 ```
 
-**Не `export *`** — теряем discoverability и tree-shake.
+Обязательное для каждого on-demand маршрута:
 
-## Mock handler (если нужен)
+- явный `Cache-Control`: публичный HTML — `no-cache` (умолчание middleware), живой или
+  персональный — `private, no-store` в самом роуте, файл для краулера — короткий
+  `public, max-age`
+- `X-Robots-Tag: noindex` там, где ответ не страница выдачи; страница — проп `noindex`
+- **строка в карте маршрутов** `docs/reference/rendering.md` и в `docs/stack/rendering.md`
+- вне `sitemap.xml`
 
-`src/shared/api/mock/handlers/<slug>.ts`:
+Обработчик формы — страница, а не endpoint: без JavaScript ответом на POST обязана быть
+разметка, а успех — 303 (PRG).
+
+---
+
+## Public API
+
+`index.ts` слайса — только explicit re-exports:
 
 ```ts
-import { http, HttpResponse } from 'msw'
-import type { DB } from '../db'
-
-export function <slug>Handlers(db: DB) {
-  return [
-    http.get('/api/v1/<resource>', () => HttpResponse.json([])),
-    // …
-  ]
-}
+export type { Post } from './api/queries'
+export { listPosts } from './api/queries'
+export { default as PostCard } from './ui/post-card.astro'
 ```
 
-Зарегистрировать в `src/shared/api/mock/handlers/index.ts`.
+Без `export *`, без импортов, без объявлений и вызовов в самом `index.ts` и без
+server-only символов (`astro:content`, `node:*`) — их серверный entry импортирует
+напрямую из модуля.
 
-## После раскладки
+## Post-flight (обязательно)
 
-- `pnpm steiger src` — должен быть зелёным (slice canonical, public API на месте)
-- `pnpm typecheck` — нет битых импортов
-- `pnpm lint` — формат / правила в порядке
+```bash
+pnpm format           # Prettier для .astro: новый файл почти всегда не в его стиле
+pnpm typecheck        # нет битых импортов и пропсов
+pnpm lint             # границы FSD (ESLint boundaries) и правила
+pnpm steiger          # структура: public API, сегменты, значимость слайса
+```
+
+Для `collection` дополнительно `pnpm check:content`; перед claim «готово» — `pnpm check`.
 
 ## Что НЕ делать
 
-- ❌ Создавать сегменты `components/`, `hooks/`, `utils/`, `types/` — это
-  группировка по типу, запрещено каноном (Steiger `no-reserved-folder-names`)
-- ❌ `export * from './...'` в `index.ts`
-- ❌ Импортировать из соседнего слайса того же слоя
-- ❌ Создавать слайс «на будущее» (Steiger `insignificant-slice`)
+- ❌ Сегменты `components/`, `hooks/`, `utils/`, `types/` — группировка по типу запрещена
+- ❌ `export *` из `index.ts`
+- ❌ Импорт соседнего слайса того же слоя — поднимай общее в `entities`/`shared` или
+  композируй в widget/page
+- ❌ Импорт мимо public API (`@/<layer>/<slice>/<segment>/…`)
+- ❌ `prerender = false` на контентной странице
+- ❌ Слайс «на будущее» — Steiger `insignificant-slice`

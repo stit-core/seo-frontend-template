@@ -7,7 +7,7 @@
 ## С чего начать
 
 - Прочитай `CLAUDE.md` (ядро + роутер) и `docs/README.md` (карта документации);
-  правила — `.claude/rules/`.
+  правила — `.claude/rules/`, устройство агент-обвязки — `docs/contributing.md`.
 - Подними окружение:
 
   ```bash
@@ -41,7 +41,8 @@
 ## Перед PR
 
 ```bash
-pnpm check      # gate: typecheck + lint + format:check + test + steiger + check:gate + build + size
+pnpm check      # gate: typecheck + lint + format:check + test + steiger + check:gate
+                #       + check:content + build + check:links + seo:check + size
 pnpm test:e2e   # Playwright на prod-сборке — отдельный stage
 ```
 

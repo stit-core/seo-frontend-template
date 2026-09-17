@@ -4,28 +4,32 @@
 
 ## Чек-лист
 
-1. **Все секции заполнены** или явно `_нет_`:
-   - `service.md` § Идентичность / Связь с экосистемой
-   - `runtime.md` § Node / Browser / React
-   - `config.md` § Runtime config keys / Build-time env / Секреты
-   - `routing.md` § TanStack Router / Layouts / Guards
-   - `api.md` § HTTP-клиент / Контракт API / Auth / Mock
-   - `styling.md` § Источники / Оси темизации
-   - `observability.md` § Sentry / Web Vitals
-   - `dependencies.md` § Базовая подборка (зафиксирована) / Проектные / Запрещено
+1. **Все секции заполнены** или явно помечены `_нет_` — состав секций по kind'у
+   в `references/field-checklists.md`. Незаполненная таблица с курсивными
+   заглушками — не stable.
 
-2. **Generates непуст** — конкретные файлы, которые правит `/de-template`.
+2. **`Generates` непуст** — конкретные файлы, которые правит `/de-template` или
+   `/scaffold`. Это главное: артефакт без `Generates` бесполезен развороту.
 
 3. **Cross-kind согласованность**:
-   - `config.md#API_BASE_URL` совпадает с тем, что использует `shared/config`
-   - `api.md#Контракт API` описывает, где живут zod-схемы
-   - `observability.md#DSN` (если активен) — есть в `config.md`
-   - `dependencies.md` не противоречит установленному `package.json`
+   - каждая страница `pages.md` FSD-карты есть в `routing.md`, и у неё есть режим
+     в `rendering.md`;
+   - `indexable: да` не стоит на `dynamic`-маршруте и на `guard ≠ public`;
+   - `content.md § Кто редактирует` не противоречит источнику и режимам
+     (редактор без git ⇒ его коллекции не `static`);
+   - каждый env из любого kind'а есть в `config.md`, секрет не помечен «в HTML: да»;
+   - канонический хост один: `service.md § Домены` = `seo.md § Идентичность` = `SITE_URL`;
+   - каждый остров из `rendering.md` имеет строку бюджета.
 
-4. **Нет открытых `**blocker**`-вопросов** в `state/<kind>.md`
-   (формат — `references/state-format.md`).
+4. **Нет открытых `**blocker**`** в `state/<kind>.md` (формат — `references/state-format.md`).
+
+## Гейт состава
+
+`/de-template` запускается, когда `stable` все **обязательные** kinds и все
+**заведённые** условные (`api`, `analytics`). Незаведённый условный kind не
+блокирует — файла просто нет.
 
 ## Эскалация при сомнении
 
-Те же правила что у fsd-deep-dive — `**blocker**`-строка в `## Открытые
-вопросы` заметки `state/<kind>.md`, не промоушать.
+Не промоутить: строка `**blocker**` в `## Открытые вопросы` заметки `state/<kind>.md`,
+и вопрос — юзеру. Артефакт со `stable` — обещание, что по нему можно разворачивать код.

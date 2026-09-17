@@ -7,39 +7,67 @@ status: draft
 
 # api
 
-## HTTP-клиент
+**Условный kind.** Заводится, когда сайт принимает что-то от посетителя (форма, подписка)
+или берёт данные извне (CMS, бэкенд, внешний сервис). Сайт-визитка со ссылкой на
+мессенджер этот артефакт не заводит.
 
-Собственный тонкий враппер поверх native `fetch` (`shared/api/client.ts`).
-CSRF-заголовок на mutating requests. Cookie-auth (`credentials: 'include'`).
+## Входящие обработчики
 
-## Контракт API
+| маршрут | что принимает | ответ | режим |
+|---|---|---|---|
+| `/api/contact` | форму обратной связи (`application/x-www-form-urlencoded`) | 303 на страницу благодарности; 200 с ошибками; 500 при сбое канала | `dynamic`, `private, no-store`, `noindex` |
+| _<path>_ | _что_ | _что отвечает_ | _режим_ |
 
-- Кодогена нет: контракт описывается **рукописными zod-схемами** в
-  `entities/<name>/model/schema.ts`
-- Клиент возвращает `unknown`, ответ парсится схемой на вызывающей стороне
-- `<backend>/openapi.json` (если есть) — референс при написании схем
+Обработчик формы — **страница**, а не endpoint: без JavaScript ответом на POST обязана
+быть разметка. Успех — PRG (303), чтобы F5 не переотправлял заявку.
 
-## Auth scheme
+## Антиспам-лестница
 
-| механизм | детали |
+Порядок обязателен; полное правило — `.claude/rules/forms-antispam.md`.
+
+1. **origin-check** — `Origin` (иначе `Referer`) обязан совпасть с origin runtime `SITE_URL`
+   или с origin запроса; нет ни того, ни другого — `403`
+2. **размер и форма тела** — `Content-Length` больше лимита формы → `413` до чтения тела;
+   не форма → `400`
+3. **honeypot** — скрытое поле; заполнено → ответ как у человека, доставки нет
+4. **валидация** — Zod; `consent: z.literal(true)` и на сервере
+5. **капча** — `CAPTCHA_PROVIDER`; `none` пропускает всё (реализаций провайдеров нет)
+6. **rate-limit** — на Traefik, не в приложении: счётчик в памяти процесса не переживает
+   рестарт и не виден второй реплике. Строка в чек-листе `docs/reference/deployment.md`
+
+## Доставка заявки
+
+| поле | значение |
 |---|---|
-| session storage | httpOnly cookie `app_session` |
-| token type | _opaque / JWT_ |
-| CSRF | double-submit cookie `csrf_token` + header `X-CSRF-Token` |
-| refresh | _автообновление через interceptor / explicit_ |
+| канал | `FORM_DELIVERY=smtp \| backend` — один |
+| адрес канала | `SMTP_URL` + `FORM_TO`/`FORM_FROM` \| `FORM_BACKEND_URL` |
+| ретраи | три попытки с паузами; ненастроенный канал — честный `500`, без ретраев |
+| доказательство согласия | `consentVersion` (`PRIVACY_POLICY_VERSION`) + `consentedAt` уезжают с заявкой |
+| durable-спул | _нет_ — заявка уходит синхронно; спул на диске требует volume и ретенции ПДн |
+| хранение | на стороне канала и в РФ; зарубежные форм-сервисы запрещены |
 
-## Mock-стратегия
+**Тело заявки не логируется** никогда: в лог — событие, результат, канал, число попыток и
+`rid`. Sentry получает исключение доставки, не заявку.
 
-- MSW 2.x + `@mswjs/data` + `@faker-js/faker`
-- Сценарии: `empty | populated | authenticated | error`
-- Персист: `localStorage` под ключом `app.mock.db.v1`
-- Dev-UI переключатель в углу
+## Внешние источники данных
+
+| источник | базовый URL | когда читается | схема ответа |
+|---|---|---|---|
+| _<сервис>_ | _env-ключ_ | _на сборке / на запрос_ | _Zod в `<slice>/model/schema.ts`_ |
+
+Источник, читаемый на сборке, делает контент частью релиза; читаемый на запрос — тянет за
+собой `cached`/`dynamic` в `rendering.md` и кеш процесса. Ответ парсится Zod-схемой на
+месте вызова: `unknown` в разметку не попадает.
 
 ## Generates
 
-- `src/shared/api/client.ts`
-- `src/shared/api/mock/*`
-- `src/entities/<name>/model/schema.ts` — zod-контракты сущностей
+- `src/pages/api/**` — обработчики
+- `src/features/<name>/{model/schema.ts,api/{handler,delivery}.ts,ui/*.astro}`
+- `src/shared/antispam/*` — шов капчи
+- строки в `rendering.md § Карта маршрутов` и в чек-листе прокси `deployment.md`
+- `e2e/forms.spec.ts` — путь без JavaScript целиком
+- `config.md` — env `FORM_DELIVERY`, `SMTP_URL`, `FORM_TO`, `FORM_FROM`, `FORM_BACKEND_URL`,
+  `CAPTCHA_PROVIDER`, `CAPTCHA_SECRET`, `CAPTCHA_FAIL_MODE`
 
 ## Открытые вопросы
 

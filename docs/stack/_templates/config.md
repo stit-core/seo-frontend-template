@@ -7,38 +7,65 @@ status: draft
 
 # config
 
-## Runtime config keys
+Роллап всех ключей: env, объявленный любым другим kind'ом, обязан быть здесь. Читает их
+только `src/shared/config` (`getRuntimeConfig()`, Zod по `process.env`); пустое значение
+равносильно незаданному — берётся дефолт.
 
-`window.__APP_CONFIG__` — генерируется nginx-entrypoint.sh из env-переменных
-контейнера, валидируется Zod в `src/shared/config/index.ts`.
+## Runtime env контейнера
 
-| key | type | default | назначение | secret? |
+Колонка «в HTML?» — попадает ли значение в разметку (whitelist `PUBLIC_CONFIG_KEYS`
+через `getPublicConfig()`; `SITE_URL` — через штамповку prerendered-выхода).
+
+| ключ | назначение | дефолт | в HTML? | секрет |
 |---|---|---|---|---|
-| `API_BASE_URL` | string | `/api` | префикс HTTP-запросов | нет |
-| `SENTRY_DSN` | string | `""` | DSN Sentry, пустой = выключен | нет (public DSN) |
-| `SENTRY_ENVIRONMENT` | string | `production` | tag среды | нет |
-| `RELEASE` | string | `unknown` | tag релиза для Sentry | нет |
-| _добавить_ | _type_ | _default_ | _что_ | _да/нет_ |
+| `SITE_URL` | канонический origin без хвостового слеша; **обязателен** | — | да (штамповка) | нет |
+| `PORT` / `HOST` | слушатель адаптера | `3000` / `0.0.0.0` | нет | нет |
+| `NODE_OPTIONS` | например `--max-old-space-size=384` | — | нет | нет |
+| `ROBOTS_POLICY` | `index \| noindex` — весь контур | `index` | да | нет |
+| `AI_TRAINING` | `allow \| deny` — обучающие AI-краулеры в `robots.txt` | `allow` | нет | нет |
+| `INDEXNOW_KEY` | ключ IndexNow; файл `/<ключ>.txt` | `''` | нет | нет |
+| `RELEASE` | версия для логов и Sentry | `unknown` | нет | нет |
+| `LOG_LEVEL` | порог JSON-лога | `info` | нет | нет |
+| `KEEP_ALIVE_TIMEOUT_MS` / `SHUTDOWN_TIMEOUT_MS` | обёртка сервера | `65000` / `15000` | нет | нет |
+| `SENTRY_DSN` / `SENTRY_ENVIRONMENT` | серверные исключения | `''` / `production` | нет | нет (DSN public by design) |
+| `FORM_DELIVERY` | канал доставки заявки | `smtp` | нет | нет |
+| `SMTP_URL` | подключение SMTP | `''` | нет | **да** |
+| `FORM_TO` / `FORM_FROM` | получатель и отправитель письма | `''` | нет | нет |
+| `FORM_BACKEND_URL` | адрес внутреннего приёмника заявок | `''` | нет | нет |
+| `CAPTCHA_PROVIDER` | шов капчи | `none` | нет | нет |
+| `CAPTCHA_SECRET` / `CAPTCHA_FAIL_MODE` | ключ верификации и поведение при недоступности | `''` / `open` | нет | **да** / нет |
+| _<ключ>_ | _что_ | _дефолт_ | _да/нет_ | _да/нет_ |
 
-## Build-time env (VITE_*)
+Ключи формы и капчи нужны только при заведённом `api.md`. Полная таблица контракта с
+пояснениями — `docs/reference/deployment.md`.
 
-| key | values | default | назначение |
-|---|---|---|---|
-| `VITE_API_MODE` | `mock` / `real` | `mock` | dev-режим API |
-| `VITE_API_TARGET` | URL | `http://localhost:8080` | таргет proxy для `real` |
-| `VITE_MOCK_SCENARIO` | `empty` / `populated` / `authenticated` / `error` | `populated` | стартовый mock-сценарий |
-| `VITE_MOCK_DEVTOOLS` | `0` / `1` | `0` | dev-UI переключателя сценариев |
+## Публичные идентификаторы сайта
+
+Не env, а поля `src/shared/config/site.ts`: prerendered-страница печатается на сборке,
+а образ собирается без env — runtime-значение до неё не доходит.
+
+| поле | назначение | пусто значит |
+|---|---|---|
+| `SITE_NAME`, `SITE_DESCRIPTION`, `SITE_SAME_AS`, `SITE_LOGO_PATH` | идентичность и JSON-LD | — |
+| `OG_DEFAULT_IMAGE` | социальная карточка по умолчанию | — |
+| `METRIKA_ID` | счётчик | сторонних скриптов нет |
+| `SITE_VERIFICATION.google` / `.yandex` | подтверждение домена | тега нет |
+| `PRIVACY_POLICY_VERSION` | редакция политики ПДн, уезжает с заявкой | — |
 
 ## Секреты
 
-Cookie-auth: сервер выставляет httpOnly cookie сессии. Фронт токены не хранит.
-DSN Sentry public-by-design, безопасно в бандле.
+Секреты живут только в env контейнера и читаются on-demand кодом, где `process.env`
+живой. В HTML не сериализуется ничего, кроме whitelist; `.env` в образ не попадает.
+Новый ключ в HTML — строка в `PUBLIC_CONFIG_KEYS` **и** строка в таблице
+`deployment.md`.
 
 ## Generates
 
-- `.env.example` — список build-time env с дефолтами
-- `docker/nginx-entrypoint.sh` — все runtime keys с дефолтами
-- `src/shared/config/index.ts` — Zod-схема `RuntimeConfig`
+- `src/shared/config/runtime.ts` — Zod-схема env и whitelist
+- `src/shared/config/site.ts` — идентичность и публичные идентификаторы
+- `.env.example` — все ключи с дефолтами
+- `docs/reference/deployment.md § Env-контракт`
+- handoff в `<org>/infra` — какие ключи дописать в `.env` VPS
 
 ## Открытые вопросы
 

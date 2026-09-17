@@ -16,10 +16,6 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 в `.claude/rules/` (path-scoped), процедуры — в `.claude/skills/`. Карта документации —
 `docs/README.md`.
 
-Скиллы `.claude/skills/*` (кроме `plan`), `docs/stack/**`,
-`docs/reference/{architecture,ecosystem,observability}.md`, `docs/getting-started.md`,
-`docs/contributing.md` — по плану `.claude/plans/roadmap.md`.
-
 ## Точка входа
 
 - **Planning-first.** Любое содержательное изменение идёт через план — секция в
@@ -27,6 +23,22 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
   и багфиксы.
 - Дизайн (FSD-карта) проектируется в соседнем `<org>/strategy`; этот репо её читает.
   Код пишется по артефактам, не наоборот.
+- Не знаешь, с чего начать, — `/smartdev`: он показывает состояние и называет
+  следующий шаг.
+
+## Скиллы
+
+| скилл | когда |
+|---|---|
+| `/smartdev` | начало сессии, после `/clear`: где я и что дальше |
+| `/plan` | любое содержательное изменение — секция в roadmap |
+| `/init-service` | свежий форк: оркестратор пути «шаблон → свой сайт» |
+| `/stack-deep-dive` | платформа: `docs/stack/*.md` волнами до `stable` |
+| `/de-template` | разворот фундамента по stable-артефактам (на каноническом репо — никогда) |
+| `/scaffold` | `page` · `collection` · `feature` · `widget` · `route` по канону |
+| `/content` | запись коллекции: frontmatter в бюджетах, перевод, `check:content` |
+| `/seo-audit` | прогон `seo:check` + `seo.spec.ts` + curl по домену, отчёт |
+| `/release` | образ, приёмка, тег, пуш, handoff в `<org>/infra` |
 
 ## Команды
 
@@ -48,6 +60,7 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 | `pnpm size` | бюджеты `.size-limit.cjs` (CSS, HTML главной и поста) |
 | `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
 | `pnpm ttfb <origin> <path…>` | TTFB запущенного сервера: медиана/p90 20 запросов (`scripts/ttfb.mjs`) |
+| `pnpm accept:image <image>` | приёмка собранного образа до пуша: fail-fast, штамповка, статусы, TTFB, staging, дренаж |
 | `pnpm check` | **gate**: typecheck → lint → format:check → test → steiger → check:gate → check:content → build → check:links → seo:check → size |
 
 Перед claim «готово» / push — **`pnpm check`** (его же гоняет `lefthook pre-push`).
@@ -56,15 +69,20 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 
 | Тема | Где |
 |---|---|
-| FSD под Astro: слои, навязанные entry, public API, server-only | rule `fsd-architecture` |
+| FSD под Astro: слои, навязанные entry, public API, server-only | rule `fsd-architecture` + `docs/reference/architecture.md` |
 | Контент: frontmatter и бюджеты, один h1, черновики, переводы, `redirects.yaml`, контент-гейты | rule `content-invariants` |
 | env, `SITE_URL`, плейсхолдер и штамповка, whitelist в HTML | rule `env-local` |
 | Режимы рендера, карта маршрутов, кеш-заголовки, рецепт D | `docs/reference/rendering.md` + rule `render-safety` |
 | Тесты: два проекта Vitest, Container API, axe, Playwright | rule `tests-pipeline` |
 | UI на токенах, тема-остров, картинки и LCP, scoped-CSS, 0 JS | rule `shared-ui` |
 | Форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка | rule `forms-antispam` |
-| Deployment: образ, entrypoint, `server.mjs`, env-контракт | `docs/reference/deployment.md` |
-| SEO: head через `DocumentLayout`, hreflang, OG, JSON-LD, `robots.txt`/`sitemap.xml`/фиды/ключ IndexNow, staging в три контура, гейты `seo:check`/`seo.spec.ts` | rule `seo-invariants` |
+| Deployment: образ, entrypoint, `server.mjs`, env-контракт, требования к прокси | `docs/reference/deployment.md` |
+| SEO: head через `DocumentLayout`, hreflang, OG, JSON-LD, `robots.txt`/`sitemap.xml`/фиды/ключ IndexNow, staging в три контура, гейты `seo:check`/`seo.spec.ts` | rule `seo-invariants` + `docs/reference/seo.md` |
+| Наблюдаемость: JSON-лог, `X-Request-Id`, `/healthz`, Sentry по DSN | `docs/reference/observability.md` |
+| Платформа проекта: 12 kinds, порядок волн, гейт `stable` | `docs/stack/README.md` |
+| Место среди шаблонов stit, контракты с соседями, STOP на image-in-registry | `docs/reference/ecosystem.md` |
+| Путь потребителя шаблона: форк → свой сайт | `docs/getting-started.md` |
+| Устройство `.claude`-системы (правила, скиллы, план) | `docs/contributing.md` |
 | Родство с SPA-шаблоном | `docs/reference/kinship.md` + `pnpm kin:diff` |
 | Forward-only, комментарии | rules `forward-only`, `comments` |
 

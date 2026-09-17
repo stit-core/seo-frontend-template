@@ -1,67 +1,139 @@
 ---
 name: release
-description: Запушить новую версию образа SPA в registry одной процедурой (один nginx-образ; runtime config через env контейнера) и передать инфра-админу handoff. Активируй когда пользователь говорит "релиз", "запушим версию", "сделай release vX.Y.Z", "/release".
+description: Выпустить новую версию сайта — собрать Node-образ, принять его локально, запушить в registry под тегом vX.Y.Z и передать handoff инфра-админу (make bump SVC=site). Активируй когда пользователь говорит "релиз", "запушим версию", "сделай release vX.Y.Z", "/release".
 ---
 
 # Skill: release
 
-Канонический release-флоу фронта. **Зона ответственности этого репо: код →
-image в registry. На STOP — всё.** Build локальный, push в
-`<registry>/<org>/frontend` под одним `vX.Y.Z`-тегом (registry-путь — из
-`docs/stack/service.md § Идентичность`).
+Канонический релиз сайта. **Зона ответственности этого репо: код → образ в registry.
+На этом STOP.** Дальше — handoff в `<org>/infra`: rollout выполняется там
+(`make bump SVC=site TAG=vX.Y.Z` — правит `SITE_TAG` в `.env` VPS + force-recreate).
+Деплой-команды чужих репо отсюда не запускаются.
 
-**Один образ.** Build `node → nginx` (см. `docs/reference/deployment.md`);
-среда конфигурируется на старте контейнера через env (`/config.js` →
-`window.__APP_CONFIG__`) — образ один на все env.
-
-Дальше — **handoff** в `<org>/infra`: rollout выполняется там
-(`make bump SVC=frontend TAG=<v>` — правит `FRONTEND_TAG` в `.env` VPS +
-force-recreate). Этот шаг здесь не выполняется — скилл печатает
-INFRA-HANDOFF-блок, оператор (или агент в `<org>/infra`) применяет его.
+**Один образ на все среды.** Сборка печёт плейсхолдер origin, контейнер штампует
+`SITE_URL` при старте — образ для staging и prod один и тот же, отличается только env
+(`docs/reference/deployment.md`). Registry-путь и `infra-svc` — из
+`docs/stack/service.md § Идентичность`.
 
 ## Когда применять
 
-- «Релизим v1.2.3» / «Запушь новую версию» / "/release"
-- После закрытия задачи и зелёного `pnpm check`, когда юзер сказал «пора катить»
+- «Релизим v1.2.3» / «запушь новую версию» / «/release»
+- После закрытой задачи и зелёного `pnpm check`, когда юзер сказал «пора катить»
 
 ## Когда НЕ применять
 
-- «Собери image локально для теста» → `docker buildx build --load -t spa-local .`
-- Пуш feature-веточного билда → preflight отвергает не-main
-- Юзер не озвучил OK на релиз → STOP, спроси
+- «Собери образ локально посмотреть» → `docker build -f docker/Dockerfile -t site-local .`
+- Пуш ветки не из `main` — preflight отвергает
+- Юзер не сказал OK на релиз → СТОП, спроси
 
-## Pre-flight (BEFORE команд)
+## Pre-flight
 
-- [ ] Юзер явно сказал OK на релиз (тег + push — действие видимое вне репо)
-- [ ] Ветка `main`, working tree clean
-- [ ] `pnpm check` зелёный. Нет — STOP → чинить, не релизить
-- [ ] Юзер знает версию (semver-bump по уровню изменений) — не угадывай
-- [ ] Оператор залогинен в registry (`docker login <host>` — вне процесса,
-      не делай сам)
+- [ ] Юзер явно сказал OK (тег и пуш видны вне репо)
+- [ ] Ветка `main`, рабочее дерево чистое
+- [ ] `pnpm check` зелёный. Нет — СТОП, чинить
+- [ ] `pnpm test:e2e` зелёный (в гейт не входит — тянет браузер)
+- [ ] Версия названа юзером (semver по уровню изменений) — не угадывай
+- [ ] Оператор залогинен в registry (`docker login <host>` — вне процесса, не делай сам)
+- [ ] Чек-листы ниже пройдены
 
 ## Шаги
 
-1. **Тег**: `git tag vX.Y.Z && git push origin vX.Y.Z` (по явному OK).
-2. **Build+push**:
+1. **Сборка образа**
+
    ```bash
-   docker buildx build -t <registry>/<org>/frontend:vX.Y.Z --push .
+   docker build -f docker/Dockerfile --secret id=npmrc,src="$HOME/.npmrc" \
+     -t <registry>/<org>/site:vX.Y.Z .
    ```
-3. **INFRA-HANDOFF** — напечатать блок:
+
+   Секрет `npmrc` нужен приватному registry пакетов; `-f docker/Dockerfile` обязателен —
+   Dockerfile лежит не в корне.
+
+2. **Приёмка образа**
+
+   ```bash
+   pnpm accept:image <registry>/<org>/site:vX.Y.Z
    ```
-   === INFRA HANDOFF · <org>/frontend vX.Y.Z ===
-   WHAT:   новый образ <registry>/<org>/frontend:vX.Y.Z
-   ACTION: в <org>/infra: make bump SVC=frontend TAG=vX.Y.Z
-   ENV:    <новые runtime-env ключи, если появились; иначе "—">
-   RISK:   <осознанные риски отката/совместимости; иначе "—">
+
+   Скрипт проверяет: отказ без `SITE_URL`, штамповку origin (в `dist/client` не осталось
+   плейсхолдера), статусы и заголовки ключевых маршрутов, canonical на runtime origin,
+   `robots.txt`/`sitemap.xml`, TTFB, контур staging (`ROBOTS_POLICY=noindex`) и дренаж по
+   `docker stop`. Красный — релиз не едет.
+
+3. **Тег**: `git tag vX.Y.Z && git push origin vX.Y.Z` (по явному OK).
+
+4. **Пуш образа**: `docker push <registry>/<org>/site:vX.Y.Z`.
+
+5. **INFRA-HANDOFF** — напечатать блок:
+
+   ```
+   === INFRA HANDOFF · <org>/site vX.Y.Z ===
+   WHAT:   новый образ <registry>/<org>/site:vX.Y.Z
+   ACTION: в <org>/infra: make bump SVC=site TAG=vX.Y.Z
+   ENV:    <новые ключи из docs/stack/config.md; иначе "—">
+   PROXY:  <новые требования к Traefik: rate-limit, редиректы; иначе "—">
+   RISK:   <риски отката и совместимости; иначе "—">
    ===
    ```
-   Новые runtime-ключи берутся из `docs/stack/config.md § Runtime config
-   keys` — если контракт env расширился, инфра-админ должен дописать их в
-   `.env` VPS до бампа.
+
+   Новые env-ключи инфра-админ дописывает в `.env` VPS **до** бампа, иначе контейнер
+   поднимется с дефолтами или не поднимется вовсе (`SITE_URL` обязателен).
+
+6. **После выката** — прогнать `/seo-audit` по прод-домену и пройти пункты «после
+   деплоя» чек-листа ниже.
+
+## SEO-чек-лист релиза
+
+Перед сборкой:
+
+1. `pnpm check` зелёный (внутри — `seo:check` по `dist/client`)
+2. `pnpm test:e2e` зелёный (внутри — `seo.spec.ts` на сыром HTML, в т.ч. `-A Googlebot`)
+3. Дифф `robots.txt` и `sitemap.xml` против прошлого релиза просмотрен глазами
+4. Бюджеты `pnpm size` не превышены
+
+После деплоя (curl по прод-домену):
+
+5. `curl -sI https://<domain>/` → 200, нет `X-Robots-Tag: noindex`
+6. `curl -s https://<domain>/robots.txt` → ожидаемая политика, абсолютный `Sitemap:`,
+   **нет** `Disallow: /`
+7. `curl -s https://<domain>/sitemap.xml | grep -c '<loc>'` → ожидаемое число, все URL на
+   прод-домене и по https
+8. `curl -sI https://<domain>/net-takogo` → **404**, не 200 и не редирект на главную
+9. `curl -sI http://<domain>/` и `https://www.<domain>/` и `https://<domain>/about/` →
+   ровно один 301/308 на канонический вид
+10. Исходник главной и одной контентной страницы глазами: `<title>`, `description`,
+    `canonical`, hreflang (взаимный), `og:*`, JSON-LD, `<html lang>`, ровно один `<h1>`
+11. Rich Results Test (`search.google.com/test/rich-results`) — без ошибок
+12. Schema Markup Validator (`validator.schema.org`) — без ошибок
+13. Валидатор микроразметки Яндекса (`webmaster.yandex.ru/site/tools/microtest/`)
+14. PageSpeed Insights (mobile) по 2–3 ключевым URL — CWV в «good»
+
+Один раз на проект (действия оператора, не скилла):
+
+19. Google Search Console: домен подтверждён, sitemap подан, отчёт «Индексирование
+    страниц» без критики
+20. Яндекс Вебмастер: сайт подтверждён, sitemap подан, **JS-рендеринг выключен**,
+    региональность задана, привязка к Метрике
+21. IndexNow: файл `https://<domain>/<ключ>.txt` доступен, тестовый submit вернул 200/202
+
+## Юридический чек-лист релиза
+
+Проверяется, когда на сайте есть форма (то есть почти всегда):
+
+- [ ] `/legal/privacy` открывается и **не содержит** `{{OPERATOR_` — проверить
+      `grep -rn '{{OPERATOR_' src/`
+- [ ] Реквизиты оператора в политике совпадают с реальными (название, ИНН, адрес, почта)
+- [ ] `PRIVACY_POLICY_VERSION` в `src/shared/config/site.ts` соответствует текущей
+      редакции текста; текст менялся — версия поднята, иначе доказательство согласия
+      ссылается не на ту редакцию
+- [ ] Форма отправляется только с отмеченным согласием, и галочка не предустановлена;
+      рядом — ссылка на политику
+- [ ] Заявки уезжают в канал, который хранит их в РФ; тело заявки не пишется в лог
+- [ ] Уведомление в РКН о намерении обрабатывать ПДн подано (разово, вне репо)
+- [ ] Rate-limit на публичный POST формы стоит на прокси — иначе форму наружу не открывают
 
 ## Что НЕ делать
 
-- ❌ Деплой-команды чужих репо (`make ship`, `make bump`, ssh) отсюда —
-  зона `<org>/infra`
-- ❌ `:latest`/`:edge`-теги — только `vX.Y.Z` или `<sha>`
-- ❌ Тег без зелёного `pnpm check` или с грязным деревом
+- ❌ Деплой-команды чужих репо (`make bump`, `make ship`, ssh) отсюда — зона `<org>/infra`
+- ❌ Теги `:latest`/`:edge` — только `vX.Y.Z`
+- ❌ Тег без зелёного `pnpm check`, с грязным деревом или с красной приёмкой образа
+- ❌ Собирать образ с `SITE_URL` в build-arg — образ перестаёт быть переносимым

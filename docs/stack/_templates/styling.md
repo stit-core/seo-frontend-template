@@ -9,42 +9,69 @@ status: draft
 
 ## Источники
 
-- **Токен-слой**: собственный — `src/app/styles/index.css` (Tailwind v4 `@theme`
-  + семантические CSS-переменные). Внешней дизайн-системы нет.
-- **CSS framework**: Tailwind v4 (Oxide engine, `@theme`)
-- **Темизация**: смена `data-scheme` на `<html>` переопределяет значения
-  семантических токенов в `index.css`
+| поле | значение |
+|---|---|
+| токен-слой | собственный — `src/app/styles/index.css` (Tailwind v4 `@theme` + семантические переменные) |
+| CSS-фреймворк | Tailwind v4 через `@tailwindcss/vite` |
+| внешняя дизайн-система | нет и не заводится: компоненты пишутся в проекте как `.astro` |
+| подсветка кода | `markdown.syntaxHighlight: false` — Shiki инлайнит сырые цвета мимо токенов |
 
-## Корневой импорт
+## Палитра и семантика
 
-`src/app/styles/index.css`:
+| группа | токены |
+|---|---|
+| поверхности | `--scheme-app-bg`, `--scheme-surface`, `--scheme-surface-muted`, `--scheme-divider` |
+| текст | `--scheme-app-fg`, `--scheme-muted`, `--scheme-link` |
+| акцент и действие | `--scheme-accent`, `--scheme-accent-soft`, `--scheme-action-bg`, `--scheme-action-fg`, `--scheme-focus` |
+| ошибка | `--scheme-danger`, `--scheme-danger-soft` |
+| классы-компоненты | `.button`, `.field`, `.note`, `.section-title`, `.prose` |
 
-```css
-@import "tailwindcss";
+Проектная палитра — значения этих же переменных: _фирменные цвета_. Новая семантика —
+новый токен здесь, а не сырой цвет в компоненте.
 
-@theme { /* типографика, радиусы, шрифты */ }
-@theme inline { /* семантические цвета → var(--scheme-*) */ }
-```
+## Тема
 
-## Темизация — оси
+| поле | значение |
+|---|---|
+| системная | `light-dark()` + `color-scheme` в токен-слое — без JS |
+| явный выбор | `data-scheme="light\|dark"` на `<html>`, хранится в cookie `scheme` |
+| остров | один инлайн-`<script>` в `<head>` (`features/theme`) — применяет выбор до первой отрисовки |
+| оси помимо схемы | _нет_ (`data-brand`, `data-density` — по потребности) |
 
-| ось | значения | управляется через |
-|---|---|---|
-| `data-scheme` | `light` / `dark` | `features/theme` store |
-| `data-brand` | _список_ | _когда_ |
-| `data-density` | `comfortable` / `compact` | _когда_ |
+## Шрифты
 
-## Layout-конвенции проекта
+| поле | значение |
+|---|---|
+| основной | системный стек `system-ui` — ноль байт по проводу и ноль CLS |
+| моноширинный | системный `ui-monospace` |
+| веб-шрифт | _нет_ |
 
-- `shared/ui/` — проектные обёртки с layout-семантикой (PageHeader, DataTable)
-- Тонкие, опираются только на семантические токены `index.css`
-- Запрет: хардкод сырых цветов/размеров в компонентах — заводи семантический
-  токен в `index.css`, потом используй утилиту
+Веб-шрифт — проектное решение и перф-риск: только self-host, только WOFF2, обязательный
+сабсет кириллицы, preload не больше одного файла активной локали, бюджет ≤ 60 КБ.
+Astro Fonts API (`subsets: ['cyrillic','latin']`) — способ его подключить.
+
+## Типографика и колонки
+
+| поле | значение |
+|---|---|
+| шкала | `text-body-sm/md/lg`, `text-heading-md/lg/xl` |
+| колонка чтения | `max-w-content` (≈ 72 знака) |
+| каркас страницы | `max-w-page` |
+| scoped `<style>` | только layout (grid, позиционирование); цвета и типографика — утилитами |
+
+## Бюджет
+
+| что | лимит |
+|---|---|
+| CSS всего сайта | ≤ 15 КБ gzip (одна таблица, `.size-limit.cjs`) |
+| HTML страницы | ≤ 20 КБ gzip (главная), ≤ 25 КБ gzip (запись) |
 
 ## Generates
 
-- `src/app/styles/index.css`
-- `vite.config.ts#plugins[tailwindcss]`
+- `src/app/styles/index.css` — токены, классы-компоненты, тема
+- `astro.config.ts` — плагин Tailwind
+- `.size-limit.cjs` — бюджеты CSS и HTML
+- `src/features/theme/**` — остров темы и переключатель (если тема нужна)
 
 ## Открытые вопросы
 
