@@ -1,17 +1,14 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
 
-const PLACEHOLDER = '__site_origin__'
-
 test.describe('сырой HTML (без браузера, как его видит бот)', () => {
-  test('/ — 200, полный HTML с одним h1, без плейсхолдера origin', async ({ request }) => {
+  test('/ — 200, полный HTML с одним h1', async ({ request }) => {
     const response = await request.get('/', { headers: { 'user-agent': 'Googlebot' } })
     expect(response.status()).toBe(200)
     const html = await response.text()
     expect(html).toContain('<html lang="ru"')
     expect(html.match(/<h1[\s>]/g)).toHaveLength(1)
     expect(html).toContain('Шаблон индексируемого сайта')
-    expect(html).not.toContain(PLACEHOLDER)
   })
 
   test('/en — 200 и lang="en"', async ({ request }) => {

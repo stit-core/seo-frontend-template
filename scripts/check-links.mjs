@@ -17,7 +17,7 @@ if (!existsSync(client)) {
 
 const onDemand = new Set(
   pageRoutes(resolve(root, 'src/pages'))
-    .filter((page) => !page.prerender && !page.dynamic)
+    .filter((page) => page.mode === 'dynamic' && !page.parametrized)
     .map((page) => page.route),
 )
 const redirects = buildRedirectTable(

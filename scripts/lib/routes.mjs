@@ -1,4 +1,4 @@
-// Маршруты из файлов src/pages — общая основа обоих контентных гейтов.
+// Маршруты из файлов src/pages — общая основа контентных гейтов и таблицы режимов.
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 
@@ -13,8 +13,12 @@ export function walk(dir) {
 }
 
 const PAGE_EXT = /\.(astro|ts|js|mjs)$/
+const ON_DEMAND = /export\s+const\s+prerender\s*=\s*false/
 
 // Файлы и каталоги с префиксом `_` Astro из роутинга исключает (секции страниц).
+// Режим маршрута: `static` — prerender на сборке (файл в dist/client), `dynamic` — on-demand
+// (`export const prerender = false`, рендер на запрос); `parametrized` — маршрут с `[param]`,
+// его конкретные пути порождает контент. Таблица — docs/reference/rendering.md.
 export function pageRoutes(pagesDir) {
   return walk(pagesDir)
     .filter((file) => PAGE_EXT.test(file))
@@ -22,11 +26,13 @@ export function pageRoutes(pagesDir) {
     .filter(({ segments }) => !segments.some((segment) => segment.startsWith('_')))
     .map(({ file, segments }) => {
       const route = `/${segments.join('/').replace(PAGE_EXT, '')}`.replace(/\/index$/, '') || '/'
+      const prerender = !ON_DEMAND.test(readFileSync(file, 'utf8'))
       return {
         file,
         route,
-        dynamic: route.includes('['),
-        prerender: !/export\s+const\s+prerender\s*=\s*false/.test(readFileSync(file, 'utf8')),
+        parametrized: route.includes('['),
+        prerender,
+        mode: prerender ? 'static' : 'dynamic',
       }
     })
 }

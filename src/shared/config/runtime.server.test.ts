@@ -14,7 +14,7 @@ it('плейсхолдер origin согласован во всех файла�
     'astro.config.ts': SITE_ORIGIN_PLACEHOLDER,
     'docker/entrypoint.sh': SITE_ORIGIN_PLACEHOLDER,
     'docker/server.mjs': SITE_ORIGIN_PLACEHOLDER,
-    'e2e/smoke.spec.ts': `'${new URL(SITE_ORIGIN_PLACEHOLDER).hostname}'`,
+    'e2e/rendering.spec.ts': `'${new URL(SITE_ORIGIN_PLACEHOLDER).hostname}'`,
   }
   for (const [file, literal] of Object.entries(literals)) {
     expect(readFileSync(repoFile(file), 'utf8'), file).toContain(literal)

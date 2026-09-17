@@ -211,7 +211,7 @@ for (const field of ['title', 'description']) {
 // ---------- маршруты ----------
 const routes = new Set(
   pageRoutes(resolve(root, 'src/pages'))
-    .filter((page) => !page.dynamic)
+    .filter((page) => !page.parametrized)
     .map((page) => page.route),
 )
 const publicDir = resolve(root, 'public')

@@ -1,0 +1,143 @@
+# Rendering
+
+Static-first: страница предрендерится на сборке, если её HTML не зависит от запроса — так
+устроены все контентные страницы. Рендер на запрос (on-demand) включается только явным
+`export const prerender = false` и только для служебных маршрутов. Режим — свойство файла в
+`src/pages`, а не конфига: `output: 'static'`, `cache`/`routeRules` в `astro.config.ts` не
+задаются. Правило для кода — `.claude/rules/render-safety.md`.
+
+## Режимы
+
+| режим | что значит | `Cache-Control` | здесь |
+|---|---|---|---|
+| `static` | HTML собран на `astro build` (`dist/client/<path>/index.html`); отдаёт статик-хендлер адаптера до приложения | `public, max-age=0` + `ETag` + `Last-Modified` (адаптер) — браузер перепроверяет и получает 304 | все контентные страницы |
+| `dynamic` | рендер на каждый запрос, кеш процесса запрещён; проходит через `app/middleware` | публичный (404, 410) — `no-cache`, умолчание middleware; живой/персональный — `private, no-store`, ставит роут | `404`, `/healthz`, `/now`; сюда же относятся `robots.txt`, `sitemap.xml`, `rss.xml`, обработчики форм `api/*` |
+| `cached` | рендер на запрос + кеш процесса (TTL + SWR) | `no-cache` | опция для контента из CMS/API — рецепт D ниже, кода в шаблоне нет |
+| `client` | каркас с сервера, данные на клиенте | `private, no-store` | нет и не планируется: приложение за логином — `spa-frontend-template` |
+
+Инварианты: индексируемая страница — `static` (или `cached`), и весь её контент — в первом
+HTML-ответе; `dynamic` в reference-наборе — всегда `noindex` и вне sitemap;
+`prerender = false` — только со строкой в карте ниже и явным решением о `Cache-Control`.
+
+## Карта маршрутов
+
+`scripts/lib/routes.mjs` (`pageRoutes()`) выводит режим каждого файла `src/pages` по признаку
+`prerender = false` — им пользуются `check:content` и `check:links`. Таблица — та же карта с
+решениями по кешу и индексации; колонка «в sitemap» — намерение для генератора карты сайта.
+
+| путь | файл (`src/pages/`) | режим | `Cache-Control` | индексируется | в sitemap |
+|---|---|---|---|---|---|
+| `/`, `/en` | `index.astro`, `en/index.astro` | `static` | `public, max-age=0` + ETag | да | да |
+| `/blog`, `/en/blog` | `blog/index.astro`, `en/blog/index.astro` | `static` | то же | да | да |
+| `/blog/page/N`, `/en/blog/page/N` | `blog/page/[page].astro`, `en/blog/page/[page].astro` | `static`, пути из `getStaticPaths` | то же | да | да |
+| `/blog/<slug>`, `/en/blog/<slug>` | `blog/[slug].astro`, `en/blog/[slug].astro` | `static`, пути из контента (без черновиков) | то же | да | да |
+| `/blog/tag/<tag>`, `/en/blog/tag/<tag>` | `blog/tag/[tag].astro`, `en/blog/tag/[tag].astro` | `static`, теги видимых записей | то же | да | да |
+| `/now` | `now.astro` | `dynamic` | `private, no-store` (роут) | нет — `noindex` | нет |
+| `/healthz` | `healthz.ts` (endpoint) | `dynamic` | `no-store` (роут) | нет | нет |
+| любой путь без файла → 404 | `404.astro` | `dynamic` | `no-cache` (middleware) | нет — статус 404 + `noindex` | нет |
+| адреса из `content/redirects.yaml` | `app/middleware/redirects.ts`, до роутинга | `dynamic` | 301/308 — без кеш-заголовка; 410 — `no-cache` | нет | нет |
+| ошибка рендера on-demand → 500 | ответ строит Astro; middleware пишет лог со статусом 500 и тем же `rid` | `dynamic` | нет | нет | нет |
+| `/_astro/*` | ассеты сборки | статика | `public, max-age=31536000, immutable` (адаптер) | — | нет |
+| `/favicon.ico`, `/icon.svg`, … | `public/` как есть | статика | `public, max-age=0` + ETag (адаптер) | — | нет |
+
+`/now` — единственная on-demand HTML-страница reference-набора: образец режима `dynamic`
+(серверное время в разметке, `noindex`, `private, no-store`, 0 JS, только `ru`). Ссылка на неё —
+в подвале, не в основной навигации.
+
+## Абсолютные URL: один образ на все среды
+
+Prerender происходит на сборке, а канонический origin известен только контейнеру
+(`SITE_URL` — runtime). Развилка закрыта **вариантом C**:
+
+- сборка печёт `site: 'https://__site_origin__'` (`astro.config.ts`); плейсхолдер попадает во
+  все абсолютные URL prerendered-выхода;
+- `docker/entrypoint.sh` при старте контейнера штампует `SITE_URL` в
+  `dist/client/**/*.{html,xml,txt}` и не запускает сервер, если плейсхолдер где-то остался;
+- on-demand маршруты берут origin из runtime `SITE_URL` (`getRuntimeConfig()`,
+  `shared/config`) — `dist/server` не штампуется;
+- `Astro.site` и `astro:i18n` для построения URL не используются: на on-demand они вернули бы
+  значение сборки — плейсхолдер;
+- абсолютные URL — только в `<head>` (canonical, `og:*`, hreflang), JSON-LD, фидах и sitemap;
+  в теле документа — корневые относительные (`/blog/x`): поверхность штамповки минимальна,
+  переезд домена не трогает контент;
+- HTML на сборке не предсжимается — иначе плейсхолдер уедет внутрь `.br`/`.gz`.
+
+Гейт: e2e `rendering.spec.ts` обходит все страницы `dist/client` и on-demand ответы —
+плейсхолдера нет нигде, в `<body>` нет URL своего origin; `check:content` не пропускает литерал
+плейсхолдера в тексты записей; `shared/config/runtime.server.test.ts` держит литерал
+согласованным во всех файлах, где он есть.
+
+## Нормализация URL
+
+- `trailingSlash: 'never'`: `/blog/` → **301** `/blog`. Для каталогов `dist/client` это делает
+  статик-хендлер адаптера, для остальных путей — Astro; оба до middleware, поэтому `/old/` —
+  два хопа (`/old`, затем правило из `redirects.yaml`)
+- `/index.html` и `/en/index.html` отвечают 200 — дубли главных; закрываются на Traefik
+  (`redirectRegex` → `/`, `/en`, репо infra). `/about.html` → 404 (`build.format: 'directory'`)
+- Регистр пути не нормализуется; `www` → apex и `http` → `https` — Traefik
+
+## Заголовки
+
+- Prerendered и `public/*` отдаёт статик-хендлер адаптера (`send`): `Cache-Control: public,
+  max-age=0` + `ETag` + `Last-Modified` — условный запрос, 304 при совпадении; `/_astro/*` —
+  `public, max-age=31536000, immutable`. Приложение (middleware, `X-Robots-Tag`, JSON-лог) их
+  не видит — staging закрывает Traefik: `basicAuth` + `customResponseHeaders: X-Robots-Tag`
+- On-demand проходит через `app/middleware`: `X-Request-Id`, JSON-лог, `Cache-Control: no-cache`
+  для HTML без явного заголовка (404/410 включительно), `X-Robots-Tag: noindex, nofollow` при
+  `ROBOTS_POLICY=noindex`. Роут задаёт заголовок сам, когда ответ живой или персональный:
+  `now` — `private, no-store`, `healthz` — `no-store`; middleware его не перебивает
+- Почему `no-cache`, а не `max-age`: без CDN `s-maxage` не на кого рассчитывать, а `max-age` на
+  своём домене оставляет у пользователей старую страницу после релиза; `no-cache` — «спроси
+  сервер», и для prerendered это дешёвый 304 по ETag
+- Стриминга нет: prerendered — файл, on-demand собирается целиком
+  (`experimentalDisableStreaming: true`); сжатия в процессе нет — жмёт Traefik (`compress`)
+
+## Измерение TTFB
+
+`pnpm ttfb <origin> <path…>` (`scripts/ttfb.mjs`): медиана/p90 из 20 последовательных запросов
+через `node:http` к запущенному серверу (`pnpm start` после штамповки, см.
+`deployment.md`). Prerendered локально — единицы миллисекунд; e2e держит мягкий порог (медиана
+≤ 25 мс — запас на шум CI, не бюджет).
+
+## Рецепт D: `cached` — рендер на запрос с кешем процесса (опция, кода нет)
+
+**Когда нужен.** Контент приходит из CMS/API и должен обновляться без релиза; страниц слишком
+много для prerender на каждую сборку; нужна runtime-политика на индексируемых страницах (тогда
+`X-Robots-Tag` ставит приложение). Для git-контента D не нужен: публикация = релиз.
+
+**Что включить.**
+
+- `output: 'server'` целиком либо `export const prerender = false` на нужных маршрутах — при
+  `output: 'static'` с адаптером `routeRules` действуют на on-demand маршруты и так;
+- `cache: { provider: memoryCache({ max }) }` в `astro.config.ts`: ключ — origin + pathname +
+  нормализованный query без трекинг-параметров; cookie и UA в ключ не входят; кешируется только
+  GET без `Set-Cookie`;
+- `routeRules` с `maxAge` / `swr` / `tags` на кешируемые маршруты, **включая `/_image`** —
+  иначе каждая картинка проходит полный цикл sharp на запрос;
+- `Astro.cache.set({ maxAge, swr, tags })` там, где правило зависит от данных.
+
+**Что обязательно дописать.**
+
+- single-flight в `src/fetch.ts` (`Map<key, Promise<Response>>`): `memoryCache` не дедуплицирует
+  параллельные промахи — без него холодный старт под трафиком даёт лавину рендеров;
+- прогрев «горячих» URL при старте, фоном, не блокируя `/healthz`;
+- `POST /internal/revalidate` (HMAC-подпись тела, `{ paths | tags }`, ответ 202, неизвестный
+  путь — 204) и `POST /internal/cache/flush` (тот же секрет, счётчик сброшенных ключей): только
+  POST, константное сравнение подписи, rate-limit, `noindex`, вне sitemap;
+- публичный `Cache-Control: no-cache` на кешированный HTML — провайдер его не ставит;
+- `X-Cache: HIT | STALE | MISS | BYPASS` наружу (провайдер даёт `X-Astro-Cache`).
+
+**Ограничения** (цифры — spike, `docs/research/ssr/round2/08-spike-astro.md` §5, §7.5–7.6):
+
+- кеш выключен в `astro dev` — поведение отличается от прода;
+- 200 параллельных запросов на холодный ключ при рендере 300 мс = 141 реальный рендер;
+- `/_image` без `routeRule` — 300–420 мс на каждый запрос, с правилом — 3 мс, но картинки живут
+  в той же LRU процесса; RSS после 50 параллельных `/_image` — 360 МБ и не возвращается;
+- `mem_limit` контейнера — 768 МБ (`NODE_OPTIONS=--max-old-space-size` ≈ 75 %);
+- после релиза кеш холодный — прогрев обязателен; инвалидация: релиз · TTL + SWR · вебхук ·
+  ручной flush; каждый `cached`-маршрут — строка в карте выше с TTL/SWR, тегами и тем, кто
+  инвалидирует.
+
+**Вариант A** (`SITE_URL` как build-arg, свой образ на среду) — только для проекта с одной
+средой и с явной записью в артефакте стека `rendering`: образ перестаёт быть переносимым между
+staging и prod.

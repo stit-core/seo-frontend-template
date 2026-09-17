@@ -16,8 +16,10 @@ globs: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
   `vi.mock` с фикстурами через `vi.hoisted`, модуль импортируется после мока: проверяются
   фильтр черновиков и локали, сортировка, twin по `translationKey` — в обоих режимах
   (`vi.stubEnv('DEV', false | true)`: Vitest сам работает в dev-режиме Vite)
-- **Процессные** — `<name>.server.test.ts`: проект `astro`; `docker/*` гоняется через
-  `spawnSync` (fail-fast `server.mjs`, отказ и штамповка `entrypoint.sh` на временном `dist`)
+- **Серверные и процессные** — `<name>.server.test.ts`: проект `astro` (node-окружение, родные
+  `Request`/`Response`): `app/middleware` с подменённым `getRuntimeConfig` (`vi.mock`
+  `@/shared/config`) и `next`-заглушками; `docker/*` гоняется через `spawnSync` (fail-fast
+  `server.mjs`, отказ и штамповка `entrypoint.sh` на временном `dist`)
 - **E2E** — `e2e/*.spec.ts`, Playwright на **prod-сборке**: webServer = `pnpm build` с
   плейсхолдером + `docker/entrypoint.sh` + `docker/server.mjs` на порту 3201, `url` —
   `/healthz` (не `/`). Сырой HTML — через `request` (в т.ч. `User-Agent: Googlebot`),
@@ -32,8 +34,10 @@ globs: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
 | `entities/*/ui/*.astro`, `widgets/*/ui/*.astro` | Container API + axe |
 | `entities/*/model/schema.ts` | valid/invalid frontmatter, дефолт `draft`, бюджеты, заглушка `image()` |
 | `shared/redirects`, `app/middleware/redirects` | pure-тесты: дубли/цепочки/статусы, пустая таблица, query в `Location`, 410; точное совпадение `from` на реальном `content/redirects.yaml` |
+| `app/middleware` | prerendered проходит как есть; `X-Request-Id` принят/сгенерирован; `Cache-Control: no-cache` на on-demand HTML и не перебивает заголовок роута; `X-Robots-Tag` только при `noindex`; редирект/410 до `next`; ошибка → лог 500 с тем же `rid` + rethrow; уровни лога, без query/cookie |
 | контент целиком (`.md`, `redirects.yaml`, ссылки) | `pnpm check:content` до build, `pnpm check:links` после |
-| статусы, заголовки, `lang`, один `<h1>`, «0 script-ресурсов», «нет `__site_origin__`», axe страниц; списки без черновика, 404 на черновик/непереведённое, `/old` → 301 одним хопом, 410 с `noindex` | e2e (`smoke.spec.ts`, `content.spec.ts`) |
+| статусы, заголовки, `lang`, один `<h1>`, «0 script-ресурсов», axe страниц; списки без черновика, 404 на черновик/непереведённое, `/old` → 301 одним хопом, 410 с `noindex` | e2e (`smoke.spec.ts`, `content.spec.ts`) |
+| режимы рендера: «нет `__site_origin__`» на всех страницах `dist/client` и on-demand ответах, «в `<body>` нет абсолютных URL своего origin», `/now` (200, `private, no-store`, `noindex`, время меняется, 0 JS, axe), 404/410 с `no-cache`, prerendered с `public, max-age=0` + ETag, TTFB (медиана 20 через `scripts/ttfb.mjs`, мягкий порог) | e2e (`rendering.spec.ts`) |
 | нарушения границ FSD и пустой a11y-конфиг | `.gate-fixtures/` + `pnpm check:gate` |
 
 ## Gate

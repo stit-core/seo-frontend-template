@@ -42,6 +42,7 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 | `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` существуют |
 | `pnpm size` | бюджеты `.size-limit.cjs` (CSS, HTML главной и поста) |
 | `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
+| `pnpm ttfb <origin> <path…>` | TTFB запущенного сервера: медиана/p90 20 запросов (`scripts/ttfb.mjs`) |
 | `pnpm check` | **gate**: typecheck → lint → format:check → test → steiger → check:gate → check:content → build → check:links → size |
 
 Перед claim «готово» / push — **`pnpm check`** (его же гоняет `lefthook pre-push`).
@@ -53,6 +54,7 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 | FSD под Astro: слои, навязанные entry, public API, server-only | rule `fsd-architecture` |
 | Контент: frontmatter и бюджеты, один h1, черновики, переводы, `redirects.yaml`, контент-гейты | rule `content-invariants` |
 | env, `SITE_URL`, плейсхолдер и штамповка, whitelist в HTML | rule `env-local` |
+| Режимы рендера, карта маршрутов, кеш-заголовки, рецепт D | `docs/reference/rendering.md` + rule `render-safety` |
 | Тесты: два проекта Vitest, Container API, axe, Playwright | rule `tests-pipeline` |
 | UI на токенах, тема, scoped-CSS, 0 JS | rule `shared-ui` |
 | Deployment: образ, entrypoint, `server.mjs`, env-контракт | `docs/reference/deployment.md` |
@@ -85,6 +87,13 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 - `SITE_URL` — runtime: сборка печёт `https://__site_origin__`, `docker/entrypoint.sh`
   штампует `dist/client` при старте, `server.mjs` с плейсхолдером не стартует; HTML не
   предсжимать; абсолютные URL только в `<head>`/JSON-LD/фидах/sitemap
+- Режимы: prerender по умолчанию (`static`); `export const prerender = false` (`dynamic`) —
+  только служебные маршруты (`404`, `healthz`, `now`, `robots.txt`/`sitemap.xml`/`rss.xml`,
+  `api/*`) со строкой в карте `docs/reference/rendering.md`. On-demand HTML — `no-cache` по
+  умолчанию (`app/middleware`), живой/персональный — `private, no-store` в роуте; prerendered
+  отдаёт адаптер (`public, max-age=0` + ETag), middleware и `X-Robots-Tag` его не видят.
+  Request-only API (`Astro.request`, cookies, `url.search`) не в prerender; `cached` (D) —
+  рецепт в `rendering.md`, кода нет
 - 0 JS на контентных страницах; остров — по решению, строка в `.size-limit.cjs`
 - Biome formatter + ESLint flat + Prettier для `*.astro`; TypeScript strict без `as any`
   без причины
@@ -109,6 +118,8 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 - Новая коллекция контента — `model/{schema,collection}.ts`, импорт в `src/content.config.ts`
   напрямую из модуля, строка в реестре `scripts/check-content.mjs`
 - Новый env-ключ — `shared/config` + `.env.example` + таблица в `deployment.md`
+- Новый on-demand маршрут (`prerender = false`) — строка в карте `docs/reference/rendering.md`
+  + явный `Cache-Control` + `noindex`
 
 ### Сначала спросить
 - Правка `docker/*`, `.npmrc`, `package.json#dependencies`
@@ -122,7 +133,8 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 - `export *` из `index.ts`; импорт мимо public API (`@/<layer>/<slice>/<segment>/…`)
 - Импорт внешней дизайн-системы; сырые цвета/размеры вместо токенов
 - `Astro.site`/`astro:i18n` для абсолютных URL; `import.meta.env.VITE_*` для среды
-- Предсжатие HTML на сборке; `build.format: 'file'`
+- Предсжатие HTML на сборке; `build.format: 'file'`; `cache`/`routeRules` в `astro.config.ts`
+- `prerender = false` на контентной странице; server islands для индексируемого контента
 
 ## Forward-only
 

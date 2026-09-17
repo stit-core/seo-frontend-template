@@ -92,18 +92,22 @@ whitelist `PUBLIC_CONFIG_KEYS`. Шаблон локального `.env` — `.e
 
 ## Что отдаёт процесс
 
-- **Prerendered** страницы и `/_astro/*` отдаёт статик-хендлер адаптера **до**
-  приложения: middleware, `X-Robots-Tag`, JSON-лог их не видят. Staging закрывается на
-  Traefik (`basicAuth` + `customResponseHeaders: X-Robots-Tag`); `/index.html` и
-  `/en/index.html` отвечают 200 — дубли главных, прикрываются `redirectRegex` там же
-- **On-demand** (`prerender = false`: `/healthz`, `404.astro` — то есть любой путь без
-  статического файла) проходит через `app/middleware`: редиректы из
+- **Prerendered** страницы, `public/*` и `/_astro/*` отдаёт статик-хендлер адаптера **до**
+  приложения со своими заголовками (`Cache-Control: public, max-age=0` + `ETag` +
+  `Last-Modified`; ассеты — `immutable`): middleware, `X-Robots-Tag`, JSON-лог их не видят.
+  Staging закрывается на Traefik (`basicAuth` + `customResponseHeaders: X-Robots-Tag`);
+  `/index.html` и `/en/index.html` отвечают 200 — дубли главных, прикрываются
+  `redirectRegex` там же
+- **On-demand** (`prerender = false`: `/healthz`, `/now`, `404.astro` — то есть любой путь
+  без статического файла) проходит через `app/middleware`: редиректы из
   `content/redirects.yaml` (301/308 с `Location`, query сохраняется; 410 с минимальным
   телом и `X-Robots-Tag: noindex`; один хоп, до роутинга), `X-Request-Id` (принимается или
   генерируется), JSON-лог одной строкой (`ts, lvl, method, path, status, dur_ms, rid`, без
   PII; успешный `/healthz` — только на `debug`; 404/410 — `warn`; ошибка рендера
-  логируется со статусом 500 и тем же `rid`, ответ строит Astro), `X-Robots-Tag` при
-  `ROBOTS_POLICY=noindex`
+  логируется со статусом 500 и тем же `rid`, ответ строит Astro), `Cache-Control: no-cache`
+  на HTML без явного заголовка (404/410 включительно; `now` ставит `private, no-store`
+  сам), `X-Robots-Tag` при `ROBOTS_POLICY=noindex`. Режимы и карта маршрутов —
+  `rendering.md`
 - Нормализация: `/en/` → 301 `/en` (адаптер — для каталогов `dist/client`, Astro — для
   остальных путей до middleware, поэтому `/old/` → `/old` → правило из `redirects.yaml`),
   `/about.html` → 404 при `build.format: 'directory'`

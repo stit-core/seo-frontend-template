@@ -23,7 +23,7 @@
 - [x] Фаза 2 — контент-слой: `entities/post` (ru/en, `translationKey`, `draft`), блог (список,
   пост, пагинация, теги), `content/redirects.yaml`, `check:content`, `check:links`,
   правило `content-invariants`
-- [ ] Фаза 3 — рендер: prerender per route, `now`, `X-Robots-Tag`/`Cache-Control` на on-demand,
+- [x] Фаза 3 — рендер: prerender per route, `now`, `X-Robots-Tag`/`Cache-Control` на on-demand,
   рецепт D в `docs/reference/rendering.md`, правило `render-safety`
 - [ ] Фаза 4 — SEO-слой: `shared/seo/*`, `robots.txt`/`sitemap.xml`/`rss.xml`, JSON-LD + Zod,
   `widgets/breadcrumbs`, `e2e/seo.spec.ts`, `seo:check`, правило `seo-invariants`

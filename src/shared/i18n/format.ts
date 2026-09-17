@@ -11,6 +11,16 @@ export function formatDate(locale: Locale, date: Date): string {
   }).format(date)
 }
 
+// Момент времени (серверное время on-demand страниц) — до секунды и явно в UTC:
+// часовой пояс контейнера не должен менять текст между средами.
+export function formatDateTime(locale: Locale, date: Date): string {
+  return new Intl.DateTimeFormat(INTL_LOCALE[locale], {
+    dateStyle: 'long',
+    timeStyle: 'long',
+    timeZone: 'UTC',
+  }).format(date)
+}
+
 export function isoDate(date: Date): string {
   return date.toISOString().slice(0, 10)
 }

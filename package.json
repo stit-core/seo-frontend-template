@@ -26,6 +26,7 @@
     "check:links": "node scripts/check-links.mjs",
     "size": "size-limit",
     "kin:diff": "node scripts/kin-diff.mjs",
+    "ttfb": "node scripts/ttfb.mjs",
     "check": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm steiger && pnpm check:gate && pnpm check:content && pnpm build && pnpm check:links && pnpm size",
     "prepare": "lefthook install"
   },

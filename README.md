@@ -63,6 +63,7 @@ pnpm check:content    # контент-гейт: схема .md, тело, пе�
 pnpm check:links      # после build: все внутренние ссылки в dist/client существуют
 pnpm size             # бюджеты CSS / HTML
 pnpm kin:diff         # сверка обвязки с ../spa-frontend-template (advisory)
+pnpm ttfb <origin> …  # TTFB запущенного сервера: медиана/p90 20 запросов
 pnpm check            # gate: typecheck + lint + format + test + steiger + check:gate + check:content + build + check:links + size
 ```
 
@@ -78,15 +79,15 @@ entities → shared`); между слайсами одного слоя — з�
 ```
 content/redirects.yaml   редиректы как данные: 301/308/410 одним хопом (обслуживает middleware)
 src/app/          layouts/document.astro, middleware (лог, X-Request-Id, редиректы), styles/index.css
-src/pages/        роутинг Astro = слой pages: index, blog/{index,[slug],page/[page],tag/[tag]}, en/…,
-                  404 (on-demand), healthz; секции страниц — _blog/
+src/pages/        роутинг Astro = слой pages: index, blog/{index,[slug],page/[page],tag/[tag]}, en/…
+                  (prerender); 404, healthz, now (on-demand); секции страниц — _blog/
 src/widgets/      site-header, site-footer, post-list
 src/entities/post content/{ru,en}/*.md + covers/, model/{schema,collection}, api/queries, lib, ui
 src/shared/       config (runtime env, Zod), i18n, lib (+ testing), redirects, ui
 src/{content.config,middleware,env.d}.ts   навязанные Astro entry — тонкие входы
 docker/           Dockerfile (3 стадии), entrypoint.sh (штамповка SITE_URL), server.mjs
 e2e/              Playwright на prod-сборке
-scripts/          check-gate, check-content, check-links, kin-diff
+scripts/          check-gate, check-content, check-links, kin-diff, ttfb
 .claude/          правила (path-scoped) и скиллы
 ```
 
@@ -98,6 +99,13 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 непереведённое под `/en/` — 404, черновики видны только в `astro dev`. Списки — `/blog`,
 `/blog/page/N`, `/blog/tag/<tag>`; всё prerender, 0 JS. Инварианты и гейты — rule
 `.claude/rules/content-invariants.md`.
+
+## Режимы рендера
+
+Всё prerender по умолчанию; on-demand (`export const prerender = false`) — только служебное:
+`404`, `/healthz`, `/now` (единственная on-demand HTML-страница: время сервера, `noindex`,
+`private, no-store`). Кеш-заголовки, карта маршрутов и рецепт кеша процесса для контента из
+CMS — [`docs/reference/rendering.md`](docs/reference/rendering.md).
 
 ## Один образ на все среды
 
@@ -119,6 +127,7 @@ shutdown под Traefik и отказывается стартовать без 
 | Документ | О чём |
 |---|---|
 | [`docs/README.md`](docs/README.md) | карта документации |
+| [`docs/reference/rendering.md`](docs/reference/rendering.md) | режимы рендера, карта маршрутов, кеш-заголовки, рецепт D |
 | [`docs/reference/deployment.md`](docs/reference/deployment.md) | образ, entrypoint, server.mjs, env-контракт |
 | [`docs/reference/kinship.md`](docs/reference/kinship.md) | родство с `spa-frontend-template` |
 | [`CLAUDE.md`](CLAUDE.md) | гайд для агента (ядро + роутер) |

@@ -14,9 +14,10 @@ interface RequestLog {
 }
 
 // Всё ниже действует только на on-demand маршрутах: prerendered-страницы отдаёт
-// статик-хендлер адаптера раньше приложения, и middleware их не видит. Поэтому
-// staging закрывается ещё и на Traefik (basicAuth + X-Robots-Tag). Путь без файла
-// (в т.ч. любой из redirects.yaml) до приложения доходит — 404-страница on-demand.
+// статик-хендлер адаптера раньше приложения (со своими `Cache-Control: public, max-age=0`
+// и ETag), и middleware их не видит. Поэтому staging закрывается ещё и на Traefik
+// (basicAuth + X-Robots-Tag). Путь без файла (в т.ч. любой из redirects.yaml) до
+// приложения доходит — 404-страница on-demand.
 export const onRequest = defineMiddleware(async (context, next) => {
   if (context.isPrerendered) return next()
 
@@ -44,12 +45,22 @@ export const onRequest = defineMiddleware(async (context, next) => {
   }
 
   response.headers.set('x-request-id', rid)
+  // Публичный on-demand HTML (404/410 включительно) без CDN: `no-cache` — «спроси сервер»,
+  // `max-age` оставил бы у пользователей старую страницу после релиза. Роут важнее:
+  // живой/персональный ответ ставит `private, no-store` сам, и он не перебивается.
+  if (isHtml(response) && !response.headers.has('cache-control')) {
+    response.headers.set('cache-control', 'no-cache')
+  }
   if (ROBOTS_POLICY === 'noindex') {
     response.headers.set('x-robots-tag', 'noindex, nofollow')
   }
   log(response.status)
   return response
 })
+
+function isHtml(response: Response): boolean {
+  return (response.headers.get('content-type') ?? '').startsWith('text/html')
+}
 
 // Одна JSON-строка на запрос, без PII: без IP (он в access-log Traefik), без cookie,
 // без query-строки. Успешный /healthz (docker HEALTHCHECK каждые 30 с) — только на debug.
