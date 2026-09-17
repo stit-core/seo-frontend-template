@@ -139,8 +139,10 @@ prerendered-страница печатается на сборке, а обра
   публичный POST-эндпоинт, и одна принятая заявка = одно письмо (или один запрос в бэкенд):
   без ограничителя один бот превращает форму в рассылку. Ставится на Traefik, в приложении
   счётчика нет — он не переживает рестарт и не виден второй реплике. Значения — пример,
-  а не догма: middleware `rateLimit` с `average: 10`, `period: 1m`, `burst: 5`,
-  `sourceCriterion.ipStrategy.depth: 1` на роутер этого пути
+  а не догма: middleware `rateLimit` с `average: 10`, `period: 1m`, `burst: 5` на роутер
+  этого пути. `sourceCriterion` не задаётся: прокси стоит на границе, и источником по
+  умолчанию считается адрес клиента — `ipStrategy.depth` заставил бы читать клиентский
+  `X-Forwarded-For`, который никем не подписан
 - `X-Forwarded-Proto` (и `X-Forwarded-For`) от прокси обязателен: TLS терминируется снаружи,
   и процесс видит запрос как `http://<Host>`. Схему прокси адаптер не читает, поэтому
   канонический origin приложение берёт только из `SITE_URL`, а origin заявки сверяет с ним
@@ -152,6 +154,9 @@ prerendered-страница печатается на сборке, а обра
 - Staging закрывается там же: `basicAuth` + `customResponseHeaders: X-Robots-Tag` (prerendered
   до приложения не доходит), `redirectRegex` для `/index.html` и `/en/index.html`,
   `www` → apex и `http` → `https`, `compress`, `secure-headers@file`
+
+Готовый `compose/site.yml`, роутеры и middleware Traefik, CrowdSec и приёмка первого
+деплоя — [`infra-handoff.md`](./infra-handoff.md): рабочее задание для сессии в `<org>/infra`.
 
 ## `/healthz`
 

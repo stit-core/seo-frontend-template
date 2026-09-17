@@ -22,6 +22,7 @@
 | [`reference/deployment.md`](./reference/deployment.md) | Node-образ, штамповка `SITE_URL`, `server.mjs`, env-контракт, требования к прокси |
 | [`reference/observability.md`](./reference/observability.md) | JSON-лог, `X-Request-Id`, `/healthz`, Sentry по DSN, чем меряется скорость |
 | [`reference/ecosystem.md`](./reference/ecosystem.md) | место сайта среди шаблонов stit, контракты с соседями, STOP на image-in-registry |
+| [`reference/infra-handoff.md`](./reference/infra-handoff.md) | задание для соседних репо: `compose/site.yml`, Traefik, CrowdSec, приёмка первого деплоя |
 | [`reference/kinship.md`](./reference/kinship.md) | родство с `spa-frontend-template`, `pnpm kin:diff` |
 
 ## Для потребителя шаблона

@@ -42,6 +42,7 @@
 | `strategy: projects/<slug>/{interface,screens}/<surface>/` | `site/` | контекст: аудитории, ситуации, экраны, блоки — из них растут тексты страниц |
 | `docs/stack/**` (здесь) | `/de-template`, `/scaffold` | платформенные решения: источник контента, маршруты, режимы, env |
 | `docs/reference/deployment.md` (здесь) | `infra/` | env-контракт образа и требования к прокси |
+| `docs/reference/infra-handoff.md` (здесь) | `infra/`, корп-карта, соседние шаблоны | рабочее задание cross-repo: `compose/site.yml`, Traefik, CrowdSec, приёмка первого деплоя |
 | образ `git.${DOMAIN}/<org>/site:vX.Y.Z` | `infra/` | `/release` пушит; rollout — `make bump SVC=site TAG=<v>` там (правит `SITE_TAG` в `.env` VPS) |
 
 Резолв путей соседа — поля `project-slug` / `strategy-path` (дефолт `../strategy`) /
@@ -56,10 +57,11 @@
 
 Этот репо **STOP'ает на image-in-registry**: деплой-команды чужих репо (`make bump`,
 `make ship`, ssh) отсюда не запускаются — `/release` печатает handoff-блок, применяет
-его оператор или агент в `<org>/infra`. Что сервису `site` нужно от прокси и compose
-(штамповка пишет в `dist/client`, поэтому не `read_only`; `stop_grace_period` больше
-`SHUTDOWN_TIMEOUT_MS`; rate-limit на публичный POST формы; `basicAuth` и `X-Robots-Tag`
-на staging) — `deployment.md § Требования к прокси`.
+его оператор или агент в `<org>/infra`. Что сервису `site` нужно от compose и прокси —
+[`infra-handoff.md`](./infra-handoff.md): готовый `compose/site.yml`, роутеры и
+middleware Traefik, CrowdSec, приёмка первого деплоя и порядок сессий по соседним репо.
+Короткая версия требований к прокси — `deployment.md § Требования к прокси`, env-контракт
+образа — там же.
 
 ## Корп control-plane
 

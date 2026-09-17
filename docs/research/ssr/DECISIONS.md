@@ -1,6 +1,6 @@
 # Решения владельца по `ssr-frontend-template` v1
 
-Дата: 2026-09-17. Зафиксировано в сессии сборки по `NEXT-SESSION.md` §3; рекомендации
+Дата: 2026-09-17. Зафиксировано в сессии сборки; рекомендации
 ресёрча — `00-synthesis.md` §10. Критерий выбора владельца: **красивый, удобный, приятный
 шаблон без замудрённостей, сделанный грамотно — по правилам, стандартам и трендам**; всё,
 что не обязательно контент-сайту в поиске, — опция или отсутствует.
@@ -36,8 +36,8 @@
 |---|---|---|
 | Острова | Без фреймворка островов: vanilla `<script>` в `.astro`; `@astrojs/react`/Preact не подключаются | синтез §10 п. 5; кабинета нет ⇒ реюз React-кода SPA не нужен |
 | Sitemap/RSS | Свои `pages/{sitemap.xml,rss.xml,robots.txt}.ts` на runtime `SITE_URL`; `@astrojs/sitemap` не подключается; `@astrojs/rss` допустим | 08 §7.17, синтез §5.1 |
-| On-demand HTML | Единственная on-demand HTML-страница reference-набора — `now` (образец режима `dynamic`) | NEXT-SESSION §4 фаза 5 |
-| Поиск, каталог | В v1 нет (`search`, `catalog/*` из §6.6 не разворачиваются) | NEXT-SESSION §4 фаза 5 |
+| On-demand HTML | Единственная on-demand HTML-страница reference-набора — `now` (образец режима `dynamic`) | решение владельца (сессия сборки) |
+| Поиск, каталог | В v1 нет (`search`, `catalog/*` из §6.6 не разворачиваются) | решение владельца (сессия сборки) |
 | Observability | JSON-логгер запросов на on-demand роутах + `/healthz`; Sentry server-side (`@sentry/node`) только при `SENTRY_DSN` через dynamic import; клиентского RUM нет (0 JS) | синтез §8, 12 §8 |
 | Тема | Переключатель темы — единственный остров v1: cookie `scheme` + `data-scheme` на `<html>` в первом байте, без FOUC | синтез §9.2, 13 §2.2 п. 4 |
 | Правила `.claude/rules` | Каждая фаза пишет правила своих инвариантов (фаза 1 — переписанные `fsd-architecture`/`env-local`/`tests-pipeline`/`shared-ui`; 2 — `content-invariants`; 3 — `render-safety`; 4 — `seo-invariants`); фаза 6 их только сверяет | агенты фаз 2–5 не должны работать по правилам SPA-стека |
@@ -63,3 +63,5 @@
 | Юридические страницы | `/legal/privacy` — только `ru`, с плейсхолдерами `{{OPERATOR_NAME}}`, `{{OPERATOR_INN}}`, `{{OPERATOR_ADDRESS}}`, `{{OPERATOR_EMAIL}}`; `/de-template` обязан падать, пока они не заменены; английские страницы ссылаются с `hreflang="ru"` | 14 §2.7.3; brief §5 фаза 6 |
 | Обвязка потребителя | `docs/stack/<kind>.md` в каноническом репо не заполняются — только `_templates` с предзаполненными дефолтами шаблона (потребитель подтверждает через `/stack-deep-dive`); `/de-template` дополнительно удаляет `kinship.md` + `kin:diff`, `docs/research/**` и одноразовые скиллы `init-service`/`de-template`; прунинг «без блога» — reviewable-правки по `references/prune.md`, автоматизации by design нет | brief §5 фаза 6; «без замудрённостей» |
 | Приёмка образа | `scripts/accept-image.sh` + `pnpm accept:image <image>` — шаг `/release` (fail-fast без `SITE_URL`, штамповка, curl, staging, дренаж) | перенос `docs/research/reports/accept-image.sh` в код |
+| Rate-limit формы | На edge-Traefik `X-Forwarded-For` не подписан и подделывается клиентом, поэтому `sourceCriterion.ipStrategy.depth` не задаётся — лимит считается по адресу клиента (дефолт); контракт — `docs/reference/infra-handoff.md` | сессия фазы 7 |
+| Cross-repo | Правки соседних репо (`project-infra-template-compose`, `corp-infra-template`, `spa-frontend-template`, `stit-public`) ведутся по `docs/reference/infra-handoff.md` отдельными сессиями; развилки (источник CrowdSec acquisition, включение staging-контура, заглушка на корне, `@stit/ui` в карте, профиль памяти 512/768 МБ) решаются там | решение владельца |

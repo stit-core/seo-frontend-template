@@ -183,6 +183,7 @@ AVIF/WebP с фолбэком, размеры заданы, обложка за�
 | [`docs/reference/deployment.md`](docs/reference/deployment.md) | образ, entrypoint, server.mjs, env-контракт, требования к прокси |
 | [`docs/reference/observability.md`](docs/reference/observability.md) | JSON-лог, `X-Request-Id`, `/healthz`, Sentry |
 | [`docs/reference/ecosystem.md`](docs/reference/ecosystem.md) | место среди шаблонов stit и контракты с соседями |
+| [`docs/reference/infra-handoff.md`](docs/reference/infra-handoff.md) | задание для соседних репо: сервис `site` в compose, Traefik, CrowdSec, приёмка |
 | [`docs/reference/kinship.md`](docs/reference/kinship.md) | родство с `spa-frontend-template` |
 | [`.claude/rules/forms-antispam.md`](.claude/rules/forms-antispam.md) | форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка |
 | [`CLAUDE.md`](CLAUDE.md) | гайд для агента (ядро + роутер) |

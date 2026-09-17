@@ -81,6 +81,7 @@ pnpm 10 / lefthook. Один Node-образ на все среды: origin шт
 | Наблюдаемость: JSON-лог, `X-Request-Id`, `/healthz`, Sentry по DSN | `docs/reference/observability.md` |
 | Платформа проекта: 12 kinds, порядок волн, гейт `stable` | `docs/stack/README.md` |
 | Место среди шаблонов stit, контракты с соседями, STOP на image-in-registry | `docs/reference/ecosystem.md` |
+| Что инфра обязана сделать под сервис `site`: `compose/site.yml`, Traefik, CrowdSec, приёмка | `docs/reference/infra-handoff.md` |
 | Путь потребителя шаблона: форк → свой сайт | `docs/getting-started.md` |
 | Устройство `.claude`-системы (правила, скиллы, план) | `docs/contributing.md` |
 | Родство с SPA-шаблоном | `docs/reference/kinship.md` + `pnpm kin:diff` |
