@@ -97,10 +97,6 @@
 
 ## 5. Заметки к оставшимся фазам (сверх brief)
 
-- **Фаза 3 (рендер)**: если `git status` показывает `now.astro`, `rendering.md`, `render-safety.md`,
-  `e2e/rendering.spec.ts` незакоммиченными — фаза сделана агентом этой сессии, но не принята:
-  прогнать шаг 2 приёмки, ревью (шаг 3) по своему усмотрению (объём небольшой), закоммитить
-  `feat(rendering): …`.
 - **Фаза 4 (SEO)**: `robots.txt`/`sitemap.xml`/`rss.xml` — on-demand с runtime `SITE_URL`; sitemap
   исключает черновики и `from` из `redirects.yaml` (`@/shared/redirects`), `lastmod` только из
   `updatedDate`; hreflang — из `findTranslation` (`@/entities/post`), только для существующих
