@@ -1,15 +1,14 @@
 node_modules
 dist
-dist-ssr
+.astro
 coverage
-.vite
-.vitest-attachments
+.vitest
+.eslintcache
 *.local
 
 .env
 .env.*
 !.env.example
-!.env.local.example
 
 .claude/settings.local.json
 
@@ -22,8 +21,6 @@ coverage
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
-
-src/app/router/routeTree.gen.ts.tmp
 
 test-results
 playwright-report

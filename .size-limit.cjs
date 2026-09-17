@@ -1,42 +1,16 @@
-// Бюджетируется критический путь загрузки. Ленивые чанки (mock+faker+graphql,
-// devtools, web-vitals, locale-каталоги) сюда не входят: в prod (API_MODE=real)
-// они не грузятся либо грузятся после старта.
+const { globSync } = require('node:fs')
+
+// Бюджеты клиентских ассетов (синтез §6.5). size-limit падает на пустом glob'е, поэтому
+// строка JS появляется вместе с первым островом и сразу попадает под бюджет.
+// «0 script-ресурсов» на индексируемых страницах проверяет e2e.
+const islands =
+  globSync('dist/client/_astro/*.js').length > 0
+    ? [{ name: 'JS островов', path: 'dist/client/_astro/*.js', limit: '30 KB', gzip: true }]
+    : []
+
 module.exports = [
-  {
-    name: 'main entry',
-    path: 'dist/assets/index-*.js',
-    limit: '35 KB',
-    gzip: true,
-  },
-  {
-    name: 'react vendor',
-    path: 'dist/assets/react-*.js',
-    limit: '65 KB',
-    gzip: true,
-  },
-  {
-    name: 'router vendor',
-    path: 'dist/assets/router-*.js',
-    limit: '30 KB',
-    gzip: true,
-  },
-  {
-    name: 'query vendor',
-    path: 'dist/assets/query-*.js',
-    limit: '12 KB',
-    gzip: true,
-  },
-  {
-    name: 'initial JS total',
-    path: [
-      'dist/assets/index-*.js',
-      'dist/assets/react-*.js',
-      'dist/assets/router-*.js',
-      'dist/assets/query-*.js',
-      'dist/assets/preload-helper-*.js',
-      'dist/assets/rolldown-runtime-*.js',
-    ],
-    limit: '150 KB',
-    gzip: true,
-  },
+  ...islands,
+  { name: 'CSS (одна таблица)', path: 'dist/client/_astro/*.css', limit: '15 KB', gzip: true },
+  { name: 'HTML главной', path: 'dist/client/index.html', limit: '20 KB', gzip: true },
+  { name: 'HTML главной (en)', path: 'dist/client/en/index.html', limit: '20 KB', gzip: true },
 ]

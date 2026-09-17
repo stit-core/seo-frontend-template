@@ -1,36 +1,55 @@
 ---
-description: Работа с env и секретами. Активируется при правке .env*, runtime config, docker/.
-globs: [".env*", "src/shared/config/**", "docker/**", "vite.config.ts"]
+description: env Node-процесса, SITE_URL и плейсхолдер origin, whitelist в HTML, секреты. Активируется при правке .env*, shared/config, docker/, astro.config.ts.
+globs: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/playwright.config.ts"]
 ---
 
 # env и секреты
 
-## Build-time vs runtime
+## Только runtime
 
-| тип | где | пример |
-|---|---|---|
-| **build-time** | `import.meta.env.VITE_*` (Vite) | `VITE_API_MODE` |
-| **runtime** | `window.__APP_CONFIG__` (генерится nginx-entrypoint.sh) | `API_BASE_URL`, `API_MODE`, `SENTRY_DSN` |
+Всё, что меняется между средами, — env Node-процесса контейнера; читается через
+`getRuntimeConfig()` (`shared/config`, Zod по `process.env`). `import.meta.env`/`VITE_*`
+для среды не используется: сборка среды не знает. Пустое значение ключа равносильно
+незаданному — берётся дефолт.
 
-**Правило**: всё, что должно меняться **между средами без пересборки**, —
-в runtime config. Всё, что **меняет поведение шаблонной сборки** (mock vs real
-в dev) — build-time.
+На prerender `getRuntimeConfig()` видит значения **сборки**; на on-demand
+(`prerender = false`) и в middleware — живой `process.env`.
 
-## .env-файлы
+## `SITE_URL` и плейсхолдер
 
-- `.env.example` — **закоммичен**, описывает build-time env с дефолтами
-- `.env.local.example` — **закоммичен**, шаблон локального override
-- `.env`, `.env.local`, `.env.*` — **в `.gitignore`**, никогда не коммитим
+- Сборка печёт `site: 'https://__site_origin__'` (`astro.config.ts`, при пустом или
+  незаданном `SITE_URL`); `docker/entrypoint.sh` при старте штампует `SITE_URL` в
+  `dist/client/**/*.{html,xml,txt}` и падает, если плейсхолдер остался в любом файле
+  `dist/client` (`DIST_DIR` — тот же скрипт для e2e). `dist/server` не штампуется:
+  on-demand маршруты берут origin из runtime `SITE_URL`
+- Штамповка пишет в `/app/dist/client` — сервис без `read_only: true` либо writable-bind
+  этого пути
+- Рантайм без `SITE_URL`, с плейсхолдером или с не-`http(s)` URL **не стартует**
+  (`docker/entrypoint.sh`, `docker/server.mjs`)
+- HTML на сборке не предсжимать — плейсхолдер уедет внутрь `.br`/`.gz`
+- Абсолютные URL — только в `<head>`, JSON-LD, фидах, sitemap; в теле — корневые
+  относительные
+- `Astro.site` и `astro:i18n` для абсолютных URL не годятся (build-time origin) —
+  только runtime `SITE_URL`
+- Все файлы с литералом плейсхолдера сверяет `shared/config/runtime.server.test.ts`
 
-## Секреты
+## Что попадает в HTML
 
-- Не хранятся в фронт-бандле. Cookie-auth (httpOnly) на стороне бэка.
-- Sentry DSN — public by design, безопасно в runtime config.
-- В CI секреты приходят через env переменные → в Docker контейнер →
-  nginx-entrypoint впишет в `config.js` (только не-секретные).
+Только `PUBLIC_CONFIG_KEYS` через `getPublicConfig()`; `process.env` целиком не
+сериализуется. Новый ключ в HTML — строка в whitelist + строка в таблице
+`docs/reference/deployment.md` (колонка «в HTML?»).
+
+## Файлы и секреты
+
+- `.env.example` — закоммичен, описывает runtime env с дефолтами; `.env*` — в `.gitignore`;
+  локальный `.env` читает только `pnpm start`, в образ он не попадает
+- Секреты — только env контейнера; в логах — без PII и без тел запросов
+  (`app/middleware`); Sentry DSN public by design
 
 ## Что нельзя
 
-- ❌ Хранить access-token в localStorage / sessionStorage (XSS-риск)
-- ❌ Подтягивать секреты в `import.meta.env.VITE_*` (попадают в публичный бандл)
-- ❌ Логировать содержимое `runtimeConfig` целиком (если добавляешь не-public поле — фильтруй)
+- ❌ `import.meta.env.VITE_*` для конфигурации среды
+- ❌ Логировать `process.env`, cookie, query-строку, тело запроса
+- ❌ Читать `process.env` мимо `shared/config`. Исключения — код вне приложения:
+  `astro.config.ts` (build-time плейсхолдер), `docker/*` (обёртка процесса стартует до
+  приложения), `e2e/playwright.config.ts` (`CI`), `scripts/*`

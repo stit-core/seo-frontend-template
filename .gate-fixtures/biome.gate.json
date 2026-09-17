@@ -1,0 +1,5 @@
+{
+  "extends": ["../biome.json"],
+  "vcs": { "enabled": false },
+  "files": { "ignoreUnknown": true, "includes": ["src/**"] }
+}

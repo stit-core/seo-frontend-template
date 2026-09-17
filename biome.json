@@ -1,26 +1,27 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.5.7/schema.json",
-  "vcs": {
-    "enabled": true,
-    "clientKind": "git",
-    "useIgnoreFile": true
-  },
+  "$schema": "https://biomejs.dev/schemas/2.5.14/schema.json",
+  "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
     "ignoreUnknown": true,
     "includes": [
       "**/*.ts",
       "**/*.tsx",
+      "**/*.mts",
+      "**/*.cts",
       "**/*.js",
-      "**/*.jsx",
+      "**/*.mjs",
+      "**/*.cjs",
+      "**/*.astro",
       "**/*.json",
       "**/*.jsonc",
       "**/*.css",
       "!**/dist",
+      "!**/.astro",
       "!**/coverage",
       "!**/node_modules",
-      "!**/routeTree.gen.ts",
-      "!**/public/mockServiceWorker.js",
-      "!**/public/config.js"
+      "!**/.vitest",
+      "!**/.gate-fixtures",
+      "!**/docs/research"
     ]
   },
   "formatter": {
@@ -41,22 +42,14 @@
       "bracketSameLine": false
     }
   },
-  "css": {
-    "parser": {
-      "tailwindDirectives": true
-    }
-  },
+  "css": { "parser": { "tailwindDirectives": true } },
+  "html": { "experimentalFullSupportEnabled": true },
   "linter": {
     "enabled": true,
     "rules": {
       "preset": "recommended",
-      "complexity": {
-        "noBannedTypes": "error",
-        "noUselessTypeConstraint": "error"
-      },
-      "correctness": {
-        "noUnusedVariables": "error"
-      },
+      "complexity": { "noBannedTypes": "error", "noUselessTypeConstraint": "error" },
+      "correctness": { "noUnusedVariables": "error", "noUnusedImports": "error" },
       "style": {
         "useImportType": "error",
         "useExportType": "error",
@@ -68,5 +61,11 @@
         "noConsole": { "level": "warn", "options": { "allow": ["warn", "error", "info"] } }
       }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.astro"],
+      "formatter": { "enabled": false }
+    }
+  ]
 }

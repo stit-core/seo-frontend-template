@@ -1,36 +1,15 @@
 {
+  "extends": "astro/tsconfigs/strictest",
   "compilerOptions": {
-    "target": "ES2024",
-    "lib": ["ES2024", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
     "moduleDetection": "force",
-    "resolveJsonModule": true,
-    "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "jsx": "react-jsx",
-    "useDefineForClassFields": true,
-
-    "strict": true,
     "noUncheckedIndexedAccess": true,
-    "noImplicitOverride": true,
-    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "exactOptionalPropertyTypes": true,
-    "useUnknownInCatchVariables": true,
-
-    "skipLibCheck": true,
-    "noEmit": true,
-    "incremental": true,
-    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
-
-    "paths": {
-      "@/*": ["./src/*"]
-    },
-    "types": ["vite/client", "vitest/globals", "@testing-library/jest-dom"]
+    "paths": { "@/*": ["./src/*"] },
+    "types": ["node", "vitest/globals"]
   },
-  "include": ["src", "e2e", "*.config.ts", "*.config.js", "vitest.setup.ts"],
-  "exclude": ["node_modules", "dist", "coverage"]
+  "include": [".astro/types.d.ts", "src", "e2e", "scripts", "*.config.ts"],
+  "exclude": ["node_modules", "dist", ".gate-fixtures"]
 }

@@ -1,0 +1,43 @@
+---
+import DocumentLayout from '@/app/layouts/document.astro'
+import { SITE_NAME } from '@/shared/config'
+
+const locale = 'ru' as const
+---
+
+<DocumentLayout locale={locale} alternatePath="/">
+  <Fragment slot="head">
+    <title>Шаблон индексируемого сайта — {SITE_NAME}</title>
+    <meta
+      name="description"
+      content="Static-first шаблон сайта на Astro 7: prerender по умолчанию, ноль JavaScript на контентных страницах, один Docker-образ на все среды."
+    />
+  </Fragment>
+
+  <h1 class="text-heading-xl font-semibold tracking-tight">Шаблон индексируемого сайта</h1>
+  <p class="mt-4 text-body-lg text-muted">
+    Static-first: страницы собираются заранее и отдаются Node-процессом как есть; серверный рендер —
+    только там, где нужен рантайм.
+  </p>
+
+  <h2 class="mt-10 text-heading-md font-semibold">Что внутри</h2>
+  <ul class="mt-4 list-disc space-y-2 pl-5 text-body-md">
+    <li>Astro 7 с Node-адаптером: prerender по умолчанию, on-demand — по явному признаку.</li>
+    <li>Ноль JavaScript на контентных страницах — эта страница не загружает ни одного скрипта.</li>
+    <li>Один Docker-образ на все среды: канонический origin штампуется при старте контейнера.</li>
+    <li>Feature-Sliced Design под линтером: границы держит ESLint, структуру — Steiger.</li>
+    <li>
+      Две локали: русская без префикса и{' '}
+      <a href="/en" hreflang="en">
+        английская под /en
+      </a>
+      .
+    </li>
+  </ul>
+
+  <h2 class="mt-10 text-heading-md font-semibold">Что дальше</h2>
+  <p class="mt-4 text-body-md">
+    Это стартовая страница шаблона — замените её содержимым своего сайта. Команды, структура
+    репозитория и путь потребителя описаны в README.
+  </p>
+</DocumentLayout>

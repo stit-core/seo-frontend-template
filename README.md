@@ -1,19 +1,18 @@
 <div align="center">
 
-# spa-frontend-template
+# ssr-frontend-template
 
-### React SPA на строгой FSD-архитектуре, mock-first
+### Шаблон индексируемого сайта: static-first, SSR по необходимости
 
-Шаблон фронтенда экосистемы stit: Vite + TypeScript + React 19 + TanStack,
-Feature-Sliced Design под линтером, mock-режим из коробки. Крутится без бэкенда
-с первой минуты; код пишется по спроектированной FSD-карте.
+Astro 7 + Node-адаптер, Feature-Sliced Design под линтером, ноль JavaScript на
+контентных страницах, один Docker-образ на все среды. Приложение за логином —
+это [`spa-frontend-template`](https://git.stit.tech/stit-core/spa-frontend-template).
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-2563eb)](LICENSE)
 [![Часть stit](https://img.shields.io/badge/stit-открытые_шаблоны-6366f1)](https://git.stit.tech/stit-core/stit-public)
-[![Vite](https://img.shields.io/badge/Vite-8-646cff)](#стек)
-[![React](https://img.shields.io/badge/React-19.2-149eca)](#стек)
+[![Astro](https://img.shields.io/badge/Astro-7-ff5d01)](#стек)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)](#стек)
-[![Arch](https://img.shields.io/badge/arch-FSD_%2B_Steiger-22c55e)](#структура)
+[![Arch](https://img.shields.io/badge/arch-FSD_%2B_ESLint_%2B_Steiger-22c55e)](#структура)
 
 </div>
 
@@ -21,10 +20,11 @@ Feature-Sliced Design под линтером, mock-режим из коробк
 
 ## Стек
 
-TypeScript 6 · Vite 8 · React 19.2 + Compiler 1.0 · TanStack Router (file-based)
-+ Query + Form · Zustand · Zod 4 (рукописные контракты API) · Tailwind v4 ·
-MSW (mock-режим) · Lingui 5 (runtime-only i18n) · Sentry + web-vitals ·
-Biome + ESLint + Steiger · Vitest 4 + Playwright · pnpm 10 · lefthook.
+Astro 7.3 + `@astrojs/node` (`output: 'static'`, standalone) · TypeScript 6
+(`astro/tsconfigs/strictest`) · Tailwind v4 на собственном токен-слое · Zod 4 ·
+i18n `ru` (без префикса) + `en` (`/en`) · Biome 2 + Prettier (только `*.astro`) ·
+ESLint 10 (`eslint-plugin-astro`, `boundaries`) + Steiger · Vitest 5 (Container API) +
+Playwright · size-limit · pnpm 10 · lefthook + commitlint.
 
 ## Быстрый старт
 
@@ -34,85 +34,78 @@ nvm use && corepack enable && corepack prepare pnpm@10 --activate
 
 pnpm install
 pnpm prepare         # lefthook git-hooks
-pnpm gen:msw         # init Service Worker для MSW в public/
-
-pnpm dev             # mock-режим по умолчанию → http://localhost:5173
+pnpm dev             # http://localhost:4321 (демон Astro 7: pnpm astro dev stop)
 ```
 
-В углу появится мини-панель `mock:` — переключатель сценариев
-(`empty | populated | authenticated | error`) и кнопка `reset`. Бэкенд не нужен.
+Как в контейнере — prod-сборка с плейсхолдером origin, штамповка и обёртка сервера
+(`pnpm start` читает `.env`, если он есть; шаблон — `.env.example`):
 
-## Воркфлоу нового проекта
-
+```bash
+pnpm build
+DIST_DIR=dist SITE_URL=http://localhost:3000 sh docker/entrypoint.sh pnpm start
 ```
-0. Use this template на Gitea → клон → pnpm install
-1. /smartdev          → сводка состояния
-2. /init-service      → оркестратор онбординга:
-   ├─ привязка к FSD-карте из ../strategy (проектируется там: /fsd-deep-dive)
-   ├─ /stack-deep-dive→ проектирование стека (docs/stack/*)
-   ├─ /de-template    → разворот фундамента
-   └─ /scaffold       → реализация по слайсам
-3. pnpm dev           → SPA крутится в mock-режиме
-4. когда бэк появится → zod-схемы сущностей по контракту, VITE_API_MODE=real
-5. pnpm check → /release → образ в registry → rollout в <org>/infra (make bump)
-```
-
-FSD-карта (`../strategy/docs/projects/<slug>/fsd/<surface>/`, cross-repo) и
-стек (`docs/stack/`) — **source of truth**; код пишется по ним.
-Reference-слайсы (`features/auth`, `pages/profile`, …) — учебные образцы:
-изучить, удалить под свой проект через `/de-template`. Полный путь —
-[`docs/getting-started.md`](docs/getting-started.md).
 
 ## Команды
 
 ```bash
-pnpm dev              # Vite dev (mock-режим)
-pnpm build            # typecheck + Vite prod build
-pnpm test             # Vitest
-pnpm test:e2e         # Playwright
-pnpm lint             # Biome + ESLint
-pnpm steiger          # FSD-линтер
-pnpm gen              # route-tree (TanStack Router CLI)
-pnpm check            # gate: typecheck + lint + format + test + steiger + build + size
+pnpm dev              # astro dev
+pnpm build            # astro build → dist/{client,server}
+pnpm start            # prod-сервер docker/server.mjs (нужны SITE_URL и штамповка entrypoint'ом)
+pnpm typecheck        # astro check
+pnpm lint             # Biome + ESLint (границы FSD — здесь)
+pnpm format:check     # Biome + Prettier для *.astro
+pnpm test             # Vitest: unit + Container API (.astro) + axe
+pnpm test:e2e         # Playwright на prod-сборке (порт 3201)
+pnpm steiger          # структурный линтер FSD
+pnpm check:gate       # негативные фикстуры обязаны валить линтеры
+pnpm size             # бюджеты CSS / HTML
+pnpm kin:diff         # сверка обвязки с ../spa-frontend-template (advisory)
+pnpm check            # gate: typecheck + lint + format + test + steiger + check:gate + build + size
 ```
 
 Перед claim «готово» / push — **`pnpm check`** (его же гоняет `lefthook pre-push`).
 
 ## Структура
 
-Feature-Sliced Design, импорты строго нисходящие (`app → pages → widgets →
-features → entities → shared`), между слайсами одного слоя — запрещены; ловит
-Steiger.
+Feature-Sliced Design, импорты строго нисходящие (`app → pages → widgets → features →
+entities → shared`); между слайсами одного слоя — запрещены. Границы держит ESLint
+(`boundaries` с резолвером + `no-restricted-imports`), структуру — Steiger; `.gate-fixtures/`
+с заведомыми нарушениями входит в gate, чтобы линтеры не деградировали молча.
 
 ```
-src/app/          bootstrap, providers, router, root-стили
-src/pages/        file-based TanStack Router routes
-src/widgets/      переиспользуемые блоки
-src/features/     пользовательские сценарии
-src/entities/     доменные сущности
-src/shared/       инфра: api, config, i18n, lib, ui
-docs/stack/       проектная карта стека (/stack-deep-dive)
-docs/reference/   стационарные доки (architecture, ecosystem, deployment)
-.claude/          скиллы и path-scoped правила
+src/app/          layouts/document.astro, middleware, styles/index.css (токены, тема)
+src/pages/        роутинг Astro = слой pages: index.astro, en/, 404.astro, healthz.ts
+src/widgets/      каркас: site-header, site-footer
+src/shared/       config (runtime env, Zod), i18n, lib (+ testing/a11y), ui
+src/{content.config,middleware,env.d}.ts   навязанные Astro entry — тонкие реэкспорты
+docker/           Dockerfile (3 стадии), entrypoint.sh (штамповка SITE_URL), server.mjs
+e2e/              Playwright на prod-сборке
+scripts/          check-gate.mjs, kin-diff.mjs
+.claude/          правила (path-scoped) и скиллы
 ```
 
-## UI-компоненты
+## Один образ на все среды
 
-Внешней дизайн-системы нет — компоненты пишутся в проекте и делаются
-design-system-agnostic: опираются только на собственный токен-слой
-(`src/app/styles/index.css` — Tailwind v4 `@theme` + семантические
-CSS-переменные, тема через `data-scheme`). Слайс-локальный UI — в `ui/`-сегменте
-слайса; переиспользуемые примитивы/обёртки — в `src/shared/ui/`. Дисциплина —
-rule `shared-ui`.
+Сборка печёт `site: 'https://__site_origin__'`; при старте контейнера
+`docker/entrypoint.sh` штампует `SITE_URL` в `dist/client` (HTML, XML, TXT) и проверяет,
+что плейсхолдера не осталось, а `docker/server.mjs` добавляет keep-alive и graceful
+shutdown под Traefik и отказывается стартовать без реального `SITE_URL`. Подробности —
+[`docs/reference/deployment.md`](docs/reference/deployment.md).
+
+## UI
+
+Внешней дизайн-системы нет — компоненты пишутся в проекте как `.astro` на собственном
+токен-слое (`src/app/styles/index.css`: Tailwind v4 `@theme` + семантические переменные,
+тема через `light-dark()` и `data-scheme`). Контентные страницы не грузят JavaScript —
+это проверяет e2e.
 
 ## Документация
 
 | Документ | О чём |
 |---|---|
 | [`docs/README.md`](docs/README.md) | карта документации |
-| [`docs/getting-started.md`](docs/getting-started.md) | старт для потребителя шаблона |
-| [`docs/reference/architecture.md`](docs/reference/architecture.md) | FSD, слои, public API |
-| [`docs/reference/deployment.md`](docs/reference/deployment.md) | Docker + nginx + runtime config |
+| [`docs/reference/deployment.md`](docs/reference/deployment.md) | образ, entrypoint, server.mjs, env-контракт |
+| [`docs/reference/kinship.md`](docs/reference/kinship.md) | родство с `spa-frontend-template` |
 | [`CLAUDE.md`](CLAUDE.md) | гайд для агента (ядро + роутер) |
 
 ## Часть экосистемы stit

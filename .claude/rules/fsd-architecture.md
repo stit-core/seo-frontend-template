@@ -1,9 +1,9 @@
 ---
-description: Жёсткие правила FSD v2.1 — слои, импорты, public API, размещение конкретики.
-globs: ["src/**/*.ts", "src/**/*.tsx"]
+description: FSD под Astro — слои, навязанные entry, public API, server-only, размещение; границы держит ESLint.
+globs: ["src/**/*.ts", "src/**/*.astro", "steiger.config.ts", "eslint.config.js", ".gate-fixtures/**"]
 ---
 
-# FSD-архитектура
+# FSD-архитектура (Astro)
 
 ## Слои (строго нисходяще)
 
@@ -11,66 +11,67 @@ globs: ["src/**/*.ts", "src/**/*.tsx"]
 app → pages → widgets → features → entities → shared
 ```
 
-- `app` и `shared` — sliceless (слой == слайс)
-- Остальные — слайсы; **между слайсами одного слоя импорт запрещён**
-- Импорт **только** в более низкий слой через public API
+- `app` и `shared` — sliceless (слой == слайс); остальные — слайсы, **между слайсами
+  одного слоя импорт запрещён**
+- **Единственный импорт вверх**: страница импортирует документ-шелл `app/layouts/*` —
+  Astro не оборачивает страницы снаружи. `app/layouts` не импортирует `pages`; остальной
+  `app` из `pages` недоступен (policy в `eslint.config.js`)
 
-Полная карта — `docs/reference/architecture.md`.
+## `src/pages` = роутинг Astro
 
-## Сегменты слайса (по назначению, не по типу)
+1 файл = 1 URL: `index.astro` → `/`, `en/index.astro` → `/en`, `healthz.ts` → `/healthz`.
+Подпапки — сегменты URL, не слайсы (правила слайсов Steiger на `pages` выключены).
+Секции одной страницы — рядом, в `src/pages/_<name>/` (префикс `_` вне роутинга);
+widget — только при ≥ 2 страницах. Server route — `src/pages/<name>.ts` с
+`export const prerender = false`.
 
-| сегмент | для чего |
-|---|---|
-| `ui/` | React-компоненты |
-| `model/` | store, schema, types, бизнес-логика |
-| `api/` | запросы, мапперы |
-| `lib/` | хелперы слайса |
-| `config/` | константы, feature-flags |
-| `index.ts` | **обязательный** public API |
+## Навязанные Astro точки входа
 
-**Запрещены** сегменты `components/`, `hooks/`, `utils/`, `types/` — это
-группировка по типу. Steiger ловит как `no-reserved-folder-names`.
+`src/content.config.ts`, `src/middleware.ts`, `src/actions/**`, `src/env.d.ts` — не слои,
+а тонкие входы: реэкспорт (`middleware.ts`), пустое объявление (`content.config.ts`) или
+декларация типов (`env.d.ts`). Steiger их игнорирует, `no-restricted-imports` на них
+выключен. Логика — в `app/middleware`, `features/<x>/api`, `entities/<x>/model`.
+`content.config.ts` импортирует коллекцию **напрямую из модуля** слайса
+(`@/entities/<x>/model/collection`): через баррель dev-сервер теряет конфиг контента.
 
 ## Public API
 
-- `index.ts` на каждом **слайсе** и **сегменте sliceless-слоя**
-- **Explicit re-exports** — `export { foo } from './foo'`, не `export *`
+- `index.ts` на каждом слайсе и сегменте `shared`; explicit re-exports, в том числе
+  `.astro`: `export { default as PostCard } from './ui/post-card.astro'`. Сегменты `app`
+  (`layouts`, `middleware`, `styles`) — модули, не баррели: импортируются по пути
+  (`@/app/layouts/document.astro`, `@/app/middleware`)
+- В `index.ts` — **только** `export { x } from './…'`: без импортов, объявлений и
+  top-level вызовов (barrel + вызов тянет zod/контент в клиентский граф) —
+  ESLint `no-restricted-syntax`
+- Server-only (`astro:*`, `node:*`) **не реэкспортируется** из `index.ts` — ESLint
+  `no-restricted-imports`. Серверный entry слайса (`api/action.ts`,
+  `model/collection.ts`) импортирует только навязанный entry Astro, напрямую
+- Deep-import запрещён: `@/<layer>/<slice>/…` — `no-restricted-imports` по
+  `@/<layer>/*/*`; `shared` — `@/shared/<segment>`, `@/shared/ui/<name>`,
+  `@/shared/lib/<name>`
 - Внутри слайса — относительные пути; снаружи — `@/<layer>/<slice>`
-- Deep-import (`@/<layer>/<slice>/ui/file`) — запрещён
-  (`no-restricted-imports` + Steiger `no-public-api-sidestep`)
+
+## Сегменты слайса
+
+`ui/` `model/` `api/` `lib/` `config/` + `content/` (markdown-коллекция сущности).
+Группировка по типу (`components/`, `hooks/`, `utils/`, `types/`) запрещена — Steiger
+`no-reserved-folder-names`.
 
 ## Размещение
 
 | что | где |
 |---|---|
-| Zod schema сущности (контракт API) | `src/entities/<name>/model/schema.ts` |
-| HTTP-клиент | `src/shared/api/client.ts` |
-| Route-tree (autogen) | `src/app/router/routeTree.gen.ts` |
-| File-based routes | `src/pages/<slug>.tsx` или `src/pages/<slug>/route.ts` |
-| Mock-слой | `src/shared/api/mock/` |
-| Проектные UI-компоненты | `src/shared/ui/<name>/` |
-| Семантические токены, темы | `src/app/styles/index.css` |
+| документ-шелл, middleware, токены | `app/layouts/document.astro`, `app/middleware`, `app/styles/index.css` |
+| runtime-конфиг, идентичность сайта | `shared/config` |
+| локали, пути с префиксом | `shared/i18n` |
+| тест-хелперы | `shared/lib/testing` |
+| проектные UI-примитивы | `shared/ui/<name>/` |
+| каркас сайта | `widgets/site-header`, `widgets/site-footer` |
 
-## Cross-feature
+## Кто что проверяет
 
-Фича A не импортирует фичу B напрямую. Варианты:
-
-1. Поднять общее в `entities/` или `shared/`
-2. Композировать в `widget`/`page`
-3. `@x`-нотация — **только для `entities/`** (не для `features/`)
-
-## Pages-first
-
-При новой функциональности — начинаем с `pages/<slug>.tsx`. Выносим в
-widget/feature **только когда** реально переиспользуется. Steiger ловит
-`insignificant-slice` (widget с 1 референсом).
-
-## UI-компоненты
-
-Внешней дизайн-системы нет — компоненты пишутся в проекте и делаются
-design-system-agnostic (опираются только на собственный токен-слой
-`app/styles/index.css`). Полное правило — `shared-ui`.
-
-- `shared/ui/` — переиспользуемые примитивы и обёртки (layout-/biz-семантика)
-- слайс-локальный UI — в `ui/`-сегменте слайса, поднимается в `shared/ui/`
-  при реальном переиспользовании
+- **Границы держит `pnpm lint`**: ESLint `boundaries` с резолвером + `no-restricted-imports`
+  (в т.ч. клиентские `<script>` в `.astro`). Steiger — структура (public API, сегменты,
+  имена); он fail-open на `.astro`-целях и `export … from`
+- Негативные фикстуры `.gate-fixtures/` (`pnpm check:gate`) обязаны валить
+  ESLint/Steiger/Biome. Новое правило границ — новая фикстура + строка в `expected.json`

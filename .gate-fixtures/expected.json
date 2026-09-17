@@ -1,0 +1,18 @@
+{
+  "eslint": [
+    { "file": "src/widgets/a/ui/a.astro", "rule": "boundaries/dependencies", "min": 3 },
+    { "file": "src/widgets/a/ui/a.astro", "rule": "astro/jsx-a11y/alt-text" },
+    { "file": "src/entities/post/ui/post-card.astro", "rule": "boundaries/dependencies" },
+    { "file": "src/pages/index.astro", "rule": "no-restricted-imports", "min": 2 },
+    { "file": "src/entities/post/index.ts", "rule": "no-restricted-imports" },
+    { "file": "src/features/search/index.ts", "rule": "no-restricted-syntax", "min": 2 }
+  ],
+  "steiger": [
+    { "file": "src/widgets/a/ui/a.astro", "rule": "fsd/forbidden-imports" },
+    { "file": "src/entities/post/ui/post-card.astro", "rule": "fsd/forbidden-imports" },
+    { "file": "src/pages/index.astro", "rule": "fsd/no-public-api-sidestep" }
+  ],
+  "biome": [
+    { "file": "src/widgets/a/ui/a.astro", "rule": "lint/a11y/useAltText" }
+  ]
+}

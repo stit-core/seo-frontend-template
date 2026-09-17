@@ -12,7 +12,7 @@
 (§12 — план фаз). Исполнение: Fable-агент по одной фазе за запуск, приёмка главной
 сессией (brief §8), после приёмки — коммит + push в `main`.
 
-- [ ] Фаза 1 — фундамент: прунинг SPA-рантайма, `astro.config.ts`, гейт (`astro check`,
+- [x] Фаза 1 — фундамент: прунинг SPA-рантайма, `astro.config.ts`, гейт (`astro check`,
   Biome + Prettier для `.astro`, ESLint 10 + `boundaries` с резолвером, Steiger, Vitest 5,
   Playwright на prod-сборке, size-limit, lefthook, commitlint), `.gate-fixtures/` + `check:gate`,
   Docker (три стадии, штамповка `SITE_URL`, `server.mjs`), `/healthz`, kinship + `kin:diff`,

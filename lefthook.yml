@@ -1,13 +1,19 @@
 pre-commit:
-  parallel: true
+  # Три --write-хука на один .astro: последовательно, чтобы не перезаписывать друг друга.
+  parallel: false
   commands:
     biome:
-      glob: "*.{ts,tsx,js,jsx,json,jsonc,css}"
+      glob: "*.{ts,tsx,mts,cts,js,mjs,cjs,astro,json,jsonc,css}"
       run: pnpm biome check --write --no-errors-on-unmatched {staged_files}
       stage_fixed: true
+    prettier-astro:
+      glob: "src/**/*.astro"
+      run: pnpm prettier --write {staged_files}
+      stage_fixed: true
     eslint:
-      glob: "src/**/*.{ts,tsx}"
-      run: pnpm eslint --fix --no-error-on-unmatched-pattern {staged_files}
+      glob: "src/**/*.{ts,mts,cts,astro}"
+      # --cache: холодный старт ESLint с парсерами фреймворка — самый дорогой шаг гейта.
+      run: pnpm eslint --fix --no-error-on-unmatched-pattern --cache {staged_files}
       stage_fixed: true
 
 commit-msg:

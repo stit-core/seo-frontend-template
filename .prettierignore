@@ -1,0 +1,8 @@
+# Prettier форматирует только *.astro (Biome их не форматирует); всё остальное — Biome.
+*
+!*/
+!*.astro
+node_modules/
+dist/
+.astro/
+.gate-fixtures/

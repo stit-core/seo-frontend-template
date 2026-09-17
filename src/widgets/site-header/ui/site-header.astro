@@ -1,0 +1,34 @@
+---
+import { SITE_NAME } from '@/shared/config'
+import { type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
+
+interface Props {
+  locale: Locale
+  alternatePath?: string | undefined
+}
+
+const { locale, alternatePath } = Astro.props
+const other = SUPPORTED_LOCALES.find((candidate) => candidate !== locale)
+---
+
+<header class="border-b border-divider">
+  <nav
+    aria-label={t(locale, 'nav.label')}
+    class="mx-auto flex max-w-content items-center justify-between gap-6 px-6 py-4"
+  >
+    <a href={localePath(locale, '/')} class="font-semibold text-app-fg no-underline">
+      {SITE_NAME}
+    </a>
+    {other !== undefined && alternatePath !== undefined && (
+      <a
+        href={localePath(other, alternatePath)}
+        hreflang={other}
+        lang={other}
+        rel="alternate"
+        class="text-body-sm text-muted"
+      >
+        {t(other, 'lang.name')}
+      </a>
+    )}
+  </nav>
+</header>

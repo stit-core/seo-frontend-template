@@ -1,6 +1,8 @@
 import fsd from '@feature-sliced/steiger-plugin'
 import { defineConfig } from 'steiger'
 
+// Steiger — структурный линтер (public API, сегменты, имена). Границы импортов
+// держит ESLint (`pnpm lint`): Steiger не видит цели `.astro` и `export … from`.
 export default defineConfig([
   ...fsd.configs.recommended,
   {
@@ -8,33 +10,35 @@ export default defineConfig([
       'fsd/forbidden-imports': 'error',
       'fsd/no-public-api-sidestep': 'error',
       'fsd/public-api': 'error',
-      'fsd/insignificant-slice': 'warn',
-      'fsd/excessive-slicing': 'warn',
-      'fsd/ambiguous-slice-names': 'error',
-      'fsd/inconsistent-naming': 'error',
       'fsd/no-segmentless-slices': 'error',
       'fsd/no-reserved-folder-names': 'error',
+      'fsd/ambiguous-slice-names': 'error',
+      'fsd/inconsistent-naming': 'error',
       'fsd/typo-in-layer-name': 'error',
+      'fsd/excessive-slicing': 'warn',
+      // Референсы из вложенных каталогов маршрутов Steiger не видит,
+      // поэтому widgets ложно числятся «без референсов». Границы держит ESLint.
+      'fsd/insignificant-slice': 'off',
     },
   },
   {
-    files: ['src/app/router/routeTree.gen.ts'],
-    rules: { 'fsd/public-api': 'off' },
+    // Файлы, жёстко навязанные Astro: это не слои FSD, а точки входа (реэкспорты).
+    ignores: ['src/content.config.ts', 'src/middleware.ts', 'src/actions/**', 'src/env.d.ts'],
   },
   {
-    // TanStack file-based routing: index.tsx — это route '/', а не public API слоя.
-    files: ['src/pages/index.tsx'],
-    rules: { 'fsd/no-layer-public-api': 'off' },
+    // src/pages — файловый роутинг: index.astro это маршрут '/', подпапки en/ blog/ [slug]/ —
+    // сегменты URL, а не слайсы с сегментами FSD.
+    files: ['src/pages/**'],
+    rules: {
+      'fsd/no-layer-public-api': 'off',
+      'fsd/no-segmentless-slices': 'off',
+      'fsd/no-segments-on-sliced-layers': 'off',
+      'fsd/public-api': 'off',
+    },
   },
   {
-    // Bootstrap: dynamic import mock-подсистемы мимо index — осознанно,
-    // чтобы MSW не попадал в prod-граф модулей.
-    files: ['src/app/init.ts'],
-    rules: { 'fsd/no-public-api-sidestep': 'off' },
-  },
-  {
-    // 'providers' — устоявшееся имя сегмента app-слоя в FSD-практике.
+    // 'layouts' / 'middleware' / 'styles' — устоявшиеся имена сегментов app-слоя.
     files: ['src/app/**'],
-    rules: { 'fsd/segments-by-purpose': 'off' },
+    rules: { 'fsd/segments-by-purpose': 'off', 'fsd/public-api': 'off' },
   },
 ])

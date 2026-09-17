@@ -1,0 +1,20 @@
+---
+// Нарушения: cross-slice импорт внутри слоя (widgets/a → widgets/b) — через public API
+// и относительным путём прямо в .astro-цель.
+import { B } from '@/widgets/b'
+import BCard from '../../b/ui/b.astro'
+---
+
+<section>
+  <B />
+  <BCard />
+  <!-- Нарушение: <img> без alt -->
+  <img src="/x.png" />
+</section>
+
+<script>
+  // Нарушение: cross-slice импорт из клиентского <script>.
+  import { helper } from '@/widgets/b'
+
+  console.info(helper())
+</script>

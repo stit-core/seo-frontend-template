@@ -1,0 +1,41 @@
+---
+import '@/app/styles/index.css'
+import { type Locale, t } from '@/shared/i18n'
+import { SiteFooter } from '@/widgets/site-footer'
+import { SiteHeader } from '@/widgets/site-header'
+
+interface Props {
+  locale: Locale
+  // Путь перевода без префикса локали; без него ссылки на другую локаль в шапке нет.
+  alternatePath?: string
+}
+
+const { locale, alternatePath } = Astro.props
+---
+
+<!doctype html>
+<html lang={locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <slot name="head" />
+  </head>
+  <body class="flex min-h-dvh flex-col">
+    <a
+      href="#main"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-10 focus:rounded-control focus:bg-action-bg focus:px-4 focus:py-2 focus:text-action-fg"
+    >
+      {t(locale, 'nav.skip')}
+    </a>
+    <SiteHeader locale={locale} alternatePath={alternatePath} />
+    <main id="main" class="mx-auto w-full max-w-content flex-1 px-6 py-12">
+      <slot />
+    </main>
+    <SiteFooter locale={locale} />
+  </body>
+</html>

@@ -1,55 +1,45 @@
-# spa-frontend-template — гайд для агентов
+# ssr-frontend-template — гайд для агентов
 
-Шаблон React SPA: TypeScript 6 / Vite 8 / React 19.2 + Compiler 1.0 /
-TanStack Router (file-based) + Query + Form / Zustand / Zod 4 (рукописные
-контракты API, без кодогена) / Tailwind v4 / MSW для mock-режима /
-Lingui 5 runtime-only i18n / Sentry condit. + web-vitals /
-Biome 2 + ESLint 9 + Steiger / Vitest 4 + Playwright / pnpm 10 / lefthook.
+Шаблон индексируемого сайта: **static-first, SSR по необходимости**. Astro 7.3 +
+`@astrojs/node` (`output: 'static'`, `standalone`) / TypeScript 6 (`astro/tsconfigs/strictest`)
+/ Tailwind v4 на собственном токен-слое / Zod 4 / FSD под линтером (ESLint 10
+`boundaries` + `no-restricted-imports`; Steiger — структура) / Biome 2 + Prettier (только
+`*.astro`) / Vitest 5 (Container API) + Playwright на prod-сборке / size-limit /
+pnpm 10 / lefthook. Один Node-образ на все среды: origin штампуется при старте.
 
-Этот файл — **ядро (always-on) + роутер**. Детали — в `docs/`, контекстные
-правила — в `.claude/rules/` (path-scoped), процедуры — в `.claude/skills/`.
-Карта документации — `docs/README.md`.
+Этот файл — **ядро (always-on) + роутер**. Детали — в `docs/`, контекстные правила —
+в `.claude/rules/` (path-scoped), процедуры — в `.claude/skills/`. Карта документации —
+`docs/README.md`.
+
+Скиллы `.claude/skills/*` (кроме `plan`), `docs/stack/**`,
+`docs/reference/{architecture,ecosystem,observability}.md`, `docs/getting-started.md`,
+`docs/contributing.md` — по плану `.claude/plans/roadmap.md`.
 
 ## Точка входа
 
-- **`/smartdev`** — cockpit сессии: сводка состояния (ветка, drift, активный план, gate'ы) +
-  переключение в нужный режим. Запускай в начале / после `/clear`.
-- **Потребителю шаблона** — `docs/getting-started.md`: форк → `/init-service` →
-  проектирование стека (FSD-карта — в `<org>/strategy`) → `/de-template` → свой проект.
 - **Planning-first.** Любое содержательное изменение идёт через план — секция в
   `.claude/plans/roadmap.md` (skill `/plan`). Прямая правка — только truly-atomic
   и багфиксы.
-
-## Проектирование первично, код вторичен
-
-**FSD-карта проектируется в соседнем `<org>/strategy`** (форк
-`business-strategy-template`): слой `docs/projects/<slug>/fsd/<surface>/` —
-карта слайсов (entities · features · pages · widgets · app · shared-*),
-восходящая к ситуациям/экранам/доменам; там её ведёт его `/fsd-deep-dive`.
-Этот репо её **читает** (cross-repo, read-only): `/scaffold` и `/de-template`
-разворачивают stable-записи в код и сами выводят `src/<layer>/<slice>/` из
-kind + slug. Артефакты платформы — локальные `docs/stack/` (8 kinds). Код
-пишется/генерируется по артефактам, не наоборот. Reference-слайсы
-`features/auth`, `pages/profile`, `pages/todos`, `features/theme` — учебные
-образцы: изучить, потом удалить под свой проект (через `/de-template`).
-
-Резолв соседа — sibling-checkout: поля `project-slug` / `strategy-path`
-(дефолт `../strategy`) / `surface` в `docs/stack/service.md`. Соседа нет —
-скиллы печатают next-step, не падают.
+- Дизайн (FSD-карта) проектируется в соседнем `<org>/strategy`; этот репо её читает.
+  Код пишется по артефактам, не наоборот.
 
 ## Команды
 
-Единый интерфейс через `pnpm <script>` (`package.json`):
-
 | команда | что делает |
 |---|---|
-| `pnpm dev` | Vite dev-server, mock-режим по умолчанию |
-| `pnpm build` | typecheck + Vite prod build |
-| `pnpm test` | Vitest (run) |
-| `pnpm test:e2e` | Playwright |
-| `pnpm steiger` | архитектурный линтер FSD |
-| `pnpm gen` | route-tree (TanStack Router CLI) |
-| `pnpm check` | **gate**: typecheck + lint + format:check + test + steiger + build + size |
+| `pnpm dev` | `astro dev` — демон Astro 7 (`pnpm astro dev stop`), порт 4321 |
+| `pnpm build` | `astro build` → `dist/{client,server}` (с плейсхолдером origin) |
+| `pnpm start` | `node --env-file-if-exists=.env docker/server.mjs` — prod-сервер (требует `SITE_URL` и штамповку) |
+| `pnpm typecheck` | `astro check` |
+| `pnpm lint` | `biome check` + `eslint` — **здесь держатся границы FSD** |
+| `pnpm format:check` | `biome format` + `prettier --check "src/**/*.astro"` |
+| `pnpm test` | Vitest: проекты `astro` (node, Container API) и `dom` (happy-dom) |
+| `pnpm test:e2e` | Playwright на prod-сборке через `docker/entrypoint.sh` + `server.mjs` (3201) |
+| `pnpm steiger` | структурный линтер FSD |
+| `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome |
+| `pnpm size` | бюджеты `.size-limit.cjs` (CSS, HTML главной) |
+| `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
+| `pnpm check` | **gate**: typecheck → lint → format:check → test → steiger → check:gate → build → size |
 
 Перед claim «готово» / push — **`pnpm check`** (его же гоняет `lefthook pre-push`).
 
@@ -57,32 +47,35 @@ kind + slug. Артефакты платформы — локальные `docs/
 
 | Тема | Где |
 |---|---|
-| Архитектура FSD, слои, public API | `docs/reference/architecture.md` + rule `fsd-architecture` |
-| Экосистема (6 шаблонов + библиотеки, контракты, оркестрация из `<org>/infra`) | `docs/reference/ecosystem.md` |
-| Observability (Sentry, web-vitals) | `docs/reference/observability.md` |
-| Deployment (Dockerfile, nginx, runtime config) | `docs/reference/deployment.md` |
-| Тесты | rule `tests-pipeline` |
-| env, секреты, runtime config | rule `env-local` |
-| UI-компоненты (свои, agnostic, свой токен-слой) | rule `shared-ui` |
-| FSD-карта (8 kinds, cross-repo) | `../strategy/docs/projects/<slug>/fsd/<surface>/` (канон — `_template/fsd/README.md` в strategy) |
-| Stack-артефакты (8 kinds) | `docs/stack/README.md` |
-| Forward-only стиль | rule `forward-only` |
+| FSD под Astro: слои, навязанные entry, public API, server-only | rule `fsd-architecture` |
+| env, `SITE_URL`, плейсхолдер и штамповка, whitelist в HTML | rule `env-local` |
+| Тесты: два проекта Vitest, Container API, axe, Playwright | rule `tests-pipeline` |
+| UI на токенах, тема, scoped-CSS, 0 JS | rule `shared-ui` |
+| Deployment: образ, entrypoint, `server.mjs`, env-контракт | `docs/reference/deployment.md` |
+| Родство с SPA-шаблоном | `docs/reference/kinship.md` + `pnpm kin:diff` |
+| Forward-only, комментарии | rules `forward-only`, `comments` |
 
-## Стиль кода (инварианты)
+## Инварианты
 
-- **Biome formatter** + **ESLint flat config** обязательны (`pnpm lint`)
-- **TypeScript strict** (`verbatimModuleSyntax`, `noUncheckedIndexedAccess`, …) —
-  без `as any` без явной причины
-- **React Compiler 1.0** (`compilationMode: infer`) — код пишется без ручных
-  `useMemo`/`useCallback`/`memo` кроме обоснованных случаев (compiler-правила
-  `eslint-plugin-react-hooks` ловят нарушения Rules of React)
-- **FSD-импорты** строго нисходящие (Steiger + `eslint-plugin-boundaries` + `no-restricted-imports`)
-- **Public API** — `index.ts` на каждом слайсе/сегменте sliceless-слоя, explicit re-exports
-- **UI-компоненты пишутся в проекте** — design-system-agnostic, на собственном
-  токен-слое (`app/styles/index.css`), без внешней DS (rule `shared-ui`)
-- **Комментарии** — только WHY, кратко (rule `comments`)
-- **Forward-only** — все доки/комментарии описывают текущее состояние,
-  без «было/стало», без changelog'ов в prose
+- `astro.config.ts`: `output: 'static'`, `build.format: 'directory'`, `trailingSlash: 'never'`,
+  `session: false`, `prefetch: false`; без `<ClientRouter/>`, без `@astrojs/react` /
+  `@astrojs/sitemap`; `cache`/`routeRules` не задаются
+- **Границы FSD держит `pnpm lint`** (ESLint с резолвером), Steiger — структура: он fail-open
+  на `.astro`-целях. Негативные фикстуры `.gate-fixtures/` — часть gate
+- Public API — `index.ts` с explicit re-exports (`.ts` и `.astro`); в `index.ts` нет
+  импортов, объявлений и вызовов; server-only (`astro:*`, `node:*`) не реэкспортируется
+- Навязанные Astro entry (`src/{content.config.ts,middleware.ts,actions/**,env.d.ts}`) —
+  тонкие входы (реэкспорт, пустое объявление, декларация типов); коллекции импортируются
+  напрямую из модуля слайса
+- Единственный импорт вверх — `pages → app/layouts` (документ-шелл)
+- `SITE_URL` — runtime: сборка печёт `https://__site_origin__`, `docker/entrypoint.sh`
+  штампует `dist/client` при старте, `server.mjs` с плейсхолдером не стартует; HTML не
+  предсжимать; абсолютные URL только в `<head>`/JSON-LD/фидах/sitemap
+- 0 JS на контентных страницах; остров — по решению, строка в `.size-limit.cjs`
+- Biome formatter + ESLint flat + Prettier для `*.astro`; TypeScript strict без `as any`
+  без причины
+- UI — `.astro` на токен-слое `src/app/styles/index.css`, без внешней DS
+- Комментарии — только WHY, кратко, по-русски; текст репо — forward-only
 
 ## Git workflow
 
@@ -98,23 +91,22 @@ kind + slug. Артефакты платформы — локальные `docs/
 - Перед claim «готово» — `pnpm check`
 - **Изменение — через план** (skill `/plan`). Отклонение — осознанное
 - Cross-feature — только через подъём в entities/shared или композицию в widget/page
-- Compute-side-effects — в `app/init.ts` или в Query (`queryFn`); никогда в рендере
-- При правке `docs/stack/*.md` — следить за `status: stable` и `Generates`-секцией;
-  FSD-карта правится только в `<org>/strategy` (его `/fsd-deep-dive`), не здесь
+- Новое правило границ — фикстура в `.gate-fixtures/` + строка в `expected.json`
+- Новый env-ключ — `shared/config` + `.env.example` + таблица в `deployment.md`
 
 ### Сначала спросить
-- Правка `docker/*`, `.npmrc`, `package.json#dependencies` без записи в `docs/stack/dependencies.md`
-- Удаление reference-слайсов вручную (это работа `/de-template`)
+- Правка `docker/*`, `.npmrc`, `package.json#dependencies`
+- Новый остров (клиентский `<script>`), новая интеграция Astro
 - Изменение FSD-структуры (новый слой, переименование сегментов)
 - Любой `--no-verify`
 
 ### Не делать никогда
 - `--no-verify` без явного разрешения юзера
 - Коммитить `.env`, `*.pem`, `*.key`
-- Прямой `export *` из `index.ts` (только explicit re-exports)
-- Импорт из `../*/*/*/*` или мимо public API
-- Импорт внешней дизайн-системы / вендорных UI-китов (Material UI, shadcn, chakra…)
-- Хардкод сырых цветов/размеров в компонентах вместо семантических токенов (`app/styles/index.css`)
+- `export *` из `index.ts`; импорт мимо public API (`@/<layer>/<slice>/<segment>/…`)
+- Импорт внешней дизайн-системы; сырые цвета/размеры вместо токенов
+- `Astro.site`/`astro:i18n` для абсолютных URL; `import.meta.env.VITE_*` для среды
+- Предсжатие HTML на сборке; `build.format: 'file'`
 
 ## Forward-only
 

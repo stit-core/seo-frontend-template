@@ -1,41 +1,41 @@
 ---
-description: UI-компоненты пишутся в проекте и делаются design-system-agnostic — на собственном токен-слое. Активируется при правке UI и стилей.
-globs: ["src/**/ui/**", "src/app/styles/**", "docs/stack/styling.md"]
+description: UI — .astro-компоненты на собственном токен-слое, тема через light-dark()/data-scheme, scoped-CSS только для layout, 0 JS по умолчанию.
+globs: ["src/**/ui/**", "src/app/layouts/**", "src/app/styles/**", "src/shared/ui/**"]
 ---
 
 # UI-компоненты
 
-Внешней дизайн-системы нет. Все UI-примитивы и блоки **пишутся в проекте** —
-никакой вендорной DS, никаких реэкспортов чужого UI-пакета.
+Внешней дизайн-системы нет. Примитивы и блоки — `.astro`-компоненты в проекте, без
+вендорных UI-китов и их токенов.
 
-## Design-system-agnostic
+## Токены — единственный источник значений
 
-Компонент опирается **только на собственный токен-слой** — семантические
-Tailwind-утилиты и CSS-переменные из `src/app/styles/index.css` (`@theme` +
-`data-scheme`), не на сырые цвета/размеры и не на вендорные токены.
+- Только семантические утилиты и переменные из `src/app/styles/index.css`:
+  `bg-app-bg`, `text-app-fg`, `text-muted`, `border-divider`, `text-link`, `text-body-md`,
+  `text-heading-xl`, `rounded-control`, `max-w-content`, `--scheme-*`
+- ❌ сырые цвета/размеры в компонентах (`bg-[#18181b]`, `text-zinc-500`, inline `style`)
+  и в `<meta>`/атрибутах; нужна новая семантика — новый токен в `index.css`
+- Тема: `light-dark()` + `color-scheme` в токен-слое — системная без JS; явный выбор —
+  `data-scheme="light|dark"` на `<html>`
 
-- ✅ `bg-action-bg`, `text-muted`, `border-divider`, `rounded-control`, `text-body-sm`
-- ❌ `bg-[#18181b]`, `text-zinc-500`, инлайновый `style={{ color: … }}` для темизируемого
-- ❌ импорт компонентов/токенов из внешней дизайн-системы
+## Scoped `<style>`
 
-Токен-слой — единственный шов темизации: light/dark переключается сменой
-`data-scheme` на `<html>` (`features/theme`), значения — в `index.css`. Нужна
-новая семантика (цвет/размер/типо-пресет) — заводишь токен там, а не хардкодишь
-в компоненте.
+Только для layout (grid, позиционирование); значения — через утилиты или `var(--…)`.
+Цвета и типографика в scoped-CSS не задаются.
+
+## 0 JS по умолчанию
+
+Компонент без `<script>`. Клиентский `<script>` — остров, только по решению: строка
+бюджета в `.size-limit.cjs`; его импорты ESLint проверяет как обычный модуль.
 
 ## Где что
 
 | что | где |
 |---|---|
-| слайс-локальный UI | `ui/`-сегмент слайса (`features/<x>/ui/…`) |
-| переиспользуемый примитив / обёртка с layout-/biz-семантикой | `shared/ui/<name>/` + `index.ts` |
-| семантические токены, темы (`data-scheme`) | `src/app/styles/index.css` |
+| слайс-локальный UI | `ui/`-сегмент слайса |
+| переиспользуемый примитив | `shared/ui/<name>/{<name>.astro,index.ts}` — своя папка, explicit re-export |
+| каркас сайта | `widgets/site-header`, `widgets/site-footer` |
+| документ-шелл: `<html lang>`, `<head>` со `<slot name="head">`, лендмарки, skip-link | `app/layouts/document.astro` |
 
-Pages-first: компонент рождается локально в слайсе и поднимается в `shared/ui/`
-**только** при реальном переиспользовании (Steiger ловит `insignificant-slice`).
-
-## Гранулярность shared/ui
-
-- Один компонент = папка + `index.ts` (explicit re-export, для tree-shake).
-- Тонкие примитивы/обёртки; без «мега-компонента» на все случаи.
-- Склейка классов — `cn` из `shared/lib`.
+Форматирует `.astro` Prettier (`pnpm format`), линтят Biome и ESLint
+(`astro/jsx-a11y/*`: `alt`, `lang`, заголовки, интерактив без клавиатуры).

@@ -1,70 +1,57 @@
-# Вклад в spa-frontend-template
+# Вклад в ssr-frontend-template
 
-Это форкаемый шаблон React SPA на стеке stit. Вклад полезен, когда он делает
-шаблон чище, надёжнее или удобнее для того, кто разворачивает из него своё
-приложение — не когда он зашивает специфику конкретного продукта.
+Это форкаемый шаблон индексируемого сайта на стеке stit (Astro 7 + Node). Вклад полезен,
+когда он делает шаблон чище, надёжнее или удобнее для того, кто разворачивает из него
+свой сайт — не когда он зашивает специфику конкретного продукта.
 
 ## С чего начать
 
 - Прочитай `CLAUDE.md` (ядро + роутер) и `docs/README.md` (карта документации);
-  FSD-архитектура и слои — `docs/reference/architecture.md`.
+  правила — `.claude/rules/`.
 - Подними окружение:
 
   ```bash
   nvm use && corepack enable && corepack prepare pnpm@10 --activate
   pnpm install
   pnpm prepare        # lefthook git-hooks
-  pnpm gen:msw        # Service Worker для MSW
-  pnpm dev            # mock-режим → http://localhost:5173
+  pnpm dev            # http://localhost:4321
   ```
-
-- Reference-слайсы (`features/auth`, `pages/profile`, `pages/todos`,
-  `features/theme`) — учебные образцы (изучить, потом удалить через `/de-template`);
-  правки в них уместны только если чинят сам референс.
 
 ## Принципы
 
-- **FSD строго нисходяще** — `app → pages → widgets → features → entities → shared`.
-  Между слайсами одного слоя импорт запрещён; только вниз через public API. Steiger +
-  `eslint-plugin-boundaries` enforce'ят.
-- **Public API** — `index.ts` на каждом слайсе/сегменте, explicit re-exports (не `export *`).
-- **UI-компоненты пишутся в проекте, design-system-agnostic.** Внешней DS нет;
-  компоненты опираются только на собственный токен-слой (`src/app/styles/index.css`,
-  тема через `data-scheme`) — в `shared/ui/` (переиспользуемое) или `ui/`-сегменте
-  слайса. Rule `shared-ui`.
-- **Секреты не в бандле.** Access-token не в localStorage; в `import.meta.env.VITE_*` —
-  только не-секретное (попадает в публичный бандл). Детали — rule `env-local`.
-- **Forward-only документация.** Текст описывает текущее состояние, без «было/стало» —
-  история живёт в `git log`.
+- **FSD строго нисходяще** — `app → pages → widgets → features → entities → shared`;
+  границы держит ESLint (`pnpm lint`), структуру — Steiger. Rule `fsd-architecture`.
+- **Public API** — `index.ts` с explicit re-exports; server-only символы в нём не живут.
+- **UI — `.astro` на собственном токен-слое** (`src/app/styles/index.css`), внешней DS
+  нет. Rule `shared-ui`.
+- **0 JS на контентных страницах**; остров — по решению, со строкой в `.size-limit.cjs`.
+- **`SITE_URL` — runtime**: плейсхолдер сборки штампуется при старте. Rule `env-local`.
+- **Forward-only документация**: текст описывает текущее состояние, история — в `git log`.
 
 ## Форк, issue, PR
 
 - **Issue** — для багов и предложений: что наблюдаешь, как воспроизвести, ожидаемое
   поведение.
-- **PR** — форкни репозиторий, заведи ветку, открой pull request с понятным описанием
-  «зачем». Держи PR сфокусированным; не подмешивай несвязанные правки.
-- Правка `docker/*`, `.npmrc`, `package.json#dependencies` или FSD-структуры (новый
-  слой, переименование сегментов) — опиши обоснование в PR отдельно.
+- **PR** — форкни репозиторий, заведи ветку, открой pull request с понятным «зачем».
+  Держи PR сфокусированным.
+- Правка `docker/*`, `.npmrc`, `package.json#dependencies`, новый остров или новая
+  интеграция Astro — обоснование в PR отдельно.
 
 ## Перед PR
 
 ```bash
-pnpm check    # gate: typecheck + lint + format:check + test + steiger + size + build
+pnpm check      # gate: typecheck + lint + format:check + test + steiger + check:gate + build + size
+pnpm test:e2e   # Playwright на prod-сборке — отдельный stage
 ```
 
-Зелёный `pnpm check` — gate пройден (его же гоняет `lefthook pre-push`). E2E
-(`pnpm test:e2e`) — отдельный stage, не в gate.
-
-- **Conventional Commits** (commitlint): `<type>(<scope>)?: <subject>`, subject ≤72.
+- **Conventional Commits** (commitlint): `<type>(<scope>)?: <subject>`, subject ≤ 72.
   Типы: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `meta`, `perf`, `style`.
-  Пример: `feat(profile): add avatar upload`.
 
 ## Стиль
 
-Спокойно и по делу, без хайпа. **Biome formatter** + **ESLint flat config**
-обязательны, **TypeScript strict** (без `as any` без явной причины). React Compiler
-делает полный проход — без ручных `useMemo`/`useCallback`/`memo` кроме обоснованных
-случаев. Комментарии — только когда WHY неочевидно, не пересказ кода.
+Спокойно и по делу. **Biome** (TS/JS/JSON/CSS) и **Prettier** (`*.astro`) для формата,
+**ESLint** для правил, **TypeScript strict**. Комментарии — только когда WHY неочевидно,
+по-русски.
 
 ## Лицензия
 

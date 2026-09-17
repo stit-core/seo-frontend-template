@@ -1,0 +1,45 @@
+---
+import DocumentLayout from '@/app/layouts/document.astro'
+import { SITE_NAME } from '@/shared/config'
+
+const locale = 'en' as const
+---
+
+<DocumentLayout locale={locale} alternatePath="/">
+  <Fragment slot="head">
+    <title>Indexable site template — {SITE_NAME}</title>
+    <meta
+      name="description"
+      content="Static-first site template on Astro 7: prerendered by default, zero JavaScript on content pages, one Docker image for every environment."
+    />
+  </Fragment>
+
+  <h1 class="text-heading-xl font-semibold tracking-tight">Indexable site template</h1>
+  <p class="mt-4 text-body-lg text-muted">
+    Static-first: pages are built ahead of time and served by the Node process as they are; server
+    rendering only where the runtime is needed.
+  </p>
+
+  <h2 class="mt-10 text-heading-md font-semibold">What is inside</h2>
+  <ul class="mt-4 list-disc space-y-2 pl-5 text-body-md">
+    <li>Astro 7 with the Node adapter: prerendered by default, on-demand by explicit opt-in.</li>
+    <li>Zero JavaScript on content pages — this page loads no scripts at all.</li>
+    <li>
+      One Docker image for every environment: the canonical origin is stamped at container start.
+    </li>
+    <li>Feature-Sliced Design under lint: ESLint guards the boundaries, Steiger the structure.</li>
+    <li>
+      Two locales:{' '}
+      <a href="/" hreflang="ru">
+        Russian without a prefix
+      </a>{' '}
+      and English under /en.
+    </li>
+  </ul>
+
+  <h2 class="mt-10 text-heading-md font-semibold">What comes next</h2>
+  <p class="mt-4 text-body-md">
+    This is the template's starting page — replace it with your own site. Commands, repository
+    layout and the consumer path are described in the README.
+  </p>
+</DocumentLayout>

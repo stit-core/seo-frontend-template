@@ -1,0 +1,19 @@
+---
+import { SITE_NAME } from '@/shared/config'
+import { type Locale, t } from '@/shared/i18n'
+
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
+const year = new Date().getFullYear()
+---
+
+<footer class="border-t border-divider">
+  <div class="mx-auto max-w-content px-6 py-6 text-body-sm text-muted">
+    <p>
+      © {year} {SITE_NAME} · {t(locale, 'footer.note')}
+    </p>
+  </div>
+</footer>

@@ -1,0 +1,10 @@
+---
+// Нарушения: deep-import мимо public API — в .astro-цель и в .ts-цель.
+import PostCard from '@/entities/post/ui/post-card.astro'
+import { PostSchema } from '@/entities/post/model/schema'
+---
+
+<main>
+  <PostCard />
+  <p>{PostSchema.title}</p>
+</main>

@@ -1,4 +1,8 @@
+import { resolve } from 'node:path'
 import { defineConfig, devices } from '@playwright/test'
+
+const PORT = 3201
+const ORIGIN = `http://127.0.0.1:${PORT}`
 
 export default defineConfig({
   testDir: './',
@@ -7,21 +11,24 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   ...(process.env.CI && { workers: 2 }),
   reporter: process.env.CI ? [['github'], ['html']] : 'list',
-  use: {
-    // localhost, не 127.0.0.1: vite слушает localhost (IPv6 ::1).
-    baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:5173',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-  },
+  timeout: 30_000,
+  use: { baseURL: ORIGIN, trace: 'on-first-retry', screenshot: 'only-on-failure' },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: 'pnpm dev --port 5173',
-    url: 'http://localhost:5173',
+    // Ровно то, что делает контейнер: prod-сборка без SITE_URL (в выход попадает
+    // плейсхолдер origin), штамповка entrypoint'ом, обёртка server.mjs. url — /healthz,
+    // а не /: иначе Playwright примет за «живой» любой ответ, включая 404 непрогретой статики.
+    command: 'env -u SITE_URL pnpm build && sh docker/entrypoint.sh node docker/server.mjs',
+    url: `${ORIGIN}/healthz`,
+    cwd: resolve(import.meta.dirname, '..'),
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
-      VITE_API_MODE: 'mock',
-      VITE_MOCK_SCENARIO: 'authenticated',
+      DIST_DIR: 'dist',
+      HOST: '127.0.0.1',
+      PORT: String(PORT),
+      SITE_URL: ORIGIN,
+      ROBOTS_POLICY: 'index',
     },
   },
 })

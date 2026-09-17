@@ -1,10 +1,12 @@
-@import "tailwindcss";
+/* source(): автодетект источников Tailwind иначе сканирует весь репозиторий (доки, правила,
+ * листинги в docs/research) и печёт в CSS утилиты, которых нет в src/. */
+@import "tailwindcss" source("../..");
 
 /*
- * Собственный токен-слой SPA. Компоненты опираются только на эти семантические
- * утилиты/переменные — это и делает их design-system-agnostic и темизируемыми:
- * тема переключается сменой data-scheme на <html> (features/theme), значения
- * семантических цветов переопределяются ниже.
+ * Собственный токен-слой. Компоненты опираются только на эти семантические
+ * утилиты/переменные — это и делает их design-system-agnostic и темизируемыми.
+ * Тема: без явного выбора — системная (prefers-color-scheme через light-dark()),
+ * явный выбор — data-scheme на <html>, который переключает color-scheme.
  */
 
 @theme {
@@ -15,14 +17,22 @@
   --text-body-sm--line-height: 1.25rem;
   --text-body-md: 0.9375rem;
   --text-body-md--line-height: 1.5rem;
+  --text-body-lg: 1.125rem;
+  --text-body-lg--line-height: 1.75rem;
+  --text-heading-md: 1.25rem;
+  --text-heading-md--line-height: 1.75rem;
   --text-heading-lg: 1.5rem;
   --text-heading-lg--line-height: 2rem;
+  --text-heading-xl: 2.25rem;
+  --text-heading-xl--line-height: 2.5rem;
 
   --radius-control: 0.5rem;
+
+  --container-content: 44rem;
 }
 
 /* Цвета — семантические; утилита компилируется в var(--scheme-*), значение
- * которого зависит от data-scheme (см. блоки ниже). */
+ * которого зависит от color-scheme (см. блоки ниже). */
 @theme inline {
   --color-app-bg: var(--scheme-app-bg);
   --color-app-fg: var(--scheme-app-fg);
@@ -30,43 +40,51 @@
   --color-divider: var(--scheme-divider);
   --color-muted: var(--scheme-muted);
   --color-danger: var(--scheme-danger);
+  --color-link: var(--scheme-link);
+  --color-focus: var(--scheme-focus);
   --color-action-bg: var(--scheme-action-bg);
   --color-action-fg: var(--scheme-action-fg);
 }
 
-:root,
+:root {
+  color-scheme: light dark;
+
+  --scheme-app-bg: light-dark(#fafafa, #0a0a0a);
+  --scheme-app-fg: light-dark(#0a0a0a, #fafafa);
+  --scheme-surface-muted: light-dark(#f4f4f5, #18181b);
+  --scheme-divider: light-dark(#e4e4e7, #27272a);
+  --scheme-muted: light-dark(#71717a, #a1a1aa);
+  --scheme-danger: light-dark(#dc2626, #f87171);
+  --scheme-link: light-dark(#1d4ed8, #93c5fd);
+  --scheme-focus: light-dark(#2563eb, #60a5fa);
+  --scheme-action-bg: light-dark(#18181b, #fafafa);
+  --scheme-action-fg: light-dark(#fafafa, #18181b);
+}
+
 [data-scheme="light"] {
-  --scheme-app-bg: #fafafa;
-  --scheme-app-fg: #0a0a0a;
-  --scheme-surface-muted: #f4f4f5;
-  --scheme-divider: #e4e4e7;
-  --scheme-muted: #71717a;
-  --scheme-danger: #dc2626;
-  --scheme-action-bg: #18181b;
-  --scheme-action-fg: #fafafa;
+  color-scheme: light;
 }
 
 [data-scheme="dark"] {
-  --scheme-app-bg: #0a0a0a;
-  --scheme-app-fg: #fafafa;
-  --scheme-surface-muted: #18181b;
-  --scheme-divider: #27272a;
-  --scheme-muted: #a1a1aa;
-  --scheme-danger: #f87171;
-  --scheme-action-bg: #fafafa;
-  --scheme-action-fg: #18181b;
+  color-scheme: dark;
 }
 
-html,
-body,
-#root {
-  height: 100%;
-}
+@layer base {
+  body {
+    background: var(--scheme-app-bg);
+    color: var(--scheme-app-fg);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
 
-body {
-  margin: 0;
-  background: var(--scheme-app-bg);
-  color: var(--scheme-app-fg);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
+  a {
+    color: var(--scheme-link);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--scheme-focus);
+    outline-offset: 2px;
+  }
 }

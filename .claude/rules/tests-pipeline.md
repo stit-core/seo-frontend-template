@@ -1,44 +1,42 @@
 ---
-description: Тестовая дисциплина — где живут тесты, что покрывают, что в gate.
-globs: ["src/**/*.test.{ts,tsx}", "src/**/*.spec.{ts,tsx}", "e2e/**", "vitest.config.ts"]
+description: Тестовая дисциплина — два проекта Vitest, Container API для .astro, axe-хелпер, Playwright на prod-сборке, состав gate.
+globs: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testing/**", ".gate-fixtures/**", "scripts/check-gate.mjs"]
 ---
 
 # Тесты
 
-## Расположение
+## Расположение и проекты Vitest
 
-- **Unit/component** — рядом со слайсом: `features/auth/ui/login-form.test.tsx`
-- **E2E** (Playwright) — отдельный `e2e/`, вне FSD-графа
-- **Тестовые утилиты** — `src/shared/lib/testing/` (если нужны)
+- **Unit** — рядом с модулем (`shared/i18n/locale.test.ts`): проект `dom` (happy-dom)
+- **Компонентные `.astro`** — `<name>.astro.test.ts` рядом с компонентом: проект `astro`
+  (node-окружение, Container API `experimental_AstroContainer`); проверка HTML-строки +
+  `expectNoA11yViolations` из `@/shared/lib/testing` (axe-core; правило `region` для
+  фрагмента выключено)
+- **Процессные** — `<name>.server.test.ts`: проект `astro`; `docker/*` гоняется через
+  `spawnSync` (fail-fast `server.mjs`, отказ и штамповка `entrypoint.sh` на временном `dist`)
+- **E2E** — `e2e/*.spec.ts`, Playwright на **prod-сборке**: webServer = `pnpm build` с
+  плейсхолдером + `docker/entrypoint.sh` + `docker/server.mjs` на порту 3201, `url` —
+  `/healthz` (не `/`). Сырой HTML — через `request` (в т.ч. `User-Agent: Googlebot`),
+  поведение — через `page`
 
 ## Что покрываем
 
-- `entities/<name>/model/schema.ts` — Zod-схема (valid/invalid)
-- `entities/<name>/api/queries.ts` — мутации (mock МSW) + invariants
-- `features/<name>/ui/*` — поведение формы / действия + axe-доступность
-- `widgets/<name>/ui/*` — рендер с разными состояниями + axe
-- `pages/*.tsx` — route guards, основной сценарий (e2e лучше)
-- `shared/lib/*` — pure-утилиты
-
-## A11y
-
-- В компонент-тестах — `vitest-axe` (`expect(container).toHaveNoViolations()`)
-- В критичных e2e — `@axe-core/playwright`
+| что | чем |
+|---|---|
+| `shared/config` | дефолты, пустые значения, валидация, whitelist; `server.mjs`/`entrypoint.sh` — отказ без `SITE_URL`, с плейсхолдером и без схемы, штамповка `dist/client`, остаточная проверка, идемпотентность; согласованность литерала плейсхолдера |
+| `shared/i18n`, `shared/lib` | pure-тесты |
+| `widgets/*/ui/*.astro` | Container API + axe |
+| статусы, заголовки, `lang`, один `<h1>`, «0 script-ресурсов», «нет `__site_origin__`», axe страниц | e2e |
+| нарушения границ FSD и пустой a11y-конфиг | `.gate-fixtures/` + `pnpm check:gate` |
 
 ## Gate
 
-`pnpm test` (== `vitest run`) обязателен в `pnpm check`. E2E (`pnpm test:e2e`) —
-**отдельный CI-stage**, не в gate, чтобы local-цикл оставался быстрым.
-
-## Mocks в тестах
-
-- Для запросов — переиспользуем `src/shared/api/mock/handlers/*` через
-  `setupServer(...buildHandlers(db, false))` из `msw/node`
-- Сценарии (`empty | populated | …`) — те же, что в dev
+`pnpm check` = typecheck → lint → format:check → test → steiger → check:gate → build →
+size. `pnpm test:e2e` — отдельный stage, не в gate (тянет браузер).
 
 ## Что не делаем
 
-- ❌ Тесты внутри слайса, импортирующие из другого слайса напрямую — это
-  нарушает FSD-границы и в production-коде, и в тестовом
-- ❌ Snapshot-тесты целых страниц (ломкие, нечитаемые)
-- ❌ Тестируем CSS — это задача visual regression (отдельный таргет)
+- ❌ `vitest-axe` (заброшен) — свой хелпер поверх `axe-core`
+- ❌ Vitest browser mode / `vitest-browser-astro` (несовместим с Astro 7 / Vitest 5)
+- ❌ Тесты, импортирующие соседний слайс мимо public API
+- ❌ Snapshot-тесты страниц; тесты CSS
