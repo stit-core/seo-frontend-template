@@ -1,6 +1,6 @@
 ---
 name: stack-deep-dive
-description: Проектирование платформы сайта — заполняет артефакты docs/stack/{service,runtime,content,routing,rendering,seo,styling,api,analytics,observability,config,dependencies}.md поверх дефолтов шаблона, через волны интерактивных вопросов. Активируй когда юзер говорит "/stack-deep-dive", "спроектируй стек", "что в платформе", или когда оркестратор /init-service пришёл к этапу 2.
+description: Проектирование платформы сайта — заполняет артефакты docs/stack/{service,runtime,content,routing,rendering,seo,styling,api,analytics,observability,config,dependencies}.md поверх дефолтов шаблона волнами интерактивных вопросов до stable. Применяй, когда нужно спроектировать или добить платформу сайта (имя и registry, домены, контент, маршруты и режимы, форма, env), и когда /init-service доходит до этапа 2.
 ---
 
 # Skill: stack-deep-dive
@@ -58,7 +58,7 @@ service → runtime → content → routing → rendering → seo → styling
 `references/field-checklists.md`. Режимы входа и cross-kind drift —
 `references/workflow-patterns.md`.
 
-## Волны (3–5 вопросов за раз)
+## Волны (до 4 вопросов за раз — предел `AskUserQuestion`)
 
 По каждому артефакту:
 
@@ -71,11 +71,13 @@ service → runtime → content → routing → rendering → seo → styling
 ## Cross-kind проверки (обязательны перед промоушном)
 
 - каждая страница `pages.md` FSD-карты — строка в `routing.md` и режим в `rendering.md`
-- `indexable` не противоречит `guard`: `guard ≠ public` ⇒ `noindex` + `private, no-store` + вне sitemap
+- `indexable` (колонка «индексируется» в `rendering.md`) не противоречит режиму и `guard`:
+  индексируемая страница — `static` или `cached`, не `dynamic`; `guard ≠ public` ⇒ `noindex` +
+  `private, no-store` + вне sitemap
 - **редактор без git ⇒ маршруты его коллекций не `static`**: `content.md § Кто редактирует`
   = «редактор без git» при источнике `git` — `**blocker**`, потому что публикация = релиз образа
 - каждый env, объявленный любым kind'ом, есть в `config.md`; секрет не помечен «в HTML: да»
-- `seo.md § Идентичность` не противоречит `service.md § Домены` (канонический хост один)
+- канонический хост один: `service.md § Домены` = `seo.md § Идентичность` = `SITE_URL`
 - новый остров в `rendering.md § Интерактивность` имеет строку бюджета в `dependencies.md`
 
 ## Промоушн draft → stable

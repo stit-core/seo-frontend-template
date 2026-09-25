@@ -1,6 +1,6 @@
 ---
 description: SEO-канон шаблона — head через DocumentLayout (title/description уникальны, self-canonical, hreflang только для реальных переводов, OG полный), JSON-LD в head только про видимое и только допустимые типы, robots.txt/sitemap.xml/rss.xml/ключ IndexNow on-demand на runtime origin, staging в три контура, гейты seo:check и seo.spec.
-globs: ["src/shared/seo/**", "src/shared/config/site.ts", "src/app/layouts/**", "src/pages/**", "src/widgets/breadcrumbs/**", "scripts/seo-check.mjs", "scripts/lib/html.mjs", "e2e/seo.spec.ts", "public/**"]
+paths: ["src/shared/seo/**", "src/shared/config/site.ts", "src/app/layouts/**", "src/pages/**", "src/widgets/breadcrumbs/**", "scripts/seo-check.mjs", "scripts/lib/html.mjs", "e2e/seo.spec.ts", "public/**"]
 ---
 
 # SEO-инварианты
@@ -65,8 +65,9 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   поисково-ответные не трогаются; `Host`/`Crawl-delay` не выводятся; `Clean-param` — строкой в
   `buildRobotsTxt`, когда появятся проектные трекинг-параметры (`utm_*`, `ysclid`, `yrclid` Яндекс
   срезает сам)
-- `sitemap.xml`: ровно индексируемые prerendered-страницы сборки (главные, статические страницы
-  из списка `STATIC_ROUTES` в `pages/sitemap.xml.ts`, списки, записи без черновиков, теги) — e2e
+- `sitemap.xml` — свой маршрут (`@astrojs/sitemap` строит URL от build-time origin): ровно
+  индексируемые prerendered-страницы сборки (главные, статические страницы из списка
+  `STATIC_ROUTES` в `pages/sitemap.xml.ts`, списки, записи без черновиков, теги) — e2e
   сверяет с `dist/client` за вычетом `noindex`; новая индексируемая страница вне коллекций —
   строка в этом списке; on-demand маршруты вне карты; адрес из `redirects.yaml` не может
   быть живым маршрутом — держит `check:content`, поэтому в карте его нет; `lastmod` только из

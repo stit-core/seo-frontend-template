@@ -155,11 +155,11 @@ shutdown под Traefik и отказывается стартовать без 
 
 ## UI
 
-Внешней дизайн-системы нет — компоненты пишутся в проекте как `.astro` на собственном
-токен-слое (`src/app/styles/index.css`: Tailwind v4 `@theme` + семантические переменные,
-тема через `light-dark()` и `data-scheme`). Ни одна страница не грузит внешних скриптов: из
-JavaScript в шаблоне только остров темы — инлайн-`<script>` в `<head>`, который применяет выбор
-до первой отрисовки и обслуживает переключатель. Картинки — `astro:assets` (`<Picture>`:
+Компоненты пишутся в проекте как `.astro` на собственном токен-слое
+(`src/app/styles/index.css`: Tailwind v4 `@theme` + семантические переменные, тема через
+`light-dark()` и `data-scheme`), без вендорных UI-китов. Ни одна страница не грузит внешних
+скриптов: из JavaScript в шаблоне только остров темы — инлайн-`<script>` в `<head>`, который
+применяет выбор до первой отрисовки и обслуживает переключатель. Картинки — `astro:assets` (`<Picture>`:
 AVIF/WebP с фолбэком, размеры заданы, обложка записи грузится с приоритетом). Всё это
 проверяет e2e, включая axe в обеих темах.
 
@@ -182,7 +182,7 @@ AVIF/WebP с фолбэком, размеры заданы, обложка за�
 | [`docs/reference/seo.md`](docs/reference/seo.md) | что держит шаблон, чек-лист страницы, три контура staging |
 | [`docs/reference/deployment.md`](docs/reference/deployment.md) | образ, entrypoint, server.mjs, env-контракт, требования к прокси |
 | [`docs/reference/observability.md`](docs/reference/observability.md) | JSON-лог, `X-Request-Id`, `/healthz`, Sentry |
-| [`docs/reference/ecosystem.md`](docs/reference/ecosystem.md) | место среди шаблонов stit и контракты с соседями |
+| [`docs/reference/ecosystem.md`](docs/reference/ecosystem.md) | место среди шаблонов stit, флоу работы из хаба `<org>/infra` и контракты с соседями |
 | [`docs/reference/infra-handoff.md`](docs/reference/infra-handoff.md) | задание для соседних репо: сервис `site` в compose, Traefik, CrowdSec, приёмка |
 | [`docs/reference/kinship.md`](docs/reference/kinship.md) | родство с `spa-frontend-template` |
 | [`.claude/rules/forms-antispam.md`](.claude/rules/forms-antispam.md) | форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка |

@@ -1,12 +1,12 @@
 ---
 description: UI — .astro-компоненты на собственном токен-слое, тема через light-dark()/data-scheme и единственный остров, scoped-CSS только для layout, картинки через <Picture> с LCP-политикой, 0 JS по умолчанию.
-globs: ["src/**/ui/**", "src/app/layouts/**", "src/app/styles/**", "src/app/analytics/**", "src/shared/ui/**", "src/features/theme/**"]
+paths: ["src/**/ui/**", "src/app/layouts/**", "src/app/styles/**", "src/app/analytics/**", "src/shared/ui/**", "src/features/theme/**"]
 ---
 
 # UI-компоненты
 
-Внешней дизайн-системы нет. Примитивы и блоки — `.astro`-компоненты в проекте, без
-вендорных UI-китов и их токенов.
+Примитивы и блоки — `.astro`-компоненты в проекте на собственном токен-слое; вендорные
+UI-киты и их токены не подключаются.
 
 ## Токены — единственный источник значений
 

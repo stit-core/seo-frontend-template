@@ -1,6 +1,6 @@
 ---
 name: scaffold
-description: Разложить один артефакт сайта по канону за один проход — page (страница ru + en через DocumentLayout), collection (коллекция контента со схемой, запросами и маршрутами), feature, widget, route (служебный on-demand маршрут). Источник — stable-запись FSD-карты в соседнем <org>/strategy (docs/projects/<slug>/fsd/<surface>/); src/-пути скилл выводит сам из kind и slug. Активируй когда юзер говорит "/scaffold", "создай страницу X", "новая коллекция Y", "добавь виджет Z", или когда оркестратор /init-service / /de-template чейнит этап реализации.
+description: Разложить один новый артефакт сайта по канону за один проход — page (страница ru + en через DocumentLayout), collection (коллекция контента со схемой, запросами и маршрутами), feature, widget, route (служебный on-demand маршрут). Источник — stable-запись FSD-карты в соседнем <org>/strategy (docs/projects/<slug>/fsd/<surface>/); src/-пути скилл выводит сам из kind и slug. Применяй, когда в сайт добавляется страница, коллекция, фича, виджет или служебный маршрут, и когда /init-service или /de-template доходит до реализации своих слайсов. Правка существующего слайса — прямая правка, не этот скилл.
 ---
 
 # Skill: scaffold

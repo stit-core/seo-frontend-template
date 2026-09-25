@@ -20,6 +20,8 @@
 .claude/rules/comments.md
 .claude/settings.json
 .claude/skills/plan/SKILL.md
+.claude/skills/plan/references/plan-template.md
+scripts/validate-plan.sh
 .commitlintrc.cjs
 .npmrc
 .nvmrc
@@ -40,7 +42,8 @@ src/shared/lib/invariant.test.ts
 CLAUDE.md
 README.md
 SECURITY.md
-.claude/plans/roadmap.md
+.claude/plans/backlog.md
+.claude/skills/plan/references/repo.md
 .claude/rules/fsd-architecture.md
 .claude/rules/env-local.md
 .claude/rules/tests-pipeline.md

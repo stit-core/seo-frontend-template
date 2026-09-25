@@ -1,6 +1,6 @@
 ---
 description: env Node-процесса, SITE_URL и плейсхолдер origin, whitelist в HTML, секреты. Активируется при правке .env*, shared/config, docker/, astro.config.ts.
-globs: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/playwright.config.ts"]
+paths: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/playwright.config.ts"]
 ---
 
 # env и секреты
@@ -12,6 +12,9 @@ globs: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/pl
 для среды не используется: сборка среды не знает. Пустое значение ключа равносильно
 незаданному — берётся дефолт. `import.meta.env.DEV` — признак `astro dev` (черновики
 контента), не конфигурация среды.
+
+Новый ключ — три места: Zod-схема `src/shared/config/runtime.ts`, строка в `.env.example`,
+строка в таблице `docs/reference/deployment.md`.
 
 На prerender `getRuntimeConfig()` видит значения **сборки**; на on-demand
 (`prerender = false`) и в middleware — живой `process.env`.

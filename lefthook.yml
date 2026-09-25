@@ -15,6 +15,9 @@ pre-commit:
       # --cache: холодный старт ESLint с парсерами фреймворка — самый дорогой шаг гейта.
       run: pnpm eslint --fix --no-error-on-unmatched-pattern --cache {staged_files}
       stage_fixed: true
+    plans:
+      glob: ".claude/plans/*.md"
+      run: bash scripts/validate-plan.sh
 
 commit-msg:
   commands:

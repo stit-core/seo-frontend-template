@@ -66,7 +66,7 @@ e2e/content.spec.ts
 | `src/shared/seo/seo-head.astro.test.ts` | убрать ожидания RSS-ссылки |
 | `src/shared/i18n/dict.ts` | убрать ключи `blog.*`, `post.*`, `footer.rss` в обеих локалях |
 | `.size-limit.cjs` | убрать бюджет «HTML поста» и вычисление самой тяжёлой записи |
-| `content/redirects.yaml` | демо-записи (их цель `/blog` больше не существует — `check:content` это поймает) |
+| `content/redirects.yaml` | демо-записи (их цель `/blog` уходит вместе с блогом — `check:content` это поймает) |
 | `src/app/middleware/redirects.test.ts` | если таблица пустая — условие «непуста» меняется на «строится» |
 | `src/app/middleware/index.server.test.ts` | кейс «редиректы до роутинга» ходит по демо-адресам `/old` и `/blog/staraya-zametka` — заменить своими из `redirects.yaml` (нет `410` — убрать его половину кейса) |
 | `e2e/{seo,rendering,a11y}.spec.ts` | убрать слаги записей, проверки фидов, тегов и страниц списка |

@@ -21,7 +21,7 @@
 | [`reference/seo.md`](./reference/seo.md) | что шаблон держит сам, чек-лист страницы, три контура staging, чем проверяется |
 | [`reference/deployment.md`](./reference/deployment.md) | Node-образ, штамповка `SITE_URL`, `server.mjs`, env-контракт, требования к прокси |
 | [`reference/observability.md`](./reference/observability.md) | JSON-лог, `X-Request-Id`, `/healthz`, Sentry по DSN, чем меряется скорость |
-| [`reference/ecosystem.md`](./reference/ecosystem.md) | место сайта среди шаблонов stit, контракты с соседями, STOP на image-in-registry |
+| [`reference/ecosystem.md`](./reference/ecosystem.md) | место сайта среди шаблонов stit, флоу (хаб `<org>/infra` или прямой заход), контракты с соседями, STOP на image-in-registry |
 | [`reference/infra-handoff.md`](./reference/infra-handoff.md) | задание для соседних репо: `compose/site.yml`, Traefik, CrowdSec, приёмка первого деплоя |
 | [`reference/kinship.md`](./reference/kinship.md) | родство с `spa-frontend-template`, `pnpm kin:diff` |
 
@@ -33,7 +33,7 @@
 ## Правила и процедуры
 
 Инварианты живут не здесь, а рядом с кодом: `.claude/rules/*.md` подгружаются
-автоматически, когда в контекст попадает файл под их `globs`. Процедуры —
+автоматически, когда агент читает файл под их `paths` (`forward-only` — всегда). Процедуры —
 `.claude/skills/*`: `/smartdev`, `/plan`, `/init-service`, `/stack-deep-dive`,
 `/de-template`, `/scaffold`, `/content`, `/seo-audit`, `/release`. Карта тем —
 `CLAUDE.md § Карта: где что`.

@@ -1,5 +1,9 @@
 # Экосистема
 
+Короткая версия для этого репо. Канон карты экосистемы и операционного флоу —
+`docs/reference/ecosystem.md` в `<org>/infra` (форк `project-infra-template-compose`; рядом —
+`../infra/docs/reference/ecosystem.md`).
+
 ## Где этот шаблон
 
 `ssr-frontend-template` — шаблон **индексируемого сайта**: контент, который должен
@@ -12,29 +16,50 @@
 | страницы, которые ищут в Google и Яндексе; блог, услуги, кейсы, лендинг | **этот шаблон** → форк `<org>/site` |
 | кабинет, дашборд, что угодно за логином | `spa-frontend-template` → форк `<org>/frontend` |
 
-## Соседние репозитории
+## Шаблоны и соседи
 
-Форки одной org клонируются sibling-checkout'ами рядом:
+Шаблоны `stit-core/*` форкаются в репо клиентской орги `<org>/*`; форки одной орги
+клонируются рядом, sibling-checkout'ами (`../<name>`):
 
 ```
 ~/git/<org>/
-├─ strategy/   ← business-strategy-template (design-time SoT: стратегия, продукт, FSD-карта)
-├─ infra/      ← project-infra-template-compose (VPS проекта, операционный хаб)
+├─ strategy/   ← business-strategy-template
+├─ infra/      ← project-infra-template-compose
 ├─ site/       ← ssr-frontend-template (этот репо)
 ├─ frontend/   ← spa-frontend-template (опционально)
 ├─ backend/    ← go-backend-template (опционально)
-└─ <bot>/      ← telegram-bot-template (опционально)
+├─ <bot>/      ← telegram-bot-template (опционально)
+└─ mobile/     ← mobile-template (опционально)
 ```
 
-| репо | первичная ответственность |
+| шаблон → форк | роль |
 |---|---|
-| `strategy/` | design-time SoT: бизнес-слои и продукт (vision, surface, interface, screens, **FSD-карта `fsd/<surface>/`**) |
-| `site/` | сайт: контент, маршруты, SEO, форма, Docker-образ |
-| `frontend/` | приложение за логином |
-| `backend/` | HTTP API, доменная логика, БД — если сайту нужны данные извне |
-| `infra/` | docker-compose VPS, секреты в `.env`, edge/ingress, **rollout тегов** |
+| `business-strategy-template` → `<org>/strategy` | design-time source of truth: бизнес, AJTBD, SWOT, карта гипотез, продукты (vision/surface, interface, screens, **FSD-карта `fsd/<surface>/`**, telegram-bot-flow, mobile, services + domains), ИТ-периметр |
+| `project-infra-template-compose` → `<org>/infra` | runtime проекта (docker-compose на VPS) и **операционный хаб**: общий план, рассылка агентов по сиблингам, выкатка тегов (`make bump`) |
+| `go-backend-template` → `<org>/backend` | Go-сервис: HTTP API и данные — если сайту нужны данные извне |
+| `spa-frontend-template` → `<org>/frontend` | React SPA (кабинет, всё за логином) |
+| `ssr-frontend-template` → `<org>/site` | **этот репо**: Astro SSR-сайт — контент, маршруты, SEO, форма, Docker-образ |
+| `telegram-bot-template` → `<org>/<bot>` | Telegram-бот (Python, aiogram) |
+| `mobile-template` → `<org>/mobile` | KMP-приложение Android + iOS; релиз — в магазины |
 
-## Контракты
+Библиотеки экосистемы — `golibinfra` (киты Go-сервисов) и `pylibinfra` (киты бота); сайт их не
+потребляет.
+
+## Как сюда приходят
+
+1. **Старт проекта — `<org>/strategy`.** Там проектируется всё, что можно, в том числе
+   FSD-карта поверхности сайта (`docs/projects/<slug>/fsd/<surface>/`, её `/fsd-deep-dive`).
+2. **Дальше работа идёт из `<org>/infra` — операционного хаба.** Сквозная задача —
+   план-программа в `.claude/plans/` инфры; оттуда агент приходит сюда (`../site`) с фазой,
+   ведёт её планом здесь (`/plan`, `parent: infra:<slug>`) и работает **обвязкой этого
+   репо**: `CLAUDE.md`, словарь `pnpm`, скиллы, гейт `pnpm check`. Изменение
+   дизайна по ходу — тоже агентом из хаба, в `../strategy` и скиллами strategy: этот репо
+   карту не правит.
+3. **Прямой заход сюда** — нормальный режим: та же обвязка, а то, что задевает соседей,
+   оформляется handoff-блоком для хаба — его печатает `/release`, требования к compose и
+   прокси — [`infra-handoff.md`](./infra-handoff.md).
+
+## Что репо берёт и отдаёт
 
 | источник | потребитель | что |
 |---|---|---|
@@ -42,40 +67,23 @@
 | `strategy: projects/<slug>/{interface,screens}/<surface>/` | `site/` | контекст: аудитории, ситуации, экраны, блоки — из них растут тексты страниц |
 | `docs/stack/**` (здесь) | `/de-template`, `/scaffold` | платформенные решения: источник контента, маршруты, режимы, env |
 | `docs/reference/deployment.md` (здесь) | `infra/` | env-контракт образа и требования к прокси |
-| `docs/reference/infra-handoff.md` (здесь) | `infra/`, корп-карта, соседние шаблоны | рабочее задание cross-repo: `compose/site.yml`, Traefik, CrowdSec, приёмка первого деплоя |
-| образ `git.${DOMAIN}/<org>/site:vX.Y.Z` | `infra/` | `/release` пушит; rollout — `make bump SVC=site TAG=<v>` там (правит `SITE_TAG` в `.env` VPS) |
+| `docs/reference/infra-handoff.md` (здесь) | `infra/`, соседние шаблоны | рабочее задание cross-repo: `compose/site.yml`, Traefik, CrowdSec, приёмка первого деплоя |
+| образ `<registry>/<org>/site:vX.Y.Z` | `infra/` | `/release` пушит (registry — `REGISTRY_HOST`, дефолт `git.stit.tech`); выкатка — `make bump SVC=site TAG=<v>` там (правит `SITE_TAG` в `.env` VPS) |
 
 Резолв путей соседа — поля `project-slug` / `strategy-path` (дефолт `../strategy`) /
 `surface` в `docs/stack/service.md`. Чтение strategy — read-only и одностороннее: этот
 репо в неё не пишет.
 
-## Операционная модель
-
-`<org>/infra` — операционный хаб проекта: задачи входят туда, оттуда агенты приходят
-сюда и работают **обвязкой этого репо** (`CLAUDE.md`, словарь `pnpm`, скиллы, гейт
-`pnpm check`). Прямой заход человека сюда — нормальный режим.
-
-Этот репо **STOP'ает на image-in-registry**: деплой-команды чужих репо (`make bump`,
-`make ship`, ssh) отсюда не запускаются — `/release` печатает handoff-блок, применяет
-его оператор или агент в `<org>/infra`. Что сервису `site` нужно от compose и прокси —
-[`infra-handoff.md`](./infra-handoff.md): готовый `compose/site.yml`, роутеры и
-middleware Traefik, CrowdSec, приёмка первого деплоя и порядок сессий по соседним репо.
-Короткая версия требований к прокси — `deployment.md § Требования к прокси`, env-контракт
-образа — там же.
-
-## Корп control-plane
-
-`corp-infra-template` — корп-VPS: registry `git.stit.tech` (pull/push образов),
-CrowdSec-whitelist egress проектных VPS. Managed = инстанс на `*.stit.tech`;
-self-hosted = свой форк, вендор-лока нет. Source-of-truth карты экосистемы —
-`corp-infra-template/docs/ecosystem.md`; там же конвенция sibling-checkout.
+Этот репо **останавливается на образе в registry**: деплой-команды чужих репо (`make bump`,
+`make ship`, ssh) отсюда не запускаются — `/release` печатает handoff-блок, применяет его
+агент или оператор в `<org>/infra`. Короткая версия требований к прокси и env-контракт
+образа — `deployment.md`.
 
 ## Родство с `spa-frontend-template`
 
 Два канонических шаблона делят **обвязку, а не код**: правила, скиллы, форму
-документации, состав гейта. Общей npm-библиотеки нет, дизайн-системы нет — компоненты
-пишутся в проекте на собственном токен-слое. Списки и сверка — `kinship.md` +
-`pnpm kin:diff` (advisory, вне гейта).
+документации, состав гейта. Списки и сверка — `kinship.md` + `pnpm kin:diff` (advisory, вне
+гейта).
 
 ## Шаблон vs проект
 

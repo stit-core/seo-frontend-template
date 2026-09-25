@@ -1,6 +1,6 @@
 ---
 description: Контент в git — frontmatter и бюджеты, один h1, alt, переводы и черновики, редиректы как данные (YAML → данные на сборке), контентные гейты check:content / check:links.
-globs: ["src/entities/*/content/**", "src/entities/*/model/schema.ts", "src/entities/*/api/**", "src/shared/redirects/**", "src/app/middleware/redirects.ts", "astro.config.ts", "content/**", "scripts/check-content.mjs", "scripts/check-links.mjs", "scripts/lib/content.mjs"]
+paths: ["src/entities/*/content/**", "src/entities/*/model/schema.ts", "src/entities/*/api/**", "src/shared/redirects/**", "src/app/middleware/redirects.ts", "astro.config.ts", "content/**", "scripts/check-content.mjs", "scripts/check-links.mjs", "scripts/lib/content.mjs"]
 ---
 
 # Контент-инварианты
@@ -71,7 +71,8 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
 - YAML разбирается на сборке (плагин `yaml-modules` в `astro.config.ts`, `js-yaml`;
   тип `*.yaml` — `src/env.d.ts`): в серверный бандл попадают данные, а не парсер; Zod
   проверяет их при загрузке модуля, файл в контейнере не нужен
-- Обслуживает `app/middleware` до роутинга, по точному `pathname`. Query переезжает в
+- Обслуживает `app/middleware` до роутинга, по точному `pathname`; `404.astro` поэтому
+  on-demand — иначе путь без файла не дошёл бы до middleware. Query переезжает в
   `Location` (`/old?x=1` → `/blog?x=1`; у внешней цели — после её собственной). Хвостовой
   слеш срезает сам Astro 301-м ещё до middleware (`trailingSlash: 'never'`), поэтому
   `/old/` — два хопа: `/old`, затем цель; в данных это не цепочка, `from` пишется без слеша.

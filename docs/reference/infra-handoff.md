@@ -10,7 +10,7 @@
 `ssr-frontend-template`), и нужны только за подробностями.
 
 В развёрнутом проекте живёт раздел 1 — это и есть задание для его `<org>/infra`;
-разделы 2–4 касаются канонических шаблонов экосистемы и проекту не нужны.
+разделы 2–3 касаются канонических шаблонов экосистемы и проекту не нужны.
 
 ## Сервис `site` одним экраном
 
@@ -47,10 +47,9 @@
 
 | # | репозиторий | что делается | зачем в этом порядке |
 |---|---|---|---|
-| 1 | `corp-infra-template` | карта экосистемы: `docs/ecosystem.md`, абзац в `.claude/rules/crowdsec-whitelist.md` | остальные репо ссылаются на неё как на канон |
-| 2 | `project-infra-template-compose` | `compose/site.yml`, edge, дефекты, скрипты, правила, доки, скиллы | без неё первый деплой невозможен |
-| 3 | `spa-frontend-template` | соседство, `infra-svc`, починка команды сборки в `/release` | косметика + один реальный баг |
-| 4 | `stit-public` | витрина: README, `docs/roadmap.md`, `docs/templates.md` | публичный слой — последним, по факту |
+| 1 | `project-infra-template-compose` | `compose/site.yml`, edge, дефекты, скрипты, правила, доки, скиллы | без неё первый деплой невозможен |
+| 2 | `spa-frontend-template` | соседство, `infra-svc`, починка команды сборки в `/release` | косметика + один реальный баг |
+| 3 | `stit-public` | витрина: README, `docs/roadmap.md`, `docs/templates.md` | публичный слой — последним, по факту |
 
 ---
 
@@ -343,8 +342,7 @@ accessLog:
   делать** — UA подделывается.
 - **AI-краулеры — продуктовое решение, а не гигиена.** `ClaudeBot`, `GPTBot`, `CCBot`,
   `meta-externalagent` — источник трафика из ответов LLM; на индексируемом сайте они
-  управляются `AI_TRAINING` в `robots.txt` сервиса, а не баном на edge. Корп-сценарий
-  `commercial-crawlers.yaml` в проектный стек не копируется.
+  управляются `AI_TRAINING` в `robots.txt` сервиса, а не баном на edge.
 
 ### 1.6 Остальные файлы репозитория
 
@@ -402,35 +400,7 @@ curl -s   https://<domain>/ | grep -c __site_origin__      # 0 — плейсх�
 
 ---
 
-## 2. `corp-infra-template`
-
-`docs/ecosystem.md` — канон карты экосистемы, поэтому идёт первым.
-
-- **Диаграмма**: рядом с `<org>/backend`, `<org>/frontend`, `<org>/<bot>` появляется
-  `<org>/site ← ssr-frontend-template` (Astro, один Node-образ, static-first,
-  индексируемый сайт на корне `${DOMAIN}`).
-- **Identity per repo**: строка `stit-core/ssr-frontend-template` — «шаблон
-  индексируемого сайта: контент, который должен находиться в поиске, отдаётся первым
-  HTML-ответом; форкается в `<client-org>/site`». Счёт семейства пересобирается:
-  7 форкаемых шаблонов + 3 общие библиотеки = 10 репозиториев.
-- **Канонические контракты → Image registry**: в перечислении `<SVC>_TAG` (`BACKEND_TAG`,
-  `FRONTEND_TAG`, `BOT_TAG`) появляется `SITE_TAG`; rollout — `make bump SVC=site`.
-- **Skill index**: `/release` дополняется `ssr-frontend-template`; добавляются строки
-  `/seo-audit` и `/content` (оба — `ssr-frontend-template`); в строке
-  `/init-service`, `/stack-deep-dive`, `/de-template`, `/scaffold` перечень репо
-  дополняется тем же шаблоном.
-- **Happy path онбординга**: в списке форков — опциональный
-  `ssr-frontend-template → <org>/site`.
-- `.claude/rules/crowdsec-whitelist.md` — абзац «поисковые и AI-краулеры на
-  индексируемых поверхностях»: верифицированные боты (forward-confirmed rDNS) не банятся
-  никогда; AI-краулеры — продуктовое решение, на стороне сайта оно выражается
-  `AI_TRAINING` в `robots.txt`; корп-сценарий `commercial-crawlers.yaml` в проектные
-  стеки не копируется.
-
-Текст ролей и границы «сайт vs приложение за логином» берётся из
-`docs/reference/ecosystem.md` репозитория `<org>/site`.
-
-## 3. `spa-frontend-template`
+## 2. `spa-frontend-template`
 
 - `docs/reference/ecosystem.md` — счёт форкаемых шаблонов; в sibling-дереве появляется
   `site/ ← ssr-frontend-template`; абзац «когда SPA, когда сайт»: страницы под поиск —
@@ -444,22 +414,21 @@ curl -s   https://<domain>/ | grep -c __site_origin__      # 0 — плейсх�
   образец — одноимённый файл в `<org>/site`.
 - `.claude/skills/release/SKILL.md` — **баг команды сборки**: `docker buildx build -t
   <registry>/<org>/frontend:vX.Y.Z --push .` не находит Dockerfile (он в `docker/`, в
-  корне его нет) и не передаёт секрет, которого требует `docker/Dockerfile`
-  (`--mount=type=secret,id=npmrc`). Правильная форма:
+  корне его нет) и не передаёт секрет `npmrc`, который монтирует `docker/Dockerfile`
+  (`--mount=type=secret,id=npmrc`). Форма как у `/release` этого репо:
 
   ```bash
   docker buildx build -f docker/Dockerfile --secret id=npmrc,src="$HOME/.npmrc" \
     -t <registry>/<org>/frontend:vX.Y.Z --push .
   ```
 
-## 4. `stit-public`
+## 3. `stit-public`
 
 - `README.md` — таблица форкаемых шаблонов: добавить `ssr-frontend-template`
   (индексируемый сайт: Astro · Node · FSD · SEO-гейт, статус «готов») и
   `telegram-bot-template`; счётчик шаблонов в заголовке пересобрать. Колонки «Стек»
   сверить с реальностью репозиториев: у проектной инфры — Traefik · CrowdSec · Postgres
-  · MinIO · restic; у корп-control-plane — Gitea (registry) · Authentik (SSO) ·
-  Vaultwarden · MinIO · ntfy.
+  · MinIO · restic.
 - `docs/roadmap.md` — `ssr-frontend-template` переезжает в «Готово»;
   `landing-template` из плана снимается: лендинг — тот же шаблон сайта, из которого
   `/de-template` вычищает лишнее (отдельной механики пресетов нет).
@@ -477,5 +446,4 @@ curl -s   https://<domain>/ | grep -c __site_origin__      # 0 — плейсх�
 | Источник CrowdSec acquisition | A — файл access-log в общем volume; B — docker-источник через сокет | B проще в эксплуатации (нет файла и ротации), A — меньше прав у контейнера |
 | Включение staging-контура | переменная `SITE_EDGE_EXTRA_MW` в `.env` среды; отдельный compose-оверрайд | переменная: не плодит файлов и проходит `make validate` |
 | Судьба заглушки на корне | прунить `compose/landing.yml` при развороте сайта; переименовать сервис в `placeholder`, чтобы имя не путали с продуктовым лендингом | прунить; переименование трогает скрипты и доки инфры |
-| `@stit/ui` в карте экосистемы | оставить как зависимость SPA-шаблона; снять упоминания везде | решается вне этого контракта: сайт дизайн-системы не импортирует, SPA — импортирует |
 | Профиль памяти `site` | 512 МБ / `--max-old-space-size=384`; 768 МБ / 576 при рендере с кешем процесса | 512 МБ: картинки оптимизируются на сборке, рантайм отдаёт готовый HTML |

@@ -1,6 +1,6 @@
 ---
 description: Безопасность рендера в трёх моментах — сборка (секреты не в клиенте, build-time значения), запрос (request-only API не в prerender, модульное состояние не в on-demand, prerender=false только с записью в rendering.md и Cache-Control), остров (server islands не для индексируемого).
-globs: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
+paths: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
 ---
 
 # Render-safety
@@ -57,10 +57,14 @@ globs: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
 
 ## Конфиг
 
-`astro.config.ts`: `output: 'static'`, `build.format: 'directory'`, `trailingSlash: 'never'`,
-`session: false`, `prefetch: false`, `experimentalDisableStreaming: true`; `cache`/`routeRules`
-не задаются — рецепт D (`cached`) описан в `docs/reference/rendering.md` и включается решением
-проекта, не шаблона.
+`astro.config.ts`: `output: 'static'`, `build.format: 'directory'` (`'file'` с node-адаптером
+отдаёт 404 на `/blog` и `/en`), `trailingSlash: 'never'`, `session: false` (fs-драйвер сессий
+пишет в cacheDir), `prefetch: false` и без `<ClientRouter/>` (без островов — ни байта JS),
+`experimentalDisableStreaming: true`, `markdown.syntaxHighlight: false` (Shiki инлайнит сырые
+цвета мимо токен-слоя), плагин `yaml-modules` (`content/*.yaml` → данные на сборке);
+`cache`/`routeRules` не задаются — рецепт D (`cached`) описан в `docs/reference/rendering.md` и
+включается решением проекта, не шаблона. Интеграций `@astrojs/react` (фреймворк островов ради
+одного переключателя) и `@astrojs/sitemap` (строит URL от build-time origin) нет.
 
 Два значения там же живут ради единственного POST-маршрута: `security.checkOrigin: false`
 (за прокси адаптер строит URL запроса как `http://<Host>` — origin сверяет `contact-form` с

@@ -1,6 +1,6 @@
 ---
 name: de-template
-description: Развернуть форк ssr-frontend-template в самостоятельный сайт по stable-артефактам — локальный docs/stack + FSD-карта из соседнего <org>/strategy (docs/projects/<slug>/fsd/<surface>/) — переименовать пакет, подставить идентичность сайта и реквизиты оператора в политику ПДн, переписать README, вычистить демо-контент и лишнюю часть reference-набора. Активируй когда юзер форкнул шаблон и говорит "/de-template", "разверни фундамент", "де-темплейтизируй", "сделай из шаблона свой сайт", или когда init-service дошёл до этапа 3 (FSD-карта в strategy + стек stable). Движок skill-only: и механика, и wiring — reviewable edits под этой процедурой. НЕ запускать на каноническом репозитории шаблона.
+description: Развернуть форк ssr-frontend-template в самостоятельный сайт по stable-артефактам (локальный docs/stack и FSD-карта из соседнего <org>/strategy, docs/projects/<slug>/fsd/<surface>/) — переименовать пакет, подставить идентичность сайта и реквизиты оператора в политику ПДн, переписать README, вычистить демо-контент и лишнюю часть reference-набора. Применяй один раз на форке, когда стек и нужные записи FSD-карты stable и юзер хочет превратить шаблон в свой сайт, или когда /init-service доходит до этапа 3. Механика — правки под этой процедурой с показом диффа, отдельного скрипта нет. На каноническом репозитории шаблона не запускается.
 ---
 
 # Skill: de-template (движок развёртывания)
@@ -30,8 +30,9 @@ FSD-карту поверхности из соседнего `<org>/strategy`
 ## Gate (проверить ДО любых правок)
 
 1. **Не канонический шаблон.** `package.json#name` ещё
-   `@stit/ssr-frontend-template` **и** каталог — не форк/тест-копия → СТОП, спроси
-   юзера явно подтвердить.
+   `@stit/ssr-frontend-template` **и** `git remote get-url origin` указывает на
+   `stit-core/ssr-frontend-template` → СТОП: это канонический репо или его копия, спроси
+   юзера явно подтвердить (допустимо только для одноразовой тест-копии).
 
 2. **Артефакты stable.** Все обязательные kinds и все заведённые условные:
    ```bash
@@ -163,15 +164,19 @@ strategy; врезки «это страница шаблона» удали. Т
 - `docs/reference/kinship.md`, `scripts/kin-diff.mjs`, `package.json#scripts.kin:diff`
   и строки о них в `README.md`/`CLAUDE.md`/`docs/README.md`/`docs/reference/ecosystem.md` —
   удалить: родство двух канонических шаблонов проекта не касается
-- `docs/reference/ecosystem.md` — оставить соседей и контракты (strategy, infra, registry,
-  handoff), убрать разделы про родство шаблонов и «шаблон vs проект»
-- `docs/research/**` — удалить: исследование, из которого вырос шаблон, не часть проекта
+- `docs/reference/ecosystem.md` — оставить таблицу «сайт или приложение за логином», соседей,
+  флоу и контракты (strategy, infra, registry, handoff), «этот шаблон» переписать на «этот
+  сайт»; убрать разделы «Родство с `spa-frontend-template`» и «Шаблон vs проект». Имена
+  шаблонов в карте соседей остаются: это происхождение форков
+- `docs/research/**` — удалить: исследование, из которого вырос шаблон, не часть проекта;
+  вместе с ним — ссылки на него в `.claude/rules/seo-invariants.md` и
+  `docs/reference/rendering.md`
 - `.claude/skills/{init-service,de-template}` — удалить: одноразовые скиллы онбординга
   отработали, а их триггеры («свежий форк») на развёрнутом проекте только мешают.
   Остальные (`smartdev`, `plan`, `stack-deep-dive`, `scaffold`, `content`, `seo-audit`,
   `release`) остаются — это рабочий инструмент проекта
-- `.claude/plans/roadmap.md` — сбросить к пустому (`## Active` без секций, `## Backlog`
-  со своими задачами): история шаблона — не история проекта
+- `.claude/plans/` — без планов шаблона: только `backlog.md` (пустой или со своими задачами);
+  планы шаблона — не планы проекта
 - `CLAUDE.md` — снять упоминания «шаблон» там, где речь о проекте; правила, команды и
   инварианты остаются: они и есть то, ради чего форк брали
 - `SECURITY.md` — контакт и скоуп свои
@@ -180,7 +185,8 @@ strategy; врезки «это страница шаблона» удали. Т
 
 По stable-записям FSD-карты чейнить `/scaffold`:
 
-- `entities.md` → `/scaffold collection` (коллекция контента) либо `entity`
+- `entities.md` → `/scaffold collection` (сущность с контентом); сущность без контента (как
+  `entities/company`) — вручную по rule `fsd-architecture`
 - `pages.md` → `/scaffold page` (ru + en) и `/scaffold route` (служебный маршрут)
 - `features.md` → `/scaffold feature`
 - `widgets.md` → `/scaffold widget`
@@ -195,5 +201,6 @@ grep -rniE 'ssr-frontend-template|@stit/' --include='*.ts' --include='*.astro' -
 pnpm check
 ```
 
-Зелёный `pnpm check`, ни одного плейсхолдера, ни одного упоминания шаблона →
+Зелёный `pnpm check`, ни одного плейсхолдера, а шаблон упоминается только как
+происхождение форка (карта соседей в `docs/reference/ecosystem.md`, `infra-handoff.md`) →
 сообщи юзеру: онбординг закрыт, дальше `/smartdev` → `/plan` → `/scaffold` → `/content`.

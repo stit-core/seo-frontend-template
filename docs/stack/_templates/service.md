@@ -33,7 +33,7 @@ status: draft
 Sibling-checkout'ы форков одной org (`~/git/<org>/…`):
 
 - strategy: `git.stit.tech/<org>/strategy` — design SoT; поля резолва ниже
-- infra: `git.stit.tech/<org>/infra` — деплой-звено (rollout: `make bump SVC=site TAG=` там)
+- infra: `git.stit.tech/<org>/infra` — runtime проекта и операционный хаб (rollout: `make bump SVC=site TAG=` там)
 - backend: `git.stit.tech/<org>/backend` (если сайт берёт данные извне)
 - frontend: `git.stit.tech/<org>/frontend` — приложение за логином (если есть)
 

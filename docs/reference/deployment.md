@@ -11,11 +11,15 @@ docker build -f docker/Dockerfile --secret id=npmrc,src=$HOME/.npmrc \
   -t <registry>/<org>/site:<tag> .
 ```
 
+Без `~/.npmrc` флаг `--secret` убирают: buildx падает на отсутствующем файле секрета, а
+Dockerfile монтирует его необязательно.
+
 Стадии `docker/Dockerfile`:
 
 - **build** — corepack + pnpm 10, `pnpm install --frozen-lockfile --ignore-scripts` (store
-  через `--mount=type=cache`, приватный registry через `--mount=type=secret,id=npmrc`;
-  скрипты зависимостей сборке не нужны, а `prepare` → `lefthook install` требует git),
+  через `--mount=type=cache`, `~/.npmrc` оператора — через необязательный
+  `--mount=type=secret,id=npmrc`; скрипты зависимостей сборке не нужны, а `prepare` →
+  `lefthook install` требует git),
   `pnpm build` без `SITE_URL` — `astro.config.ts` подставляет плейсхолдер
   `https://__site_origin__`
 - **prod-deps** — `pnpm install --prod --ignore-scripts` + прунинг build-машинерии,
@@ -172,11 +176,7 @@ DIST_DIR=dist SITE_URL=http://localhost:3000 sh docker/entrypoint.sh pnpm start
 
 ## Release handoff
 
-CI-runner'а в экосистеме нет; build + push делает разработчик:
-
-1. `docker buildx build -f docker/Dockerfile --secret id=npmrc,src=$HOME/.npmrc
-   -t <registry>/<org>/site:vX.Y.Z --push .`
-2. INFRA-HANDOFF: rollout выполняет `<org>/infra` — `make bump SVC=site TAG=vX.Y.Z`
-   (правит `SITE_TAG` в `.env` VPS + force-recreate)
-
-CD — задача `infra/` репо; отсюда деплой-команды не запускаются.
+CI-runner'а в экосистеме нет: сборку, приёмку (`pnpm accept:image`), тег и пуш образа делает
+разработчик по `/release` (`.claude/skills/release/SKILL.md`). Выкатку выполняет `<org>/infra` —
+`make bump SVC=site TAG=vX.Y.Z` (правит `SITE_TAG` в `.env` VPS + force-recreate); отсюда
+деплой-команды не запускаются.

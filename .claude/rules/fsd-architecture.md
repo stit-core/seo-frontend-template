@@ -1,6 +1,6 @@
 ---
 description: FSD под Astro — слои, навязанные entry, public API, server-only, размещение; границы держит ESLint.
-globs: ["src/**/*.ts", "src/**/*.astro", "steiger.config.ts", "eslint.config.js", ".gate-fixtures/**"]
+paths: ["src/**/*.ts", "src/**/*.astro", "steiger.config.ts", "eslint.config.js", ".gate-fixtures/**"]
 ---
 
 # FSD-архитектура (Astro)
@@ -12,7 +12,8 @@ app → pages → widgets → features → entities → shared
 ```
 
 - `app` и `shared` — sliceless (слой == слайс); остальные — слайсы, **между слайсами
-  одного слоя импорт запрещён**
+  одного слоя импорт запрещён**: общее поднимается в `entities`/`shared` или
+  композируется в widget/page
 - **Единственный импорт вверх**: страница импортирует документ-шелл `app/layouts/*` —
   Astro не оборачивает страницы снаружи. `app/layouts` не импортирует `pages`; остальной
   `app` из `pages` недоступен (policy в `eslint.config.js`)
