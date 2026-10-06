@@ -21,6 +21,8 @@
     "printf 'exit 0\\n' > .git/hooks/pre-push",
     "cat > lefthook-local.yml <<'EOF'\npre-push:\n  skip: true\nEOF",
     "cp /tmp/x .git/hooks/pre-commit",
+    "sed -i 's/run/true/' .git/hooks/pre-push",
+    "perl -pi -e 's/run/true/' .git/hooks/pre-push",
     "git push --force origin main",
     "git push origin main --force-with-lease",
     "git push -f origin main",
@@ -33,7 +35,9 @@
     "sh -c 'git commit -n -m wip'",
     "bash -lc \"LEFTHOOK=0 git push\"",
     "bash -c -- \"git commit -n -m wip\"",
-    "eval \"LEFTHOOK=0 git push\""
+    "eval \"LEFTHOOK=0 git push\"",
+    "bash <<'EOF'\ngit push --no-verif\nEOF",
+    "sh -s <<EOF\nLEFTHOOK=0 git push\nEOF"
   ],
   "allow": [
     "git commit -m \"fix: x\"",
@@ -52,6 +56,8 @@
     "pnpm exec lefthook install",
     "LEFTHOOK_VERBOSE=1 lefthook run pre-push",
     "cat .git/hooks/pre-push",
+    "sed -n '1,20p' .git/hooks/pre-push",
+    "sed -i 's/a/b/' src/x.ts",
     "grep -rn \"core.hooksPath\" docs",
     "git log --oneline -n 5",
     "git stash push -m wip",
@@ -62,6 +68,7 @@
     "bash -c \"echo ok\"",
     "bash -c 'pnpm -s lint'",
     "bash -lc \"pnpm -s check\"",
+    "bash <<'EOF'\npnpm -s lint\nEOF",
     "eval \"$(fnm env)\""
   ]
 }

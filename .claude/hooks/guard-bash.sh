@@ -5,10 +5,14 @@
 # Блокирует: git commit с -n; git с --no-veri… (любая подкоманда); git push с --force…, -f или
 # +refspec; core.hooksPath и переменные lefthook, которые выключают или подменяют хук (LEFTHOOK,
 # LEFTHOOK_EXCLUDE, LEFTHOOK_BIN, LEFTHOOK_CONFIG), в команде с git или lefthook; lefthook
-# uninstall; запись в .git/hooks и в lefthook-local (rm, mv, chmod… или перенаправление).
+# uninstall; запись в .git/hooks и в lefthook-local (rm, mv, chmod…, sed -i, perl -i или
+# перенаправление).
 # Команда проверяется построчно; тела heredoc — данные (сообщение коммита может упоминать
-# флаги); флаги и переменные в строках в кавычках не ищутся, кроме тела `bash -c "…"` и
-# `eval "…"`. Это страховка от «удобного» обхода, а не от обфускации (`echo … | bash`, алиасы).
+# флаги), кроме тела, которое читает оболочка (`bash <<EOF`, `sh -s <<EOF`); флаги и переменные
+# в строках в кавычках не ищутся, кроме тела `bash -c "…"` и `eval "…"`. Это страховка от
+# «удобного» обхода, а не от обфускации. Пределы: конвейер и here-string в оболочку
+# (`echo … | bash`, `bash <<<`), оболочка с аргументами перед heredoc (`bash -s -- x <<EOF`),
+# другие интерпретаторы (`python -c`, `awk -i inplace`), алиасы, путь к хуку от `cd .git/hooks`.
 # Сценарии — .gate-fixtures/guard.json, их держит pnpm check:gate.
 set -uo pipefail
 
@@ -21,12 +25,18 @@ block() {
 raw=$(sed -nE 's/.*"command"[[:space:]]*:[[:space:]]*"(([^"\\]|\\.)*)".*/\1/p' | head -n 1)
 cmd=$(printf '%b' "$(printf '%s' "$raw" | sed 's/\\"/"/g')")
 
-# Без тел heredoc: от строки с `<<WORD` до строки-терминатора WORD.
+# Без тел heredoc (от строки с `<<WORD` до строки-терминатора WORD), кроме тела, которое читает
+# оболочка с одними флагами: `bash <<EOF` — та же команда, что `bash -c "…"`.
 text=$(printf '%s\n' "$cmd" | awk '
-    body != "" { line = $0; sub(/^\t+/, "", line); if (line == body) body = ""; next }
+    body != "" {
+        line = $0; sub(/^\t+/, "", line)
+        if (line == body) body = ""; else if (shell) print
+        next
+    }
     { print }
     match($0, /(^|[^<])<<-?[ \t]*["'\'']?[A-Za-z_][A-Za-z0-9_]*/) {
         body = substr($0, RSTART, RLENGTH); sub(/^[^<]*<<-?[ \t]*["'\'']?/, "", body)
+        shell = $0 ~ /(^|[;&|(`\/ \t])(ba|z|da)?sh([ \t]+-[-a-zA-Z]*)*[ \t]*<</
     }')
 
 # `bash -c "…"` (и `-lc`, `-c --`), `sh -c '…'`, `eval "…"` — та же команда: кавычки обёртки
@@ -48,10 +58,15 @@ if [[ $(printf '%s' "$text" | tr '[:upper:]' '[:lower:]') == *core.hookspath* &&
 fi
 
 # Хук и его локальная подмена живут вне диффа: запись туда — тот же обход, что uninstall.
+# `sed -i` и `perl -i` — тоже запись: так правят файл, когда Edit закрыт deny.
 re_hooks='(\.git/hooks|lefthook-local)'
-re_write="(^|[;&|(\`[:space:]])(rm|mv|cp|chmod|ln|unlink|truncate|tee|install)[[:space:]][^;&|]*$re_hooks"
+re_start='(^|[;&|(`[:space:]])'
+re_write="$re_start(rm|mv|cp|chmod|ln|unlink|truncate|tee|install)[[:space:]][^;&|]*$re_hooks"
+re_inplace="$re_start(sed|perl)([[:space:]][^;&|]*)?[[:space:]]-(-in-place|[a-zA-Z0-9]*i)[^;&|]*$re_hooks"
 re_redirect=">[[:space:]]*[^;&|[:space:]]*$re_hooks"
-if [[ $text =~ $re_write || $text =~ $re_redirect ]]; then block "запись в .git/hooks или lefthook-local"; fi
+if [[ $text =~ $re_write || $text =~ $re_inplace || $text =~ $re_redirect ]]; then
+    block "запись в .git/hooks или lefthook-local"
+fi
 
 # Флаги git ищем вне кавычек, по сегментам: строки (с учётом `\` в конце) и части между
 # ; & | ( ) и обратными кавычками.

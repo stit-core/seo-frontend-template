@@ -58,9 +58,11 @@ ESLint, Steiger и Biome гоняются из этого каталога по 
 
 Сценарии guard-хука Claude Code (`.claude/hooks/guard-bash.sh`): `block` — обходы git-хуков и
 force-push (`git commit -n`, `--no-veri…`, `core.hooksPath`, `LEFTHOOK=0`, `LEFTHOOK_EXCLUDE`,
-`lefthook uninstall`, запись в `.git/hooks` и `lefthook-local`), каждому — отказ с кодом 2;
-`allow` — обычная работа (коммит с heredoc-сообщением, `--amend`, `git worktree add/remove`,
-`git restore`, push без force, `lefthook install`), каждой — пропуск. Пустой `block` — красный.
+`lefthook uninstall`, запись в `.git/hooks` и `lefthook-local`, в том числе `sed -i` и `perl -i`) —
+и они же в теле `bash -c`, `eval` и heredoc оболочке, каждому — отказ с кодом 2; `allow` — обычная
+работа (коммит с heredoc-сообщением, `--amend`, `git worktree add/remove`, `git restore`, push без
+force, `lefthook install`, чтение хука, `sed -i` по коду, heredoc оболочке с обычной командой),
+каждой — пропуск. Пустой `block` — красный.
 
 ## Как менять
 

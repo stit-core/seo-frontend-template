@@ -13,6 +13,8 @@ coverage
 !.env.example
 
 .claude/settings.local.json
+# Worktree агентов Claude Code — свой checkout, не часть дерева: префлайт pre-push требует чистое.
+/.claude/worktrees/
 
 .DS_Store
 *.log
