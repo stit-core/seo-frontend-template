@@ -156,7 +156,11 @@ Prerender происходит на сборке, а канонический or
   путь — 204) и `POST /internal/cache/flush` (тот же секрет, счётчик сброшенных ключей): только
   POST, константное сравнение подписи, rate-limit, `noindex`, вне sitemap;
 - публичный `Cache-Control: no-cache` на кешированный HTML — провайдер его не ставит;
-- `X-Cache: HIT | STALE | MISS | BYPASS` наружу (провайдер даёт `X-Astro-Cache`).
+- `X-Cache: HIT | STALE | MISS | BYPASS` наружу (провайдер даёт `X-Astro-Cache`);
+- список индексируемых `cached`-маршрутов в политике сборки `scripts/lib/site-policy.mjs` (рядом
+  с `NOINDEX_ROUTES`) и его чтение в двух проверках HTTP-набора: «HTML on-demand маршрута — только
+  с `noindex`» (`e2e/http/service.spec.ts`) и «карта сайта = индексируемые страницы `dist/client`»
+  (`e2e/http/seo.spec.ts`). Индексируемую on-demand страницу без строки в этом списке гейт роняет.
 
 **Ограничения** (цифры — spike, `docs/research/ssr/round2/08-spike-astro.md` §5, §7.5–7.6):
 

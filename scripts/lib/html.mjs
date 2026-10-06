@@ -1,11 +1,44 @@
 // Разбор прод-HTML для гейтов и e2e: значения атрибутов раскодированы из HTML-сущностей,
 // <meta>/<link> из <head> — объекты атрибутов (порядок атрибутов в разметке не важен).
-const ENTITIES = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'" }
 
-// Один проход: `&amp;lt;` — это литерал `&lt;`, а не `<`.
+// Именованные сущности, которые печатает Astro и пишут руками: служебные HTML и типографика —
+// пробелы, кавычки, тире. Числовые (`&#160;`, `&#x202F;`) раскодируются все.
+/** @type {Record<string, string>} */
+const ENTITIES = {
+  amp: '&',
+  lt: '<',
+  gt: '>',
+  quot: '"',
+  apos: "'",
+  nbsp: ' ',
+  thinsp: ' ',
+  ensp: ' ',
+  emsp: ' ',
+  laquo: '«',
+  raquo: '»',
+  bdquo: '„',
+  ldquo: '“',
+  rdquo: '”',
+  lsquo: '‘',
+  rsquo: '’',
+  mdash: '—',
+  ndash: '–',
+  minus: '−',
+  hellip: '…',
+  middot: '·',
+  times: '×',
+  copy: '©',
+  numero: '№',
+}
+
+// Один проход: `&amp;lt;` — это литерал `&lt;`, а не `<`; незнакомая сущность остаётся как есть.
 /** @param {string} value */
 export const decode = (value) =>
-  value.replace(/&(?:amp|lt|gt|quot|#39);/g, (entity) => ENTITIES[entity])
+  value.replace(/&(?:#(\d+)|#x([\da-f]+)|([a-z]+));/gi, (entity, dec, hex, name) => {
+    if (name !== undefined) return ENTITIES[name] ?? entity
+    const code = dec !== undefined ? Number.parseInt(dec, 10) : Number.parseInt(hex, 16)
+    return code <= 0x10ffff ? String.fromCodePoint(code) : entity
+  })
 
 /** @typedef {Record<string, string>} HeadTag */
 
