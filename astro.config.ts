@@ -1,6 +1,7 @@
 import { fileURLToPath } from 'node:url'
 import node from '@astrojs/node'
 import tailwindcss from '@tailwindcss/vite'
+import type { AstroIntegration } from 'astro'
 import { defineConfig } from 'astro/config'
 import { load } from 'js-yaml'
 
@@ -22,8 +23,23 @@ const yamlModules = {
   },
 }
 
+// Endpoint изображений в собранном сайте закрыт (`src/pages/_image.ts` отвечает 404): картинки
+// оптимизирует сборка, а живой /_image — DoS по CPU и памяти. В `astro dev` он нужен самой
+// разработке — там страницы рендерятся на запрос, — поэтому подмена только для `astro build`.
+const closedImageEndpoint: AstroIntegration = {
+  name: 'closed-image-endpoint',
+  hooks: {
+    'astro:config:setup': ({ command, updateConfig }) => {
+      if (command === 'build') {
+        updateConfig({ image: { endpoint: { entrypoint: './src/pages/_image.ts' } } })
+      }
+    },
+  },
+}
+
 export default defineConfig({
   site: process.env.SITE_URL,
+  integrations: [closedImageEndpoint],
   output: 'static',
   // Дефолтный лимит тела у адаптера — 1 ГиБ, а разбор формы буферизует тело в heap процесса
   // (`--max-old-space-size=384`): предел на порядок ниже потолка памяти. Свой, куда более

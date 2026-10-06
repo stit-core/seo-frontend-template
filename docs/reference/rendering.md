@@ -11,7 +11,7 @@ Static-first: страница предрендерится на сборке, �
 | режим | что значит | `Cache-Control` | здесь |
 |---|---|---|---|
 | `static` | HTML собран на `astro build` (`dist/client/<path>/index.html`); отдаёт статик-хендлер адаптера до приложения | `public, max-age=0` + `ETag` + `Last-Modified` (адаптер) — браузер перепроверяет и получает 304 | все контентные страницы |
-| `dynamic` | рендер на каждый запрос, кеш процесса запрещён; проходит через `app/middleware` | публичный (404, 410) — `no-cache`, умолчание middleware; живой/персональный — `private, no-store`, ставит роут; crawler-файлы — короткий `public, max-age` роута | `404`, `/healthz`, `/now`, `robots.txt`, `sitemap.xml`, `rss.xml`, `/<INDEXNOW_KEY>.txt`; сюда же относятся обработчики форм `api/*` |
+| `dynamic` | рендер на каждый запрос, кеш процесса запрещён; проходит через `app/middleware` | публичный (404, 410) — `no-cache`, умолчание middleware; живой/персональный — `private, no-store`, ставит роут; crawler-файлы — короткий `public, max-age` роута | `404`, `/healthz`, `/now`, `robots.txt`, `sitemap.xml`, `rss.xml`, `/<INDEXNOW_KEY>.txt`, закрытый `/_image`; сюда же относятся обработчики форм `api/*` |
 | `cached` | рендер на запрос + кеш процесса (TTL + SWR) | `no-cache` | опция для контента из CMS/API — рецепт D ниже, кода в шаблоне нет |
 | `client` | каркас с сервера, данные на клиенте | `private, no-store` | нет и не планируется: приложение за логином — `spa-frontend-template` |
 
@@ -42,6 +42,7 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 | `/500` | `500.astro` (адаптер читает файл с диска при исключении в on-demand) | `static` | `public, max-age=0` + ETag | нет — `noindex` | нет |
 | `/now` | `now.astro` | `dynamic` | `private, no-store` (роут) | нет — `noindex` | нет |
 | `/healthz` | `healthz.ts` (endpoint) | `dynamic` | `no-store` (роут) | нет | нет |
+| `/_image` | `_image.ts` (endpoint изображений: маршрут вводит сам Astro, `image.endpoint` в `astro.config.ts` подменяет его для сборки; в `astro dev` — штатный) | `dynamic` | `no-cache` (роут) | — (404 текстом, `X-Robots-Tag: noindex`: картинки готовит сборка, трансформация на запрос наружу закрыта, на edge — тоже) | нет |
 | `/robots.txt` | `robots.txt.ts` (endpoint) | `dynamic` | `public, max-age=300` (роут) | — (текст; `X-Robots-Tag: noindex`) | нет |
 | `/sitemap.xml` | `sitemap.xml.ts` (endpoint) | `dynamic` | `public, max-age=3600` (роут) | — (`X-Robots-Tag: noindex`) | сам — карта |
 | `/rss.xml`, `/en/rss.xml` | `rss.xml.ts`, `en/rss.xml.ts` (endpoint, общий `_blog/feed.ts`) | `dynamic` | `public, max-age=600` (роут) | — (`X-Robots-Tag: noindex`) | нет |
@@ -149,8 +150,9 @@ git-контента D не нужен: публикация = релиз.
 - `cache: { provider: memoryCache({ max }) }` в `astro.config.ts`: ключ — origin + pathname +
   нормализованный query без трекинг-параметров; cookie и UA в ключ не входят; кешируется только
   GET без `Set-Cookie`;
-- `routeRules` с `maxAge` / `swr` / `tags` на кешируемые маршруты, **включая `/_image`** —
-  иначе каждая картинка проходит полный цикл sharp на запрос;
+- `routeRules` с `maxAge` / `swr` / `tags` на кешируемые маршруты; картинки контента из CMS —
+  открытый `/_image` (без подмены `image.endpoint` в `astro.config.ts` и блока на edge) с
+  `routeRule` и лимитом частоты, иначе каждая картинка проходит полный цикл sharp на запрос;
 - `Astro.cache.set({ maxAge, swr, tags })` там, где правило зависит от данных.
 
 **Что обязательно дописать.**

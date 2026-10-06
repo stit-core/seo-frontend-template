@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test'
 import { bodyOf, type HeadTag, headTags, isNoindex } from '../../scripts/lib/html.mjs'
 import { scriptViolations } from '../../scripts/lib/site-policy.mjs'
 import { SITE_ORIGIN_PLACEHOLDER } from '../../src/shared/config/runtime.ts'
+import { OG_DEFAULT_IMAGE } from '../../src/shared/config/site.ts'
 import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
 import { entries, onDemandRoutes, prerenderedPaths, redirects } from '../site'
 
@@ -84,6 +85,25 @@ test.describe('on-demand: ответы приложения', () => {
   }) => {
     for (const path of [UNKNOWN, ...onDemandRoutes()]) {
       expect(scriptViolations(await (await request.get(path)).text()), path).toEqual([])
+    }
+  })
+
+  // Картинки оптимизирует сборка; трансформация на запрос — CPU и память процесса для любого клиента.
+  test('/_image закрыт: 404 текстом на любую картинку, on-demand страницы на него не ссылаются', async ({
+    request,
+  }) => {
+    const home = await (await request.get('/')).text()
+    const built = /\/_astro\/[^"' ,]+\.(?:webp|avif|png|jpe?g)/.exec(home)?.[0]
+    const sources = [OG_DEFAULT_IMAGE.path, built, 'https://example.com/x.png']
+    for (const href of sources.filter((source) => source !== undefined)) {
+      const response = await request.get(
+        `/_image?href=${encodeURIComponent(href)}&w=1600&f=avif&q=100`,
+      )
+      expect(response.status(), href).toBe(404)
+      expect(response.headers()['content-type'], href).toContain('text/plain')
+    }
+    for (const path of [UNKNOWN, ...onDemandRoutes()]) {
+      expect(await (await request.get(path)).text(), path).not.toContain('/_image')
     }
   })
 

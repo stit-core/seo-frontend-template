@@ -67,7 +67,9 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
 `experimentalDisableStreaming: true`, `markdown.syntaxHighlight: false` (Shiki инлайнит сырые
 цвета мимо токен-слоя), плагин `yaml-modules` (`content/*.yaml` → данные на сборке);
 `cache`/`routeRules` не задаются — рецепт D (`cached`) описан в `docs/reference/rendering.md` и
-включается решением проекта, не шаблона. Интеграций `@astrojs/react` (фреймворк островов ради
+включается решением проекта, не шаблона. `image.endpoint` для `astro build` — `src/pages/_image.ts`
+(404): картинки оптимизирует сборка, трансформации на запрос наружу нет; в `astro dev` endpoint
+штатный. Интеграций `@astrojs/react` (фреймворк островов ради
 одного переключателя) и `@astrojs/sitemap` (строит URL от build-time origin) нет.
 
 Два значения там же живут ради единственного POST-маршрута: `security.checkOrigin: false`

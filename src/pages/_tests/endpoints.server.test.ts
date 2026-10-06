@@ -1,4 +1,5 @@
 import type { APIContext, APIRoute } from 'astro'
+import { ALL as imageEndpoint } from '../_image.ts'
 import { GET as indexNowKey } from '../[key].txt.ts'
 import { GET as feedEn } from '../en/rss.xml.ts'
 import { GET as healthz } from '../healthz.ts'
@@ -133,6 +134,16 @@ describe('ключ IndexNow', () => {
 
   it('ключ не задан: любой *.txt — 404', async () => {
     expect((await get(indexNowKey, { key: KEY })).status).toBe(404)
+  })
+})
+
+describe('/_image', () => {
+  it('endpoint изображений закрыт: 404 текстом без трансформации, вне индекса', async () => {
+    const response = await get(imageEndpoint)
+    expect([response.status, await response.text()]).toEqual([404, 'Not found'])
+    expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8')
+    expect(response.headers.get('cache-control')).toBe('no-cache')
+    expect(response.headers.get('x-robots-tag')).toBe('noindex')
   })
 })
 

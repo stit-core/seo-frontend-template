@@ -25,7 +25,7 @@ Dockerfile монтирует его необязательно.
 - **prod-deps** — `pnpm install --prod --ignore-scripts` + прунинг build-машинерии,
   которую `astro` тянет в `dependencies` (gnu-варианты rolldown / sharp-libvips /
   lightningcss / `@astrojs/compiler` / satteri, `@types/node`, `caniuse-lite`, `prismjs`):
-  выход Astro не self-contained, `entry.mjs` импортит `astro`/`zod`, `/_image` — `sharp`
+  выход Astro не self-contained, `entry.mjs` импортит `astro`/`zod`, сервис картинок — `sharp`
 - **runtime** — `node_modules` из prod-deps, `dist/`, `package.json`, `docker/{entrypoint.sh,
   stamp.mjs,server.mjs}`; `USER node`, `EXPOSE 3000`, `HEALTHCHECK wget …:${PORT:-3000}/healthz`,
   `ENTRYPOINT entrypoint.sh`, `CMD node ./docker/server.mjs`
@@ -134,7 +134,8 @@ prerendered-страница печатается на сборке, а обра
   главных, прикрываются `redirectRegex` на Traefik
 - **On-demand** (`prerender = false`: `/healthz`, `/now`, `/api/contact`, `robots.txt`,
   `sitemap.xml`, фиды `rss.xml` и `en/rss.xml`, `/<INDEXNOW_KEY>.txt`, `404.astro` — то есть
-  любой путь без статического файла; список держит карта `rendering.md`)
+  любой путь без статического файла, и закрытый `/_image` — 404 текстом; список держит карта
+  `rendering.md`)
   проходит через `app/middleware`: редиректы из
   `content/redirects.yaml` (301/308 с `Location`, query сохраняется; 410 с минимальным
   телом и `X-Robots-Tag: noindex`; один хоп, до роутинга), `X-Request-Id` (принимается или
@@ -166,6 +167,8 @@ prerendered-страница печатается на сборке, а обра
   канонический origin приложение берёт только из `SITE_URL`, а origin заявки сверяет с ним
   `features/contact-form` (`security.checkOrigin` Astro выключен — он отвечал бы 403 на любой
   POST формы из браузера)
+- `/_image` закрыт и на edge (роутер на `PathPrefix(/_image)` с отказом): приложение отвечает
+  404, но трансформация картинок на запрос не должна доходить до процесса
 - Тело запроса прокси ограничивает своим лимитом; приложение отвечает `413` на
   `Content-Length` больше 64 КБ и не читает такое тело, а `bodySizeLimit` адаптера —
   последний рубеж

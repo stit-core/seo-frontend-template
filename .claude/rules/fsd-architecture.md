@@ -24,7 +24,8 @@ app → pages → widgets → features → entities → shared
 Подпапки — сегменты URL, не слайсы (правила слайсов Steiger на `pages` выключены).
 Секции одной страницы — рядом, в `src/pages/_<name>/` (префикс `_` вне роутинга);
 widget — только при ≥ 2 страницах. Server route — `src/pages/<name>.ts` с
-`export const prerender = false`.
+`export const prerender = false`. `src/pages/_image.ts` — не секция, а обработчик маршрута
+`/_image`, который вводит сам Astro (`image.endpoint` в `astro.config.ts`).
 
 ## Навязанные Astro точки входа
 

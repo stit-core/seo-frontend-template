@@ -18,7 +18,7 @@ COPY . .
 RUN pnpm build
 
 # ── prod-deps ───────────────────────────────────────────────────────
-# Выход Astro не self-contained: entry.mjs импортит astro/zod, /_image — sharp.
+# Выход Astro не self-contained: entry.mjs импортит astro/zod, сервис картинок — sharp.
 # Ставим только dependencies.
 FROM node:24-alpine AS prod-deps
 

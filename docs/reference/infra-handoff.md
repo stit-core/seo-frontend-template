@@ -22,7 +22,8 @@
   его отдаёт статик-хендлер Node-адаптера со своими заголовками (`public, max-age=0` +
   `ETag`), **не доходя до кода приложения**. Рендер на запрос — только у служебных
   маршрутов: `404`, `/healthz`, `/now`, `/robots.txt`, `/sitemap.xml`, `/rss.xml`,
-  `/en/rss.xml`, `/<INDEXNOW_KEY>.txt`, `POST /api/contact`.
+  `/en/rss.xml`, `/<INDEXNOW_KEY>.txt`, `POST /api/contact`. Endpoint изображений Astro
+  `/_image` не обслуживается (404): картинки оптимизирует сборка.
 - **Один образ на все среды.** Сборка печёт в абсолютные URL плейсхолдер
   `https://__site_origin__`; при старте контейнера entrypoint заменяет его на `SITE_URL`
   в `/app/dist/client/**/*.{html,xml,txt}`, сохраняя mtime файлов (`Last-Modified` и ETag не
@@ -156,6 +157,16 @@ services:
       traefik.http.routers.site-form.middlewares: crowdsec@file,form-rate-limit@file,form-body-limit@file,secure-headers@file${SITE_EDGE_EXTRA_MW:-}
       traefik.http.routers.site-form.service: site
 
+      # /_image — endpoint изображений Astro: приложение отвечает 404 (картинки готовит сборка),
+      # а запрос на трансформацию не должен доходить до процесса — sharp на запрос это CPU и RAM.
+      traefik.http.routers.site-image.rule: Host(`${DOMAIN}`) && PathPrefix(`/_image`)
+      traefik.http.routers.site-image.priority: "100"
+      traefik.http.routers.site-image.entrypoints: websecure
+      traefik.http.routers.site-image.tls: "true"
+      traefik.http.routers.site-image.tls.certresolver: letsencrypt
+      traefik.http.routers.site-image.middlewares: crowdsec@file,deny-all@file
+      traefik.http.routers.site-image.service: site
+
       # www → apex одним 301, отдельным роутером: regexp не гоняется на apex-запросах.
       traefik.http.routers.site-www.rule: Host(`www.${DOMAIN}`)
       traefik.http.routers.site-www.entrypoints: websecure
@@ -254,6 +265,11 @@ redirection на entrypoint `web`) и добавляется `frameDeny: true`. 
       retry:
         attempts: 2
         initialInterval: 100ms
+
+    # Путь без внешнего доступа (/_image): 403 на edge, до процесса.
+    deny-all:
+      ipAllowList:
+        sourceRange: ["127.0.0.1/32"]
 
     # Не-прод контур: подключается через SITE_EDGE_EXTRA_MW в .env среды.
     staging-auth:
@@ -386,6 +402,7 @@ curl -sI  https://www.<domain>/                # ровно один 301 на ap
 curl -sI  https://<domain>/index.html          # 301 на /
 curl -sI  https://<domain>/<любая-страница>/   # 301 без слеша (хвостовой слеш срезается)
 curl -sI  https://<domain>/healthz             # 200, Cache-Control: no-store
+curl -sI 'https://<domain>/_image?href=/og-default.png&f=webp'   # 403 на edge (без него — 404 приложения)
 curl -s   https://<domain>/ | grep -c __site_origin__      # 0 — плейсхолдер проштампован
 ```
 
