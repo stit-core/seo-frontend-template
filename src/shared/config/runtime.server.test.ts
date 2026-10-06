@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import {
+  chmodSync,
   cpSync,
   existsSync,
   mkdirSync,
@@ -181,11 +182,27 @@ describe('docker/entrypoint.sh: SITE_URL по схеме, штамповка dis
     })
   })
 
-  it('без dist/client — отказ', () => {
-    withDist({}, (dist) => {
+  it('без выхода сборки — отказ: dist/client нет или он пуст (том поверх образа)', () => {
+    for (const files of [{}, { 'client/.keep': '' }]) {
+      withDist(files, (dist) => {
+        const result = run({ SITE_URL: 'https://demo.example', DIST_DIR: dist }, ['echo', 'up'])
+        expect(result.status, JSON.stringify(files)).toBe(1)
+        expect(result.stderr).toContain('[entrypoint]')
+        expect(result.stderr).toContain('build output is missing or empty')
+        expect(result.stdout).not.toContain('up')
+      })
+    }
+  })
+
+  // root пишет мимо прав файла: для него отказ записи так не воспроизвести.
+  const root = process.getuid?.() === 0
+  it.skipIf(root)('запись без прав — отказ строкой с причиной, без стека', () => {
+    withDist({ 'client/index.html': `<a href="${SITE_ORIGIN_PLACEHOLDER}/">` }, (dist) => {
+      chmodSync(join(dist, 'client/index.html'), 0o444)
       const result = run({ SITE_URL: 'https://demo.example', DIST_DIR: dist })
       expect(result.status).toBe(1)
-      expect(result.stderr).toContain('client')
+      expect(result.stderr).toContain('[entrypoint] cannot stamp index.html: EACCES')
+      expect(result.stderr).not.toMatch(/^\s+at /m)
     })
   })
 

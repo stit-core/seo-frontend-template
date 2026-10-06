@@ -30,8 +30,9 @@ paths: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/pl
   остался в любом файле `dist/client` (`DIST_DIR` — тот же скрипт для копии сборки в e2e,
   `e2e/serve.mjs`). `dist/server` не штампуется: on-demand маршруты берут origin из runtime
   `SITE_URL`
-- Штамповка пишет в `/app/dist/client` — сервис без `read_only: true` либо writable-bind
-  этого пути
+- Штамповка пишет в `/app/dist/client` образа — сервис без `read_only: true`, без `user:` и
+  без тома на этом пути; без `index.html` в `dist/client` (пустой bind) и при записи без прав
+  процесс не стартует — строка `[entrypoint]` с причиной
 - `SITE_URL` — ровно origin: схема `http(s)`, хост в нижнем регистре (IDN — punycode) и порт;
   путь, query, userinfo, пробелы и спецсимволы — отказ. Правило одно — поле схемы
   `shared/config/runtime.ts`

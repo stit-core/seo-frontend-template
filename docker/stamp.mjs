@@ -18,7 +18,11 @@ const fail = (message) => {
   process.exit(1)
 }
 
-if (!existsSync(client)) fail(`${client} not found: build output is missing`)
+// Выход сборки живёт в образе: пустой каталог на его месте (bind, tmpfs) поднял бы живой /healthz
+// без единой страницы.
+if (!existsSync(join(client, 'index.html'))) {
+  fail(`${client}/index.html not found: build output is missing or empty`)
+}
 
 // Origin проверяет та же схема, что и старт сервера (shared/config): строка уходит в разметку
 // дословно, а данные из env не исполняются — замена строкой, без sed и регулярных выражений.
@@ -51,8 +55,15 @@ for (const file of files) {
   // mtime сборки остаётся: от него Last-Modified и ETag статики, и рестарт не делает каждую
   // страницу «изменённой» для краулера. Повторный старт проштампованного выхода файлов не трогает.
   const { atime, mtime } = statSync(file)
-  writeFileSync(file, content.toString('utf8').split(SITE_ORIGIN_PLACEHOLDER).join(origin))
-  utimesSync(file, atime, mtime)
+  try {
+    writeFileSync(file, content.toString('utf8').split(SITE_ORIGIN_PLACEHOLDER).join(origin))
+    utimesSync(file, atime, mtime)
+  } catch (error) {
+    // EROFS, EACCES: read_only: true или чужой uid в compose — причина строкой, а не стеком.
+    fail(
+      `cannot stamp ${relative(client, file)}: ${error.code ?? error} — dist/client must be writable by the image user (no read_only: true, no user: override)`,
+    )
+  }
   stamped++
 }
 

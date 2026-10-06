@@ -44,8 +44,9 @@ docker run --rm -p 3000:3000 -e SITE_URL=https://example.com <image>
 
 Контейнер не стартует (код 1, сообщение с префиксом `[entrypoint]` / `[server]`), если
 любой ключ env не проходит схему (сообщение называет ключ и правило, значение не печатает),
-`SITE_URL` пуст, не origin вида `https://example.com`, равен плейсхолдеру сборки или после
-штамповки плейсхолдер где-то остался.
+`SITE_URL` пуст, не origin вида `https://example.com`, равен плейсхолдеру сборки, в
+`dist/client` нет `index.html`, файл не записать или после штамповки плейсхолдер где-то
+остался.
 
 ## Штамповка origin (`docker/entrypoint.sh` → `docker/stamp.mjs`)
 
@@ -65,8 +66,10 @@ docker run --rm -p 3000:3000 -e SITE_URL=https://example.com <image>
 
 - `DIST_DIR` (дефолт `/app/dist`) — тот же скрипт штампует копию локальной сборки в e2e (`e2e/serve.mjs`)
 - HTML на сборке **не предсжимается** — иначе плейсхолдер уедет внутрь `.br`/`.gz`
-- Штамповка перезаписывает файлы в `/app/dist/client`: сервис `site` в compose — без
-  `read_only: true`, либо этот путь — writable-bind
+- Штамповка перезаписывает выход сборки в `/app/dist/client` образа: сервис `site` в compose —
+  без `read_only: true`, без `user:` и без тома на этом пути. Пустой bind или tmpfs — код 1
+  (`index.html` в `dist/client` нет), именованный том отдал бы файлы прошлого релиза; запись без
+  прав — код 1 со строкой `[entrypoint] cannot stamp <файл>: <код ошибки>`
 
 ## Обёртка сервера (`docker/server.mjs`)
 
