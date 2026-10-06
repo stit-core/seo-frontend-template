@@ -50,10 +50,10 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   в `<Breadcrumbs>` (`widgets/breadcrumbs`, видимые), и в `jsonLd={[breadcrumbList(crumbs)]}`;
   `seo:check` проверяет форму блока там, где он есть (позиции с 1, абсолютные `item` у предков,
   последняя крошка — текущая страница), отсутствие блока — не ошибка
-- Фабрики `shared/seo/json-ld.ts` возвращают типизированные литералы; Zod-схема (абсолютные URL,
-  обязательные поля, календарные даты) проверяет выход каждой фабрики в `json-ld.test.ts`, а
-  `seo:check` — типы на реальном HTML. Размечается только видимое на странице: `dateModified` —
-  при `updatedDate`, `image` — при обложке
+- Фабрики `shared/seo/json-ld.ts` возвращают типизированные литералы; `json-ld.test.ts` сверяет
+  выход каждой фабрики полным объектом и Zod-схемой (абсолютные URL, обязательные поля,
+  календарные даты), а `seo:check` — типы на реальном HTML. Размечается только видимое на
+  странице: `dateModified` — при `updatedDate`, `image` — при обложке
 
 ## robots.txt, sitemap.xml, фиды, IndexNow (on-demand)
 

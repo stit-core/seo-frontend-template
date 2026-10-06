@@ -21,11 +21,25 @@ it('плейсхолдер origin согласован во всех файла�
   }
 })
 
+// Процесс под тестом обязан завершиться сам: сломанный fail-fast поднял бы сервер, и без
+// таймаута гейт висел бы вместо красного теста.
+const spawn = (command: string, args: string[], env: Record<string, string>) => {
+  const result = spawnSync(command, args, {
+    env: { PATH: process.env.PATH ?? '', ...env },
+    encoding: 'utf8',
+    timeout: 5_000,
+  })
+  if (result.error) throw result.error
+  return result
+}
+
 describe('docker/server.mjs: fail-fast до загрузки приложения', () => {
+  // Свободный порт на loopback: если сервер всё же поднимется, он никому не помешает.
   const run = (env: Record<string, string>) =>
-    spawnSync(process.execPath, [repoFile('docker/server.mjs')], {
-      env: { PATH: process.env.PATH ?? '', ...env },
-      encoding: 'utf8',
+    spawn(process.execPath, [repoFile('docker/server.mjs')], {
+      HOST: '127.0.0.1',
+      PORT: '0',
+      ...env,
     })
 
   it('не стартует без SITE_URL и с пустым SITE_URL', () => {
@@ -52,11 +66,8 @@ describe('docker/server.mjs: fail-fast до загрузки приложени�
 })
 
 describe('docker/entrypoint.sh: SITE_URL обязателен, штамповка dist/client', () => {
-  const run = (env: Record<string, string>) =>
-    spawnSync('sh', [repoFile('docker/entrypoint.sh'), 'true'], {
-      env: { PATH: process.env.PATH ?? '', ...env },
-      encoding: 'utf8',
-    })
+  const run = (env: Record<string, string>, command = ['true']) =>
+    spawn('sh', [repoFile('docker/entrypoint.sh'), ...command], env)
 
   const withDist = (files: Record<string, string>, fn: (dist: string) => void) => {
     const dist = mkdtempSync(join(tmpdir(), 'entrypoint-dist-'))
@@ -102,7 +113,7 @@ describe('docker/entrypoint.sh: SITE_URL обязателен, штамповк�
   it('штампует html/xml/txt в dist/client, dist/server не трогает, срезает все хвостовые слеши', () => {
     withDist(
       {
-        'client/index.html': `<link href="${SITE_ORIGIN_PLACEHOLDER}/en">`,
+        'client/index.html': `<link href="${SITE_ORIGIN_PLACEHOLDER}/en"><a href="${SITE_ORIGIN_PLACEHOLDER}/">`,
         'client/en/index.html': `<link href="${SITE_ORIGIN_PLACEHOLDER}/">`,
         'client/sitemap.xml': `<loc>${SITE_ORIGIN_PLACEHOLDER}/</loc>`,
         'client/robots.txt': `Sitemap: ${SITE_ORIGIN_PLACEHOLDER}/sitemap.xml`,
@@ -112,7 +123,9 @@ describe('docker/entrypoint.sh: SITE_URL обязателен, штамповк�
         const result = run({ SITE_URL: 'https://demo.example//', DIST_DIR: dist })
         expect(result.status, result.stderr).toBe(0)
         expect(result.stdout).toContain('stamped')
-        expect(read(dist, 'client/index.html')).toBe('<link href="https://demo.example/en">')
+        expect(read(dist, 'client/index.html')).toBe(
+          '<link href="https://demo.example/en"><a href="https://demo.example/">',
+        )
         expect(read(dist, 'client/en/index.html')).toBe('<link href="https://demo.example/">')
         expect(read(dist, 'client/sitemap.xml')).toBe('<loc>https://demo.example/</loc>')
         expect(read(dist, 'client/robots.txt')).toBe('Sitemap: https://demo.example/sitemap.xml')
@@ -145,6 +158,29 @@ describe('docker/entrypoint.sh: SITE_URL обязателен, штамповк�
       const again = run(env)
       expect(again.status, again.stderr).toBe(0)
       expect(read(dist, 'client/index.html')).toBe(stamped)
+    })
+  })
+
+  it('команда заменяет процесс entrypoint (exec): сигналы контейнера доходят до node', () => {
+    withDist({ 'client/index.html': '' }, (dist) => {
+      const result = run({ SITE_URL: 'https://demo.example', DIST_DIR: dist }, [
+        'sh',
+        '-c',
+        'echo "pid=$$"',
+      ])
+      expect(result.status, result.stderr).toBe(0)
+      expect(result.stdout).toContain(`pid=${result.pid}`)
+    })
+  })
+
+  it('код выхода команды — код выхода контейнера', () => {
+    withDist({ 'client/index.html': '' }, (dist) => {
+      const result = run({ SITE_URL: 'https://demo.example', DIST_DIR: dist }, [
+        'sh',
+        '-c',
+        'exit 3',
+      ])
+      expect(result.status).toBe(3)
     })
   })
 })

@@ -1,11 +1,4 @@
-import {
-  EMPTY_CONTACT_VALUES,
-  HONEYPOT_FIELD,
-  MESSAGE_LENGTH,
-  NAME_LENGTH,
-  toContactValues,
-  validateContact,
-} from './schema'
+import { EMPTY_CONTACT_VALUES, HONEYPOT_FIELD, toContactValues, validateContact } from './schema'
 
 const valid = {
   name: 'Мария',
@@ -72,14 +65,17 @@ describe('contact form: валидация', () => {
     })
   })
 
-  it('держит бюджеты длины полей', () => {
-    expect(validateContact({ ...valid, name: 'и'.repeat(NAME_LENGTH.max) }).ok).toBe(true)
-    expect(validateContact({ ...valid, name: 'и'.repeat(NAME_LENGTH.max + 1) }).ok).toBe(false)
-    expect(validateContact({ ...valid, message: 'т'.repeat(MESSAGE_LENGTH.max + 1) }).ok).toBe(
-      false,
-    )
-    expect(validateContact({ ...valid, message: 'т'.repeat(MESSAGE_LENGTH.min - 1) }).ok).toBe(
-      false,
-    )
+  // Границы — литералами: имя 2–80 знаков, сообщение 10–2000.
+  it.each([
+    ['name', 1, false],
+    ['name', 2, true],
+    ['name', 80, true],
+    ['name', 81, false],
+    ['message', 9, false],
+    ['message', 10, true],
+    ['message', 2000, true],
+    ['message', 2001, false],
+  ])('бюджет поля: %s в %i знаков — %s', (field, length, ok) => {
+    expect(validateContact({ ...valid, [field]: 'ж'.repeat(length) }).ok).toBe(ok)
   })
 })

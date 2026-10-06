@@ -78,3 +78,34 @@ describe('доставка заявки: канал smtp', () => {
     expect(smtp.createTransport).not.toHaveBeenCalled()
   })
 })
+
+describe('доставка заявки: повторы по умолчанию', () => {
+  const fetchMock = vi.fn(() => Promise.resolve(new Response(null, { status: 502 })))
+
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] })
+    vi.stubGlobal('fetch', fetchMock)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.unstubAllGlobals()
+  })
+
+  it('вторая попытка — через 0,5 с, третья — ещё через 2 с, затем честный отказ', async () => {
+    const delivery = deliverLead(lead, {
+      env: { FORM_DELIVERY: 'backend', FORM_BACKEND_URL: 'http://backend.internal/leads' },
+    })
+    const refused = expect(delivery).rejects.toThrow('502')
+    const attemptsAfter = async (ms: number) => {
+      await vi.advanceTimersByTimeAsync(ms)
+      return fetchMock.mock.calls.length
+    }
+    expect(await attemptsAfter(0)).toBe(1)
+    expect(await attemptsAfter(499)).toBe(1)
+    expect(await attemptsAfter(1)).toBe(2)
+    expect(await attemptsAfter(1999)).toBe(2)
+    expect(await attemptsAfter(1)).toBe(3)
+    await refused
+  })
+})

@@ -1,6 +1,6 @@
 import type { ImageFunction } from 'astro:content'
 import { z } from 'zod'
-import { DESCRIPTION_LENGTH, postSchema, TITLE_LENGTH } from './schema'
+import { postSchema } from './schema'
 
 // Реальный image() резолвит файл на сборке; в unit-тесте достаточно заглушки.
 const image = (() =>
@@ -43,11 +43,21 @@ describe('post schema', () => {
     expect(post.cover?.width).toBe(1600)
   })
 
+  // Границы — литералами: сниппет выдачи держит title 25–65 и description 70–170 знаков.
   it.each([
-    ['title короче бюджета', { title: 'Коротко' }],
-    ['title длиннее бюджета', { title: 'x'.repeat(TITLE_LENGTH.max + 1) }],
-    ['description короче бюджета', { description: 'Мало' }],
-    ['description длиннее бюджета', { description: 'y'.repeat(DESCRIPTION_LENGTH.max + 1) }],
+    ['title', 24, false],
+    ['title', 25, true],
+    ['title', 65, true],
+    ['title', 66, false],
+    ['description', 69, false],
+    ['description', 70, true],
+    ['description', 170, true],
+    ['description', 171, false],
+  ])('бюджет сниппета: %s в %i знаков — %s', (field, length, ok) => {
+    expect(schema.safeParse({ ...valid, [field]: 'ж'.repeat(length) }).success).toBe(ok)
+  })
+
+  it.each([
     ['невалидная дата', { pubDate: 'вчера' }],
     ['updatedDate раньше pubDate', { updatedDate: '2026-01-01' }],
     ['тег не slug', { tags: ['SEO'] }],

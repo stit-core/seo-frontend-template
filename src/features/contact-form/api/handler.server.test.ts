@@ -1,6 +1,14 @@
+import type * as Antispam from '@/shared/antispam'
+import { getCaptchaVerifier } from '@/shared/antispam'
 import type { RuntimeEnv } from '@/shared/config'
 import { HONEYPOT_FIELD, LOCALE_FIELD } from '../model/schema'
 import { handleContactRequest } from './handler'
+
+// Провайдера капчи в шаблоне нет (`none` пропускает всё): отказ ступени подставляет тест.
+vi.mock('@/shared/antispam', async (importOriginal) => {
+  const actual = await importOriginal<typeof Antispam>()
+  return { ...actual, getCaptchaVerifier: vi.fn(actual.getCaptchaVerifier) }
+})
 
 const ORIGIN = 'http://localhost:3000'
 const BACKEND = 'http://backend.internal/leads'
@@ -48,8 +56,11 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  const log = logged()
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
+  // Тело заявки — персональные данные: ни на одном исходе обработчика его нет в логе.
+  for (const value of [filled.name, filled.email, MESSAGE]) expect(log).not.toContain(value)
 })
 
 describe('обработчик формы', () => {
@@ -183,10 +194,18 @@ describe('обработчик формы', () => {
     expect(outcome.notice).toBe('form.error.delivery')
     expect(outcome.values.email).toBe('maria@example.com')
     expect(fetchMock).toHaveBeenCalledTimes(3)
-    const log = logged()
-    expect(log).toContain('failed')
-    expect(log).not.toContain(MESSAGE)
-    expect(log).not.toContain('maria@example.com')
+    expect(logged()).toContain('failed')
+  })
+
+  it('капча отказала: та же форма с полями и пояснением, доставки нет', async () => {
+    vi.mocked(getCaptchaVerifier).mockReturnValueOnce({
+      provider: 'none',
+      verify: () => Promise.resolve(false),
+    })
+    const outcome = await handleContactRequest(post(filled), context)
+    expect(outcome).toMatchObject({ status: 'invalid', notice: 'form.error.captcha', errors: {} })
+    expect(fetchMock).not.toHaveBeenCalled()
+    expect(logged()).toContain('captcha')
   })
 
   it('канал не настроен: отказ без попыток отправки', async () => {
@@ -208,5 +227,45 @@ describe('обработчик формы', () => {
     fetchMock.mockResolvedValue(new Response(null, { status: 502 }))
     await handleContactRequest(post(filled), quiet)
     expect(console.error).toHaveBeenCalledOnce()
+  })
+})
+
+describe('origin-check: доверены только origin сайта и origin самого запроса', () => {
+  const SITE = 'https://demo.example'
+  const siteContext = { ...context, env: { ...env, SITE_URL: SITE } }
+  // Прямое обращение к контейнеру: URL запроса — его собственный адрес.
+  const direct = (headers: Record<string, string>) =>
+    new Request('http://127.0.0.1:4321/api/contact', {
+      method: 'POST',
+      headers: { 'content-type': 'application/x-www-form-urlencoded', ...headers },
+      body: new URLSearchParams(filled),
+    })
+  const send = (headers: Record<string, string>) =>
+    handleContactRequest(direct(headers), siteContext)
+
+  it.each([
+    ['двойник с доменом сайта в начале', 'https://demo.example.attacker.tld'],
+    ['поддомен', 'https://www.demo.example'],
+    ['другой порт', 'https://demo.example:8443'],
+    ['другая схема', 'http://demo.example'],
+    ['домен сайта как userinfo', 'https://demo.example@attacker.tld'],
+    ['непрозрачный origin', 'null'],
+  ])('%s — отказ и в Origin, и в Referer', async (_case, origin) => {
+    expect(await send({ origin })).toEqual({ status: 'forbidden' })
+    expect(await send({ referer: `${origin}/contacts` })).toEqual({ status: 'forbidden' })
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('Origin сайта, origin запроса и Referer со страницы сайта — заявка принимается', async () => {
+    const accepted = { status: 'accepted', locale: 'ru' }
+    expect(await send({ origin: SITE })).toEqual(accepted)
+    expect(await send({ origin: 'http://127.0.0.1:4321' })).toEqual(accepted)
+    expect(await send({ referer: `${SITE}/en/contacts` })).toEqual(accepted)
+  })
+
+  it('Origin важнее Referer: чужой Origin со своим Referer — отказ', async () => {
+    expect(await send({ origin: 'https://attacker.tld', referer: `${SITE}/contacts` })).toEqual({
+      status: 'forbidden',
+    })
   })
 })

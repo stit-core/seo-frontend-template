@@ -1,3 +1,4 @@
+import { SITE_DESCRIPTION, SITE_LOGO_PATH, SITE_NAME, SITE_SAME_AS } from '@/shared/config'
 import {
   blogPosting,
   breadcrumbList,
@@ -8,27 +9,35 @@ import {
   webSite,
 } from './json-ld'
 
+const ORIGIN = 'https://demo.example'
+const publisher = { '@type': 'Organization', name: SITE_NAME, url: `${ORIGIN}/` }
+
 // Фабрики не парсят результат на рендере — схему к их выходу применяет этот тест.
 describe('seo/json-ld', () => {
-  beforeEach(() => vi.stubEnv('SITE_URL', 'https://demo.example'))
+  beforeEach(() => vi.stubEnv('SITE_URL', ORIGIN))
   afterEach(() => vi.unstubAllEnvs())
 
-  it('Organization: абсолютные url/logo/sameAs, проходит схему', () => {
+  it('Organization: имя, абсолютные url и logo, профили в других сервисах; проходит схему', () => {
     const data = organization()
-    expect(data).toMatchObject({
+    expect(data).toEqual({
       '@context': 'https://schema.org',
       '@type': 'Organization',
-      url: 'https://demo.example/',
-      logo: 'https://demo.example/icon-512.png',
+      name: SITE_NAME,
+      url: `${ORIGIN}/`,
+      logo: `${ORIGIN}${SITE_LOGO_PATH}`,
+      sameAs: SITE_SAME_AS,
     })
     expect(JsonLdSchema.parse(data)).toEqual(data)
   })
 
   it('WebSite: корень домена на дефолтной локали, проходит схему', () => {
     const data = webSite()
-    expect(data).toMatchObject({
+    expect(data).toEqual({
+      '@context': 'https://schema.org',
       '@type': 'WebSite',
-      url: 'https://demo.example/',
+      name: SITE_NAME,
+      description: SITE_DESCRIPTION,
+      url: `${ORIGIN}/`,
       inLanguage: 'ru',
     })
     expect(JsonLdSchema.parse(data)).toEqual(data)
@@ -48,16 +57,24 @@ describe('seo/json-ld', () => {
       },
       openingHours: 'Mo-Fr 10:00-19:00',
     })
-    expect(data).toMatchObject({
+    expect(data).toEqual({
+      '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
-      url: 'https://demo.example/',
-      image: 'https://demo.example/icon-512.png',
+      name: 'ООО «Пример»',
+      description: 'Небольшая студия',
+      url: `${ORIGIN}/`,
+      image: `${ORIGIN}${SITE_LOGO_PATH}`,
+      email: 'hello@example.com',
+      telephone: '+7 495 000-00-00',
       address: {
         '@type': 'PostalAddress',
         addressCountry: 'RU',
+        postalCode: '101000',
         addressLocality: 'Москва',
         streetAddress: 'ул. Примерная, 1',
       },
+      openingHours: 'Mo-Fr 10:00-19:00',
+      sameAs: SITE_SAME_AS,
     })
     expect(JsonLdSchema.parse(data)).toEqual(data)
   })
@@ -72,8 +89,8 @@ describe('seo/json-ld', () => {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
       itemListElement: [
-        { '@type': 'ListItem', position: 1, name: 'Главная', item: 'https://demo.example/' },
-        { '@type': 'ListItem', position: 2, name: 'Блог', item: 'https://demo.example/blog' },
+        { '@type': 'ListItem', position: 1, name: 'Главная', item: `${ORIGIN}/` },
+        { '@type': 'ListItem', position: 2, name: 'Блог', item: `${ORIGIN}/blog` },
         { '@type': 'ListItem', position: 3, name: 'Запись' },
       ],
     })
@@ -89,15 +106,17 @@ describe('seo/json-ld', () => {
       published: new Date('2026-09-08'),
     }
     const plain = blogPosting(base)
-    expect(plain).toMatchObject({
+    expect(plain).toEqual({
+      '@context': 'https://schema.org',
       '@type': 'BlogPosting',
+      headline: 'Заголовок',
+      description: 'Описание',
       datePublished: '2026-09-08',
       inLanguage: 'ru',
-      mainEntityOfPage: { '@type': 'WebPage', '@id': 'https://demo.example/blog/x' },
-      author: { '@type': 'Organization', url: 'https://demo.example/' },
+      author: publisher,
+      publisher,
+      mainEntityOfPage: { '@type': 'WebPage', '@id': `${ORIGIN}/blog/x` },
     })
-    expect(plain).not.toHaveProperty('dateModified')
-    expect(plain).not.toHaveProperty('image')
     expect(JsonLdSchema.parse(plain)).toEqual(plain)
 
     const full = blogPosting({
@@ -105,9 +124,10 @@ describe('seo/json-ld', () => {
       updated: new Date('2026-09-10'),
       imagePath: '/_astro/cover.abc.png',
     })
-    expect(full).toMatchObject({
+    expect(full).toEqual({
+      ...plain,
       dateModified: '2026-09-10',
-      image: 'https://demo.example/_astro/cover.abc.png',
+      image: `${ORIGIN}/_astro/cover.abc.png`,
     })
     expect(JsonLdSchema.parse(full)).toEqual(full)
   })
