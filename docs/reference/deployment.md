@@ -43,6 +43,7 @@ docker run --rm -p 3000:3000 -e SITE_URL=https://example.com <image>
 ```
 
 Контейнер не стартует (код 1, сообщение с префиксом `[entrypoint]` / `[server]`), если
+любой ключ env не проходит схему (сообщение называет ключ и правило, значение не печатает),
 `SITE_URL` пуст, без схемы `http(s)://`, равен плейсхолдеру сборки или после штамповки
 плейсхолдер где-то остался.
 
@@ -71,10 +72,14 @@ docker run --rm -p 3000:3000 -e SITE_URL=https://example.com <image>
 - дренаж на `SIGTERM`/`SIGINT`: `close()` + `closeIdleConnections()` каждые 200 мс,
   потолок `SHUTDOWN_TIMEOUT_MS` (15 с; держать ≤ `stop_grace_period` compose);
   `docker stop` без трафика — доли секунды, запрос в полёте доезжает
-- fail-fast: `SITE_URL` пустой, с плейсхолдером или не абсолютный `http(s)`-URL — выход с
-  кодом 1 до загрузки приложения; занятый порт — код 1 с `[server] listen failed`
-- `KEEP_ALIVE_TIMEOUT_MS` / `SHUTDOWN_TIMEOUT_MS`: пусто — дефолт, не число или ≤ 0 —
-  предупреждение и дефолт
+- fail-fast: env целиком проверяется до загрузки приложения той же схемой, что его читает
+  (`loadServerConfig` из `src/shared/config/runtime.ts`; сборка кладёт этот модуль отдельным
+  файлом `dist/server/runtime-config.mjs`, и экземпляр у обёртки и приложения общий — запросы
+  читают уже разобранный конфиг). Опечатка в любом ключе, пустой `SITE_URL` или плейсхолдер —
+  код 1 и строка `[server] invalid env — <ключ>: <правило>`; занятый порт — код 1 с
+  `[server] listen failed`
+- `KEEP_ALIVE_TIMEOUT_MS` / `SHUTDOWN_TIMEOUT_MS` — ключи той же схемы: пусто — дефолт, не
+  целое число больше нуля — отказ старта
 
 ## Env-контракт
 
@@ -98,8 +103,9 @@ docker run --rm -p 3000:3000 -e SITE_URL=https://example.com <image>
 | `CAPTCHA_SECRET` / `CAPTCHA_FAIL_MODE` | ключ верификации и поведение при недоступности провайдера (`open` \| `closed`) | `''` / `open` | нет (секрет) |
 | `SENTRY_DSN` / `SENTRY_ENVIRONMENT` | отправка серверных исключений; пусто — `@sentry/node` не грузится | `''` / `production` | нет |
 
-Пустое значение (`ROBOTS_POLICY=`) равносильно незаданному — берётся дефолт. Чтение —
-`src/shared/config` (`getRuntimeConfig()`, Zod по `process.env`); в HTML из env попадает только
+Пустое значение (`ROBOTS_POLICY=`) равносильно незаданному — берётся дефолт; значение вне
+формата — отказ старта с именем ключа. Чтение — `src/shared/config` (`getRuntimeConfig()`, Zod
+по `process.env`, один разбор на набор значений); в HTML из env попадает только
 origin `SITE_URL` через `absoluteUrl()`. Шаблон локального `.env` — `.env.example`; его читает
 `pnpm start` (`node --env-file-if-exists=.env`), в образе файла нет.
 

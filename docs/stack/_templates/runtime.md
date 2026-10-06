@@ -13,7 +13,7 @@ status: draft
 |---|---|
 | образ | `node:24-alpine`, три стадии (`build` → `prod-deps` → `runtime`), `USER node` |
 | адаптер | `@astrojs/node` в режиме `standalone`, автостарт выключен |
-| обёртка | `docker/server.mjs` — keep-alive, дренаж, fail-fast по `SITE_URL` |
+| обёртка | `docker/server.mjs` — keep-alive, дренаж, fail-fast по env целиком (схема `shared/config`) |
 | порт / хост | `PORT=3000` / `HOST=0.0.0.0` |
 | liveness | `GET /healthz` → `200 ok`, `Cache-Control: no-store`, без зависимостей |
 | graceful shutdown | `SIGTERM`/`SIGINT` → `close()` + `closeIdleConnections()`, потолок `SHUTDOWN_TIMEOUT_MS` (15 с) |

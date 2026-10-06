@@ -1,4 +1,4 @@
-import { getRuntimeConfig, SITE_ORIGIN_PLACEHOLDER } from './runtime'
+import { getRuntimeConfig, loadServerConfig, SITE_ORIGIN_PLACEHOLDER } from './runtime'
 
 describe('runtime config', () => {
   const defaults = {
@@ -18,6 +18,8 @@ describe('runtime config', () => {
     CAPTCHA_PROVIDER: 'none',
     CAPTCHA_SECRET: '',
     CAPTCHA_FAIL_MODE: 'open',
+    KEEP_ALIVE_TIMEOUT_MS: 65_000,
+    SHUTDOWN_TIMEOUT_MS: 15_000,
   }
 
   it('без env даёт дефолты и плейсхолдер origin', () => {
@@ -73,6 +75,17 @@ describe('runtime config', () => {
     })
   })
 
+  it('таймауты обёртки сервера — целые миллисекунды больше нуля', () => {
+    expect(
+      getRuntimeConfig({ KEEP_ALIVE_TIMEOUT_MS: '70000', SHUTDOWN_TIMEOUT_MS: '2000' }),
+    ).toMatchObject({ KEEP_ALIVE_TIMEOUT_MS: 70_000, SHUTDOWN_TIMEOUT_MS: 2_000 })
+    for (const value of ['15s', '0', '-1', '1.5']) {
+      expect(() => getRuntimeConfig({ SHUTDOWN_TIMEOUT_MS: value }), value).toThrow(
+        'SHUTDOWN_TIMEOUT_MS',
+      )
+    }
+  })
+
   it('отвергает невалидный SITE_URL, неизвестные значения enum и ключ IndexNow вне формата', () => {
     expect(() => getRuntimeConfig({ SITE_URL: 'demo.example' })).toThrow()
     expect(() => getRuntimeConfig({ ROBOTS_POLICY: 'maybe' })).toThrow()
@@ -81,5 +94,42 @@ describe('runtime config', () => {
     for (const INDEXNOW_KEY of ['short', 'с-кириллицей', 'has space', 'x'.repeat(129)]) {
       expect(() => getRuntimeConfig({ INDEXNOW_KEY }), INDEXNOW_KEY).toThrow()
     }
+  })
+
+  it('ошибка называет каждый неверный ключ и не печатает его значение', () => {
+    const bad = { LOG_LEVEL: 'verbose', INDEXNOW_KEY: 'short', FORM_DELIVERY: 'email' }
+    let message = ''
+    try {
+      getRuntimeConfig(bad)
+    } catch (error) {
+      message = (error as Error).message
+    }
+    for (const [key, value] of Object.entries(bad)) {
+      expect(message).toContain(`${key}:`)
+      expect(message).not.toContain(value)
+    }
+  })
+
+  it('те же значения env разбираются один раз: запрос получает готовый объект', () => {
+    const config = getRuntimeConfig({ LOG_LEVEL: 'debug' })
+    expect(getRuntimeConfig({ LOG_LEVEL: 'debug' })).toBe(config)
+    expect(getRuntimeConfig({ LOG_LEVEL: 'warn' }).LOG_LEVEL).toBe('warn')
+  })
+})
+
+describe('loadServerConfig: env процесса, который отдаёт сайт', () => {
+  it('без настоящего origin — отказ: пусто, не задано, плейсхолдер сборки', () => {
+    for (const env of [{}, { SITE_URL: '' }, { SITE_URL: SITE_ORIGIN_PLACEHOLDER }]) {
+      expect(() => loadServerConfig(env), JSON.stringify(env)).toThrow('SITE_URL')
+    }
+  })
+
+  it('с настоящим origin — конфиг целиком, опечатка в любом ключе — отказ', () => {
+    expect(loadServerConfig({ SITE_URL: 'https://demo.example/' }).SITE_URL).toBe(
+      'https://demo.example',
+    )
+    expect(() =>
+      loadServerConfig({ SITE_URL: 'https://demo.example', LOG_LEVEL: 'verbose' }),
+    ).toThrow('LOG_LEVEL')
   })
 })

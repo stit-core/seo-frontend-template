@@ -2,42 +2,18 @@
 // ни keep-alive таймаутов. Без первого `make bump` рвёт запросы в полёте, без второго
 // Traefik ловит спорадические 502 (Node закрывает idle keep-alive на 5-й секунде,
 // прокси его переиспользует).
-const PLACEHOLDER = 'https://__site_origin__'
+import { loadServerConfig } from '../dist/server/runtime-config.mjs'
 
-// `new URL('localhost:3000')` парсится как схема `localhost:` — проверяем и протокол.
-function isHttpUrl(value) {
-  try {
-    return /^https?:$/.test(new URL(value).protocol)
-  } catch {
-    return false
-  }
-}
-
-// Пусто — дефолт; мусор — предупреждение и дефолт: NaN Node трактует как «без таймаута».
-function positiveMs(name, fallback) {
-  const raw = process.env[name]
-  if (raw === undefined || raw === '') return fallback
-  const value = Number(raw)
-  if (Number.isFinite(value) && value > 0) return value
-  console.warn(`[server] ${name}='${raw}' is not a positive number, using ${fallback}`)
-  return fallback
-}
-
-const siteUrl = (process.env.SITE_URL ?? '').replace(/\/+$/, '')
-
-// Fail-fast: без реального origin prerendered-выход остаётся со значением сборки —
-// такой контейнер не должен подняться и попасть под трафик.
-if (siteUrl === '' || siteUrl === PLACEHOLDER) {
-  console.error('[server] SITE_URL is required and must not be the build placeholder')
+// Fail-fast: env проверяется целиком до загрузки приложения — той же схемой, что его читает
+// (shared/config). Иначе опечатка в ключе поднимает полуживой контейнер: статика 200, а каждый
+// on-demand ответ, включая /healthz и robots.txt, — 500.
+let config
+try {
+  config = loadServerConfig()
+} catch (error) {
+  console.error(`[server] ${error instanceof Error ? error.message : error}`)
   process.exit(1)
 }
-if (!isHttpUrl(siteUrl)) {
-  console.error(`[server] SITE_URL must be an absolute http(s) URL, got '${siteUrl}'`)
-  process.exit(1)
-}
-
-const keepAliveMs = positiveMs('KEEP_ALIVE_TIMEOUT_MS', 65_000)
-const graceMs = positiveMs('SHUTDOWN_TIMEOUT_MS', 15_000)
 
 process.env.ASTRO_NODE_AUTOSTART = 'disabled'
 
@@ -53,9 +29,10 @@ done.catch((err) => {
 })
 
 // Traefik/nginx держат idle-соединение дольше, чем дефолтные 5 с Node.
-http.keepAliveTimeout = keepAliveMs
-http.headersTimeout = keepAliveMs + 5_000
+http.keepAliveTimeout = config.KEEP_ALIVE_TIMEOUT_MS
+http.headersTimeout = config.KEEP_ALIVE_TIMEOUT_MS + 5_000
 
+const graceMs = config.SHUTDOWN_TIMEOUT_MS
 let closing = false
 
 for (const signal of ['SIGTERM', 'SIGINT']) {

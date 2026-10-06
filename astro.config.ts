@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import node from '@astrojs/node'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
@@ -49,5 +50,25 @@ export default defineConfig({
   // light/dark); контент-сайту она не обязательна. Нужна — `shikiConfig` с темой
   // `css-variables` и переменные `--astro-code-*` в app/styles/index.css.
   markdown: { syntaxHighlight: false },
-  vite: { plugins: [tailwindcss(), yamlModules] },
+  vite: {
+    plugins: [
+      tailwindcss(),
+      yamlModules,
+      // docker/* проверяют env до старта приложения той же схемой, что его читает: модуль
+      // конфига — отдельный файл серверной сборки со стабильным именем, а экземпляр модуля у
+      // обёртки и приложения общий (разбор при старте и есть тот, что читают запросы).
+      {
+        name: 'runtime-config-entry',
+        apply: 'build',
+        applyToEnvironment: (environment) => environment.name === 'ssr',
+        buildStart() {
+          this.emitFile({
+            type: 'chunk',
+            id: fileURLToPath(new URL('src/shared/config/runtime.ts', import.meta.url)),
+            fileName: 'runtime-config.mjs',
+          })
+        },
+      },
+    ],
+  },
 })

@@ -8,10 +8,11 @@ paths: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/pl
 ## Только runtime
 
 Всё, что меняется между средами, — env Node-процесса контейнера; читается через
-`getRuntimeConfig()` (`shared/config`, Zod по `process.env`). `import.meta.env`/`VITE_*`
-для среды не используется: сборка среды не знает. Пустое значение ключа равносильно
-незаданному — берётся дефолт. `import.meta.env.DEV` — признак `astro dev` (черновики
-контента), не конфигурация среды.
+`getRuntimeConfig()` (`shared/config`, Zod по `process.env`, один разбор на набор значений —
+запрос получает готовый объект). `import.meta.env`/`VITE_*` для среды не используется: сборка
+среды не знает. Пустое значение ключа равносильно незаданному — берётся дефолт; значение вне
+формата — отказ старта. `import.meta.env.DEV` — признак `astro dev` (черновики контента), не
+конфигурация среды.
 
 Новый ключ — три места: Zod-схема `src/shared/config/runtime.ts`, строка в `.env.example`,
 строка в таблице `docs/reference/deployment.md`.
@@ -28,8 +29,11 @@ paths: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/pl
   `dist/server` не штампуется: on-demand маршруты берут origin из runtime `SITE_URL`
 - Штамповка пишет в `/app/dist/client` — сервис без `read_only: true` либо writable-bind
   этого пути
-- Рантайм без `SITE_URL`, с плейсхолдером или с не-`http(s)` URL **не стартует**
-  (`docker/entrypoint.sh`, `docker/server.mjs`)
+- Рантайм **не стартует**, если env не проходит схему (опечатка в любом ключе — сообщение с
+  ключом и правилом, без значения), без `SITE_URL`, с плейсхолдером или с не-`http(s)` URL:
+  `docker/server.mjs` проверяет env целиком до загрузки приложения (`loadServerConfig`; модуль
+  схемы сборка кладёт отдельным файлом `dist/server/runtime-config.mjs`), `docker/entrypoint.sh`
+  — `SITE_URL` до штамповки
 - HTML на сборке не предсжимать — плейсхолдер уедет внутрь `.br`/`.gz`
 - Абсолютные URL — только в `<head>`, JSON-LD, фидах, sitemap; в теле — корневые
   относительные

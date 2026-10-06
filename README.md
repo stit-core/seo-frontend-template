@@ -154,7 +154,8 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 Сборка печёт `site: 'https://__site_origin__'`; при старте контейнера
 `docker/entrypoint.sh` штампует `SITE_URL` в `dist/client` (HTML, XML, TXT) и проверяет,
 что плейсхолдера не осталось, а `docker/server.mjs` добавляет keep-alive и graceful
-shutdown под Traefik и отказывается стартовать без реального `SITE_URL`. Подробности —
+shutdown под Traefik и отказывается стартовать, если env не проходит схему `shared/config`
+(опечатка в любом ключе, нет реального `SITE_URL`). Подробности —
 [`docs/reference/deployment.md`](docs/reference/deployment.md).
 
 ## UI

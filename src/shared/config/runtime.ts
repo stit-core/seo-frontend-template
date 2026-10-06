@@ -6,14 +6,20 @@ export const SITE_ORIGIN_PLACEHOLDER = 'https://__site_origin__'
 // Ключ IndexNow (indexnow.org): 8–128 символов a-z, A-Z, 0-9 и дефис; подтверждается файлом /<ключ>.txt.
 const INDEXNOW_KEY_RE = /^[a-zA-Z0-9-]{8,128}$/
 
+// Таймаут обёртки сервера: NaN или 0 Node понял бы как «без таймаута».
+const milliseconds = (fallback: number) => z.coerce.number().int().positive().default(fallback)
+
 const RuntimeConfigSchema = z.object({
-  SITE_URL: z.url().transform((value) => value.replace(/\/+$/, '')),
+  SITE_URL: z
+    .url({ protocol: /^https?$/, error: 'expected an absolute http(s) URL' })
+    .transform((value) => value.replace(/\/+$/, ''))
+    .default(SITE_ORIGIN_PLACEHOLDER),
   ROBOTS_POLICY: z.enum(['index', 'noindex']).default('index'),
   RELEASE: z.string().min(1).default('unknown'),
   LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   INDEXNOW_KEY: z
     .string()
-    .regex(INDEXNOW_KEY_RE, '8–128 символов a-z, A-Z, 0-9 и дефис')
+    .regex(INDEXNOW_KEY_RE, '8-128 characters a-z, A-Z, 0-9 and hyphen')
     .default(''),
   AI_TRAINING: z.enum(['allow', 'deny']).default('allow'),
   SENTRY_DSN: z.string().default(''),
@@ -30,35 +36,48 @@ const RuntimeConfigSchema = z.object({
   CAPTCHA_PROVIDER: z.enum(['none']).default('none'),
   CAPTCHA_SECRET: z.string().default(''),
   CAPTCHA_FAIL_MODE: z.enum(['open', 'closed']).default('open'),
+  // Обёртка сервера (docker/server.mjs): keep-alive дольше idle-таймаута прокси, дренаж на SIGTERM.
+  KEEP_ALIVE_TIMEOUT_MS: milliseconds(65_000),
+  SHUTDOWN_TIMEOUT_MS: milliseconds(15_000),
 })
 
 export type RuntimeConfig = z.infer<typeof RuntimeConfigSchema>
 export type RuntimeEnv = Partial<Record<keyof RuntimeConfig, string | undefined>>
 
+const KEYS = Object.keys(RuntimeConfigSchema.shape) as (keyof RuntimeConfig)[]
+
 // Пустая строка в env (`SITE_URL=` в compose/.env) — то же, что отсутствие ключа:
 // иначе она проходит в Zod и валит enum/url вместо дефолта.
 const unset = (value: string | undefined): string | undefined => (value === '' ? undefined : value)
 
+// Разбор — один на набор значений env: процесс сервера проверяет env при старте
+// (`loadServerConfig`), запросы читают готовый объект и Zod не гоняют.
+let parsed: { input: string; config: RuntimeConfig } | undefined
+
 // На on-demand маршрутах process.env живой (Node-процесс контейнера); при prerender
-// сюда попадает значение сборки — плейсхолдер origin. Отказ от плейсхолдера в рантайме —
-// в docker/server.mjs (fail-fast при старте).
+// сюда попадает значение сборки — плейсхолдер origin.
 export function getRuntimeConfig(env: RuntimeEnv = process.env): RuntimeConfig {
-  return RuntimeConfigSchema.parse({
-    SITE_URL: unset(env.SITE_URL) ?? SITE_ORIGIN_PLACEHOLDER,
-    ROBOTS_POLICY: unset(env.ROBOTS_POLICY),
-    RELEASE: unset(env.RELEASE),
-    LOG_LEVEL: unset(env.LOG_LEVEL),
-    INDEXNOW_KEY: unset(env.INDEXNOW_KEY),
-    AI_TRAINING: unset(env.AI_TRAINING),
-    SENTRY_DSN: unset(env.SENTRY_DSN),
-    SENTRY_ENVIRONMENT: unset(env.SENTRY_ENVIRONMENT),
-    FORM_DELIVERY: unset(env.FORM_DELIVERY),
-    FORM_BACKEND_URL: unset(env.FORM_BACKEND_URL),
-    SMTP_URL: unset(env.SMTP_URL),
-    FORM_TO: unset(env.FORM_TO),
-    FORM_FROM: unset(env.FORM_FROM),
-    CAPTCHA_PROVIDER: unset(env.CAPTCHA_PROVIDER),
-    CAPTCHA_SECRET: unset(env.CAPTCHA_SECRET),
-    CAPTCHA_FAIL_MODE: unset(env.CAPTCHA_FAIL_MODE),
-  })
+  const values = Object.fromEntries(KEYS.map((key) => [key, unset(env[key])]))
+  const input = JSON.stringify(values)
+  if (parsed?.input !== input) parsed = { input, config: parse(values) }
+  return parsed.config
+}
+
+function parse(values: Record<string, string | undefined>): RuntimeConfig {
+  const result = RuntimeConfigSchema.safeParse(values)
+  if (result.success) return result.data
+  // Только ключ и правило: значение в сообщение не попадает — среди ключей есть секреты.
+  const problems = result.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+  throw new Error(`invalid env — ${problems.join('; ')}`)
+}
+
+// Процесс, который отдаёт сайт (docker/*), проверяет env целиком до старта; без настоящего
+// origin — пустого или плейсхолдера сборки — он не поднимается: prerendered-выход остался бы со
+// значением сборки.
+export function loadServerConfig(env: RuntimeEnv = process.env): RuntimeConfig {
+  const config = getRuntimeConfig(env)
+  if (config.SITE_URL === SITE_ORIGIN_PLACEHOLDER) {
+    throw new Error('invalid env — SITE_URL: required, must not be the build placeholder')
+  }
+  return config
 }
