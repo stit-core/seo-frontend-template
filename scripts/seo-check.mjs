@@ -2,17 +2,19 @@
 // - head: ровно один <title> и один <h1>, description с непустым content, self-canonical
 //   абсолютным URL на плейсхолдере origin (один образ на все среды), lang по локали пути, полный
 //   OG с существующей картинкой, без keywords; title и description уникальны среди всех страниц;
-// - сниппет индексируемой страницы в бюджетах и не общий; noindex — только у служебных маршрутов
-//   из списка политики (scripts/lib/site-policy.mjs), и тогда без canonical, OG и hreflang;
+// - сниппет индексируемой страницы в бюджетах и не общий; noindex (в любой форме) — только у
+//   служебных маршрутов из списка политики (scripts/lib/site-policy.mjs), и тогда без canonical,
+//   OG и hreflang; og:image и hreflang — на своём origin;
 // - hreflang — полный взаимный набор (self + x-default) у каждой пары переводов из источника
 //   (главные, списки и теги под обоими префиксами локалей; записи — twin по translationKey) и
 //   только у них;
-// - JSON-LD: допустимые типы, Organization/WebSite только на главной, правильный BreadcrumbList,
-//   разметка = видимое (headline = h1, даты = <time>, image = og:image, mainEntityOfPage =
-//   canonical, крошки = BreadcrumbList, контакты организации — на странице);
-// - тело: ни плейсхолдера origin, ни HTML-комментариев; исполняемые скрипты — только острова из
-//   списка; у картинок размеры, картинка над h1 (LCP) — не lazy и с fetchpriority; ресурсов с чужих
-//   origin нет, @font-face — с font-display swap/fallback/optional (и в CSS сборки);
+// - JSON-LD: типы из списка политики, Organization/WebSite только на главной, правильный
+//   BreadcrumbList, разметка = видимое (headline = h1, даты = <time>, image = og:image,
+//   mainEntityOfPage = canonical, крошки = BreadcrumbList, контакты организации — на странице);
+// - тело: ни плейсхолдера origin, ни HTML-комментариев; исполняемый код (<script>, on*=,
+//   javascript:) — только острова из списка; у картинок размеры, картинка над h1 (LCP) — не lazy и
+//   с fetchpriority; ресурсов с чужих origin нет (и в style=""), @font-face — с font-display
+//   swap/fallback/optional (и в CSS сборки);
 // - сборка против источника: страница у каждой опубликованной записи и prerendered-маршрута,
 //   страниц черновиков нет.
 // On-demand ответы (robots.txt, sitemap.xml, фиды, /now, 404) и карту сайта против сборки
@@ -23,11 +25,13 @@ import { load } from 'js-yaml'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
 import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../src/shared/i18n/locale.ts'
 import { collectionsOf, splitFrontmatter } from './lib/content.mjs'
-import { bodyOf, decode, headTags, normalizeSpace, textOf } from './lib/html.mjs'
+import { bodyOf, decode, headTags, isNoindex, normalizeSpace, textOf } from './lib/html.mjs'
 import { pageRoutes, walk } from './lib/routes.mjs'
 import {
   DESCRIPTION_BUDGET,
   GENERIC_TITLE,
+  JSON_LD_FORBIDDEN,
+  JSON_LD_TYPES,
   NOINDEX_ROUTES,
   RESOURCE_ORIGINS,
   scriptViolations,
@@ -42,17 +46,6 @@ if (!existsSync(client)) {
   console.error('seo:check: dist/client не найден — сначала pnpm build')
   process.exit(1)
 }
-
-// Reference-набор печатает только эти типы; FAQPage/HowTo/SearchAction — не «по умолчанию»
-// (rich results сняты), их появление в шаблоне — ошибка.
-const ALLOWED_TYPES = new Set([
-  'Organization',
-  'WebSite',
-  'LocalBusiness',
-  'BreadcrumbList',
-  'BlogPosting',
-])
-const FORBIDDEN_TYPES = ['FAQPage', 'HowTo', 'SearchAction']
 
 const errors = []
 const fail = (where, message) => {
@@ -162,7 +155,8 @@ function checkCss(where, css) {
 const RESOURCE_LINK =
   /^(stylesheet|preload|modulepreload|prefetch|preconnect|dns-prefetch|manifest|icon|apple-touch-icon|mask-icon)$/i
 
-// Ресурсы документа: что браузер скачает сам (src, srcset, poster, data; ресурсные link).
+// Ресурсы документа: что браузер скачает сам (src, srcset, poster, data; ресурсные link; CSS в
+// <style> и в атрибутах style).
 function checkResources(where, html) {
   for (const [, tag, attrs = ''] of html.matchAll(
     /<(link|script|img|source|video|audio|iframe|embed|object|track)\b([^>]*)>/g,
@@ -182,6 +176,7 @@ function checkResources(where, html) {
   }
   for (const [, css = ''] of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g))
     checkCss(where, css)
+  for (const [, css = ''] of html.matchAll(/\sstyle="([^"]*)"/g)) checkCss(where, decode(css))
 }
 
 // Картинки, видео и фреймы — с размерами (иначе сдвиг вёрстки); картинка над h1 — кандидат в
@@ -343,7 +338,7 @@ for (const file of walk(client).filter((path) => path.endsWith('index.html'))) {
   // Служебная prerendered-страница (подтверждение заявки, 500) закрыта одним noindex и не
   // печатает ни canonical, ни OG, ни hreflang: разрешающие и запрещающие директивы не
   // смешиваются. Всё остальное prerendered — индексируемое, и noindex там ошибка сборки.
-  const noindex = meta('robots').some((robots) => /noindex|none/.test(robots.content ?? ''))
+  const noindex = isNoindex(tags)
   if (noindex && !NOINDEX_ROUTES.includes(routeOf(path))) {
     fail(
       where,
@@ -377,6 +372,9 @@ for (const file of walk(client).filter((path) => path.endsWith('index.html'))) {
     if (![...hrefs.values()].includes(canonical)) fail(where, 'hreflang без self-ссылки')
     for (const [hreflang, href] of hrefs) {
       if (!absolute(href)) fail(where, `hreflang ${hreflang}: не абсолютный URL ${href}`)
+      else if (new URL(href).origin !== OWN_ORIGIN) {
+        fail(where, `hreflang ${hreflang} на чужом origin: ${href}`)
+      }
       if (hreflang !== 'x-default' && !SUPPORTED_LOCALES.includes(hreflang)) {
         fail(where, `hreflang «${hreflang}» вне SUPPORTED_LOCALES`)
       }
@@ -425,7 +423,9 @@ for (const file of walk(client).filter((path) => path.endsWith('index.html'))) {
     facts.ogImage = image
     if (image !== undefined) {
       if (!absolute(image)) fail(where, `og:image не абсолютный: ${image}`)
-      else if (!fileInDist(new URL(image).pathname))
+      else if (new URL(image).origin !== OWN_ORIGIN) {
+        fail(where, `og:image на чужом origin: ${image}`)
+      } else if (!fileInDist(new URL(image).pathname))
         fail(where, `og:image ${new URL(image).pathname} нет в dist/client`)
     }
     for (const side of ['og:image:width', 'og:image:height']) {
@@ -452,9 +452,13 @@ for (const file of walk(client).filter((path) => path.endsWith('index.html'))) {
     }
     if (data['@context'] !== 'https://schema.org')
       fail(where, `JSON-LD @context «${data['@context']}»`)
-    if (!ALLOWED_TYPES.has(data['@type']))
-      fail(where, `JSON-LD @type «${data['@type']}» вне списка`)
-    for (const forbidden of FORBIDDEN_TYPES) {
+    if (!JSON_LD_TYPES.includes(data['@type'])) {
+      fail(
+        where,
+        `JSON-LD @type «${data['@type']}» вне JSON_LD_TYPES (scripts/lib/site-policy.mjs)`,
+      )
+    }
+    for (const forbidden of JSON_LD_FORBIDDEN) {
       if (json.includes(`"${forbidden}"`)) fail(where, `JSON-LD содержит ${forbidden}`)
     }
     if (data['@type'] === 'BreadcrumbList') checkBreadcrumbList(where, data, canonical)

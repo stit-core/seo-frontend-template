@@ -26,6 +26,19 @@ export function headTags(html) {
 }
 
 /**
+ * Страница закрыта от индекса метатегом: общим robots или адресным поисковику (googlebot,
+ * yandex, bingbot); имя и значение — без учёта регистра, none = noindex + nofollow.
+ * @param {HeadTag[]} tags
+ */
+export const isNoindex = (tags) =>
+  tags.some(
+    (tag) =>
+      tag.tag === 'meta' &&
+      /^(robots|googlebot|yandex|bingbot)$/i.test(tag.name ?? '') &&
+      /\b(noindex|none)\b/i.test(tag.content ?? ''),
+  )
+
+/**
  * Тело документа: от `<body` до `</body>`.
  * @param {string} html
  */

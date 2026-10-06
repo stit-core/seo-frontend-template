@@ -27,15 +27,18 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   `noindex` layout'а: только `<meta name="robots" content="noindex">`, без canonical/OG/hreflang;
   разрешающие и запрещающие директивы не смешиваются (Яндекс выбирает разрешающую). Prerendered
   служебная страница — маршрут из `NOINDEX_ROUTES` (`scripts/lib/site-policy.mjs`), вне карты
-  сайта и вне пар hreflang: `noindex` на любой другой странице `seo:check` валит, карту против
+  сайта и вне пар hreflang: `noindex` на любой другой странице (в любой форме: `robots`,
+  `googlebot`, `yandex`, `bingbot`, любым регистром) `seo:check` валит, карту против
   сборки сверяет HTTP-набор. На prerendered мета — значение сборки, поэтому
   staging закрывают `ROBOTS_POLICY` (`robots.txt` + `X-Robots-Tag` на on-demand) и Traefik
   (`basicAuth` + `X-Robots-Tag`) — три контура
 - hreflang — только при реальном переводе (`alternatePath` из `findTranslation` и списков):
-  полный взаимный набор `ru`, `en`, `x-default` (дефолтная локаль) с self-ссылкой; без перевода —
+  полный взаимный набор `ru`, `en`, `x-default` (дефолтная локаль) с self-ссылкой, все на своём
+  origin; без перевода —
   ни одной `<link hreflang>`; canonical внутри локали; авторедиректов по `Accept-Language` нет
 - `og:image` — обложка записи (исходный PNG из `_astro/`, `immutable`) или `public/og-default.png`
-  1200×630 (`OG_DEFAULT_IMAGE`, `shared/config/site.ts`); URL абсолютный, файл есть в сборке
+  1200×630 (`OG_DEFAULT_IMAGE`, `shared/config/site.ts`); URL абсолютный на своём origin, файл
+  есть в сборке
 - Публичные идентификаторы сайта — поля `shared/config/site.ts`, не env: prerendered печатается
   на сборке, а образ собирается без env. `SITE_VERIFICATION.google`/`.yandex` — токены Search
   Console и Вебмастера (пусто — тега нет; альтернатива — HTML-файл в `public/` или DNS TXT),
@@ -51,7 +54,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
 - Только `Organization` + `WebSite` (корень `/`; `/en` — `Organization`; на других страницах —
   ошибка `seo:check`), `LocalBusiness` (страница «О компании» — ровно те факты, что видны в
   тексте), `BreadcrumbList`, `BlogPosting` (запись). `FAQPage`, `HowTo`, `SearchAction` не
-  генерируются — `seo:check` валит сборку
+  генерируются — `seo:check` валит сборку. Списки — `JSON_LD_TYPES` и `JSON_LD_FORBIDDEN` в
+  `scripts/lib/site-policy.mjs`: новый тип разметки — строкой там, а не правкой скрипта
 - `BreadcrumbList` — норма вложенной страницы: страница строит один массив крошек и отдаёт его и
   в `<Breadcrumbs>` (`widgets/breadcrumbs`, видимые), и в `jsonLd={[breadcrumbList(crumbs)]}`;
   `seo:check` проверяет форму блока (позиции с 1, абсолютные `item` у предков, последняя
@@ -105,8 +109,9 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   `translationKey` из frontmatter, реестр коллекций `scripts/lib/content.mjs`) и ни одной ссылки
   на отсутствующую страницу; JSON-LD (типы, `Organization`/`WebSite` только на главной, форма
   `BreadcrumbList`, разметка = видимое); сниппет в бюджетах и не общий, `noindex` только у
-  `NOINDEX_ROUTES`, canonical на плейсхолдере origin и ни плейсхолдера в `<body>`, исполняемые
-  скрипты — острова `ISLANDS`, ресурсов с чужих origin нет, у картинок размеры, картинка над h1 —
+  `NOINDEX_ROUTES`, canonical на плейсхолдере origin и ни плейсхолдера в `<body>`, исполняемый
+  код (`<script>`, обработчики `on*=`, `javascript:`) — острова `ISLANDS`, ресурсов с чужих origin
+  нет (и в `style`), og:image и hreflang — на своём origin, у картинок размеры, картинка над h1 —
   не lazy и с `fetchpriority="high"`, у `@font-face` — `font-display` swap/fallback/optional;
   страниц черновиков нет; сборка против источника — страница у каждой опубликованной записи и
   prerendered-маршрута `src/pages`, hreflang только у страниц сверенных пар. Сам скрипт под

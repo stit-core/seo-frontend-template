@@ -3,6 +3,7 @@ import { createServer } from 'node:net'
 import { relative, resolve, sep } from 'node:path'
 import { load } from 'js-yaml'
 import { collections, splitFrontmatter } from '../scripts/lib/content.mjs'
+import { headTags, isNoindex } from '../scripts/lib/html.mjs'
 import { pageRoutes, walk } from '../scripts/lib/routes.mjs'
 import { type Locale, localePath } from '../src/shared/i18n/locale.ts'
 import { buildRedirectTable, type RedirectRule } from '../src/shared/redirects/table.ts'
@@ -55,7 +56,7 @@ export function prerenderedPaths(): string[] {
 export function indexablePaths(): string[] {
   return prerenderedPaths().filter((path) => {
     const file = resolve(clientDir, `.${path === '/' ? '' : path}/index.html`)
-    return !/<meta name="robots" content="noindex"/.test(readFileSync(file, 'utf8'))
+    return !isNoindex(headTags(readFileSync(file, 'utf8')))
   })
 }
 
