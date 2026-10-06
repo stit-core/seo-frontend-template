@@ -161,7 +161,8 @@ services:
 
       # /_image — endpoint изображений Astro: приложение отвечает 404 (картинки готовит сборка),
       # а запрос на трансформацию не должен доходить до процесса — sharp на запрос это CPU и RAM.
-      traefik.http.routers.site-image.rule: Host(`${DOMAIN}`) && PathPrefix(`/_image`)
+      # Маршрут и его подпути, а не префикс имени: public/_images/… сайта правило не задевает.
+      traefik.http.routers.site-image.rule: Host(`${DOMAIN}`) && (Path(`/_image`) || PathPrefix(`/_image/`))
       traefik.http.routers.site-image.priority: "100"
       traefik.http.routers.site-image.entrypoints: websecure
       traefik.http.routers.site-image.tls: "true"
