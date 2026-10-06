@@ -23,7 +23,7 @@ import { load } from 'js-yaml'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
 import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../src/shared/i18n/locale.ts'
 import { collections, splitFrontmatter } from './lib/content.mjs'
-import { bodyOf, decode, headTags, textOf } from './lib/html.mjs'
+import { bodyOf, decode, headTags, normalizeSpace, textOf } from './lib/html.mjs'
 import { pageRoutes, walk } from './lib/routes.mjs'
 import {
   DESCRIPTION_BUDGET,
@@ -432,7 +432,11 @@ for (const file of walk(client).filter((path) => path.endsWith('index.html'))) {
   )) {
     let data
     try {
-      data = JSON.parse(json)
+      // Строки разметки — в нормализации видимого текста: «разметка = видимое» не краснеет на
+      // неразрывном пробеле, который textOf на странице уже сделал обычным.
+      data = JSON.parse(json, (_, value) =>
+        typeof value === 'string' ? normalizeSpace(value) : value,
+      )
     } catch (err) {
       fail(where, `JSON-LD не парсится: ${err instanceof Error ? err.message : String(err)}`)
       continue

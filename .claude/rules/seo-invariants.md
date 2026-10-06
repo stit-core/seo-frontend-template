@@ -64,7 +64,9 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   держит `seo:check` на каждой странице: `headline` = видимый h1, `datePublished`/`dateModified`
   и `article:*_time` — `datetime` видимого `<time>`, `image` = `og:image`, `mainEntityOfPage` =
   canonical, `inLanguage` = язык страницы; у `Organization`/`LocalBusiness` имя, адрес и почта
-  видны в тексте, телефон — ссылкой `tel:` с тем же номером
+  видны в тексте, телефон — ссылкой `tel:` с тем же номером. Текст обеих сторон сравнивается в
+  одной нормализации пробелов (`normalizeSpace`, `scripts/lib/html.mjs`): неразрывный пробел
+  типографики («+64 %», «ООО «Пример»») равен обычному
 
 ## robots.txt, sitemap.xml, фиды, IndexNow (on-demand)
 

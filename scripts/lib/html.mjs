@@ -32,16 +32,24 @@ export function headTags(html) {
 export const bodyOf = (html) => html.slice(html.indexOf('<body'), html.lastIndexOf('</body>'))
 
 /**
+ * Текст в нормализации для сравнения: любой пробельный символ — переводы строк, неразрывный
+ * U+00A0 и узкие U+2009, U+202F типографики («+64 %», «ООО «Пример»») — один обычный пробел,
+ * по краям — ничего. Видимый текст и строки разметки сравниваются только в ней.
+ * @param {string} text
+ */
+export const normalizeSpace = (text) => text.replace(/\s+/g, ' ').trim()
+
+/**
  * Видимый текст фрагмента — то, что читает человек: без скриптов, стилей и aria-hidden,
- * сущности раскодированы, пробелы схлопнуты.
+ * сущности раскодированы, пробелы нормализованы.
  * @param {string} fragment
  */
 export const textOf = (fragment) =>
-  decode(
-    fragment
-      .replace(/<(script|style)\b[\s\S]*?<\/\1>/g, ' ')
-      .replace(/<(\w+)\b[^>]*\baria-hidden="true"[^>]*>[\s\S]*?<\/\1>/g, ' ')
-      .replace(/<[^>]+>/g, ' '),
+  normalizeSpace(
+    decode(
+      fragment
+        .replace(/<(script|style)\b[\s\S]*?<\/\1>/g, ' ')
+        .replace(/<(\w+)\b[^>]*\baria-hidden="true"[^>]*>[\s\S]*?<\/\1>/g, ' ')
+        .replace(/<[^>]+>/g, ' '),
+    ),
   )
-    .replace(/\s+/g, ' ')
-    .trim()
