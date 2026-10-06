@@ -1,0 +1,80 @@
+import { SITE_NAME } from '@/shared/config'
+import { deliverLead, type Lead } from './delivery'
+
+// nodemailer подменён: письмо никуда не уходит, транспорт и вызовы видны тесту.
+const smtp = vi.hoisted(() => {
+  const sendMail = vi.fn()
+  const close = vi.fn()
+  return { sendMail, close, createTransport: vi.fn(() => ({ sendMail, close })) }
+})
+vi.mock('nodemailer', () => ({ createTransport: smtp.createTransport }))
+
+const lead: Lead = {
+  name: 'Мария',
+  email: 'maria@example.com',
+  message: 'Нужен сайт с блогом и формой заявки.',
+  consent: true,
+  consentVersion: '2026-09-17',
+  consentedAt: '2026-10-06T09:00:00.000Z',
+}
+
+// FORM_DELIVERY не задан — канал по умолчанию, smtp.
+const env = {
+  SMTP_URL: 'smtp://mail.internal:25',
+  FORM_TO: 'sales@example.com',
+  FORM_FROM: 'site@example.com',
+}
+
+beforeEach(() => {
+  smtp.sendMail.mockResolvedValue({})
+})
+
+describe('доставка заявки: канал smtp', () => {
+  it('одно письмо оператору: ответ — отправителю, в тексте заявка и доказательство согласия', async () => {
+    expect(await deliverLead(lead, { env, retryDelaysMs: [0, 0] })).toEqual({
+      channel: 'smtp',
+      attempts: 1,
+    })
+    // Дефолты nodemailer — минуты; отправитель формы столько не ждёт.
+    expect(smtp.createTransport).toHaveBeenCalledWith({
+      url: env.SMTP_URL,
+      connectionTimeout: 5000,
+      greetingTimeout: 5000,
+      socketTimeout: 5000,
+    })
+    expect(smtp.sendMail).toHaveBeenCalledOnce()
+    const [mail] = smtp.sendMail.mock.calls[0] as [Record<string, string>]
+    expect(mail).toMatchObject({
+      from: 'site@example.com',
+      to: 'sales@example.com',
+      replyTo: 'maria@example.com',
+      subject: `Заявка с сайта ${SITE_NAME}: Мария`,
+    })
+    for (const part of [
+      lead.name,
+      lead.email,
+      lead.message,
+      lead.consentVersion,
+      lead.consentedAt,
+    ]) {
+      expect(mail.text).toContain(part)
+    }
+    expect(smtp.close).toHaveBeenCalledOnce()
+  })
+
+  it('сбой сервера: три попытки, транспорт закрывается после каждой, ошибка — наружу', async () => {
+    smtp.sendMail.mockRejectedValue(new Error('421 try again later'))
+    await expect(deliverLead(lead, { env, retryDelaysMs: [0, 0] })).rejects.toThrow(
+      '421 try again later',
+    )
+    expect(smtp.sendMail).toHaveBeenCalledTimes(3)
+    expect(smtp.close).toHaveBeenCalledTimes(3)
+  })
+
+  it('канал не настроен: отказ с именем переменной, без попыток', async () => {
+    for (const key of ['SMTP_URL', 'FORM_TO', 'FORM_FROM'] as const) {
+      await expect(deliverLead(lead, { env: { ...env, [key]: '' } })).rejects.toThrow(key)
+    }
+    expect(smtp.createTransport).not.toHaveBeenCalled()
+  })
+})

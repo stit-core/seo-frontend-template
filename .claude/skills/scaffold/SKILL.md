@@ -58,6 +58,11 @@ src/pages/en/<path>.astro             en-обёртка: locale = 'en'
   на каждую локаль, в которой она есть
 - тексты — в объекте `COPY` секции на обе локали; подписи навигации — в
   `src/shared/i18n/dict.ts`
+- условия и вычисления секции (ссылка на перевод, крошки, разметка) — в `.ts`-модели рядом с
+  ней (как `_blog/sections.ts`) с unit-тестом; в `.astro` — разметка
+- **тест обязателен**: строка на каждую локаль в `src/pages/_tests/pages.astro.test.ts` — язык,
+  self-canonical или `noindex`, hreflang пары, типы JSON-LD, один `h1`; индексируемая — ещё и
+  адрес в ожидаемой карте `src/pages/_tests/endpoints.server.test.ts`
 
 Не нужно: править `e2e/site.ts` — списки страниц он выводит из `dist/client`. Ключевую
 страницу стоит добавить в `PAGES` спека `e2e/a11y.spec.ts`.
@@ -130,6 +135,10 @@ export const prerender = false
 - `X-Robots-Tag: noindex` там, где ответ не страница выдачи; страница — проп `noindex`
 - **строка в карте маршрутов** `docs/reference/rendering.md` и в `docs/stack/rendering.md`
 - вне `sitemap.xml`
+- **тест обязателен** — в `src/pages/_tests/`: endpoint вызывается напрямую
+  (`endpoints.server.test.ts`), страница — `renderToResponse` Container API
+  (`contact.astro.test.ts`); проверяются статус, тело или разметка, `Cache-Control` и
+  `X-Robots-Tag` — по каждому исходу маршрута
 
 Обработчик формы — страница, а не endpoint: без JavaScript ответом на POST обязана быть
 разметка, а успех — 303 (PRG).
@@ -157,6 +166,7 @@ pnpm format           # Prettier для .astro: новый файл почти �
 pnpm typecheck        # нет битых импортов и пропсов
 pnpm lint             # границы FSD (ESLint boundaries) и правила
 pnpm steiger          # структура: public API, сегменты, значимость слайса
+pnpm test             # тесты артефакта и пороги покрытия
 ```
 
 Для `collection` дополнительно `pnpm check:content`; перед claim «готово» — `pnpm check`.

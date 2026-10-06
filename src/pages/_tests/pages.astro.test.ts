@@ -1,0 +1,178 @@
+import type { GetStaticPathsResult } from 'astro'
+import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
+import { headTags } from '../../../scripts/lib/html.mjs'
+import NotFound from '../404.astro'
+import ServerError from '../500.astro'
+import About from '../about.astro'
+import * as PostRu from '../blog/[slug].astro'
+import Blog from '../blog/index.astro'
+import * as ListRu from '../blog/page/[page].astro'
+import * as TagRu from '../blog/tag/[tag].astro'
+import Contacts from '../contacts/index.astro'
+import Thanks from '../contacts/spasibo.astro'
+import AboutEn from '../en/about.astro'
+import * as PostEn from '../en/blog/[slug].astro'
+import BlogEn from '../en/blog/index.astro'
+import * as ListEn from '../en/blog/page/[page].astro'
+import * as TagEn from '../en/blog/tag/[tag].astro'
+import ContactsEn from '../en/contacts/index.astro'
+import ThanksEn from '../en/contacts/spasibo.astro'
+import HomeEn from '../en/index.astro'
+import Home from '../index.astro'
+import Privacy from '../legal/privacy.astro'
+import Now from '../now.astro'
+
+vi.mock('astro:content', () => import('./fixtures').then((fixtures) => fixtures.astroContent))
+
+const ORIGIN = 'https://demo.example'
+
+beforeEach(() => {
+  vi.stubEnv('SITE_URL', ORIGIN)
+  // Vitest работает в dev-режиме Vite; режим сборки, где черновиков нет, задаётся явно.
+  vi.stubEnv('DEV', false)
+})
+afterEach(() => vi.unstubAllEnvs())
+
+const container = await AstroContainer.create()
+
+// Страница целиком, как её отдаёт сборка: <head> разбирает тот же парсер, что seo:check и e2e.
+async function render(
+  page: AstroComponentFactory,
+  path: string,
+  props: Record<string, unknown> = {},
+) {
+  const html = await container.renderToString(page, {
+    props,
+    request: new Request(`${ORIGIN}${path}`),
+    partial: false,
+  })
+  const tags = headTags(html)
+  return {
+    html,
+    lang: /<html lang="([^"]+)"/.exec(html)?.[1],
+    canonical: tags.find((tag) => tag.rel === 'canonical')?.href,
+    robots: tags.find((tag) => tag.name === 'robots')?.content,
+    hreflang: Object.fromEntries(
+      tags.flatMap((tag) => (tag.hreflang ? [[tag.hreflang, tag.href]] : [])),
+    ),
+    jsonLd: [...html.matchAll(/<script type="application\/ld\+json">([^<]*)<\/script>/g)].map(
+      ([, json]) => (JSON.parse(json ?? '') as { '@type': string })['@type'],
+    ),
+    h1: html.match(/<h1\b/g)?.length ?? 0,
+  }
+}
+
+const localeOf = (path: string) => (/^\/en(\/|$)/.test(path) ? 'en' : 'ru')
+const pair = (ru: string, en: string) => ({
+  ru: `${ORIGIN}${ru}`,
+  en: `${ORIGIN}${en}`,
+  'x-default': `${ORIGIN}${ru}`,
+})
+
+describe('индексируемые страницы', () => {
+  it.each<[string, AstroComponentFactory, Record<string, string>, string[]]>([
+    ['/', Home, pair('/', '/en'), ['Organization', 'WebSite']],
+    ['/en', HomeEn, pair('/', '/en'), ['Organization']],
+    ['/about', About, pair('/about', '/en/about'), ['LocalBusiness', 'BreadcrumbList']],
+    ['/en/about', AboutEn, pair('/about', '/en/about'), ['LocalBusiness', 'BreadcrumbList']],
+    ['/contacts', Contacts, pair('/contacts', '/en/contacts'), ['BreadcrumbList']],
+    ['/en/contacts', ContactsEn, pair('/contacts', '/en/contacts'), ['BreadcrumbList']],
+    ['/legal/privacy', Privacy, {}, ['BreadcrumbList']],
+    ['/blog', Blog, pair('/blog', '/en/blog'), ['BreadcrumbList']],
+    ['/en/blog', BlogEn, pair('/blog', '/en/blog'), ['BreadcrumbList']],
+  ])(
+    '%s: язык, self-canonical, hreflang пары, JSON-LD и один h1',
+    async (path, page, hreflang, jsonLd) => {
+      const head = await render(page, path)
+      expect(head.lang).toBe(localeOf(path))
+      expect(head.canonical).toBe(`${ORIGIN}${path}`)
+      expect(head.robots).toBeUndefined()
+      expect(head.hreflang).toEqual(hreflang)
+      expect(head.jsonLd).toEqual(jsonLd)
+      expect(head.h1).toBe(1)
+    },
+  )
+})
+
+describe('служебные страницы', () => {
+  it.each<[string, AstroComponentFactory]>([
+    ['/contacts/spasibo', Thanks],
+    ['/en/contacts/spasibo', ThanksEn],
+    ['/net-takoj-stranicy', NotFound],
+    ['/500', ServerError],
+  ])('%s: только noindex — без canonical, hreflang и разметки', async (path, page) => {
+    const head = await render(page, path)
+    expect(head.lang).toBe(localeOf(path))
+    expect(head.robots).toBe('noindex')
+    expect(head.canonical).toBeUndefined()
+    expect(head.hreflang).toEqual({})
+    expect(head.jsonLd).toEqual([])
+    expect(head.h1).toBe(1)
+  })
+
+  it('/now: время запроса, ответ не кешируется и не индексируется', async () => {
+    const response = await container.renderToResponse(Now, {
+      request: new Request(`${ORIGIN}/now`),
+      partial: false,
+    })
+    expect(response.headers.get('cache-control')).toBe('private, no-store')
+    const html = await response.text()
+    const time = /<time datetime="([^"]+)"/.exec(html)?.[1] ?? ''
+    expect(Math.abs(Date.parse(time) - Date.now())).toBeLessThan(60_000)
+    expect(headTags(html).find((tag) => tag.name === 'robots')?.content).toBe('noindex')
+  })
+})
+
+// Плоский TS видит у модуля .astro только default (src/env.d.ts); маршрут с параметрами
+// экспортирует ещё getStaticPaths.
+interface DynamicRoute {
+  default: AstroComponentFactory
+  getStaticPaths: () => Promise<GetStaticPathsResult>
+}
+
+describe('маршруты с параметрами', () => {
+  it.each<[string, { default: AstroComponentFactory }, string[]]>([
+    [
+      '/blog/[slug]',
+      PostRu,
+      [
+        '/blog/para',
+        '/blog/odna',
+        '/blog/zametka-4',
+        '/blog/zametka-3',
+        '/blog/zametka-2',
+        '/blog/zametka-1',
+      ],
+    ],
+    ['/en/blog/[slug]', PostEn, ['/en/blog/pair']],
+    ['/blog/tag/[tag]', TagRu, ['/blog/tag/astro', '/blog/tag/seo']],
+    ['/en/blog/tag/[tag]', TagEn, ['/en/blog/tag/seo']],
+    ['/blog/page/[page]', ListRu, ['/blog/page/2']],
+    ['/en/blog/page/[page]', ListEn, []],
+  ])(
+    '%s: адреса своей локали без черновиков, каждый — своя страница',
+    async (route, module, expected) => {
+      const { default: page, getStaticPaths } = module as DynamicRoute
+      const pages = (await getStaticPaths()).map(({ params, props }) => ({
+        path: route.replace(/\[(\w+)\]/, (_, key: string) => params[key] ?? ''),
+        props: props ?? {},
+      }))
+      expect(pages.map(({ path }) => path)).toEqual(expected)
+      for (const { path, props } of pages) {
+        const head = await render(page, path, props)
+        expect(head.lang, path).toBe(localeOf(path))
+        expect(head.canonical, path).toBe(`${ORIGIN}${path}`)
+        expect(head.h1, path).toBe(1)
+      }
+    },
+  )
+
+  it('запись с переводом: hreflang пары, BlogPosting и тело записи', async () => {
+    const [first] = await (PostRu as DynamicRoute).getStaticPaths()
+    const head = await render(PostRu.default, '/blog/para', first?.props)
+    expect(head.hreflang).toEqual(pair('/blog/para', '/en/blog/pair'))
+    expect(head.jsonLd).toEqual(['BlogPosting', 'BreadcrumbList'])
+    expect(head.html).toContain('<p>Тело записи.</p>')
+  })
+})

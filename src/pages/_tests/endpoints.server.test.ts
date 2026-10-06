@@ -63,10 +63,15 @@ describe('sitemap.xml', () => {
       `${ORIGIN}/en/contacts`,
       `${ORIGIN}/legal/privacy`,
       `${ORIGIN}/blog`,
+      `${ORIGIN}/blog/page/2`,
       `${ORIGIN}/blog/tag/astro`,
       `${ORIGIN}/blog/tag/seo`,
       `${ORIGIN}/blog/para`,
       `${ORIGIN}/blog/odna 2026-02-10`,
+      `${ORIGIN}/blog/zametka-4`,
+      `${ORIGIN}/blog/zametka-3`,
+      `${ORIGIN}/blog/zametka-2`,
+      `${ORIGIN}/blog/zametka-1`,
       `${ORIGIN}/en/blog`,
       `${ORIGIN}/en/blog/tag/seo`,
       `${ORIGIN}/en/blog/pair`,
@@ -84,7 +89,14 @@ describe('фиды', () => {
   it('у каждой локали свои записи без черновика, свой язык и self-ссылка', async () => {
     const ru = await get(feedRu)
     const ruXml = await ru.text()
-    expect(links(ruXml)).toEqual([`${ORIGIN}/blog/para`, `${ORIGIN}/blog/odna`])
+    expect(links(ruXml)).toEqual([
+      `${ORIGIN}/blog/para`,
+      `${ORIGIN}/blog/odna`,
+      `${ORIGIN}/blog/zametka-4`,
+      `${ORIGIN}/blog/zametka-3`,
+      `${ORIGIN}/blog/zametka-2`,
+      `${ORIGIN}/blog/zametka-1`,
+    ])
     expect(ruXml).toContain('<language>ru</language>')
     expect(ruXml).toContain(`<atom:link href="${ORIGIN}/rss.xml" rel="self"`)
 

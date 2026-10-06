@@ -80,6 +80,22 @@ const locale = 'ru' as const
 { route: '/<path>', locales: SUPPORTED_LOCALES },   // или [DEFAULT_LOCALE]
 ```
 
+## page — тест
+
+`src/pages/_tests/pages.astro.test.ts`: импорт обёрток и строка на локаль в таблице
+индексируемых страниц (служебная — в таблице служебных, только путь и страница):
+
+```ts
+import NamePage from '../<path>.astro'
+import NamePageEn from '../en/<path>.astro'
+
+['/<path>', NamePage, pair('/<path>', '/en/<path>'), ['BreadcrumbList']],
+['/en/<path>', NamePageEn, pair('/<path>', '/en/<path>'), ['BreadcrumbList']],
+```
+
+Без перевода вместо `pair(…)` — `{}`. Индексируемая — ещё и адреса `${ORIGIN}/<path>`,
+`${ORIGIN}/en/<path>` в ожидаемом списке карты `src/pages/_tests/endpoints.server.test.ts`.
+
 ---
 
 ## collection — `model/schema.ts`
@@ -244,3 +260,24 @@ Astro.response.headers.set('cache-control', 'private, no-store')
 
 Каждый такой маршрут — строка в `docs/reference/rendering.md` и в
 `docs/stack/rendering.md`, и он не попадает в `sitemap.xml`.
+
+## route — тест
+
+Endpoint — в `src/pages/_tests/endpoints.server.test.ts` (хелпер `get` вызывает `GET` с
+параметрами пути):
+
+```ts
+import { GET as name } from '../<name>.ts'
+
+describe('<name>', () => {
+  it('ответ и заголовки', async () => {
+    const response = await get(name)
+    expect([response.status, await response.text()]).toEqual([200, 'ok'])
+    expect(response.headers.get('cache-control')).toBe('no-store')
+    expect(response.headers.get('x-robots-tag')).toBe('noindex')
+  })
+})
+```
+
+Страница — `renderToResponse`, как в `src/pages/_tests/contact.astro.test.ts`: статус,
+`Cache-Control` и разметка каждого исхода.

@@ -1,17 +1,8 @@
 ---
 import DocumentLayout from '@/app/layouts/document.astro'
-import {
-  blogPath,
-  findTranslation,
-  type Post,
-  PostArticle,
-  postPath,
-  postRoute,
-  renderPost,
-} from '@/entities/post'
-import { localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
-import { blogPosting, breadcrumbList } from '@/shared/seo'
+import { type Post, PostArticle, renderPost } from '@/entities/post'
 import { Breadcrumbs } from '@/widgets/breadcrumbs'
+import { postPageModel } from './sections'
 
 interface Props {
   post: Post
@@ -20,52 +11,20 @@ interface Props {
 const { post } = Astro.props
 const { locale, data } = post
 const { Content } = await renderPost(post)
-
-// Ссылка на перевод — только при реальном twin по translationKey; slug перевода может отличаться.
-const other = SUPPORTED_LOCALES.find((candidate) => candidate !== locale)
-const twin = other ? await findTranslation(post, other) : undefined
-const alternatePath = twin ? postRoute(twin.slug) : undefined
-
-// Социальная карточка — обложка записи (исходный PNG), без обложки — дефолт сайта.
-const ogImage =
-  data.cover && data.coverAlt
-    ? {
-        path: data.cover.src,
-        width: data.cover.width,
-        height: data.cover.height,
-        alt: data.coverAlt,
-      }
-    : undefined
-const article = { published: data.pubDate, modified: data.updatedDate }
-const crumbs = [
-  { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
-  { name: t(locale, 'blog.title'), href: blogPath(locale) },
-  { name: data.title },
-]
+const model = await postPageModel(post)
 ---
 
 <DocumentLayout
   locale={locale}
-  alternatePath={alternatePath}
+  alternatePath={model.alternatePath}
   title={data.title}
   description={data.description}
   ogType="article"
-  ogImage={ogImage}
-  article={article}
-  jsonLd={[
-    blogPosting({
-      locale,
-      path: postPath(locale, post.slug),
-      title: data.title,
-      description: data.description,
-      published: data.pubDate,
-      updated: data.updatedDate,
-      imagePath: ogImage?.path,
-    }),
-    breadcrumbList(crumbs),
-  ]}
+  ogImage={model.ogImage}
+  article={model.article}
+  jsonLd={model.jsonLd}
 >
-  <Breadcrumbs locale={locale} items={crumbs} class="mb-4" />
+  <Breadcrumbs locale={locale} items={model.crumbs} class="mb-4" />
   <PostArticle post={post}>
     <Content />
   </PostArticle>

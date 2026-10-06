@@ -145,18 +145,16 @@ describe('обработчик формы', () => {
     expect(outcome).toEqual({ status: 'accepted', locale: 'ru' })
   })
 
-  it('тело больше лимита — отказ по Content-Length, без чтения', async () => {
-    const request = new Request(`${ORIGIN}/api/contact`, {
-      method: 'POST',
-      headers: {
-        origin: ORIGIN,
-        'content-type': 'application/x-www-form-urlencoded',
-        'content-length': '99999999',
-      },
-      body: new URLSearchParams(filled),
+  it('лимит тела — 64 КБ по Content-Length: байт сверх — отказ без чтения', async () => {
+    const sized = (length: number) => post(filled, { 'content-length': String(length) })
+    expect(await handleContactRequest(sized(64 * 1024), context)).toEqual({
+      status: 'accepted',
+      locale: 'ru',
     })
-    expect(await handleContactRequest(request, context)).toEqual({ status: 'too-large' })
-    expect(fetchMock).not.toHaveBeenCalled()
+    expect(await handleContactRequest(sized(64 * 1024 + 1), context)).toEqual({
+      status: 'too-large',
+    })
+    expect(fetchMock).toHaveBeenCalledOnce()
     expect(logged()).toContain('too-large')
   })
 

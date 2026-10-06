@@ -72,7 +72,7 @@ widget — только при ≥ 2 страницах. Server route — `src/p
 | проектные UI-примитивы | `shared/ui/<name>/` |
 | каркас сайта, список записей, хлебные крошки (видимые; `BreadcrumbList` из того же массива печатает layout в `<head>`) | `widgets/site-header`, `widgets/site-footer`, `widgets/post-list`, `widgets/breadcrumbs` |
 | коллекция контента: `.md`, схема, запросы, карточка/статья | `entities/post/{content,model,api,lib,ui}` |
-| секции страниц блога, их `getStaticPaths` и фид (ru/en делят разметку, пути и фид) | `src/pages/_blog/*.astro`, `src/pages/_blog/static-paths.ts`, `src/pages/_blog/feed.ts` |
+| секции страниц блога, их логика, `getStaticPaths` и фид (ru/en делят разметку, логику, пути и фид) | `src/pages/_blog/*.astro`, `src/pages/_blog/sections.ts`, `src/pages/_blog/static-paths.ts`, `src/pages/_blog/feed.ts` |
 | on-demand SEO-маршруты | `src/pages/{robots.txt,sitemap.xml,rss.xml,[key].txt}.ts`, `src/pages/en/rss.xml.ts` |
 
 ## Кто что проверяет

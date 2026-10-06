@@ -1,10 +1,10 @@
 ---
 import DocumentLayout from '@/app/layouts/document.astro'
-import { blogPath, listByTag, type Post, tagRoute } from '@/entities/post'
-import { type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
-import { breadcrumbList } from '@/shared/seo'
+import type { Post } from '@/entities/post'
+import type { Locale } from '@/shared/i18n'
 import { Breadcrumbs } from '@/widgets/breadcrumbs'
 import { PostList } from '@/widgets/post-list'
+import { tagPageModel } from './sections'
 
 interface Props {
   locale: Locale
@@ -13,28 +13,18 @@ interface Props {
 }
 
 const { locale, tag, posts } = Astro.props
-
-// Тег есть в другой локали — только если там есть опубликованные записи с ним.
-const other = SUPPORTED_LOCALES.find((candidate) => candidate !== locale)
-const alternatePath = other && (await listByTag(other, tag)).length > 0 ? tagRoute(tag) : undefined
-
-const heading = `${t(locale, 'blog.tagLead')} #${tag}`
-const crumbs = [
-  { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
-  { name: t(locale, 'blog.title'), href: blogPath(locale) },
-  { name: `#${tag}` },
-]
+const model = await tagPageModel(locale, tag)
 ---
 
 <DocumentLayout
   locale={locale}
-  alternatePath={alternatePath}
-  title={`${t(locale, 'blog.tag')} #${tag} — ${t(locale, 'blog.title')}`}
-  description={`${heading}. ${t(locale, 'blog.lead')}`}
-  jsonLd={[breadcrumbList(crumbs)]}
+  alternatePath={model.alternatePath}
+  title={model.title}
+  description={model.description}
+  jsonLd={model.jsonLd}
 >
-  <Breadcrumbs locale={locale} items={crumbs} class="mb-4" />
-  <h1 class="text-heading-xl font-semibold tracking-tight">{heading}</h1>
+  <Breadcrumbs locale={locale} items={model.crumbs} class="mb-4" />
+  <h1 class="text-heading-xl font-semibold tracking-tight">{model.heading}</h1>
   <div class="mt-10">
     <PostList locale={locale} posts={posts} />
   </div>

@@ -1,7 +1,9 @@
 import type { PostData, PostEntry } from '@/entities/post'
+import PostBody from './post-body.astro'
 
 // Коллекция для подмены astro:content в тестах маршрутов: пара переводов, запись без перевода
-// с updatedDate и черновик со своим тегом — сборка не видит ни черновик, ни его тег.
+// с updatedDate, черновик со своим тегом — сборка не видит ни черновик, ни его тег — и четыре
+// заметки, с которыми у русского блога две страницы списка, а у английского одна.
 const entry = (id: string, data: Partial<PostData>): PostEntry =>
   ({
     id,
@@ -36,6 +38,13 @@ export const POSTS: readonly PostEntry[] = [
     draft: true,
     translationKey: 'draft',
   }),
+  ...[1, 2, 3, 4].map((n) =>
+    entry(`ru/zametka-${n}`, {
+      title: `Заметка ${n}`,
+      pubDate: new Date(`2026-01-0${n}`),
+      translationKey: `zametka-${n}`,
+    }),
+  ),
 ]
 
 // Модуль astro:content для vi.mock.
@@ -44,4 +53,5 @@ export const astroContent = {
     Promise.resolve(filter ? POSTS.filter(filter) : POSTS),
   getEntry: (_collection: string, id: string) =>
     Promise.resolve(POSTS.find((post) => post.id === id)),
+  render: () => Promise.resolve({ Content: PostBody, headings: [] }),
 }
