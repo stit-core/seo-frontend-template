@@ -5,6 +5,8 @@ import { getViteConfig } from 'astro/config'
 export default getViteConfig({
   test: {
     globals: true,
+    // `.only`, забытый в тесте, молча выключил бы остальные тесты гейта — это ошибка прогона.
+    allowOnly: false,
     coverage: {
       provider: 'v8',
       // Широкий объём: всё, что исполняется на сборке или на запросе, — страницы, app и .astro.
@@ -36,7 +38,7 @@ export default getViteConfig({
         test: {
           name: 'astro',
           environment: 'node',
-          include: ['src/**/*.astro.test.ts', 'src/**/*.server.test.ts'],
+          include: ['src/**/*.{astro,server}.{test,spec}.{ts,mts}'],
         },
       },
       {
@@ -44,8 +46,9 @@ export default getViteConfig({
         test: {
           name: 'dom',
           environment: 'happy-dom',
-          include: ['src/**/*.test.ts'],
-          exclude: ['src/**/*.astro.test.ts', 'src/**/*.server.test.ts'],
+          // Любой тест-файл src запускается: .spec и .mts не выпадают из гейта молча.
+          include: ['src/**/*.{test,spec}.{ts,mts}'],
+          exclude: ['src/**/*.{astro,server}.{test,spec}.{ts,mts}'],
         },
       },
     ],

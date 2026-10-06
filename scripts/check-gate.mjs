@@ -3,7 +3,8 @@
 // check:content) — ровно нарушениями из expected.json, не больше и не меньше. Иначе деградация
 // (Steiger fail-open, пустой a11y-конфиг, потерянный резолвер boundaries, ослабленная проверка
 // скрипта) остаётся незамеченной: прогон зелёный, а держать нечем. Пустая или урезанная секция
-// expected.json — тоже деградация: её ловит точное совпадение.
+// expected.json — тоже деградация: её ловит точное совпадение. Периметр — так же: guard-хук
+// Claude Code обязан отказать каждому обходу из .gate-fixtures/guard.json и пропустить работу.
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { isAbsolute, relative, resolve } from 'node:path'
@@ -101,7 +102,30 @@ for (const [section, script] of Object.entries(SCRIPTS)) {
     .map((line) => expectedKey(line.slice(2), want[section]))
 }
 
-let problems = 0
+// Guard-хук: отказ — код 2 (так Claude Code блокирует вызов), пропуск — 0.
+const guard = JSON.parse(readFileSync(resolve(fixtures, 'guard.json'), 'utf8'))
+const guardCode = (command) =>
+  spawnSync('bash', [resolve(root, '.claude/hooks/guard-bash.sh')], {
+    input: JSON.stringify({ tool_name: 'Bash', tool_input: { command } }),
+    encoding: 'utf8',
+  }).status
+const guardLines = [
+  ...(guard.block ?? [])
+    .filter((command) => guardCode(command) !== 2)
+    .map((command) => `  ✗ обход не заблокирован: ${JSON.stringify(command)}`),
+  ...(guard.allow ?? [])
+    .filter((command) => guardCode(command) !== 0)
+    .map((command) => `  ✗ обычная работа заблокирована: ${JSON.stringify(command)}`),
+]
+if ((guard.block ?? []).length === 0)
+  guardLines.push('  ✗ guard.json без обходов — периметр не проверен')
+
+let problems = guardLines.length
+console.info(
+  guardLines.length === 0
+    ? `✓ guard: обходов ${guard.block.length} — отказ, обычных команд ${guard.allow?.length ?? 0} — пропуск`
+    : `✗ guard:\n${guardLines.join('\n')}`,
+)
 for (const section of [...LINTERS, ...Object.keys(SCRIPTS)]) {
   if (want[section].length === 0) {
     console.error(`✗ ${section}: секция expected.json пуста — гейт на гейт выключен`)

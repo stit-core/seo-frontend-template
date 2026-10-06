@@ -86,7 +86,8 @@ Vitest 5 (Container API) + Playwright на prod-сборке (HTTP-набор в
 | `pnpm accept:image <image>` | приёмка собранного образа до пуша: fail-fast, штамповка, статусы, TTFB, staging, дренаж |
 | `pnpm check` | **gate**: plan:check → typecheck → lint → format:check → test → steiger → check:gate → check:content → build → check:links → seo:check → size → test:http |
 
-Перед claim «готово» / push — **`pnpm check`** (его же гоняет `lefthook pre-push`).
+Перед claim «готово» / push — **`pnpm check`** (его же гоняет pre-push — для пушимого HEAD на
+чистом дереве).
 
 ## Карта: где что
 
@@ -139,18 +140,24 @@ Vitest 5 (Container API) + Playwright на prod-сборке (HTTP-набор в
 - **Conventional Commits** (commitlint): `feat|fix|refactor|docs|test|chore|meta|perf|style`,
   формат `<type>(<scope>)?: <subject>`, subject ≤ 72
 - **Push в `main` разрешён** (прямой или через PR); линейная история
-- Хуки ставит `pnpm prepare` (`lefthook install`): pre-commit — Biome/Prettier/ESLint по staged,
-  commit-msg — commitlint, pre-push — `pnpm check`
+- Хуки ставит `pnpm prepare` (`lefthook install`, хук без lefthook — отказ): pre-commit — Biome,
+  Prettier (`.astro`), ESLint по staged и валидатор планов; commit-msg — commitlint; pre-push —
+  `scripts/pre-push.sh`: дерево чистое, пушится HEAD, затем `pnpm check`
 
 ## Границы
 
 Сначала спроси юзера — эти решения надолго меняют образ, зависимости или архитектуру сайта:
 правка `docker/*`, `.npmrc`, `package.json#dependencies`; новый остров (клиентский `<script>`)
-или интеграция Astro; изменение FSD-структуры (новый слой, переименование сегментов).
+или интеграция Astro; изменение FSD-структуры (новый слой, переименование сегментов). Ослабить
+гейт — выключить или смягчить правило, урезать фикстуры и `expected.json`, понизить пороги
+(`scripts/`, `.gate-fixtures/`, конфиги линтеров и Vitest, `.size-limit.cjs`, `lefthook.yml`,
+`.claude/`) — только по явной просьбе юзера.
 
-Хуки не обходятся: `--no-verify` закрыт deny-правилом `.claude/settings.json`, и пропустить
-pre-push `pnpm check` может только сам юзер. `.env`, `*.pem`, `*.key` не коммитятся: секреты
-живут только в env контейнера.
+Хуки не обходятся из сессии: guard-хук `.claude/hooks/guard-bash.sh` отказывает `git commit -n`,
+`--no-veri…`, force-push, `core.hooksPath`, переменным lefthook (`LEFTHOOK=0`,
+`LEFTHOOK_EXCLUDE`…), `lefthook uninstall` и записи в `.git/hooks`; `--no-verify` закрыт ещё и
+deny-правилом. Пропустить pre-push может только сам юзер. `.env`, `*.pem`, `*.key` не
+коммитятся (`.gitignore`) и не читаются из сессии (deny): секреты живут только в env контейнера.
 
 ## Долгосрочное знание
 

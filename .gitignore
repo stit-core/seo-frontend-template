@@ -30,3 +30,7 @@ playwright-report
 
 *.tsbuildinfo
 node_modules/.cache
+
+# Ключи и сертификаты: секреты живут только в env контейнера.
+*.pem
+*.key

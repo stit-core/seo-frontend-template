@@ -72,7 +72,8 @@ pnpm accept:image <image>   # приёмка собранного образа �
 pnpm check            # gate: plan:check + typecheck + lint + format + test + steiger + check:gate + check:content + build + check:links + seo:check + size + test:http
 ```
 
-Перед claim «готово» / push — **`pnpm check`** (его же гоняет `lefthook pre-push`).
+Перед claim «готово» / push — **`pnpm check`** (его же гоняет pre-push — для пушимого HEAD на
+чистом дереве).
 
 ## Структура
 

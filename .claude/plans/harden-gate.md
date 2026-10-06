@@ -65,9 +65,13 @@ blocked-by: —
   - Подтверждено: `pnpm check` → шаг `test:http` поднимает копию сборки как контейнер (прод и staging) на
     свободных портах, 25 тестов зелёные; `pnpm test:e2e` — 79 браузерных тестов на динамических портах, шаг 1
     «Браузерный набор» в `.claude/skills/release/SKILL.md`
-- [ ] **AC6** — Обходы pre-push из ENF-01 закрыты: Claude Code отклоняет `git commit -n`, `--no-veri*`,
+- [x] **AC6** — Обходы pre-push из ENF-01 закрыты: Claude Code отклоняет `git commit -n`, `--no-veri*`,
   `LEFTHOOK=0`, `LEFTHOOK_EXCLUDE`, `core.hooksPath`; хук без lefthook падает; pre-push проверяет пушимый
   HEAD на чистом дереве. Проверка: сценарии ENF-01 → отказ
+  - Подтверждено: guard-хук — 29 обходов (ENF-01 и force-push) → код 2, 23 обычные команды → 0 в
+    `pnpm check:gate`, откат любого правила хука → красный; копия хука без lefthook → exit 1 (без
+    `assert_lefthook_installed` — 0); префлайт: грязное дерево и ref не на HEAD → отказ, чистый HEAD →
+    `pnpm check` (scratch-репо `M/stage-c/perimeter`). Живую сессию с хуком проверит приёмка S13
 - [ ] **AC7** — Доки не приписывают гейту несуществующих проверок. Проверка: сверка 43 утверждений «гейт ловит
   X» из ENF-06 → каждое верно или удалено
 
@@ -173,10 +177,16 @@ blocked-by: —
     Tailwind по умолчанию выключена в токен-слое (сборка побайтно та же); Biome `noConsole` снят. Фикстура
     `widgets/promo` — откат любого правила → красный `check:gate`. V08, V17, V20, V24, V27a–c, V06 и цвет в `fill`
     → красный `pnpm check` на `lint`, V18 — на `test` (PII-проверка этапа A); класс палитры CSS не даёт
-- [ ] **S11** — Периметр: guard-хук Claude Code по образцу go-backend (плюс `LEFTHOOK=0`, `LEFTHOOK_EXCLUDE`,
+- [x] **S11** — Периметр: guard-хук Claude Code по образцу go-backend (плюс `LEFTHOOK=0`, `LEFTHOOK_EXCLUDE`,
   `lefthook uninstall`), `assert_lefthook_installed`, префлайт pre-push «чистое дерево, пушится HEAD», глобы
   pre-commit для `e2e/` и `scripts/`
   - Проверка: сценарии ENF-01 → отказ; хук без lefthook → exit 1 · Закрывает: AC6 · Зависит от: S10
+  - Сделано: `.claude/hooks/guard-bash.sh` в `hooks.PreToolUse` (обходы git-хуков, переменные lefthook,
+    `lefthook uninstall`, запись в `.git/hooks` и `lefthook-local`, force-push), сценарии — `.gate-fixtures/
+    guard.json` в `check:gate`; `lefthook.yml` — `assert_lefthook_installed`, pre-push — `scripts/pre-push.sh`
+    (чистое дерево, пушится HEAD, затем `pnpm check`), ESLint pre-commit — по всем линтуемым расширениям; Vitest —
+    `allowOnly: false`, тесты `.spec` и `.mts`; deny — секреты, `clean -df`, `.git/hooks`; `autoMemoryEnabled:
+    false`. Сценарии ENF-01 → отказ, хук без lefthook → exit 1, `.only` и падающий `.spec.ts` → красный `test`
 - [ ] **S12** — Правда прозы: каждое утверждение «гейт ловит X» из ENF-06 реализовано в S1–S11 или удалено;
   состав гейта — в одном месте; CLAUDE.md о гейте и хуках — правда; `/scaffold collection` и `feature` приходят
   с тестами (схема граничными литералами, запросы, строки маршрутов и карты в тестах `_tests/`, фикстуры; unit и
@@ -251,7 +261,19 @@ blocked-by: —
   `#fff`, именованные цвета), а Tailwind печатает свои служебные; литерал в исходнике однозначен и с `file:line`.
 - Палитра Tailwind — выключена в токен-слое (`--color-*: initial`), а не регэксп имён в классах: цвет палитры не
   доходит до CSS ни из литерала, ни из вычисленного класса. `console` и `any` — одним владельцем, ESLint.
+- Guard — хук go-backend плюс поверхность lefthook: переменные `LEFTHOOK`, `_EXCLUDE`, `_BIN`, `_CONFIG` рядом с
+  git или lefthook (по тексту без кавычек — сообщение коммита и шаблон grep не блокируются), `lefthook
+  uninstall`, запись в `.git/hooks` и `lefthook-local` (хук живёт вне диффа), force-push во всех формах.
+  Обход для человека — `git push --no-verify`, своей переменной нет. Предел — обфускация и ослабление
+  `lefthook.yml` в самом пушимом коммите (хуки в репо, как у go-backend).
+- Сценарии хука — в `check:gate` (`guard.json`: `block` и `allow`), а не в Vitest: хук — периметр гейта, его
+  регресс в обе стороны (пропуск обхода, блок работы) краснеет там же, где регресс линтеров.
+- Префлайт pre-push — `scripts/pre-push.sh` под lefthook (`use_stdin`: refs пушимого на stdin).
+- ENF-11 — в S11: `.only` и тест-файл вне шаблона Vitest молча выключали шаг `test` — тот же обход гейта.
+- ENF-15: deny — `git clean *-*f*`, чтение и правка секретов, правка `.git/hooks` и `lefthook-local`; `*.pem`,
+  `*.key` — в `.gitignore`. `ask` на конфиги гейта не заведён: агенты программы правят их по плану, ослабление
+  ловят фикстуры `check:gate`, остальное — «Сначала спроси» в CLAUDE.md. `autoMemoryEnabled: false` (HAR-07).
 
 ## Где мы сейчас
 Этапы A и B (S1–S8) сделаны и приняты валидатором, AC1, AC4, AC5 подтверждены; остатки перепроверки B (R1–R3)
-закрыты. Этап C идёт: S9 и S10 сделаны, следующий шаг — S11 (периметр: guard-хук и префлайт pre-push).
+закрыты, AC6 подтверждён. Этап C идёт: S9–S11 сделаны, следующий шаг — S12 (правда прозы).

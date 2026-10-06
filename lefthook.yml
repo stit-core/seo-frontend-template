@@ -1,3 +1,7 @@
+# Хук без lefthook (checkout без node_modules, удалённый worktree, на который указывает хук) —
+# отказ, а не молчаливый пропуск.
+assert_lefthook_installed: true
+
 pre-commit:
   # Три --write-хука на один .astro: последовательно, чтобы не перезаписывать друг друга.
   parallel: false
@@ -11,9 +15,10 @@ pre-commit:
       run: pnpm prettier --write {staged_files}
       stage_fixed: true
     eslint:
-      glob: "src/**/*.{ts,mts,cts,astro}"
+      # Всё, что линтит `pnpm lint`: src, e2e, scripts, конфиги; игнор решает eslint.config.js.
+      glob: "*.{ts,tsx,mts,cts,js,mjs,cjs,astro}"
       # --cache: холодный старт ESLint с парсерами фреймворка — самый дорогой шаг гейта.
-      run: pnpm eslint --fix --no-error-on-unmatched-pattern --cache {staged_files}
+      run: pnpm eslint --fix --no-error-on-unmatched-pattern --no-warn-ignored --cache {staged_files}
       stage_fixed: true
     plans:
       glob: ".claude/plans/*.md"
@@ -28,4 +33,6 @@ pre-push:
   parallel: false
   commands:
     check:
-      run: pnpm check
+      # Префлайт (чистое дерево, пушится HEAD) и pnpm check; refs пушимого — на stdin хука.
+      use_stdin: true
+      run: bash scripts/pre-push.sh

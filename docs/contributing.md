@@ -13,8 +13,20 @@
 ├─ skills/           # процедуры: smartdev, plan, init-service, stack-deep-dive,
 │                    #   de-template, scaffold, content, seo-audit, release
 ├─ plans/           # активные планы <slug>.md и backlog.md (skill /plan)
-└─ settings.json     # настройки сессии (permissions)
+├─ hooks/            # guard-bash.sh — хук Claude Code против обходов git-хуков
+└─ settings.json     # настройки сессии: deny-правила и подключение хука
 ```
+
+## Что держит машина
+
+| слой | где | что |
+|---|---|---|
+| гейт | `pnpm check` | всё, что проверяемо; сам гейт под гейтом — `pnpm check:gate` на `.gate-fixtures/` |
+| git-хуки | `lefthook.yml` (`pnpm prepare`) | pre-commit — формат и линт staged, планы; commit-msg — commitlint; pre-push — `scripts/pre-push.sh`: чистое дерево, пушится HEAD, затем `pnpm check`; хук без lefthook — отказ |
+| хук Claude Code | `.claude/hooks/guard-bash.sh` (PreToolUse, Bash) | отказ `git commit -n`, `--no-veri…`, force-push, `core.hooksPath`, переменным lefthook, `lefthook uninstall`, записи в `.git/hooks`; сценарии — `.gate-fixtures/guard.json` |
+| permissions.deny | `.claude/settings.json` | `--no-verify`, `reset --hard`, `clean -f`, публикация пакетов; чтение и правка секретов (`.env`, `*.pem`, `*.key`), правка `.git/hooks` и `lefthook-local` |
+| правила | `.claude/rules/` | подсказка по теме файла; то, что они обещают машинного, держит гейт |
+| `CLAUDE.md` | корень | ядро и роутер, always-on |
 
 ## Правила
 

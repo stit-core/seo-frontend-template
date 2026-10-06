@@ -50,6 +50,14 @@ ESLint, Steiger и Biome гоняются из этого каталога по 
 | `links/` | `check:links` | несуществующая страница и картинка в `srcset`, хвостовой слеш, `.html`, адрес из `redirects.yaml`, относительная ссылка; живые цели — страница, on-demand маршрут, внешняя ссылка, якорь, `mailto:` |
 | `content/` | `check:content` | тело записи нарушает каждое правило по разу (`telo.md`), дубль сниппета и `translationKey`, поле вне схемы, битый YAML, файл без frontmatter, плохой slug, чужая локаль и вложенный каталог, ссылка на черновик, `redirects.yaml` на живой и несуществующий маршрут, каталог контента вне реестра коллекций (`vne-reestra/`) и запись реестра без каталога |
 
+## Периметр — `guard.json`
+
+Сценарии guard-хука Claude Code (`.claude/hooks/guard-bash.sh`): `block` — обходы git-хуков и
+force-push (`git commit -n`, `--no-veri…`, `core.hooksPath`, `LEFTHOOK=0`, `LEFTHOOK_EXCLUDE`,
+`lefthook uninstall`, запись в `.git/hooks` и `lefthook-local`), каждому — отказ с кодом 2;
+`allow` — обычная работа (коммит с heredoc-сообщением, `--amend`, `git worktree add/remove`,
+`git restore`, push без force, `lefthook install`), каждой — пропуск. Пустой `block` — красный.
+
 ## Как менять
 
 Новое правило границ в корневом конфиге или новая проверка в скрипте гейта — новое нарушение в

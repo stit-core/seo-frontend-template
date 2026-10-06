@@ -107,7 +107,8 @@ pnpm check    # plan:check → typecheck → lint → format:check → test → 
               # → check:content → build → check:links → seo:check → size → test:http
 ```
 
-Его же гоняет `lefthook pre-push`; `test:http` — HTTP-набор на prod-сервере из этой сборки.
+Его же гоняет pre-push — для пушимого HEAD на чистом дереве; `test:http` — HTTP-набор на
+prod-сервере из этой сборки.
 Браузерный набор (`pnpm test:e2e`) — обязательный шаг `/release`: тянет браузер.
 
 ## Когда что-то идёт не так
