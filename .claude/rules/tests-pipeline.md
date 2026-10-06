@@ -1,5 +1,5 @@
 ---
-description: Тестовая дисциплина — два проекта Vitest, Container API для .astro, axe-хелпер, Playwright на prod-сборке, покрытие с порогами-храповиком, состав gate.
+description: Тестовая дисциплина — два проекта Vitest, Container API для .astro, axe-хелпер, Playwright на prod-сборке (HTTP-набор в gate, браузерный — в /release), покрытие с порогами-храповиком, состав gate.
 paths: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testing/**", ".gate-fixtures/**", "scripts/*.mjs"]
 ---
 
@@ -11,8 +11,8 @@ paths: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
 - **Компонентные `.astro`** — `<name>.astro.test.ts` рядом с компонентом: проект `astro`
   (node-окружение, Container API `experimental_AstroContainer`); проверка HTML-строки +
   `expectNoA11yViolations` из `@/shared/lib/testing` (axe-core; правило `region` для
-  фрагмента выключено; в happy-dom нет CSS — контраст видит только браузерный axe e2e
-  `a11y.spec.ts`). Пропсы-сущности — плоские фикстуры (`Post` не тянет `astro:content`)
+  фрагмента выключено; в happy-dom нет CSS — контраст видит только браузерный набор
+  `e2e/browser/a11y.spec.ts`). Пропсы-сущности — плоские фикстуры (`Post` не тянет `astro:content`)
 - **Запросы к контенту** (`entities/*/api/queries.test.ts`) — `astro:content` подменяется
   `vi.mock` с фикстурами через `vi.hoisted`, модуль импортируется после мока: проверяются
   фильтр черновиков и локали, сортировка, twin по `translationKey` — в обоих режимах
@@ -28,13 +28,19 @@ paths: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
   общие фикстуры `fixtures.ts` через `vi.mock('astro:content')`, режим сборки —
   `vi.stubEnv('DEV', false)`. Логика секции — в `.ts`-модели рядом с ней
   (`_blog/sections.ts`), её unit-тест — там же
-- **E2E** — `e2e/*.spec.ts`, Playwright на **prod-сборке**: webServer = `pnpm build` с
-  плейсхолдером + `docker/entrypoint.sh` + `docker/server.mjs` на порту 3201, `url` —
-  `/healthz` (не `/`), прод-профиль (`ROBOTS_POLICY=index`, демо-`INDEXNOW_KEY`). Сырой HTML —
-  через `request` (в т.ч. `User-Agent: Googlebot`), поведение — через `page`; общие хелперы
-  (списки prerendered- и индексируемых страниц из `dist/client`, демо-ключ, порт приёмника) —
-  `e2e/site.ts`. Второй webServer — приёмник заявок `e2e/form-stub.mjs` (порт 3202): канал
-  доставки формы в тестах локальный, наружу они не ходят
+- **E2E** — Playwright на **prod-сборке** (`e2e/playwright.config.ts`). Сервер — как контейнер
+  (`e2e/serve.mjs`): копия `dist/` в раскладке образа, штамповка `docker/entrypoint.sh`,
+  `docker/server.mjs`, живость — по `/healthz` (не `/`). Порты — свободные, свои у каждого
+  прогона: чужой сервер не переиспользуется (`reuseExistingServer: false`), а `dist/` остаётся
+  с плейсхолдером. Цели — из сборки и контента, не демо-slug'и (`e2e/site.ts`: prerendered- и
+  индексируемые страницы `dist/client`, on-demand маршруты `src/pages`, записи коллекций по
+  реестру гейтов, правила `redirects.yaml`). Заявки уходят в локальный приёмник
+  `e2e/form-stub.mjs` — наружу тесты не ходят. Два набора:
+  - **HTTP** (`e2e/http/`, `pnpm test:http`, шаг `pnpm check` после build) — только `request`,
+    браузер не нужен: профили прод (`ROBOTS_POLICY=index`, демо-`INDEXNOW_KEY`) и staging
+    (`ROBOTS_POLICY=noindex`, проект `staging`)
+  - **браузерный** (`e2e/browser/`, `pnpm test:e2e`, обязательный шаг `/release`) — axe, тема,
+    форма без JavaScript в настоящем браузере
 
 ## Что покрываем
 
@@ -54,13 +60,14 @@ paths: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
 | обработчик формы `/api/contact` | `contact.astro.test.ts` (`renderToResponse`): PRG 303 на подтверждение своей локали, GET → 303 на форму, отказы 403/400/413 коротким текстом, ошибка валидации → 200 с полями, сбой доставки → 500; каждый ответ — `private, no-store` и вне индекса |
 | head каждой страницы сборки (`dist/client`) | `pnpm seo:check` после build: один `<title>`/`<h1>`, description с `content`, self-canonical, `lang`, OG с существующей картинкой, hreflang у каждой пары переводов (списки/теги под обоими префиксами, записи по `translationKey`; взаимный, + x-default), уникальность title/description, JSON-LD (типы, Organization/WebSite на главной, форма BreadcrumbList), ни одного HTML-комментария в разметке; парсер `<head>` общий с e2e и `check:links` — `scripts/lib/html.mjs` |
 | контент целиком (`.md`, `redirects.yaml`, ссылки) | `pnpm check:content` до build, `pnpm check:links` после |
-| статусы, заголовки, `lang`, один `<h1>`, «0 script-ресурсов», axe страниц; списки без черновика, 404 на черновик/непереведённое, `/old` → 301 одним хопом, 410 с `noindex` | e2e (`smoke.spec.ts`, `content.spec.ts`) |
-| режимы рендера: «нет `__site_origin__`» на всех страницах `dist/client` и on-demand ответах, «в `<body>` нет абсолютных URL своего origin», `/now` (200, `private, no-store`, `noindex`, время меняется, 0 JS, axe), «внешних скриптов нет, инлайн — только остров темы в `<head>`», 404/410 с `no-cache`, prerendered с `public, max-age=0` + ETag, TTFB (медиана 20 через `scripts/ttfb.mjs`, мягкий порог) | e2e (`rendering.spec.ts`) |
-| SEO на сыром HTML: title/description, self-canonical, hreflang взаимный + x-default (главная ↔ `/en`, запись ↔ перевод, ничего у непереведённой), OG и `og:image` (дефолт 1200×630 у записи без обложки; обложка с её размерами, 200, `immutable`), JSON-LD по типу страницы в `<head>` и ни одного `<script>` в `<body>`, 404/`/now` без canonical/OG, нет `noindex`/`keywords` в прод-профиле, `robots.txt` (Allow, абсолютный Sitemap, без AI-блока), `sitemap.xml` = индексируемые страницы `dist/client` (все 200, служебных нет, `lastmod` только у `updatedDate`), фиды (self-ссылка, язык, абсолютные ссылки, ≤ 20), `/<ключ>.txt`, размер HTML < 300 КБ | e2e (`seo.spec.ts`) |
+| prerendered-страницы как в контейнере: каждая страница сборки — 200 от статик-хендлера (`public, max-age=0` + ETag, без `X-Request-Id` и `X-Robots-Tag`), плейсхолдер проштампован, canonical индексируемой — на runtime origin, в `<body>` нет своего origin, HTML < 300 КБ; исполняемый скрипт — только инлайн-остров темы в `<head>`; ассеты `_astro` — `immutable` | HTTP-набор (`pages.spec.ts`) |
+| on-demand: каждый маршрут `prerender = false` отвечает из приложения (`X-Request-Id`, без плейсхолдера и своего origin в теле); адрес вне сборки (неизвестный, черновик, непереведённая запись под чужим префиксом) — 404 служебной страницей с `no-cache`, её ссылки живые; хвостовой слеш — один 301; `/healthz`; `/now` (`private, no-store`, `noindex`, время меняется); редиректы `redirects.yaml` — один хоп, query в `Location`, 410 с `noindex` | HTTP-набор (`service.spec.ts`) |
+| `robots.txt` прод-профиля; `sitemap.xml` = индексируемые страницы `dist/client` (все 200, `lastmod` только у записей с `updatedDate`); фиды (self-ссылка, язык, живые абсолютные ссылки своей локали, ≤ 20, без черновиков); `/<ключ>.txt`; запись с переводом — hreflang взаимный, `article:*_time`, `BlogPosting` про эту страницу (headline = h1, `mainEntityOfPage` = canonical, `image` = `og:image`), видимые крошки = `BreadcrumbList` | HTTP-набор (`seo.spec.ts`) |
+| обработчик формы на prod-сервере: PRG 303 на подтверждение своей локали и доставка в приёмник, ловушка без доставки, ошибка валидации с полями и `private, no-store`, недоступный канал → 500, чужой и отсутствующий Origin → 403, Origin сайта при чужом `Host` → 303, не-форма и битое тело → 400, большое тело → 413, GET → 303 | HTTP-набор (`forms.spec.ts`) |
+| staging (`ROBOTS_POLICY=noindex`): `robots.txt` — `Disallow: /` без карты, каждый ответ приложения — `X-Robots-Tag: noindex, nofollow` | HTTP-набор (`staging.spec.ts`) |
 | форма: значения и бюджеты полей, согласие `literal(true)`; обработчик (`.server.test.ts`): ловушка без доставки, чужой и отсутствующий Origin, враждебные Origin и Referer (двойник с доменом сайта в начале, поддомен, порт, схема, userinfo, `null`; Origin важнее Referer), origin сайта при чужом URL запроса («за прокси»), 413 по `Content-Length` на границе 64 КБ и 400 на не-форму, три попытки, отказ капчи, ненастроенный канал, порог `LOG_LEVEL`, ни на одном исходе тела заявки в логе (`afterEach`); прод-расписание повторов на fake timers; канал smtp (`delivery.server.test.ts`, `nodemailer` подменён): письмо с ответом отправителю и доказательством согласия, три попытки с закрытием транспорта, ненастроенный канал; разметка формы (пустая и с ошибками) + axe | unit + Container API `features/contact-form` |
 | остров темы: ровно один инлайн-скрипт без `src`, без комментариев и прагм, и его размер в байтах (единственная мера бюджета острова); поведение — скрипт исполняется в happy-dom: выбор из cookie до отрисовки, переключатель выбирает тему, противоположную видимой, cookie на весь сайт (`path=/`) на год; кнопка с подписью и без скриптов + axe; счётчик: без идентификатора разметка пуста, с ним — один инлайн-скрипт после idle и `init` без `defer` (иначе просмотры не считаются) | Container API `features/theme`, `app/analytics` |
-| форма без JavaScript целиком: PRG на подтверждение и доставка в приёмник, ошибка валидации с сохранёнными полями и `private, no-store`, ловушка без доставки, недоступный канал → 500, чужой и отсутствующий Origin → 403, Origin сайта при чужом `Host` → 303, не-форма → 400, большое тело → 413, GET обработчика → 303 | e2e (`forms.spec.ts`) |
-| axe на главной, записи, контактах, «о компании», политике и 404 в обеих темах; выбор темы ставит `data-scheme` и cookie и переживает перезагрузку; без JS переключателя нет | e2e (`a11y.spec.ts`) |
+| axe (WCAG 2.2 AA + best-practice) на каждой странице сборки, 404, `/now` и ответе формы с ошибками — в обеих темах; выбор темы ставит `data-scheme` и cookie на весь сайт; без JS переключателя нет; форма в браузере без JavaScript — PRG на подтверждение и доставка, без согласия не отправляется | браузерный набор (`a11y.spec.ts`, `forms.spec.ts`) |
 | нарушения границ FSD и пустой a11y-конфиг | `.gate-fixtures/` + `pnpm check:gate` |
 
 ## Покрытие
@@ -86,9 +93,10 @@ paths: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
 
 ## Gate
 
-`pnpm check` = typecheck → lint → format:check → test (с покрытием и порогами
+`pnpm check` = plan:check → typecheck → lint → format:check → test (с покрытием и порогами
 `vitest.config.ts`) → steiger → check:gate → check:content → build → check:links → seo:check →
-size. `pnpm test:e2e` — отдельный stage, не в gate (тянет браузер).
+size → test:http (HTTP-набор на prod-сервере из этой сборки). `pnpm test:e2e` — браузерный
+набор: обязательный шаг `/release`, в gate не входит (тянет браузер).
 
 ## Что не делаем
 

@@ -32,7 +32,7 @@ description: Cockpit сессии — сводка состояния (ветк�
    (`grep -l '^status: draft' docs/stack/*.md`); FSD-карта поверхности в
    `../strategy` (`docs/projects/<slug>/fsd/<surface>/`) заведена или нет
 5. **Гейты**: какие есть и когда их гонять — `pnpm check` (перед push),
-   `pnpm test:e2e` (отдельный stage), `pnpm kin:diff` (advisory)
+   `pnpm test:e2e` (браузерный набор — обязательный шаг `/release`), `pnpm kin:diff` (advisory)
 6. **Следующий шаг** — один конкретный:
    - форк не развёрнут → `/init-service`
    - стек `draft` → `/stack-deep-dive`

@@ -2,6 +2,11 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 
+/**
+ * Все файлы каталога рекурсивно, в стабильном порядке.
+ * @param {string} dir
+ * @returns {string[]}
+ */
 export function walk(dir) {
   const files = []
   for (const name of readdirSync(dir).sort()) {
@@ -19,6 +24,11 @@ const ON_DEMAND = /export\s+const\s+prerender\s*=\s*false/
 // Режим маршрута: `static` — prerender на сборке (файл в dist/client), `dynamic` — on-demand
 // (`export const prerender = false`, рендер на запрос); `parametrized` — маршрут с `[param]`,
 // его конкретные пути порождает контент. Таблица — docs/reference/rendering.md.
+/**
+ * @typedef {{ file: string, route: string, parametrized: boolean, prerender: boolean, mode: 'static' | 'dynamic' }} PageRoute
+ * @param {string} pagesDir
+ * @returns {PageRoute[]}
+ */
 export function pageRoutes(pagesDir) {
   return walk(pagesDir)
     .filter((file) => PAGE_EXT.test(file))

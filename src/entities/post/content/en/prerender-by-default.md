@@ -28,4 +28,4 @@ environment and read it from env at request time. They opt in with
 
 The dev server renders by route, production serves files from disk. That is why the mode is
 verified on the production build: e2e starts the same server the container runs and checks
-status codes, the single `<h1>` and the absence of scripts.
+status codes, headers and the absence of scripts on every page.

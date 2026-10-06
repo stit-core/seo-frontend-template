@@ -81,7 +81,7 @@
 `Интерактивность (острова)`, `Generates`.
 
 **Generates**: `export const prerender` и заголовки в `src/pages/**`, строки в
-`docs/reference/rendering.md`, бюджеты `.size-limit.cjs`, `e2e/rendering.spec.ts`.
+`docs/reference/rendering.md`, бюджеты `.size-limit.cjs`, HTTP-набор `e2e/http/`.
 
 **Cross-kind**: `indexable: да` ⇒ режим `static` или `cached` (никогда `dynamic`/`client`);
 каждый остров ⇒ строка бюджета; источник контента не `git` ⇒ у его маршрутов режим не `static`.
@@ -98,7 +98,7 @@
 `Локали и hreflang`, `robots-политика`, `Sitemap и фиды`, `Верификация`, `Generates`.
 
 **Generates**: `src/shared/config/site.ts`, `src/shared/seo/*`, маршруты
-`robots.txt`/`sitemap.xml`/фидов/ключа IndexNow, `STATIC_ROUTES`, `e2e/seo.spec.ts`.
+`robots.txt`/`sitemap.xml`/фидов/ключа IndexNow, `STATIC_ROUTES`, `e2e/http/seo.spec.ts`.
 
 **Cross-kind**: канонический хост ↔ `service.md § Домены` ↔ `SITE_URL` в `config.md`;
 `ROBOTS_POLICY`, `AI_TRAINING`, `INDEXNOW_KEY` — в `config.md`; набор локалей ↔ `content.md`.
@@ -131,7 +131,7 @@
 `Внешние источники данных`, `Generates`.
 
 **Generates**: `src/pages/api/**`, слайс формы, шов капчи, строки в карте маршрутов и в
-чек-листе прокси `deployment.md`, `e2e/forms.spec.ts`, env формы в `config.md`.
+чек-листе прокси `deployment.md`, `e2e/{http,browser}/forms.spec.ts`, env формы в `config.md`.
 
 **Cross-kind**: rate-limit на публичный POST — **требование деплоя**, строка в
 `deployment.md`; согласие на ПДн ⇒ страница политики в `routing.md`; внешний источник,
@@ -148,7 +148,7 @@
 **Секции**: `Счётчики`, `Что не работает в РФ`, `Согласие`, `Бюджет`, `Generates`.
 
 **Generates**: `src/app/analytics/*`, идентификаторы в `site.ts`, баннер согласия и его
-строка бюджета, e2e-проверка «сторонних скриптов столько-то».
+строка бюджета, проверка «сторонних скриптов столько-то» в HTTP-наборе.
 
 **Cross-kind**: идентификатор счётчика — поле `site.ts`, не env (`config.md § Публичные
 идентификаторы`); баннер — остров, строка в `rendering.md` и в `.size-limit.cjs`.

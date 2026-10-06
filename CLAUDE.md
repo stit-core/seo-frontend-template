@@ -8,8 +8,9 @@ hreflang, OG, JSON-LD; `robots.txt`/`sitemap.xml`/`rss.xml` on-demand на runti
 форма обратной связи без JS (PRG, антиспам-лестница, один канал доставки) / тема — единственный
 остров / картинки `astro:assets` / FSD под линтером (ESLint 10 `boundaries` +
 `no-restricted-imports`; Steiger — структура) / Biome 2 + Prettier (только `*.astro`) /
-Vitest 5 (Container API) + Playwright на prod-сборке / size-limit / pnpm 10 / lefthook.
-Один Node-образ на все среды: origin штампуется при старте.
+Vitest 5 (Container API) + Playwright на prod-сборке (HTTP-набор в гейте, браузер — в
+`/release`) / size-limit / pnpm 10 / lefthook. Один Node-образ на все среды: origin
+штампуется при старте.
 
 Этот файл — **ядро (always-on) + роутер**. Детали — в `docs/`, контекстные правила — в
 `.claude/rules/` (подгружаются по `paths`, когда читаешь файл их темы; `forward-only` — всегда),
@@ -58,7 +59,7 @@ Vitest 5 (Container API) + Playwright на prod-сборке / size-limit / pnpm
 | `/de-template` | разворот фундамента по stable-артефактам (на каноническом репо — никогда) |
 | `/scaffold` | `page` · `collection` · `feature` · `widget` · `route` по канону |
 | `/content` | запись коллекции: frontmatter в бюджетах, перевод, `check:content` |
-| `/seo-audit` | прогон `seo:check` + `seo.spec.ts` + curl по домену, отчёт |
+| `/seo-audit` | прогон `seo:check` + HTTP-набора + curl по домену, отчёт |
 | `/release` | образ, приёмка, тег, пуш, handoff в `<org>/infra` |
 
 ## Команды
@@ -72,7 +73,8 @@ Vitest 5 (Container API) + Playwright на prod-сборке / size-limit / pnpm
 | `pnpm lint` | `biome check` + `eslint` — **здесь держатся границы FSD** |
 | `pnpm format:check` | `biome format` + `prettier --check "src/**/*.astro"` |
 | `pnpm test` | Vitest: проекты `astro` (node, Container API) и `dom` (happy-dom), покрытие широкого объёма с порогами |
-| `pnpm test:e2e` | Playwright на prod-сборке через `docker/entrypoint.sh` + `server.mjs` (3201) |
+| `pnpm test:http` | HTTP-набор `e2e/http/` после build: prod-сервер как контейнер (копия сборки, `entrypoint.sh` + `server.mjs`) на свободных портах, профили прод и staging |
+| `pnpm test:e2e` | build + браузерный набор `e2e/browser/`: axe в двух темах, тема, форма без JS — обязательный шаг `/release` |
 | `pnpm steiger` | структурный линтер FSD |
 | `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome |
 | `pnpm check:content` | контент-гейт до build: схема каждого `.md`, тело, переводы, ссылки, `content/redirects.yaml` |
@@ -82,7 +84,7 @@ Vitest 5 (Container API) + Playwright на prod-сборке / size-limit / pnpm
 | `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
 | `pnpm ttfb <origin> <path…>` | TTFB запущенного сервера: медиана/p90 20 запросов (`scripts/ttfb.mjs`) |
 | `pnpm accept:image <image>` | приёмка собранного образа до пуша: fail-fast, штамповка, статусы, TTFB, staging, дренаж |
-| `pnpm check` | **gate**: typecheck → lint → format:check → test → steiger → check:gate → check:content → build → check:links → seo:check → size |
+| `pnpm check` | **gate**: plan:check → typecheck → lint → format:check → test → steiger → check:gate → check:content → build → check:links → seo:check → size → test:http |
 
 Перед claim «готово» / push — **`pnpm check`** (его же гоняет `lefthook pre-push`).
 
@@ -98,7 +100,7 @@ Vitest 5 (Container API) + Playwright на prod-сборке / size-limit / pnpm
 | UI на токенах, тема-остров, картинки и LCP, scoped-CSS, 0 JS | rule `shared-ui` |
 | Форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка | rule `forms-antispam` |
 | Deployment: образ, entrypoint, `server.mjs`, env-контракт, требования к прокси | `docs/reference/deployment.md` |
-| SEO: head через `DocumentLayout`, hreflang, OG, JSON-LD, `robots.txt`/`sitemap.xml`/фиды/ключ IndexNow, staging в три контура, гейты `seo:check`/`seo.spec.ts` | rule `seo-invariants` + `docs/reference/seo.md` |
+| SEO: head через `DocumentLayout`, hreflang, OG, JSON-LD, `robots.txt`/`sitemap.xml`/фиды/ключ IndexNow, staging в три контура, гейты `seo:check` и HTTP-набор | rule `seo-invariants` + `docs/reference/seo.md` |
 | Наблюдаемость: JSON-лог, `X-Request-Id`, `/healthz`, Sentry по DSN | `docs/reference/observability.md` |
 | Платформа проекта: 12 kinds, порядок волн, гейт `stable` | `docs/stack/README.md` |
 | Экосистема: соседи, флоу (хаб `<org>/infra` или прямой заход), контракты, STOP на image-in-registry | `docs/reference/ecosystem.md` |

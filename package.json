@@ -18,7 +18,8 @@
     "format:check": "biome format . && prettier --check \"src/**/*.astro\"",
     "test": "vitest run --coverage",
     "test:watch": "vitest",
-    "test:e2e": "playwright test -c e2e/playwright.config.ts",
+    "test:http": "playwright test -c e2e/playwright.config.ts --project http --project staging",
+    "test:e2e": "pnpm build && playwright test -c e2e/playwright.config.ts --project browser",
     "steiger": "steiger src",
     "check:gate": "node scripts/check-gate.mjs",
     "check:content": "node scripts/check-content.mjs",
@@ -29,7 +30,7 @@
     "ttfb": "node scripts/ttfb.mjs",
     "accept:image": "sh scripts/accept-image.sh",
     "plan:check": "bash scripts/validate-plan.sh",
-    "check": "pnpm plan:check && pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm steiger && pnpm check:gate && pnpm check:content && pnpm build && pnpm check:links && pnpm seo:check && pnpm size",
+    "check": "pnpm plan:check && pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm steiger && pnpm check:gate && pnpm check:content && pnpm build && pnpm check:links && pnpm seo:check && pnpm size && pnpm test:http",
     "prepare": "lefthook install"
   },
   "pnpm": {

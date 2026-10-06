@@ -1,9 +1,10 @@
 // Приёмник заявок для e2e: канал доставки FORM_DELIVERY=backend не должен ходить наружу.
 // POST /leads — принять заявку (адрес, начинающийся с fail-, отвергается: так проверяется
-// отказ канала), GET /received — список адресов доставленных заявок.
+// отказ канала), GET /received — список адресов доставленных заявок. Порт выбирает конфиг
+// Playwright (свободный на машине).
 import { createServer } from 'node:http'
 
-const PORT = Number(process.env.FORM_STUB_PORT ?? 3202)
+const PORT = Number(process.env.FORM_STUB_PORT)
 const received = []
 
 const json = (res, status, body) => {

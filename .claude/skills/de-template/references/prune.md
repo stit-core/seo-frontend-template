@@ -14,8 +14,12 @@ Reference-набор шаблона — **живой образец**, а не �
 `src/shared/**`, `src/app/**`, `.gate-fixtures/`, `docker/`, `scripts/`, гейты.
 
 Форма и политика ПДн — не «демо»: это минимум сайта, который принимает заявки. Страница
-`/now` — образец режима `dynamic`; удаляется вместе со строкой в карте маршрутов
-`docs/reference/rendering.md`, если проекту она не нужна.
+`/now` — образец режима `dynamic`; если проекту она не нужна, удаляется вместе со строкой в
+карте маршрутов `docs/reference/rendering.md`, кейсом в `src/pages/_tests/pages.astro.test.ts`
+и упоминаниями `/now` в `e2e/http/{pages,service}.spec.ts` и `e2e/browser/a11y.spec.ts`.
+
+Цели e2e выводятся из сборки и контента (`e2e/site.ts`): смена или удаление записей, тегов и
+редиректов правок в `e2e/` не требует.
 
 ---
 
@@ -27,9 +31,8 @@ Reference-набор шаблона — **живой образец**, а не �
    `src/entities/post/content/covers/*.png`
 2. Написать свои — `/content` (минимум по одной записи на локаль, иначе списки пусты)
 3. `content/redirects.yaml` — демо-записи убрать, вписать адреса своего старого сайта
-4. `e2e/{seo,rendering,content,a11y}.spec.ts` — слаги в шапках спеков заменить своими
-5. Проверить бюджет «HTML поста» в `.size-limit.cjs`: своя вёрстка записи может весить иначе
-6. Переименовать коллекцию под свой домен (`post` → `article`, `case`, `vacancy`) — если
+4. Проверить бюджет «HTML поста» в `.size-limit.cjs`: своя вёрстка записи может весить иначе
+5. Переименовать коллекцию под свой домен (`post` → `article`, `case`, `vacancy`) — если
    переименовываешь: каталог слайса, `src/content.config.ts`, реестр `scripts/lib/content.mjs`,
    импорты `@/entities/post`, маршруты `src/pages/blog/**`
 
@@ -47,7 +50,6 @@ src/widgets/post-list/
 src/pages/blog/  src/pages/en/blog/  src/pages/_blog/
 src/pages/rss.xml.ts  src/pages/en/rss.xml.ts
 src/shared/seo/rss.ts  src/shared/seo/rss.test.ts
-e2e/content.spec.ts
 ```
 
 ### Поправить (порядок удобный, не обязательный)
@@ -72,7 +74,6 @@ e2e/content.spec.ts
 | `src/pages/_tests/fixtures.ts` | удалить вместе с `vi.mock('astro:content')` в тестах маршрутов: коллекции нет |
 | `src/pages/_tests/endpoints.server.test.ts` | ожидаемая карта — без списков, тегов и записей; describe фидов убрать |
 | `src/pages/_tests/pages.astro.test.ts` | убрать строки `/blog`, `/en/blog` и таблицу маршрутов с параметрами |
-| `e2e/{seo,rendering,a11y}.spec.ts` | убрать слаги записей, проверки фидов, тегов и страниц списка |
 | `docs/reference/rendering.md` | убрать строки блога и фидов из карты маршрутов |
 
 ### Что при этом **не** трогать

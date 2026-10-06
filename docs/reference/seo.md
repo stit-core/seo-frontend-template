@@ -6,8 +6,8 @@
 
 Главный принцип: **всё, что читает краулер, — в первом HTML-ответе**. Не в островке, не
 после гидрации, не за `server:defer`. Поэтому контентные страницы prerender, JavaScript
-на них нет, а разметка одинакова для человека и для бота (клоакинга нет; e2e ходит с
-`User-Agent: Googlebot` и сверяет ровно тот же HTML).
+на них нет, а разметка одинакова для человека и для бота (клоакинга нет; HTTP-набор гейта
+запрашивает каждую страницу и с `User-Agent: Googlebot` и сверяет, что HTML тот же).
 
 ## Что даёт шаблон из коробки
 
@@ -80,7 +80,7 @@ OG-картинка, набор локалей, политика AI-крауле
 | `pnpm seo:check` (в `pnpm check`) | весь `dist/client`: один `<title>` и `<h1>`, description, self-canonical, `lang`, OG с существующей картинкой, уникальность сниппетов, полные пары hreflang, типы JSON-LD |
 | `pnpm check:links` | каждый внутренний `href`/`src`/`srcset` сборки существует |
 | `pnpm check:content` | бюджеты и уникальность полей записей, ссылки в теле, `redirects.yaml` |
-| `e2e/seo.spec.ts` | сырой HTML живого сервера, в т.ч. под Googlebot: статусы, мета, hreflang, JSON-LD в `<head>` и ни одного `<script>` в `<body>`, `robots.txt` ↔ `sitemap.xml` ↔ `dist/client`, фиды, ключ IndexNow, вес HTML |
+| HTTP-набор `e2e/http/` (в `pnpm check`) | сырой HTML prod-сервера, в т.ч. под Googlebot: статусы и заголовки, штамповка origin, ни одного `<script>` в `<body>`, `robots.txt` (прод и staging) ↔ `sitemap.xml` ↔ `dist/client`, фиды, ключ IndexNow, разметка записи с переводом, вес HTML |
 | `/seo-audit` | прогон всего вышеперечисленного + curl по живому домену + внешние валидаторы |
 
 Ручное — раз на релиз: Rich Results Test, validator.schema.org, валидатор микроразметки

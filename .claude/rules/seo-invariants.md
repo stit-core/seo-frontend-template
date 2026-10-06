@@ -1,6 +1,6 @@
 ---
-description: SEO-канон шаблона — head через DocumentLayout (title/description уникальны, self-canonical, hreflang только для реальных переводов, OG полный), JSON-LD в head только про видимое и только допустимые типы, robots.txt/sitemap.xml/rss.xml/ключ IndexNow on-demand на runtime origin, staging в три контура, гейты seo:check и seo.spec.
-paths: ["src/shared/seo/**", "src/shared/config/site.ts", "src/app/layouts/**", "src/pages/**", "src/widgets/breadcrumbs/**", "scripts/seo-check.mjs", "scripts/lib/html.mjs", "e2e/seo.spec.ts", "public/**"]
+description: SEO-канон шаблона — head через DocumentLayout (title/description уникальны, self-canonical, hreflang только для реальных переводов, OG полный), JSON-LD в head только про видимое и только допустимые типы, robots.txt/sitemap.xml/rss.xml/ключ IndexNow on-demand на runtime origin, staging в три контура, гейты seo:check и HTTP-набор.
+paths: ["src/shared/seo/**", "src/shared/config/site.ts", "src/app/layouts/**", "src/pages/**", "src/widgets/breadcrumbs/**", "scripts/seo-check.mjs", "scripts/lib/html.mjs", "e2e/http/**", "public/**"]
 ---
 
 # SEO-инварианты
@@ -67,8 +67,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   срезает сам)
 - `sitemap.xml` — свой маршрут (`@astrojs/sitemap` строит URL от build-time origin): ровно
   индексируемые prerendered-страницы сборки (главные, статические страницы из списка
-  `STATIC_ROUTES` в `pages/sitemap.xml.ts`, списки, записи без черновиков, теги) — e2e
-  сверяет с `dist/client` за вычетом `noindex`; новая индексируемая страница вне коллекций —
+  `STATIC_ROUTES` в `pages/sitemap.xml.ts`, списки, записи без черновиков, теги) — HTTP-набор
+  гейта сверяет с `dist/client` за вычетом `noindex`; новая индексируемая страница вне коллекций —
   строка в этом списке; on-demand маршруты вне карты; адрес из `redirects.yaml` не может
   быть живым маршрутом — держит `check:content`, поэтому в карте его нет; `lastmod` только из
   `updatedDate`, `changefreq`/`priority` нет; > 50 000 URL — `buildSitemap` бросает: нужен sitemap
@@ -94,10 +94,11 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
 - unit `shared/seo/*.test.ts` (urls, robots, sitemap, rss, json-ld со схемой) и Container API
   (`seo-head`, `json-ld.astro`, `widgets/breadcrumbs`); маршруты `robots.txt` (прод, staging,
   `AI_TRAINING=deny`), `sitemap.xml`, фиды и ключ — `src/pages/_tests/endpoints.server.test.ts`
-- e2e `seo.spec.ts` через `request` (сырой HTML, в т.ч. `User-Agent: Googlebot`): статусы, мета,
-  hreflang взаимный, JSON-LD в `<head>` и ни одного `<script>` в `<body>`, `og:image` (дефолт и
-  обложка), robots ↔ sitemap ↔ `dist/client`, фиды, ключ IndexNow, нет `noindex` в прод-профиле,
-  размер HTML < 300 КБ. Парсер `<head>` и `decode` сущностей один — `scripts/lib/html.mjs`
-  (он же в `seo:check` и `check:links`)
+- HTTP-набор `e2e/http/` (`pnpm test:http`, шаг `pnpm check`) на prod-сервере из сборки: каждая
+  страница — тот же HTML под `User-Agent: Googlebot`, canonical на runtime origin, ни одного
+  `<script>` в `<body>`, нет `X-Robots-Tag` в прод-профиле; robots (прод и staging) ↔ sitemap ↔
+  `dist/client`, фиды, ключ IndexNow; запись с переводом — hreflang, `article:*_time`,
+  `BlogPosting` и крошки по видимому; размер HTML < 300 КБ. Парсер `<head>` и `decode`
+  сущностей один — `scripts/lib/html.mjs` (он же в `seo:check` и `check:links`)
 - Перед релизом вручную: Rich Results Test, validator.schema.org, валидатор Яндекса
   (`webmaster.yandex.ru/site/tools/microtest/`)

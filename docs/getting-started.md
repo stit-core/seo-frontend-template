@@ -93,7 +93,7 @@ pnpm check            # полный гейт
 ## Шаг 4: выпуск
 
 ```bash
-/seo-audit            # build + seo:check + e2e/seo.spec.ts + curl по домену
+/seo-audit            # build + seo:check + HTTP-набор + curl по домену
 /release              # образ, приёмка (pnpm accept:image), тег, пуш, handoff в <org>/infra
 ```
 
@@ -103,11 +103,12 @@ pnpm check            # полный гейт
 ## Гейт перед push
 
 ```bash
-pnpm check    # typecheck → lint → format:check → test → steiger → check:gate
-              # → check:content → build → check:links → seo:check → size
+pnpm check    # plan:check → typecheck → lint → format:check → test → steiger → check:gate
+              # → check:content → build → check:links → seo:check → size → test:http
 ```
 
-Его же гоняет `lefthook pre-push`. E2E (`pnpm test:e2e`) — отдельный stage: тянет браузер.
+Его же гоняет `lefthook pre-push`; `test:http` — HTTP-набор на prod-сервере из этой сборки.
+Браузерный набор (`pnpm test:e2e`) — обязательный шаг `/release`: тянет браузер.
 
 ## Когда что-то идёт не так
 

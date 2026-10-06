@@ -65,7 +65,7 @@ status: draft
 - `src/features/<name>/{model/schema.ts,api/{handler,delivery}.ts,ui/*.astro}`
 - `src/shared/antispam/*` — шов капчи
 - строки в `rendering.md § Карта маршрутов` и в чек-листе прокси `deployment.md`
-- `e2e/forms.spec.ts` — путь без JavaScript целиком
+- `e2e/http/forms.spec.ts` — HTTP-контракт обработчика, `e2e/browser/forms.spec.ts` — путь без JavaScript в браузере
 - `config.md` — env `FORM_DELIVERY`, `SMTP_URL`, `FORM_TO`, `FORM_FROM`, `FORM_BACKEND_URL`,
   `CAPTCHA_PROVIDER`, `CAPTCHA_SECRET`, `CAPTCHA_FAIL_MODE`
 

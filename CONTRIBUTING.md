@@ -41,9 +41,10 @@
 ## Перед PR
 
 ```bash
-pnpm check      # gate: typecheck + lint + format:check + test + steiger + check:gate
-                #       + check:content + build + check:links + seo:check + size
-pnpm test:e2e   # Playwright на prod-сборке — отдельный stage
+pnpm check      # gate: plan:check + typecheck + lint + format:check + test + steiger
+                #       + check:gate + check:content + build + check:links + seo:check
+                #       + size + test:http (HTTP-набор на prod-сервере)
+pnpm test:e2e   # браузерный набор (axe, тема, форма без JS) — обязательный шаг /release
 ```
 
 - **Conventional Commits** (commitlint): `<type>(<scope>)?: <subject>`, subject ≤ 72.

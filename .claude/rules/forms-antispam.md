@@ -1,6 +1,6 @@
 ---
 description: Форма обратной связи без JavaScript — PRG-303, антиспам-лестница (свой origin-check вместо checkOrigin Astro, лимит тела, honeypot, валидация, шов капчи), согласие на обработку ПДн как literal(true), один канал доставки с ретраями, тело заявки не логируется.
-paths: ["src/features/contact-form/**", "src/pages/api/**", "src/pages/_contacts/**", "src/pages/legal/**", "src/shared/antispam/**", "src/entities/company/**", "e2e/forms.spec.ts", "e2e/form-stub.mjs"]
+paths: ["src/features/contact-form/**", "src/pages/api/**", "src/pages/_contacts/**", "src/pages/legal/**", "src/shared/antispam/**", "src/entities/company/**", "e2e/http/forms.spec.ts", "e2e/browser/forms.spec.ts", "e2e/form-stub.mjs"]
 ---
 
 # Формы и антиспам
@@ -88,8 +88,9 @@ Time-trap (подписанная метка времени) в шаблоне *
   Container API + axe на форму — пустую и с ошибками; маршрут `/api/contact`
   (`src/pages/_tests/contact.astro.test.ts`): PRG и цель по локали, отказы, статусы и
   `private, no-store` каждого ответа
-- e2e `forms.spec.ts`: браузер **без JavaScript** проходит путь целиком, PRG на подтверждение,
-  ловушка без доставки, ошибка валидации с сохранёнными полями, недоступный канал → 500, чужой
-  и отсутствующий Origin → 403, Origin сайта при чужом `Host` → 303, не-форма → 400, большое
-  тело → 413. Канал доставки в тестах — локальный приёмник `e2e/form-stub.mjs`, наружу тесты
-  не ходят
+- HTTP-набор гейта (`e2e/http/forms.spec.ts`) на prod-сервере: PRG на подтверждение своей
+  локали и доставка, ловушка без доставки, ошибка валидации с сохранёнными полями, недоступный
+  канал → 500, чужой и отсутствующий Origin → 403, Origin сайта при чужом `Host` → 303,
+  не-форма → 400, большое тело → 413; браузерный набор (`e2e/browser/forms.spec.ts`, `/release`)
+  — браузер **без JavaScript** проходит путь целиком. Канал доставки в тестах — локальный
+  приёмник `e2e/form-stub.mjs`, наружу тесты не ходят

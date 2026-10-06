@@ -76,7 +76,7 @@ docs/reference/deployment.md
 Общего нет — у сайта другая природа рантайма: `astro.config.ts`, `tsconfig.json`
 (`astro/tsconfigs/strictest`), `docker/*` (Node-образ, штамповка origin, обёртка
 сервера), `src/**` кроме `shared/lib`, `.gate-fixtures/`, `scripts/*`, `.prettierrc.json`
-(только `*.astro`), `e2e/*.spec.ts`, бюджеты `.size-limit.cjs` (вес HTML/CSS вместо
+(только `*.astro`), спеки `e2e/{http,browser}/`, бюджеты `.size-limit.cjs` (вес HTML/CSS вместо
 вендорных чанков).
 
 ## Бэкпорт-кандидаты в SPA-шаблон

@@ -66,8 +66,8 @@ HTML-ответе; `dynamic` в reference-наборе — всегда `noindex
 `robots.txt`, `sitemap.xml`, фиды и файл ключа IndexNow — on-demand, потому что их содержимое
 зависит от runtime env: `SITE_URL` (абсолютные URL), `ROBOTS_POLICY` (staging — `Disallow: /`),
 `AI_TRAINING`, `INDEXNOW_KEY`. Источник карты сайта — те же запросы к контенту, что и
-`getStaticPaths` страниц, поэтому карта совпадает с prerendered-выходом один в один (e2e сверяет
-с `dist/client`); правила — `.claude/rules/seo-invariants.md`.
+`getStaticPaths` страниц, поэтому карта совпадает с prerendered-выходом один в один (HTTP-набор
+гейта сверяет с `dist/client`); правила — `.claude/rules/seo-invariants.md`.
 
 ## Абсолютные URL: один образ на все среды
 
@@ -89,8 +89,8 @@ Prerender происходит на сборке, а канонический or
   переезд домена не трогает контент;
 - HTML на сборке не предсжимается — иначе плейсхолдер уедет внутрь `.br`/`.gz`.
 
-Гейт: e2e `rendering.spec.ts` обходит все страницы `dist/client` и on-demand ответы —
-плейсхолдера нет нигде, в `<body>` нет URL своего origin; `check:content` не пропускает литерал
+Гейт: HTTP-набор (`e2e/http/pages.spec.ts`, `service.spec.ts`) обходит все страницы `dist/client`
+и on-demand маршруты — плейсхолдера нет нигде, в `<body>` нет URL своего origin; `check:content` не пропускает литерал
 плейсхолдера в тексты записей; `shared/config/runtime.server.test.ts` держит литерал
 согласованным во всех файлах, где он есть.
 
@@ -125,8 +125,9 @@ Prerender происходит на сборке, а канонический or
 
 `pnpm ttfb <origin> <path…>` (`scripts/ttfb.mjs`): медиана/p90 из 20 последовательных запросов
 через `node:http` к запущенному серверу (`pnpm start` после штамповки, см.
-`deployment.md`). Prerendered локально — единицы миллисекунд; e2e держит мягкий порог (медиана
-≤ 25 мс — запас на шум CI, не бюджет).
+`deployment.md`). Prerendered локально — единицы миллисекунд. Порога в гейте нет: что страница
+отдаётся статикой, а не рендером, HTTP-набор проверяет точно — заголовками статик-хендлера на
+каждой странице; медиану главной печатает приёмка образа.
 
 ## Рецепт D: `cached` — рендер на запрос с кешем процесса (опция, кода нет)
 

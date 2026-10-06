@@ -64,8 +64,8 @@ src/pages/en/<path>.astro             en-обёртка: locale = 'en'
   self-canonical или `noindex`, hreflang пары, типы JSON-LD, один `h1`; индексируемая — ещё и
   адрес в ожидаемой карте `src/pages/_tests/endpoints.server.test.ts`
 
-Не нужно: править `e2e/site.ts` — списки страниц он выводит из `dist/client`. Ключевую
-страницу стоит добавить в `PAGES` спека `e2e/a11y.spec.ts`.
+Не нужно: править e2e — цели HTTP- и браузерного наборов (`e2e/site.ts`) выводятся из
+`dist/client`, `src/pages` и контента, и новая страница попадает в них сама.
 
 ## collection
 

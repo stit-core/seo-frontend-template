@@ -58,7 +58,8 @@ pnpm typecheck        # astro check
 pnpm lint             # Biome + ESLint (границы FSD — здесь)
 pnpm format:check     # Biome + Prettier для *.astro
 pnpm test             # Vitest: unit + Container API (.astro) + axe, покрытие с порогами
-pnpm test:e2e         # Playwright на prod-сборке (порт 3201)
+pnpm test:http        # после build: HTTP-набор на prod-сервере, профили прод и staging
+pnpm test:e2e         # build + браузерный набор: axe в двух темах, тема, форма без JS
 pnpm steiger          # структурный линтер FSD
 pnpm check:gate       # негативные фикстуры обязаны валить линтеры
 pnpm check:content    # контент-гейт: схема .md, тело, переводы, ссылки, redirects.yaml
@@ -68,7 +69,7 @@ pnpm size             # бюджеты CSS / HTML
 pnpm kin:diff         # сверка обвязки с ../spa-frontend-template (advisory)
 pnpm ttfb <origin> …  # TTFB запущенного сервера: медиана/p90 20 запросов
 pnpm accept:image <image>   # приёмка собранного образа до пуша в registry
-pnpm check            # gate: typecheck + lint + format + test + steiger + check:gate + check:content + build + check:links + seo:check + size
+pnpm check            # gate: plan:check + typecheck + lint + format + test + steiger + check:gate + check:content + build + check:links + seo:check + size + test:http
 ```
 
 Перед claim «готово» / push — **`pnpm check`** (его же гоняет `lefthook pre-push`).
@@ -98,7 +99,7 @@ src/shared/       config (runtime env, Zod; идентичность сайта)
                   (шов капчи), observability (JSON-лог с порогом LOG_LEVEL, Sentry по DSN), ui
 src/{content.config,middleware,env.d}.ts   навязанные Astro entry — тонкие входы
 docker/           Dockerfile (3 стадии), entrypoint.sh (штамповка SITE_URL), server.mjs
-e2e/              Playwright на prod-сборке
+e2e/              Playwright на prod-сборке: http/ — в гейте, browser/ — в /release
 scripts/          check-gate, check-content, check-links, seo-check, kin-diff, ttfb, accept-image
 docs/stack/       формы платформенных артефактов (12 kinds) — заполняет /stack-deep-dive
 .claude/          правила (path-scoped) и скиллы (init-service, scaffold, content, release…)
@@ -143,7 +144,7 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 `BlogPosting` у записи; в `<body>` ни одного `<script>`. `robots.txt`
 (`ROBOTS_POLICY`, `AI_TRAINING`), `sitemap.xml` (ровно prerendered-страницы, `lastmod` из
 `updatedDate`), `rss.xml`/`en/rss.xml` и `/<INDEXNOW_KEY>.txt` — on-demand на runtime
-`SITE_URL`. Гейты: `pnpm seo:check` в `pnpm check`, `e2e/seo.spec.ts`; правило —
+`SITE_URL`. Гейты: `pnpm seo:check` и HTTP-набор (`e2e/http/seo.spec.ts`) в `pnpm check`; правило —
 `.claude/rules/seo-invariants.md`.
 
 ## Один образ на все среды
@@ -161,8 +162,8 @@ shutdown под Traefik и отказывается стартовать без 
 `light-dark()` и `data-scheme`), без вендорных UI-китов. Ни одна страница не грузит внешних
 скриптов: из JavaScript в шаблоне только остров темы — инлайн-`<script>` в `<head>`, который
 применяет выбор до первой отрисовки и обслуживает переключатель. Картинки — `astro:assets` (`<Picture>`:
-AVIF/WebP с фолбэком, размеры заданы, обложка записи грузится с приоритетом). Всё это
-проверяет e2e, включая axe в обеих темах.
+AVIF/WebP с фолбэком, размеры заданы, обложка записи грузится с приоритетом). Скрипты
+страниц проверяет HTTP-набор гейта, доступность — браузерный axe в обеих темах на `/release`.
 
 ## Из шаблона — в свой сайт
 

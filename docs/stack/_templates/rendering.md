@@ -64,7 +64,7 @@ server islands (`server:defer`) для индексируемого контен
 - `export const prerender` в файлах `src/pages/**` и `Astro.response.headers` в on-demand роутах
 - `docs/reference/rendering.md § Карта маршрутов` — строка на каждый on-demand маршрут
 - `.size-limit.cjs` — строки бюджетов островов и HTML
-- `e2e/rendering.spec.ts` — статусы, заголовки, отсутствие плейсхолдера
+- HTTP-набор `e2e/http/{pages,service}.spec.ts` — статусы, заголовки, отсутствие плейсхолдера
 - `config.md` — env `SITE_URL`
 
 ## Открытые вопросы

@@ -5,8 +5,19 @@
 import { POSTS_PER_PAGE, pageCount } from '../../src/entities/post/lib/paginate.ts'
 import { postSchema } from '../../src/entities/post/model/schema.ts'
 
+/** @param {string} slug */
 const postRoute = (slug) => `/blog/${slug}`
 
+/**
+ * @typedef {object} Collection
+ * @property {string} name
+ * @property {string} dir — каталог `.md` от корня проекта, внутри — `<locale>/<slug>.md`
+ * @property {(context: { image: () => import('zod').ZodType }) => import('zod').ZodType} schema
+ * @property {(slug: string) => string} entryRoute
+ * @property {(visible: { slugs: string[], tags: string[] }) => string[]} routes
+ */
+
+/** @type {Collection[]} */
 export const collections = [
   {
     name: 'post',
@@ -27,6 +38,10 @@ export const collections = [
 ]
 
 // Frontmatter между строками `---` и тело; без frontmatter — undefined.
+/**
+ * @param {string} source
+ * @returns {{ frontmatter: string, body: string } | undefined}
+ */
 export function splitFrontmatter(source) {
   const match = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?([\s\S]*)$/.exec(source)
   return match ? { frontmatter: match[1], body: match[2] } : undefined

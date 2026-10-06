@@ -8,7 +8,7 @@
 // translationKey) и ни одной ссылки на отсутствующую страницу; JSON-LD парсится, содержит только
 // допустимые типы, Organization/WebSite на главной и правильно устроенный BreadcrumbList там, где
 // он есть, и ни одного HTML-комментария в разметке. On-demand ответы (robots.txt, sitemap.xml,
-// фиды) проверяет e2e — им нужен сервер.
+// фиды) проверяет HTTP-набор (`pnpm test:http`) — им нужен сервер.
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { relative, resolve, sep } from 'node:path'
 import { load } from 'js-yaml'

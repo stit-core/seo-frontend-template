@@ -1,6 +1,6 @@
 ---
 description: env Node-процесса, SITE_URL и плейсхолдер origin, whitelist в HTML, секреты. Активируется при правке .env*, shared/config, docker/, astro.config.ts.
-paths: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/playwright.config.ts"]
+paths: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/playwright.config.ts", "e2e/serve.mjs"]
 ---
 
 # env и секреты
@@ -24,8 +24,8 @@ paths: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/pl
 - Сборка печёт `site: 'https://__site_origin__'` (`astro.config.ts`, при пустом или
   незаданном `SITE_URL`); `docker/entrypoint.sh` при старте штампует `SITE_URL` в
   `dist/client/**/*.{html,xml,txt}` и падает, если плейсхолдер остался в любом файле
-  `dist/client` (`DIST_DIR` — тот же скрипт для e2e). `dist/server` не штампуется:
-  on-demand маршруты берут origin из runtime `SITE_URL`
+  `dist/client` (`DIST_DIR` — тот же скрипт для копии сборки в e2e, `e2e/serve.mjs`).
+  `dist/server` не штампуется: on-demand маршруты берут origin из runtime `SITE_URL`
 - Штамповка пишет в `/app/dist/client` — сервис без `read_only: true` либо writable-bind
   этого пути
 - Рантайм без `SITE_URL`, с плейсхолдером или с не-`http(s)` URL **не стартует**
@@ -65,4 +65,4 @@ env: их читает on-demand код (`api/contact`, наблюдаемост
 - ❌ Логировать `process.env`, cookie, query-строку, тело запроса
 - ❌ Читать `process.env` мимо `shared/config`. Исключения — код вне приложения:
   `astro.config.ts` (build-time плейсхолдер), `docker/*` (обёртка процесса стартует до
-  приложения), `e2e/playwright.config.ts` (`CI`), `scripts/*`
+  приложения), `e2e/*` (профили и порты прогона), `scripts/*`

@@ -103,14 +103,14 @@ src/
 
 Рядом с модулем: `<name>.test.ts` (unit, happy-dom), `<name>.astro.test.ts` (Container
 API + axe), `<name>.server.test.ts` (node-окружение, родные `Request`/`Response`).
-E2E — `e2e/` вне FSD-графа, на прод-сборке. Дисциплина — правило
-`.claude/rules/tests-pipeline.md`.
+E2E — `e2e/` вне FSD-графа, на прод-сборке: HTTP-набор `e2e/http/` — шаг гейта, браузерный
+`e2e/browser/` — обязательный шаг `/release`. Дисциплина — правило `.claude/rules/tests-pipeline.md`.
 
 ## Гейт
 
 ```
-typecheck → lint → format:check → test → steiger → check:gate → check:content
-          → build → check:links → seo:check → size
+plan:check → typecheck → lint → format:check → test → steiger → check:gate → check:content
+           → build → check:links → seo:check → size → test:http
 ```
 
-`pnpm test:e2e` — отдельный stage: тянет браузер.
+`pnpm test:e2e` — браузерный набор, обязательный шаг `/release`: в гейт не входит, тянет браузер.

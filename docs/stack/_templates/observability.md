@@ -38,7 +38,7 @@ status: draft
 | поле | значение |
 |---|---|
 | RUM / web-vitals | **нет** — на контентной странице 0 КБ JS, а RUM это скрипт на каждой странице |
-| чем меряется скорость | `pnpm ttfb` на запущенном сервере, e2e-порог TTFB, PageSpeed Insights по ключевым URL, поле CWV в Search Console и Вебмастере |
+| чем меряется скорость | `pnpm ttfb` на запущенном сервере, медиана главной в `pnpm accept:image`, PageSpeed Insights по ключевым URL, поле CWV в Search Console и Вебмастере |
 
 ## Здоровье
 

@@ -10,7 +10,8 @@
 - **Сводка планов:** `pnpm plan:check --summary`.
 - **Типовые проверки шагов:** `pnpm vitest run <путь>` → passed · `pnpm check:content` → OK ·
   `pnpm build` → собрано · `pnpm check:links` → без битых ссылок · `pnpm seo:check` → OK ·
-  `pnpm test:e2e` → passed (отдельный прогон) · `pnpm check` → зелёный.
+  `pnpm test:http` → passed (после build) · `pnpm test:e2e` → passed (браузерный набор) ·
+  `pnpm check` → зелёный.
 - **Handoff:** в хаб `<org>/infra` — новый образ, runtime-env и маршруты сервиса `site` (их печатает
   `/release`, контракт — `docs/reference/infra-handoff.md`); в `<org>/strategy` — расхождение с
   FSD-картой (карта правится только там, её скиллами).
