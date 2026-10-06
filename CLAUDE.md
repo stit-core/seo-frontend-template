@@ -71,7 +71,7 @@ Vitest 5 (Container API) + Playwright на prod-сборке / size-limit / pnpm
 | `pnpm typecheck` | `astro check` |
 | `pnpm lint` | `biome check` + `eslint` — **здесь держатся границы FSD** |
 | `pnpm format:check` | `biome format` + `prettier --check "src/**/*.astro"` |
-| `pnpm test` | Vitest: проекты `astro` (node, Container API) и `dom` (happy-dom) |
+| `pnpm test` | Vitest: проекты `astro` (node, Container API) и `dom` (happy-dom), покрытие широкого объёма с порогами |
 | `pnpm test:e2e` | Playwright на prod-сборке через `docker/entrypoint.sh` + `server.mjs` (3201) |
 | `pnpm steiger` | структурный линтер FSD |
 | `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome |

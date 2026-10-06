@@ -53,9 +53,9 @@ paths: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
 
 ## Gate
 
-`pnpm check` = typecheck → lint → format:check → test → steiger → check:gate →
-check:content → build → check:links → seo:check → size. `pnpm test:e2e` — отдельный stage, не в
-gate (тянет браузер).
+`pnpm check` = typecheck → lint → format:check → test (с покрытием и порогами
+`vitest.config.ts`) → steiger → check:gate → check:content → build → check:links → seo:check →
+size. `pnpm test:e2e` — отдельный stage, не в gate (тянет браузер).
 
 ## Что не делаем
 

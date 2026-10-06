@@ -7,9 +7,26 @@ export default getViteConfig({
     globals: true,
     coverage: {
       provider: 'v8',
-      include: ['src/**/*.{ts,mts}'],
-      exclude: ['src/**/*.test.ts', 'src/app/**', 'src/shared/lib/testing/**'],
-      thresholds: { lines: 60, functions: 60, branches: 60, statements: 60 },
+      // Широкий объём: всё, что исполняется на сборке или на запросе, — страницы, app и .astro.
+      include: ['src/**/*.{ts,astro}'],
+      // Исключения — связки без своей логики; тестовые файлы Vitest исключает сам.
+      exclude: [
+        // Баррели: только `export … from` — держит ESLint no-restricted-syntax.
+        'src/{entities,features,widgets}/*/index.ts',
+        'src/shared/*/index.ts',
+        // Входы, навязанные Astro: реэкспорт, регистрация коллекций, объявление типов.
+        'src/middleware.ts',
+        'src/content.config.ts',
+        'src/env.d.ts',
+        // defineCollection + glob: коллекцию собирает только Content Layer на сборке.
+        'src/entities/*/model/collection.ts',
+        // Опора тестов, а не код сайта.
+        'src/shared/lib/testing/**',
+        'src/pages/_tests/**',
+      ],
+      reporter: [['text', { skipFull: true }]],
+      // Храповик: пороги — факт, округлённый вниз; выросло покрытие — пороги растут тем же коммитом.
+      thresholds: { statements: 66, branches: 80, functions: 67, lines: 65 },
     },
     projects: [
       {

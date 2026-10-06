@@ -57,7 +57,7 @@ pnpm start            # prod-сервер docker/server.mjs (нужны SITE_URL
 pnpm typecheck        # astro check
 pnpm lint             # Biome + ESLint (границы FSD — здесь)
 pnpm format:check     # Biome + Prettier для *.astro
-pnpm test             # Vitest: unit + Container API (.astro) + axe
+pnpm test             # Vitest: unit + Container API (.astro) + axe, покрытие с порогами
 pnpm test:e2e         # Playwright на prod-сборке (порт 3201)
 pnpm steiger          # структурный линтер FSD
 pnpm check:gate       # негативные фикстуры обязаны валить линтеры
