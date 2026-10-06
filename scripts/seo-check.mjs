@@ -64,8 +64,8 @@ const pathOf = (url) => {
   const { pathname } = new URL(url)
   return pathname !== '/' && pathname.endsWith('/') ? pathname.slice(0, -1) : pathname
 }
-const existsInDist = (url) => {
-  const file = resolve(client, `.${new URL(url).pathname}`)
+const fileInDist = (path) => {
+  const file = resolve(client, `.${path}`)
   return file.startsWith(client + sep) && existsSync(file) && statSync(file).isFile()
 }
 
@@ -157,14 +157,19 @@ function checkCss(where, css) {
   }
 }
 
-// Ресурсы документа: что браузер скачает сам (src, srcset, poster, data; link кроме навигации).
+// Связи <link>, по которым браузер сам что-то загружает; canonical, alternate, me, author, next и
+// прочие — ссылки, а не ресурсы.
+const RESOURCE_LINK =
+  /^(stylesheet|preload|modulepreload|prefetch|preconnect|dns-prefetch|manifest|icon|apple-touch-icon|mask-icon)$/i
+
+// Ресурсы документа: что браузер скачает сам (src, srcset, poster, data; ресурсные link).
 function checkResources(where, html) {
   for (const [, tag, attrs = ''] of html.matchAll(
     /<(link|script|img|source|video|audio|iframe|embed|object|track)\b([^>]*)>/g,
   )) {
     if (tag === 'link') {
-      const rel = /\brel="([^"]*)"/.exec(attrs)?.[1] ?? ''
-      if (!/^(canonical|alternate)$/.test(rel)) {
+      const rels = (/\brel="([^"]*)"/.exec(attrs)?.[1] ?? '').split(/\s+/)
+      if (rels.some((rel) => RESOURCE_LINK.test(rel))) {
         checkResourceUrl(where, decode(/\bhref="([^"]*)"/.exec(attrs)?.[1] ?? ''))
       }
       continue
@@ -206,9 +211,12 @@ function checkMedia(where, body) {
 }
 
 // Видимые крошки — паттерн WAI-ARIA Breadcrumb: <nav> с упорядоченным списком, текущая
-// страница без ссылки. Пункт — имя и корневой путь.
+// страница — пункт с aria-current="page" без ссылки; оглавление и другие <nav><ol> — не крошки.
+// Пункт — имя и корневой путь.
 function visibleCrumbs(body) {
-  const list = /<nav\b[^>]*>\s*<ol\b[^>]*>([\s\S]*?)<\/ol>/.exec(body)?.[1]
+  const list = [...body.matchAll(/<nav\b[^>]*>\s*<ol\b[^>]*>([\s\S]*?)<\/ol>/g)]
+    .map(([, items = '']) => items)
+    .find((items) => /\baria-current="page"/.test(items))
   if (list === undefined) return undefined
   return [...list.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/g)].map(([, item = '']) => {
     const link = /<a\b[^>]*\bhref="([^"]*)"[^>]*>([\s\S]*?)<\/a>/.exec(item)
@@ -417,7 +425,7 @@ for (const file of walk(client).filter((path) => path.endsWith('index.html'))) {
     facts.ogImage = image
     if (image !== undefined) {
       if (!absolute(image)) fail(where, `og:image не абсолютный: ${image}`)
-      else if (!existsInDist(image))
+      else if (!fileInDist(new URL(image).pathname))
         fail(where, `og:image ${new URL(image).pathname} нет в dist/client`)
     }
     for (const side of ['og:image:width', 'og:image:height']) {
@@ -538,8 +546,9 @@ for (const path of draftPaths) {
 }
 for (const { route, prerender, parametrized } of pageRoutes(resolve(root, 'src/pages'))) {
   if (!prerender || parametrized) continue
-  // Страницы ошибок Astro пишет файлом `<код>.html`, остальные — каталогом с index.html.
-  const built = pages.has(route) || existsSync(resolve(client, `.${route}.html`))
+  // Страницы ошибок Astro пишет файлом `<код>.html`, prerendered-эндпоинт (`feed.json.ts`) — самим
+  // файлом, остальные — каталогом с index.html.
+  const built = pages.has(route) || fileInDist(`${route}.html`) || fileInDist(route)
   if (!built) fail(`dist/client${route}`, 'страницы нет в сборке, хотя маршрут есть в src/pages')
 }
 
