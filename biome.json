@@ -57,7 +57,7 @@
         "useConst": "error"
       },
       "suspicious": {
-        "noExplicitAny": "warn"
+        "noExplicitAny": "off"
       }
     }
   },

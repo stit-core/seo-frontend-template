@@ -1,5 +1,5 @@
 ---
-description: UI — .astro-компоненты на собственном токен-слое, тема через light-dark()/data-scheme и единственный остров, scoped-CSS только для layout, картинки через <Picture> с LCP-политикой, 0 JS по умолчанию.
+description: UI — .astro-компоненты на собственном токен-слое, тема через light-dark()/data-scheme и инлайн-остров, scoped-CSS только для layout, картинки через <Picture> с LCP-политикой, 0 JS по умолчанию — острова только по списку политики.
 paths: ["src/**/ui/**", "src/app/layouts/**", "src/app/styles/**", "src/app/analytics/**", "src/shared/ui/**", "src/features/theme/**"]
 ---
 
@@ -25,7 +25,7 @@ UI-киты и их токены не подключаются: импорт л�
   `app/styles/index.server.test.ts`)
 - Колонка чтения — `max-w-content` (≈ 72 знака), каркас сайта — `max-w-page`
 
-## Тема: единственный остров
+## Тема: инлайн-остров
 
 - Системная тема — без JS: `light-dark()` + `color-scheme` в токен-слое
 - Явный выбор — `data-scheme="light|dark"` на `<html>`; хранится в cookie `scheme`

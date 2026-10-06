@@ -188,9 +188,9 @@ blocked-by: —
     `lefthook uninstall`, запись в `.git/hooks` и `lefthook-local`, force-push), сценарии — `.gate-fixtures/
     guard.json` в `check:gate`; `lefthook.yml` — `assert_lefthook_installed`, pre-push — `scripts/pre-push.sh`
     (чистое дерево, пушится HEAD, затем `pnpm check`), ESLint pre-commit — по всем линтуемым расширениям, кроме
-    `.gate-fixtures` (у них свой конфиг, их линтит `check:gate`); Vitest —
-    `allowOnly: false`, тесты `.spec` и `.mts`; deny — секреты, `clean -df`, `.git/hooks`; `autoMemoryEnabled:
-    false`. Сценарии ENF-01 → отказ, хук без lefthook → exit 1, `.only` и падающий `.spec.ts` → красный `test`
+    `.gate-fixtures` (их линтит `check:gate`); Vitest — `allowOnly: false`, тесты `.spec` и `.mts`; deny — секреты,
+    `clean -df`, `.git/hooks`; `autoMemoryEnabled: false`. ENF-01 → отказ, хук без lefthook → exit 1, `.only` и
+    падающий `.spec.ts` → красный `test`
 - [x] **S12** — Правда прозы: каждое утверждение «гейт ловит X» из ENF-06 реализовано в S1–S11 или удалено;
   состав гейта — в одном месте; CLAUDE.md о гейте и хуках — правда; `/scaffold collection` и `feature` приходят
   с тестами (схема граничными литералами, запросы, строки маршрутов и карты в тестах `_tests/`, фикстуры; unit и
@@ -203,7 +203,8 @@ blocked-by: —
     разметке (`getRuntimeConfig`, `import.meta.env`), `app ↛ pages`, острова на всех on-demand ответах, бюджет
     острова счётчика, `docker run` с образом в `accept-image.sh`; удалено — Steiger `insignificant-slice`,
     whitelist `PUBLIC_CONFIG_KEYS` (с кодом). Состав гейта — rule `tests-pipeline` § Gate; `/scaffold collection`
-    и `feature` — с тестами, фикстуры по имени коллекции; N5, N7. Откат любой новой проверки → красный `check:gate`
+    и `feature` — с тестами, фикстуры по имени коллекции; N5, N7. Откат новой проверки скриптов и линтеров →
+    красный `check:gate`; острова on-demand держит HTTP-набор, бюджет острова счётчика — unit-тест
 - [ ] **S13** — Приёмка независимым агентом: 45 мутаций, 27 нарушений, 6 SEO-нарушений, мутации скриптов гейта
   на итоговом коде; гейт фазы зелёный
   - Проверка: ≥ 42/45, ≥ 24/27, 6/6, мутации скриптов — красные; `pnpm check` → зелёный · Закрывает: AC2, AC3, AC4 · Зависит от: S12
@@ -223,8 +224,7 @@ blocked-by: —
 - Ожидания JSON-LD — от констант `shared/config`: форк с другой идентичностью зелёный; `@sentry/node` подменён —
   проверяется контракт с SDK, а не отправка.
 - У русского блога в фикстурах две страницы списка: пагинация и перевод страницы 2 — на реальном случае.
-- Валидатор A — PASS (`M/validation-harden-gate-A.md`): N1, N3, N4, N8, N9 закрыты перед S6, N2, N5, N7 — S12, N6 —
-  S6 и S8; дренаж `accept:image` (TST-11) — P2.
+- Валидатор A — PASS (`M/validation-harden-gate-A.md`): замечания закрыты в S6, S8, S12; дренаж (TST-11) — P2.
 
 Этап B:
 - HTTP-набор — проекты Playwright `http` и `staging` (только `request`), браузерный — `browser`; один конфиг и один
@@ -243,14 +243,12 @@ blocked-by: —
   `export const prerender = false` с начала строки; комментарий `docker/entrypoint.sh` уточняет пакет `docker/*` P2.
 - Политика сборки — данными в `scripts/lib/site-policy.mjs` (служебные `noindex`, острова по `data-island`, чужие
   origin, типы JSON-LD, бюджеты сниппета); правило островов одно на `seo:check` и HTTP-набор.
-- Сниппет индексируемой страницы: title без суффикса — от трёх слов до 65 знаков и не общий, description 70–170;
-  reference-страницы переписаны под бюджет.
+- Сниппет индексируемой страницы: title без суффикса — 3 слова…65 знаков и не общий, description 70–170.
 - «Разметка = видимое» — по смыслу (h1, `<time>`, `og:image`, canonical, язык, крошки WAI-ARIA, факты организации
   текстом, телефон `tel:`); canonical — на плейсхолдере (V21); LCP — картинка `<main>` над h1, не lazy и с
   приоритетом; чужие ресурсы — в ресурсных `link`, медиа, CSS сборки, `<style>` и `style=""`.
-- Валидатор B — FAIL, после фиксов PASS (`M/validation-harden-gate-B.md`): B1, B2 и N1–N8 закрыты фиксами этапа B
-  (одна нормализация текста, реестр проверяемого корня, зеркала `seo:check`); N10 (бюджет HTML самой тяжёлой
-  страницы) — P4 с PRF-09.
+- Валидатор B — FAIL, после фиксов PASS (`M/validation-harden-gate-B.md`): B1, B2, N1–N8 закрыты фиксами этапа B;
+  N10 (бюджет HTML самой тяжёлой страницы) — P4 с PRF-09.
 
 Этап C:
 - Остатки перепроверки B: R2 — `decode` знает частые именованные и все числовые сущности; R1 — пагинация без слов
@@ -276,7 +274,7 @@ blocked-by: —
 - Сценарии хука — в `check:gate` (`guard.json`: `block` и `allow`), а не в Vitest: регресс периметра в обе
   стороны краснеет там же, где регресс линтеров. Префлайт pre-push — `scripts/pre-push.sh` (lefthook, `use_stdin`).
 - ENF-11 — в S11: `.only` и тест-файл вне шаблона Vitest молча выключали шаг `test` — тот же обход гейта.
-- ENF-15: deny — `git clean *-*f*`, чтение и правка секретов, правка `.git/hooks` и `lefthook-local`; `*.pem`,
+- ENF-15: deny — `git clean *-*f*`, Read и Edit секретов (Bash — нет), Edit `.git/hooks` и `lefthook-local`; `*.pem`,
   `*.key` — в `.gitignore`. `ask` на конфиги гейта не заведён: агенты программы правят их по плану, ослабление
   ловят фикстуры `check:gate`, остальное — «Сначала спроси» в CLAUDE.md. `autoMemoryEnabled: false` (HAR-07).
 - Сверка прозы — заново (список аудитора не сохранён), два прохода и перепроверка: машинное обещание реализовано,
@@ -286,15 +284,17 @@ blocked-by: —
 - `500.html` — страница сборки для `seo:check` и `/500` в `NOINDEX_ROUTES`; HTTP- и браузерный наборы берут
   `<путь>/index.html`. Контрольный прогон 42 нарушений аудита — `M/stage-c/logs/violations-s12.txt` (для S13).
 - Хвост — бэклог `gate-ux` (ENF-14); обход ESLint обфускацией (`await import`) — предел.
-- Валидатор C — PASS (`M/validation-harden-gate-C.md`), замечания:
-  - N1: реестр фикстур `{ [K in CollectionKey]: … }` — коллекция без строки — ошибка typecheck. N3:
-    `import.meta.env` где угодно, кроме `.DEV`; цвет и в шаблонной строке класса; `url(#id)`, `#add` — не цвет.
-  - N2: `sed -i`/`perl -i` по хуку и тело heredoc, которое читает оболочка, — обход; пределы — шапка хука.
-  - N4: палитру держит тест `app/styles/index.server.test.ts` (решение о палитре выше).
-  - N5 (FO7, ENF-12): подкаталог, `.markdown`, `.MD` в `.claude/plans/` — ошибка `plan:check` (фикстура
-    `.gate-fixtures/plans`); pre-commit проверяет планы при любом файле `.claude/plans/`.
-  - N8: `/.claude/worktrees/` в `.gitignore`: worktree агента не пачкает дерево префлайта. Далее — N6, N7, N9, N10.
+- Валидатор C — PASS (`M/validation-harden-gate-C.md`), замечания закрыты до S13: N1 — реестр фикстур
+  `{ [K in CollectionKey]: … }`; N3 — `import.meta.env` кроме `.DEV`, цвет в шаблонной строке, `url(#id)` и `#add`
+  не цвет; N2 — guard и N4 — палитра (решения выше); N6 — проза: острова «тема и счётчик», секреты закрыты для Read
+  и Edit, у `any` один владелец (Biome `noExplicitAny` выключен); N7 — предел храповика в `tests-pipeline`.
+- План вне модели (N5, FO7): подкаталог, `.markdown`, `.MD` в `.claude/plans/` — ошибка `plan:check`, а не пропуск
+  (фикстура `.gate-fixtures/plans`); pre-commit проверяет планы при любом файле в `.claude/plans/`.
+- Периметр (N8, N9): `/.claude/worktrees/` — в `.gitignore`. Ключи `lefthook.yml` в `check:gate` не сверяются:
+  снятый целиком pre-push такая проверка не видит (предел выше). Ложные блоки guard (`cp` из хука, упоминание в
+  комментарии) и полный `pnpm check` на удаление ref безвредны — оставлены.
+- N10 → P2: «старт без `SITE_URL`» в `accept-image.sh` без таймаута повиснет, а не упадёт, — с пакетом `docker/*`.
 
 ## Где мы сейчас
-Этапы A–C (S1–S12) приняты валидаторами, AC1, AC4–AC7 подтверждены; из замечаний C закрыты N1–N5, N8. Следующий
-шаг — остаток замечаний C (план правки — `M/handoff-p1-c-followup.md`), затем S13 (приёмка) отдельным агентом.
+Этапы A–C (S1–S12) приняты валидаторами, AC1, AC4–AC7 подтверждены, замечания валидатора C закрыты (N10 — P2).
+Следующий шаг — S13: приёмка независимым агентом на итоговом коде, затем закрытие плана, P1 → done и push.
