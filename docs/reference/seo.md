@@ -27,12 +27,13 @@ OG-картинка, набор локалей, политика AI-крауле
 
 ## Чек-лист новой страницы
 
-Проходится при `/scaffold page`; те же пункты держит `seo:check`.
+Проходится при `/scaffold page`; те же пункты держат `seo:check` и HTTP-набор гейта (карта сайта,
+статусы, кеш).
 
 1. **Индексируется?** Да — prerender (`static`), self-canonical, в карте сайта.
    Нет — проп `noindex`, вне карты, `Cache-Control` по смыслу ответа.
 2. **`title`** — уникальный среди всех страниц, без имени сайта (суффикс добавляет
-   шаблон), ≤ 65 символов.
+   шаблон), от трёх слов до 65 символов и не общий («Контакты», «Блог», «О компании»).
 3. **`description`** — уникальный, 70–170 символов, отвечает на «что здесь», а не
    пересказывает заголовок.
 4. **Canonical** — собирается сам из пути; ручное переопределение только с обоснованием,
@@ -77,11 +78,11 @@ OG-картинка, набор локалей, политика AI-крауле
 |---|---|
 | unit `shared/seo/*.test.ts` | `absoluteUrl`, `alternates`, `buildRobotsTxt`, `buildSitemap`, `buildFeed`, фабрики JSON-LD (их выход проходит Zod-схему) |
 | Container API | `seo-head.astro`, `json-ld.astro`, `widgets/breadcrumbs` — разметка и axe |
-| `pnpm seo:check` (в `pnpm check`) | весь `dist/client`: один `<title>` и `<h1>`, description, self-canonical, `lang`, OG с существующей картинкой, уникальность сниппетов, полные пары hreflang, типы JSON-LD; страница у каждой опубликованной записи и маршрута `src/pages`, hreflang только у сверенных пар |
+| `pnpm seo:check` (в `pnpm check`) | весь `dist/client`: один `<title>` и `<h1>`, description, self-canonical, `lang`, OG с существующей картинкой, сниппет уникальный, в бюджетах и не общий, полные пары hreflang, типы JSON-LD и разметка = видимое; `noindex`, острова и чужие ресурсы — по списку `scripts/lib/site-policy.mjs`; картинки с размерами, LCP не lazy; страница у каждой опубликованной записи и маршрута `src/pages`, черновиков нет, hreflang только у сверенных пар |
 | `pnpm check:gate` | сам `seo:check` (и `check:links`, `check:content`) на негативной фикстуре `.gate-fixtures/seo` — ровно ожидаемые нарушения |
 | `pnpm check:links` | каждый внутренний `href`/`src`/`srcset` сборки существует |
 | `pnpm check:content` | бюджеты и уникальность полей записей, ссылки в теле, `redirects.yaml` |
-| HTTP-набор `e2e/http/` (в `pnpm check`) | сырой HTML prod-сервера, в т.ч. под Googlebot: статусы и заголовки, штамповка origin, ни одного `<script>` в `<body>`, `robots.txt` (прод и staging) ↔ `sitemap.xml` ↔ `dist/client`, фиды, ключ IndexNow, разметка записи с переводом, вес HTML |
+| HTTP-набор `e2e/http/` (в `pnpm check`) | сырой HTML prod-сервера, в т.ч. под Googlebot: статусы и заголовки, штамповка origin, ни одного `<script>` в `<body>`, `robots.txt` (прод и staging) ↔ `sitemap.xml` ↔ `dist/client`, фиды, ключ IndexNow, вес HTML |
 | `/seo-audit` | прогон всего вышеперечисленного + curl по живому домену + внешние валидаторы |
 
 Ручное — раз на релиз: Rich Results Test, validator.schema.org, валидатор микроразметки

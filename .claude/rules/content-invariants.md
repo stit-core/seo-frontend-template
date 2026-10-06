@@ -43,7 +43,8 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
 
 - `draft: true` виден только в `astro dev` (`import.meta.env.DEV` в `api/queries.ts`): в
   списках, тегах и по URL, с пометкой «Черновик» в карточке и статье. В сборке записи нет
-  нигде — не в списках, не в тегах, URL — 404 (и не будет в sitemap/RSS). Preview-режима
+  нигде — не в списках, не в тегах, URL — 404 (и не будет в sitemap/RSS); страницу черновика в
+  `dist/client` валит `seo:check`. Preview-режима
   нет; ссылка на черновик из опубликованной записи — ошибка `check:content`
 - Переводы — параллельные каталоги `ru/`, `en/` с общим `translationKey`; slug'и могут
   отличаться. `translationKey` уникален внутри локали; запись без twin — норма.

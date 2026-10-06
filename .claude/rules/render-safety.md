@@ -47,8 +47,9 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
 
 ## Остров (клиент)
 
-- Без островов нет ни байта JS; клиентский `<script>` — по решению, со строкой бюджета в
-  `.size-limit.cjs` (rule `shared-ui`); его импорты линтит ESLint как обычный модуль
+- Без островов нет ни байта JS; клиентский `<script>` — по решению: имя в `ISLANDS`
+  (`scripts/lib/site-policy.mjs`), `data-island` на теге и строка бюджета (rule `shared-ui`);
+  другой исполняемый скрипт валит `seo:check`; импорты острова линтит ESLint как обычный модуль
 - Server islands (`server:defer`) — не для индексируемого контента: бот видит заглушку, а не
   данные; в reference-наборе их нет
 - Cookie темы читает только остров: `Astro.cookies` на prerendered — значение сборки, поэтому

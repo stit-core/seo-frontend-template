@@ -24,3 +24,24 @@ export function headTags(html) {
     return item
   })
 }
+
+/**
+ * Тело документа: от `<body` до `</body>`.
+ * @param {string} html
+ */
+export const bodyOf = (html) => html.slice(html.indexOf('<body'), html.lastIndexOf('</body>'))
+
+/**
+ * Видимый текст фрагмента — то, что читает человек: без скриптов, стилей и aria-hidden,
+ * сущности раскодированы, пробелы схлопнуты.
+ * @param {string} fragment
+ */
+export const textOf = (fragment) =>
+  decode(
+    fragment
+      .replace(/<(script|style)\b[\s\S]*?<\/\1>/g, ' ')
+      .replace(/<(\w+)\b[^>]*\baria-hidden="true"[^>]*>[\s\S]*?<\/\1>/g, ' ')
+      .replace(/<[^>]+>/g, ' '),
+  )
+    .replace(/\s+/g, ' ')
+    .trim()

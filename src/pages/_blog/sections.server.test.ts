@@ -92,6 +92,7 @@ describe('страница списка', () => {
     const model = await blogListPageModel('ru', paginate(await listPosts('ru'), 1))
     expect(model.alternatePath).toBe('/blog')
     expect(model.heading).toBe(ru('blog.title'))
+    expect(model.title).toBe(ru('blog.pageTitle'))
     expect(model.description).toBe(ru('blog.description'))
     expect(model.crumbs).toEqual([home, { name: ru('blog.title') }])
     expect(model.tags).toEqual(['astro', 'seo'])
@@ -107,6 +108,7 @@ describe('страница списка', () => {
     const model = await blogListPageModel('ru', paginate(await listPosts('ru'), 2))
     expect(model.alternatePath).toBeUndefined()
     expect(model.heading).toBe(`${ru('blog.title')} — ${page2}`)
+    expect(model.title).toBe(`${ru('blog.pageTitle')} — ${page2}`)
     expect(model.description).toBe(`${ru('blog.description')} — ${page2}`)
     expect(model.crumbs).toEqual([home, blog, { name: page2 }])
     expect(model.pagination).toEqual({
@@ -134,8 +136,8 @@ describe('страница тега', () => {
   it('заголовок, сниппет и крошки', async () => {
     const model = await tagPageModel('ru', 'astro')
     expect(model.heading).toBe(`${ru('blog.tagLead')} #astro`)
-    expect(model.title).toBe(`${ru('blog.tag')} #astro — ${ru('blog.title')}`)
-    expect(model.description).toBe(`${ru('blog.tagLead')} #astro. ${ru('blog.lead')}`)
+    expect(model.title).toBe(model.heading)
+    expect(model.description).toBe(`${ru('blog.tagLead')} #astro — ${ru('blog.tagDescription')}`)
     expect(model.crumbs).toEqual([home, blog, { name: '#astro' }])
     expect(model.jsonLd).toEqual([breadcrumbList(model.crumbs)])
   })

@@ -53,6 +53,22 @@ describe('PostCard', () => {
     expect(html).toContain('14 July 2026')
   })
 
+  it('миниатюра обложки — слот 160×90: размеры заданы, кандидаты не крупнее двух плотностей', async () => {
+    const container = await AstroContainer.create()
+    const cover = { src: '/_astro/cover.png', width: 1600, height: 900, format: 'png' as const }
+    const html = await container.renderToString(PostCard, {
+      props: { post: { ...post, data: { ...post.data, cover, coverAlt: 'Обложка' } } },
+    })
+    const img = /<img\b[^>]*>/.exec(html)?.[0] ?? ''
+    expect(img).toContain('width="160"')
+    expect(img).toContain('height="90"')
+    expect(img).toContain('loading="lazy"')
+    // Без размеров Picture отдал бы исходные 1600 px в слот шириной 160.
+    const widths = [...html.matchAll(/\s(\d+)w\b/g)].map(([, width]) => Number(width))
+    expect(widths.length).toBeGreaterThan(0)
+    expect(Math.max(...widths)).toBeLessThanOrEqual(320)
+  })
+
   it('не имеет нарушений доступности', async () => {
     const container = await AstroContainer.create()
     await expectNoA11yViolations(await container.renderToString(PostCard, { props: { post } }))

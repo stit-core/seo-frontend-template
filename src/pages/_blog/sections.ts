@@ -79,6 +79,7 @@ export async function blogListPageModel(locale: Locale, page: Page<Post>) {
   ]
   return {
     alternatePath,
+    title: `${t(locale, 'blog.pageTitle')}${pageSuffix}`,
     heading: `${t(locale, 'blog.title')}${pageSuffix}`,
     description: `${t(locale, 'blog.description')}${pageSuffix}`,
     crumbs,
@@ -106,9 +107,9 @@ export async function tagPageModel(locale: Locale, tag: string) {
   ]
   return {
     alternatePath,
-    title: `${t(locale, 'blog.tag')} #${tag} — ${t(locale, 'blog.title')}`,
+    title: heading,
     heading,
-    description: `${heading}. ${t(locale, 'blog.lead')}`,
+    description: `${heading} — ${t(locale, 'blog.tagDescription')}`,
     crumbs,
     jsonLd: [breadcrumbList(crumbs)],
   }

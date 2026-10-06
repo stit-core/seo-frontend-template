@@ -1,6 +1,6 @@
 ---
 import DocumentLayout from '@/app/layouts/document.astro'
-import { CompanyContacts } from '@/entities/company'
+import { COMPANY, CompanyContacts } from '@/entities/company'
 import { type ContactErrors, ContactForm, type ContactValues } from '@/features/contact-form'
 import { type DictKey, type Locale, localePath, t } from '@/shared/i18n'
 import { breadcrumbList } from '@/shared/seo'
@@ -31,7 +31,7 @@ const COPY = {
   en: {
     title: 'Contacts',
     description:
-      'A contact form that works without JavaScript: the browser sends a POST, the server validates the request and answers with a redirect. Email, phone and address are next to it.',
+      'A contact form that works without JavaScript: the browser sends a POST, the server validates the request and answers with a redirect. Email, phone and address are below.',
     lead: 'Write to us and we answer by email. The form is a plain POST request: no JavaScript, no third-party services, no lost requests.',
     form: 'Request',
     other: 'Other ways to reach us',
@@ -40,6 +40,9 @@ const COPY = {
 } satisfies Record<Locale, Record<string, string>>
 
 const copy = COPY[locale]
+// Сниппет контактов — где компания: город и адрес из реквизитов, h1 и крошка — короткие.
+const address = COMPANY.address[locale]
+const title = `${copy.title} — ${address.locality}, ${address.street}`
 const crumbs = [
   { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
   { name: copy.title },
@@ -48,7 +51,7 @@ const crumbs = [
 
 <DocumentLayout
   locale={locale}
-  title={copy.title}
+  title={title}
   description={copy.description}
   alternatePath="/contacts"
   noindex={noindex}

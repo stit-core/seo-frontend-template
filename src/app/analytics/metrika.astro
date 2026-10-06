@@ -6,10 +6,15 @@ import { METRIKA_ID } from '@/shared/config'
 // разметка чиста, сторонних скриптов на сайте нет вообще.
 // Сам счётчик — 95 КБ чужого кода, поэтому он грузится после простоя браузера, не конкурируя
 // с контентом, и ровно один раз. `init` без параметров: просмотр страницы он засчитывает сам,
-// остальное настраивается в панели Метрики, а не здесь.
+// остальное настраивается в панели Метрики, а не здесь. data-island — имя в списке островов
+// политики сборки (scripts/lib/site-policy.mjs): без него seo:check счётчик не пропустит.
 ---
 
-{METRIKA_ID !== '' && <script is:inline define:vars={{ counterId: METRIKA_ID }}>
+{METRIKA_ID !== '' && <script
+  is:inline
+  data-island="metrika"
+  define:vars={{ counterId: METRIKA_ID }}
+>
   {
     const load = () => {
       if (window.ym) return

@@ -13,6 +13,7 @@ const { locale } = Astro.props
 
 const COPY = {
   ru: {
+    title: 'О компании: сайты, которые видно в поиске',
     description:
       'Организация reference-набора: чем занимается, где находится, когда работает и как с ней связаться. Разметка LocalBusiness собирается из этих же фактов.',
     lead: 'Небольшая студия: делаем сайты, которые видно в поиске. Тексты живут в git, страницы собираются заранее, сервер отдаёт готовые файлы.',
@@ -27,6 +28,7 @@ const COPY = {
     note: 'Данные на этой странице — демонстрационные: название, телефон, адрес и часы работы заменяются при развёртывании шаблона в проект.',
   },
   en: {
+    title: 'About the company: sites you can find in search',
     description:
       'The organisation of the reference set: what it does, where it is, when it works and how to reach it. The LocalBusiness markup is built from the same facts.',
     lead: 'A small studio that builds sites you can find in search. Texts live in git, pages are built ahead of time, the server ships ready files.',
@@ -43,14 +45,15 @@ const COPY = {
 } satisfies Record<Locale, unknown>
 
 const copy = COPY[locale]
-const title = t(locale, 'nav.about')
-const crumbs = [{ name: t(locale, 'nav.home'), href: localePath(locale, '/') }, { name: title }]
+// Заголовок раздела — h1 и крошка; title сниппета говорит, чем компания занимается.
+const heading = t(locale, 'nav.about')
+const crumbs = [{ name: t(locale, 'nav.home'), href: localePath(locale, '/') }, { name: heading }]
 const address = COMPANY.address[locale]
 ---
 
 <DocumentLayout
   locale={locale}
-  title={title}
+  title={copy.title}
   description={copy.description}
   alternatePath="/about"
   jsonLd={[
@@ -71,7 +74,7 @@ const address = COMPANY.address[locale]
   ]}
 >
   <Breadcrumbs locale={locale} items={crumbs} class="mb-4" />
-  <h1 class="text-heading-xl font-semibold tracking-tight">{title}</h1>
+  <h1 class="text-heading-xl font-semibold tracking-tight">{heading}</h1>
   <p class="mt-4 text-body-lg text-muted">{copy.lead}</p>
 
   <h2 class="section-title mt-12 text-heading-md font-semibold">{copy.work}</h2>

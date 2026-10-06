@@ -2,7 +2,7 @@ const { globSync, statSync } = require('node:fs')
 
 // Бюджеты клиентских ассетов (синтез §6.5). size-limit падает на пустом glob'е, поэтому
 // строка JS появляется вместе с первым островом и сразу попадает под бюджет.
-// «0 script-ресурсов» на индексируемых страницах проверяет e2e.
+// Что исполняемых скриптов на страницах нет, кроме островов из списка, проверяет seo:check.
 const islands =
   globSync('dist/client/_astro/*.js').length > 0
     ? [{ name: 'JS островов', path: 'dist/client/_astro/*.js', limit: '30 KB', gzip: true }]

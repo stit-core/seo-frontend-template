@@ -79,7 +79,7 @@ Vitest 5 (Container API) + Playwright на prod-сборке (HTTP-набор в
 | `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome и свои скрипты гейта (`seo:check`, `check:links`, `check:content`) — ровно нарушениями из `expected.json` |
 | `pnpm check:content` | контент-гейт до build: схема каждого `.md`, тело, переводы, ссылки, `content/redirects.yaml` |
 | `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` существуют |
-| `pnpm seo:check` | после build: у каждой страницы `dist/client` title/description (уникальные), self-canonical, `lang`, один h1, OG с картинкой, hreflang у каждой пары переводов, валидный JSON-LD |
+| `pnpm seo:check` | после build: у каждой страницы `dist/client` title/description (уникальные, в бюджетах, не общие), self-canonical, `lang`, один h1, OG с картинкой, hreflang у каждой пары переводов, JSON-LD = видимое; `noindex`, острова и чужие ресурсы — только по списку `scripts/lib/site-policy.mjs` |
 | `pnpm size` | бюджеты `.size-limit.cjs` (CSS, HTML главной и поста) |
 | `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
 | `pnpm ttfb <origin> <path…>` | TTFB запущенного сервера: медиана/p90 20 запросов (`scripts/ttfb.mjs`) |
@@ -121,7 +121,8 @@ Vitest 5 (Container API) + Playwright на prod-сборке (HTTP-набор в
   `https://__site_origin__`, `docker/entrypoint.sh` штампует `dist/client` при старте
 - Границы FSD держит `pnpm lint` (ESLint с резолвером) вместе с `.gate-fixtures/`; Steiger —
   структура
-- 0 JS на контентных страницах; единственный остров — тема (инлайн-`<script>` в `<head>`)
+- 0 JS на контентных страницах; единственный остров — тема (инлайн-`<script>` в `<head>`);
+  острова, служебные `noindex` и чужие ресурсы — только по списку `scripts/lib/site-policy.mjs`
 - Контент — Markdown в `src/entities/<name>/content/<locale>/`; `draft: true` виден только в
   `astro dev`
 - Каждая страница — через `DocumentLayout`; абсолютные URL — только `absoluteUrl()` из `shared/seo`

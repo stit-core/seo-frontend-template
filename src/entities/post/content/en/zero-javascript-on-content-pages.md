@@ -12,7 +12,8 @@ and add points of failure. So the starting state of a page here is zero bytes of
 
 ## How it is enforced
 
-- e2e counts script resources on indexable pages — there must be exactly none.
+- The gate reads every built page: an executable script may only be a declared island, and no
+  script, style or font comes from someone else's domain.
 - `prefetch` and `<ClientRouter />` are off: a client router would cost almost 5 KB on every
   page.
 - Every island is a separate line in the `size-limit` budget, so adding one shows up in the

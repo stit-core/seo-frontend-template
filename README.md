@@ -64,7 +64,7 @@ pnpm steiger          # структурный линтер FSD
 pnpm check:gate       # негативные фикстуры обязаны валить линтеры и скрипты гейта
 pnpm check:content    # контент-гейт: схема .md, тело, переводы, ссылки, redirects.yaml
 pnpm check:links      # после build: все внутренние ссылки в dist/client существуют
-pnpm seo:check        # после build: head каждой страницы (title/description/canonical/lang/h1/OG/hreflang/JSON-LD)
+pnpm seo:check        # после build: head, сниппет, hreflang, JSON-LD = видимое, острова и ресурсы каждой страницы
 pnpm size             # бюджеты CSS / HTML
 pnpm kin:diff         # сверка обвязки с ../spa-frontend-template (advisory)
 pnpm ttfb <origin> …  # TTFB запущенного сервера: медиана/p90 20 запросов
@@ -162,8 +162,9 @@ shutdown под Traefik и отказывается стартовать без 
 `light-dark()` и `data-scheme`), без вендорных UI-китов. Ни одна страница не грузит внешних
 скриптов: из JavaScript в шаблоне только остров темы — инлайн-`<script>` в `<head>`, который
 применяет выбор до первой отрисовки и обслуживает переключатель. Картинки — `astro:assets` (`<Picture>`:
-AVIF/WebP с фолбэком, размеры заданы, обложка записи грузится с приоритетом). Скрипты
-страниц проверяет HTTP-набор гейта, доступность — браузерный axe в обеих темах на `/release`.
+AVIF/WebP с фолбэком, размеры заданы, обложка записи грузится с приоритетом). Скрипты, чужие
+ресурсы и картинки каждой страницы проверяет `seo:check`, доступность — браузерный axe в обеих
+темах на `/release`.
 
 ## Из шаблона — в свой сайт
 

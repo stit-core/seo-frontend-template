@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
-import { type HeadTag, headTags } from '../../scripts/lib/html.mjs'
+import { bodyOf, type HeadTag, headTags } from '../../scripts/lib/html.mjs'
+import { scriptViolations } from '../../scripts/lib/site-policy.mjs'
 import { SITE_ORIGIN_PLACEHOLDER } from '../../src/shared/config/runtime.ts'
 import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
 import { entries, onDemandRoutes, prerenderedPaths, redirects } from '../site'
@@ -7,7 +8,6 @@ import { entries, onDemandRoutes, prerenderedPaths, redirects } from '../site'
 const PLACEHOLDER = new URL(SITE_ORIGIN_PLACEHOLDER).hostname
 const UNKNOWN = '/net-takogo-adresa'
 
-const bodyOf = (html: string) => html.slice(html.indexOf('<body'), html.lastIndexOf('</body>'))
 const jsonLd = (html: string) => html.match(/<script type="application\/ld\+json">/g) ?? []
 const serverTime = (html: string) => /<time datetime="([^"]+)"/.exec(html)?.[1]
 
@@ -69,6 +69,14 @@ test.describe('on-demand: ответы приложения', () => {
     // check:links видит только dist/client — ссылки on-demand страницы проверяются здесь.
     for (const [, href] of html.matchAll(/<a[^>]* href="(\/[^"]*)"/g)) {
       expect((await request.get(href ?? '')).status(), href).toBe(200)
+    }
+  })
+
+  test('on-demand страницы: скрипты — только острова политики (prerendered держит seo:check)', async ({
+    request,
+  }) => {
+    for (const path of [UNKNOWN, '/now']) {
+      expect(scriptViolations(await (await request.get(path)).text()), path).toEqual([])
     }
   })
 

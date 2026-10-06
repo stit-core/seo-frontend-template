@@ -7,9 +7,11 @@
 // скрипт не выполнился.
 // Тело уезжает в <head> каждой страницы как есть — поэтому оно плотное, без комментариев и
 // прагм, и его не трогает форматтер (.prettierignore); размер держит theme-init.astro.test.ts.
+// data-island — имя в списке островов политики сборки (scripts/lib/site-policy.mjs): другой
+// исполняемый скрипт seo:check не пропустит.
 ---
 
-<script is:inline>{const d=document,s=d.documentElement.dataset,m=/(^|; )scheme=(light|dark)/.exec(d.cookie)
+<script is:inline data-island="theme">{const d=document,s=d.documentElement.dataset,m=/(^|; )scheme=(light|dark)/.exec(d.cookie)
 if(m)s.scheme=m[2]
 s.js='on'
 d.addEventListener('click',e=>{if(e.target.closest?.('[data-theme-toggle]')){s.scheme=(s.scheme?s.scheme==='dark':matchMedia('(prefers-color-scheme:dark)').matches)?'light':'dark'
