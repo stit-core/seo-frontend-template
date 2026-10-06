@@ -34,6 +34,11 @@ export const DESCRIPTION_BUDGET = { minChars: 70, maxChars: 170 }
 export const GENERIC_TITLE =
   /^\s*(?:главная(?:\s+страница)?|домашняя\s+страница|home(?:\s*page)?|untitled(?:\s+document)?|без\s+названия|новая\s+страница|страница|page\s+title|app\s+title|site\s+title|document|react\s+app|vite\s*\+\s*react|my\s*app|website|сайт|добро\s+пожаловать!?|welcome!?|контакты|contacts?|contact\s+us|услуги|services|о\s+(?:нас|компании)|about(?:\s+us)?|блог|blog|каталог|catalog|профиль|profile|новости|news)\s*$/iu
 
+// Атрибут тега: имя и значение — в кавычках или без них.
+const ATTRIBUTE = /\s([\w:-]+)\s*=\s*("[^"]*"|'[^']*'|[^\s"'>]+)/g
+// Атрибуты-адреса, по которым браузер переходит или грузит: javascript: в них исполняется.
+const URL_ATTRIBUTE = /^(href|src|action|formaction|xlink:href|data)$/i
+
 /**
  * Нарушения правила островов в документе: скрипт вне списка, внешний, в <body> или дубль;
  * исполняемый код мимо <script> — обработчик в атрибуте или javascript:-адрес.
@@ -58,19 +63,20 @@ export function scriptViolations(html) {
     if (match.index > headEnd) problems.push(`<script${attrs}> в <body>: остров живёт в <head>`)
     if (island !== undefined) seen.add(island)
   }
-  // onclick=… и javascript:-адрес исполняют код без <script> — острову так не объявиться.
+  // Обработчик on*= и javascript:-адрес исполняют код без <script> — острову так не объявиться.
+  // Смотрятся имена атрибутов и значения адресных: текст «JavaScript: …» в title или content — не код.
   const markup = html.replace(/<script\b[\s\S]*?<\/script>/g, '')
   for (const [tag] of markup.matchAll(/<[a-z][^>]*>/gi)) {
-    const handler = /\s(on[a-z]+)\s*=/i.exec(tag)?.[1]
-    if (handler) {
-      problems.push(
-        `обработчик ${handler} в разметке: скрипт вне островов ISLANDS (scripts/lib/site-policy.mjs)`,
-      )
-    }
-    if (/=\s*["']?\s*javascript:/i.test(tag)) {
-      problems.push(
-        'javascript:-адрес в разметке: скрипт вне островов ISLANDS (scripts/lib/site-policy.mjs)',
-      )
+    for (const [, name = '', value = ''] of tag.matchAll(ATTRIBUTE)) {
+      if (/^on[a-z]+$/i.test(name)) {
+        problems.push(
+          `обработчик ${name} в разметке: скрипт вне островов ISLANDS (scripts/lib/site-policy.mjs)`,
+        )
+      } else if (URL_ATTRIBUTE.test(name) && /^["']?\s*javascript:/i.test(value)) {
+        problems.push(
+          'javascript:-адрес в разметке: скрипт вне островов ISLANDS (scripts/lib/site-policy.mjs)',
+        )
+      }
     }
   }
   return problems

@@ -285,10 +285,11 @@ blocked-by: —
     текст: неразрывный пробел типографики на обеих сторонах один, новые поля разметки получают её сами.
   - B2: реестр — проверяемого корня (`collectionsOf(root)`), у мини-проектов `seo` и `content` свой, со своей
     схемой. В worktree вторая коллекция, коллекция `case` и prune «без блога» — `check:gate` зелёный.
-  - N3: крошки — `<nav><ol>` с `aria-current="page"`; prerendered-эндпоинт — файлом сборки; чужой origin — у
-    ресурсных `rel` `<link>` (загружающих меньше, и список не растёт). N7: строка ожидания с `…` — префикс.
-  - N2, N5, N6, N8: `on*=` и `javascript:` — нарушение островов, `style=""` — через `checkCss`; `noindex` в
-    любой форме — `isNoindex`; типы JSON-LD — `JSON_LD_TYPES` политики; og:image и hreflang — свой origin.
+  - N3: крошки — `<nav><ol>`, чей последний пункт с `aria-current="page"` (не оглавление и не пагинация);
+    prerendered-эндпоинт — файлом сборки; чужой origin — у ресурсных `rel` `<link>`. N7: ожидание с `…` — префикс.
+  - N2, N5, N6, N8: атрибут `on*` и `javascript:` в адресном атрибуте — нарушение островов (по имени атрибута:
+    «JavaScript: …» в `content` — текст), `style=""` — через `checkCss`; `noindex` в любой форме — `isNoindex`;
+    типы JSON-LD — `JSON_LD_TYPES` политики; og:image и hreflang — свой origin.
   - N1: HTML on-demand маршрута — только с `noindex` (HTTP-набор): смысл «dynamic — всегда noindex», а не второй
     список маршрутов рядом с картой `rendering.md`. N4: обложку-LCP (над h1, не lazy) держит тест `post-article`.
   - N9: AC5 — 25 тестов, проза о HTTP-наборе и островах; `pageRoutes` — с начала строки (фикстура `kontakty`).

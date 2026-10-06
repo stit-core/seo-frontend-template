@@ -205,13 +205,13 @@ function checkMedia(where, body) {
     fail(where, `fetchpriority="high" у ${priority.length} картинок, больше двух`)
 }
 
-// Видимые крошки — паттерн WAI-ARIA Breadcrumb: <nav> с упорядоченным списком, текущая
-// страница — пункт с aria-current="page" без ссылки; оглавление и другие <nav><ol> — не крошки.
-// Пункт — имя и корневой путь.
+// Видимые крошки — паттерн WAI-ARIA Breadcrumb: <nav> с упорядоченным списком, последний пункт —
+// текущая страница с aria-current="page" без ссылки; оглавление и нумерованная пагинация в
+// <nav><ol> — не крошки. Пункт — имя и корневой путь.
 function visibleCrumbs(body) {
   const list = [...body.matchAll(/<nav\b[^>]*>\s*<ol\b[^>]*>([\s\S]*?)<\/ol>/g)]
     .map(([, items = '']) => items)
-    .find((items) => /\baria-current="page"/.test(items))
+    .find((items) => /\baria-current="page"/.test(items.slice(items.lastIndexOf('<li'))))
   if (list === undefined) return undefined
   return [...list.matchAll(/<li\b[^>]*>([\s\S]*?)<\/li>/g)].map(([, item = '']) => {
     const link = /<a\b[^>]*\bhref="([^"]*)"[^>]*>([\s\S]*?)<\/a>/.exec(item)
