@@ -164,9 +164,15 @@ blocked-by: —
     `CLIENT_MODULES`; правило `fsd-architecture` о сервере и клиенте — по смыслу Astro. Фикстуры на каждый пункт,
     `check:gate` линтует `src` и `.claude`; откат любой из шести защит → красный `check:gate`. V03b, X1, X2, X7,
     остров с `@/shared/config` (и V01–V04) → красный `pnpm check` на шаге `lint` (`M/stage-c/`)
-- [ ] **S10** — Проза → машина для UI и логов: сырые цвета, `<img>` мимо `astro:assets`, `client:`,
+- [x] **S10** — Проза → машина для UI и логов: сырые цвета, `<img>` мимо `astro:assets`, `client:`,
   `process.env` в `.astro`, `console.*` — ошибкой; PII в логе ловит тест всех исходов
   - Проверка: V08, V17, V18, V20, V24, V27a–c → красный `pnpm check` · Закрывает: AC3 · Зависит от: S9
+  - Сделано: ESLint в `.astro` (`no-restricted-syntax`) — сырой `<img>`, `client:*`, инлайн-`style`, литерал цвета
+    в классе, в `fill`/`stroke` SVG и в `<style>`; в коде `src` — `no-console` (кроме `log.ts`), `process.env`
+    вне `shared/config` (`no-restricted-properties`), CSS кроме токен-слоя (`no-restricted-imports`); палитра
+    Tailwind по умолчанию выключена в токен-слое (сборка побайтно та же); Biome `noConsole` снят. Фикстура
+    `widgets/promo` — откат любого правила → красный `check:gate`. V08, V17, V20, V24, V27a–c, V06 и цвет в `fill`
+    → красный `pnpm check` на `lint`, V18 — на `test` (PII-проверка этапа A); класс палитры CSS не даёт
 - [ ] **S11** — Периметр: guard-хук Claude Code по образцу go-backend (плюс `LEFTHOOK=0`, `LEFTHOOK_EXCLUDE`,
   `lefthook uninstall`), `assert_lefthook_installed`, префлайт pre-push «чистое дерево, пушится HEAD», глобы
   pre-commit для `e2e/` и `scripts/`
@@ -241,7 +247,11 @@ blocked-by: —
   исключение — блоком конфига с причиной, и `as any` в коде `src` (кроме тестов) — жёсткий запрет (ENF-16).
 - Сервер и клиент по смыслу Astro: серверный код в баррелях законен, ограничены импорты клиентского `<script>`
   (`CLIENT_MODULES`); запрет `astro:*` в баррелях оставлен — public API не раздаёт `getCollection` мимо запросов.
+- Канон UI — ESLint по исходнику `.astro`, а не скан цветов `dist`: минификатор переписывает литералы (`#ffffff` →
+  `#fff`, именованные цвета), а Tailwind печатает свои служебные; литерал в исходнике однозначен и с `file:line`.
+- Палитра Tailwind — выключена в токен-слое (`--color-*: initial`), а не регэксп имён в классах: цвет палитры не
+  доходит до CSS ни из литерала, ни из вычисленного класса. `console` и `any` — одним владельцем, ESLint.
 
 ## Где мы сейчас
 Этапы A и B (S1–S8) сделаны и приняты валидатором, AC1, AC4, AC5 подтверждены; остатки перепроверки B (R1–R3)
-закрыты. Этап C идёт: S9 сделан, следующий шаг — S10 (проза → машина для UI и логов).
+закрыты. Этап C идёт: S9 и S10 сделаны, следующий шаг — S11 (периметр: guard-хук и префлайт pre-push).

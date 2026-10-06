@@ -10,6 +10,10 @@
  */
 
 @theme {
+  /* Палитра Tailwind по умолчанию выключена: цвет — только семантический токен ниже, а
+   * `text-zinc-500` не даёт ни байта CSS. */
+  --color-*: initial;
+
   --font-sans:
     ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;

@@ -3,13 +3,18 @@
     { "file": "src/widgets/a/ui/a.astro", "rule": "boundaries/dependencies", "count": 3 },
     { "file": "src/widgets/a/ui/a.astro", "rule": "no-restricted-imports" },
     { "file": "src/widgets/a/ui/a.astro", "rule": "astro/jsx-a11y/alt-text" },
+    { "file": "src/widgets/a/ui/a.astro", "rule": "no-restricted-syntax" },
     { "file": "src/widgets/b/lib/crumbs.js", "rule": "boundaries/dependencies" },
     { "file": "src/entities/post/ui/post-card.astro", "rule": "boundaries/dependencies" },
     { "file": "src/pages/index.astro", "rule": "no-restricted-imports", "count": 3 },
     { "file": "src/entities/post/index.ts", "rule": "no-restricted-imports" },
     { "file": "src/features/search/index.ts", "rule": "no-restricted-syntax", "count": 2 },
     { "file": "src/features/search/ui/search-box.astro", "rule": "no-restricted-imports" },
-    { "file": "src/components/promo.astro", "rule": "boundaries/no-unknown-files" }
+    { "file": "src/components/promo.astro", "rule": "boundaries/no-unknown-files" },
+    { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-imports" },
+    { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-properties" },
+    { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-console" },
+    { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-syntax", "count": 6 }
   ],
   "steiger": [
     { "file": "src/widgets/a/ui/a.astro", "rule": "fsd/forbidden-imports" },

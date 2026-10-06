@@ -8,7 +8,7 @@ JSON-строка на on-demand запрос, `X-Request-Id` для сшивк�
 ## Лог процесса
 
 Единственный вывод — `log()` из `src/shared/observability`; `console.*` мимо него не
-пишут ни middleware, ни маршруты. Одна строка JSON на событие:
+пишут ни middleware, ни маршруты (ESLint `no-console` в `src`). Одна строка JSON на событие:
 
 ```json
 {"ts":"2026-01-15T10:03:41.118Z","lvl":"info","method":"GET","path":"/now","status":200,"dur_ms":3,"rid":"..."}

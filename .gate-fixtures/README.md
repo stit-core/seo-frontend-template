@@ -21,7 +21,8 @@ ESLint, Steiger и Biome гоняются из этого каталога по 
 | `src/widgets/b/lib/crumbs.js` | cross-slice `widgets/b → widgets/a` из `.js`-модуля | ESLint `boundaries/dependencies`, Steiger `fsd/forbidden-imports` |
 | `src/features/search/ui/search-box.astro` | клиентский `<script>` импортирует `@/shared/config` (Zod и env процесса в бандле) | ESLint `no-restricted-imports` |
 | `src/components/promo.astro` | файл вне слоёв FSD | ESLint `boundaries/no-unknown-files` |
-| `src/widgets/a/ui/a.astro` | `<img>` без `alt` | ESLint `astro/jsx-a11y/alt-text`, Biome `lint/a11y/useAltText` |
+| `src/widgets/a/ui/a.astro` | `<img>` без `alt` (и сырой `<img>` мимо `<Picture>`) | ESLint `astro/jsx-a11y/alt-text` и `no-restricted-syntax`, Biome `lint/a11y/useAltText` |
+| `src/widgets/promo/ui/promo.astro` | канон UI и приложения: CSS UI-кита, `process.env` и `console` во frontmatter; сырой `<img>`, `client:load`, инлайн-`style`, сырой цвет в классе, в `fill` SVG и в `<style>` | ESLint `no-restricted-imports`, `no-restricted-properties`, `no-console`, `no-restricted-syntax` ×6 |
 | `src/entities/post/ui/post-card.astro` | импорт вверх `entities → widgets` | ESLint `boundaries/dependencies`, Steiger `fsd/forbidden-imports` |
 | `src/pages/index.astro` | deep-import в `.astro`-цель и в `.ts`-цель (над вторым — `eslint-disable-next-line`, который не действует), относительным путём из слайса в каталог слоя | ESLint `no-restricted-imports` ×3, Steiger `fsd/no-public-api-sidestep` (только `.ts`) |
 | `src/entities/post/index.ts` | реэкспорт `astro:content` из public API | ESLint `no-restricted-imports` |

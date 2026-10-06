@@ -60,11 +60,20 @@ const publicApiPatterns = [
   },
 ]
 
+// Стили — один токен-слой: CSS UI-кита или пакета приносит свои цвета и размеры мимо токенов.
+const importPatterns = [
+  ...publicApiPatterns,
+  {
+    group: ['*.css', '!@/app/styles/index.css'],
+    message: 'UI: стили — только токен-слой @/app/styles/index.css, CSS UI-китов и пакетов нет',
+  },
+]
+
 // Клиентский <script> исполняется в браузере: импортирует только модули без серверного кода.
 // Баррель тянет в бандл всё, что за ним (`@/shared/config` — это Zod и env процесса).
 const CLIENT_MODULES = ['@/shared/lib', '@/shared/i18n']
 const clientPatterns = [
-  ...publicApiPatterns,
+  ...importPatterns,
   {
     regex: String.raw`^(?!\.\.?/|(${CLIENT_MODULES.join('|')})$)`,
     message: `FSD: клиентскому <script> — только свой слайс и ${CLIENT_MODULES.join(', ')}`,
@@ -96,8 +105,39 @@ const fsdRules = {
   ],
   // Файл вне слоёв (src/components, src/lib…) — мимо всех границ сразу.
   'boundaries/no-unknown-files': 'error',
-  'no-restricted-imports': ['error', { patterns: publicApiPatterns }],
+  'no-restricted-imports': ['error', { patterns: importPatterns }],
 }
+
+// Цвет — только токен src/app/styles/index.css: литерал цвета в разметке компонента — сырой цвет.
+const COLOR = String.raw`#[0-9a-f]{3,8}\b|\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(`
+const CLASS = "JSXAttribute:matches([name.name='class'], [name.namespace.name='class'])"
+// Канон UI (rule shared-ui) в разметке .astro.
+const uiSyntax = [
+  {
+    selector: "JSXOpeningElement[name.name='img']",
+    message: 'UI: картинка — <Picture> из astro:assets (форматы, размеры, LCP), а не сырой <img>',
+  },
+  {
+    selector: "JSXNamespacedName[namespace.name='client']",
+    message: 'UI: client:* — фреймворка островов нет, остров — инлайн-<script data-island>',
+  },
+  {
+    selector: "JSXAttribute[name.name='style']",
+    message: 'UI: инлайн-style — значения через утилиты токен-слоя src/app/styles/index.css',
+  },
+  {
+    selector: `${CLASS} Literal[value=/${COLOR}/i]`,
+    message: 'UI: сырой цвет в классе — семантическая утилита токен-слоя',
+  },
+  {
+    selector: `JSXElement[openingElement.name.name='style'] > AstroRawText[value=/${COLOR}/i]`,
+    message: 'UI: сырой цвет в <style> — токен src/app/styles/index.css',
+  },
+  {
+    selector: `JSXAttribute[name.name=/^(fill|stroke|color|stop-color|flood-color)$/] > Literal[value=/${COLOR}/i]`,
+    message: 'UI: сырой цвет в атрибуте — currentColor или токен',
+  },
+]
 
 export default defineConfig(
   {
@@ -149,6 +189,7 @@ export default defineConfig(
       parser: astroParser,
       parserOptions: { parser: tseslint.parser, extraFileExtensions: ['.astro'] },
     },
+    rules: { 'no-restricted-syntax': ['error', ...uiSyntax] },
   },
   {
     files: [CLIENT_SCRIPTS],
@@ -178,7 +219,7 @@ export default defineConfig(
         'error',
         {
           patterns: [
-            ...publicApiPatterns,
+            ...importPatterns,
             {
               group: ['astro:*', 'node:*'],
               message: 'FSD: примитивы Astro и Node не реэкспортируются из public API слайса',
@@ -191,6 +232,27 @@ export default defineConfig(
         {
           selector: 'Program > :not(ExportNamedDeclaration[source])',
           message: 'FSD: в index.ts — только `export { x } from "./…"`, без импортов и вызовов',
+        },
+      ],
+    },
+  },
+  {
+    // Лог — один log() из shared/observability: порог LOG_LEVEL, JSON-строка без PII.
+    files: [SRC_CODE],
+    ignores: ['src/shared/observability/log.ts', 'src/**/*.test.ts'],
+    rules: { 'no-console': 'error' },
+  },
+  {
+    // Среда — только getRuntimeConfig(): на prerender process.env — значение сборки, не контейнера.
+    files: [SRC_CODE],
+    ignores: ['src/shared/config/**', 'src/**/*.test.ts'],
+    rules: {
+      'no-restricted-properties': [
+        'error',
+        {
+          object: 'process',
+          property: 'env',
+          message: 'env — только через getRuntimeConfig() из @/shared/config (rule env-local)',
         },
       ],
     },

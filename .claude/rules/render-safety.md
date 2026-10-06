@@ -22,7 +22,7 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
   `Astro.cookies` и `Astro.response.headers` ни на что не влияют. Нужен запрос — маршрут
   становится `dynamic` (`prerender = false`)
 - Секреты и `process.env` не попадают в клиентский бандл и в HTML: среду читает только
-  `shared/config` на сервере; в разметку — только `PUBLIC_CONFIG_KEYS` через
+  `shared/config` на сервере (`process.env` в другом модуле `src` валит ESLint); в разметку — только `PUBLIC_CONFIG_KEYS` через
   `getPublicConfig()`; `import.meta.env.VITE_*`/`PUBLIC_*` для среды не используются
 - `Astro.site` и `astro:i18n` не строят абсолютные URL: на on-demand они вернули бы значение
   сборки — плейсхолдер. Origin — runtime `SITE_URL` (on-demand) или плейсхолдер в `<head>`
@@ -41,7 +41,8 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
   реплике. Иммутабельные данные сборки (таблица редиректов) — допустимое исключение
 - `getRuntimeConfig()` на on-demand — живой `process.env` контейнера; в лог — одна JSON-строка
   без PII, query, cookie и тел запросов, и только через `log()` из `shared/observability`
-  (порог `LOG_LEVEL`): `console.*` напрямую мимо порога не пишут ни middleware, ни маршруты
+  (порог `LOG_LEVEL`): `console.*` напрямую мимо порога не пишут ни middleware, ни маршруты —
+  ESLint `no-console`
 - 404/410 — честный статус, не soft-404, с `noindex`; `X-Robots-Tag` staging действует только
   на on-demand — на prerendered его ставит Traefik
 

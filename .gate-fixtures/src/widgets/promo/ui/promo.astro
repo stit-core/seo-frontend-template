@@ -1,0 +1,25 @@
+---
+// Нарушения канона UI и приложения: CSS UI-кита мимо токен-слоя, env процесса мимо
+// getRuntimeConfig(), console мимо log().
+import 'fake-ui-kit/kit.css'
+import Badge from './badge.astro'
+
+const promo = process.env.PROMO === '1'
+console.log(promo)
+---
+
+<!-- Нарушения: сырой <img> мимо <Picture>, client:* без фреймворка островов, инлайн-style, сырой
+цвет в классе, в атрибуте SVG и в <style>. -->
+<section class="promo">
+  <img src="/promo.png" alt="Промо" width="10" height="10" />
+  <Badge client:load />
+  <p style="margin-top: 1rem">Акция</p>
+  <p class:list={['mt-4', 'text-[#e11d48]']}>Скидка</p>
+  <svg viewBox="0 0 1 1" aria-hidden="true"><path fill="#e11d48" d="M0 0h1v1H0z" /></svg>
+</section>
+
+<style>
+  .promo {
+    color: #e11d48;
+  }
+</style>

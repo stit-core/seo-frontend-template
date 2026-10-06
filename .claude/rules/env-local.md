@@ -56,13 +56,14 @@ env: их читает on-demand код (`api/contact`, наблюдаемост
   локальный `.env` читает только `pnpm start`, в образ он не попадает
 - Секреты — только env контейнера (`SMTP_URL`, `FORM_BACKEND_URL`, `CAPTCHA_SECRET`); в логах —
   без PII, без тел запросов и без тела заявки. Пишет один `log()` (`shared/observability`) с
-  порогом `LOG_LEVEL` — и middleware, и форма; Sentry DSN public by design, но пустой по
+  порогом `LOG_LEVEL` — и middleware, и форма (`console` в `src` вне `log.ts` валит ESLint); Sentry DSN public by design, но пустой по
   умолчанию — пакет тогда не грузится вовсе
 
 ## Что нельзя
 
 - ❌ `import.meta.env.VITE_*` для конфигурации среды
 - ❌ Логировать `process.env`, cookie, query-строку, тело запроса
-- ❌ Читать `process.env` мимо `shared/config`. Исключения — код вне приложения:
+- ❌ Читать `process.env` мимо `shared/config` — в `src` (кроме тестов) это ошибка ESLint
+  `no-restricted-properties`. Исключения — код вне приложения:
   `astro.config.ts` (build-time плейсхолдер), `docker/*` (обёртка процесса стартует до
   приложения), `e2e/*` (профили и порты прогона), `scripts/*`
