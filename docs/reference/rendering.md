@@ -23,8 +23,9 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 ## Карта маршрутов
 
 `scripts/lib/routes.mjs` (`pageRoutes()`) выводит режим каждого файла `src/pages` по признаку
-`prerender = false` — им пользуются `check:content` и `check:links`. Таблица — та же карта с
-решениями по кешу и индексации; колонка «в sitemap» — намерение для генератора карты сайта.
+`prerender = false` — им пользуются `check:content`, `check:links`, `seo:check` и HTTP-набор.
+Таблица — та же карта с решениями по кешу и индексации: у каждого on-demand файла здесь строка,
+иначе `check:content` красный; колонка «в sitemap» — намерение для генератора карты сайта.
 
 | путь | файл (`src/pages/`) | режим | `Cache-Control` | индексируется | в sitemap |
 |---|---|---|---|---|---|
@@ -90,10 +91,12 @@ Prerender происходит на сборке, а канонический or
   переезд домена не трогает контент;
 - HTML на сборке не предсжимается — иначе плейсхолдер уедет внутрь `.br`/`.gz`.
 
-Гейт: HTTP-набор (`e2e/http/pages.spec.ts`, `service.spec.ts`) обходит все страницы `dist/client`
-и on-demand маршруты — плейсхолдера нет нигде, в `<body>` нет URL своего origin; `check:content` не пропускает литерал
-плейсхолдера в тексты записей; `shared/config/runtime.server.test.ts` держит литерал
-согласованным во всех файлах, где он есть.
+Гейт: HTTP-набор (`e2e/http/pages.spec.ts`, `service.spec.ts`) обходит страницы `dist/client`
+(`<путь>/index.html`) и on-demand маршруты — плейсхолдера нет нигде, в `<body>` нет URL своего
+origin; остаток плейсхолдера в любом файле `dist/client` не даёт стартовать `entrypoint.sh`;
+`check:content` не пропускает литерал плейсхолдера в тексты записей;
+`shared/config/runtime.server.test.ts` держит литерал согласованным в файлах, которые не
+импортируют `shared/config` (конфиг сборки, `docker/*`, приёмка образа).
 
 ## Нормализация URL
 

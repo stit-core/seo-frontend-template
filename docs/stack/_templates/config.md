@@ -13,15 +13,15 @@ status: draft
 
 ## Runtime env контейнера
 
-Колонка «в HTML?» — попадает ли значение в разметку (whitelist `PUBLIC_CONFIG_KEYS`
-через `getPublicConfig()`; `SITE_URL` — через штамповку prerendered-выхода).
+Колонка «в HTML?» — попадает ли значение в разметку: из env — только `SITE_URL` (штамповка
+prerendered-выхода, `absoluteUrl()` на on-demand); публичные идентификаторы — поля `site.ts`.
 
 | ключ | назначение | дефолт | в HTML? | секрет |
 |---|---|---|---|---|
 | `SITE_URL` | канонический origin без хвостового слеша; **обязателен** | — | да (штамповка) | нет |
 | `PORT` / `HOST` | слушатель адаптера | `3000` / `0.0.0.0` | нет | нет |
 | `NODE_OPTIONS` | например `--max-old-space-size=384` | — | нет | нет |
-| `ROBOTS_POLICY` | `index \| noindex` — весь контур | `index` | да | нет |
+| `ROBOTS_POLICY` | `index \| noindex` — весь контур | `index` | нет | нет |
 | `AI_TRAINING` | `allow \| deny` — обучающие AI-краулеры в `robots.txt` | `allow` | нет | нет |
 | `INDEXNOW_KEY` | ключ IndexNow; файл `/<ключ>.txt` | `''` | нет | нет |
 | `RELEASE` | версия для логов и Sentry | `unknown` | нет | нет |
@@ -55,13 +55,13 @@ status: draft
 ## Секреты
 
 Секреты живут только в env контейнера и читаются on-demand кодом, где `process.env`
-живой. В HTML не сериализуется ничего, кроме whitelist; `.env` в образ не попадает.
-Новый ключ в HTML — строка в `PUBLIC_CONFIG_KEYS` **и** строка в таблице
-`deployment.md`.
+живой. Разметка env напрямую не читает (`process.env` вне `shared/config`, `import.meta.env`
+кроме `DEV` и `getRuntimeConfig()` в `.astro` валят ESLint): из env в HTML уходит `SITE_URL`;
+`.env` в образ не попадает. Значение для HTML — поле `site.ts` **и** строка в таблице `deployment.md`.
 
 ## Generates
 
-- `src/shared/config/runtime.ts` — Zod-схема env и whitelist
+- `src/shared/config/runtime.ts` — Zod-схема env
 - `src/shared/config/site.ts` — идентичность и публичные идентификаторы
 - `.env.example` — все ключи с дефолтами
 - `docs/reference/deployment.md § Env-контракт`

@@ -85,7 +85,7 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
 ## Гейты
 
 - `pnpm check:content` (до `build`): схема каждого `.md`, тело, литерал плейсхолдера,
-  уникальность `title`/`description`/`translationKey` в локали, ссылки по списку маршрутов
+  уникальность `title`/`description`/`translationKey` в коллекции и локали, ссылки по списку маршрутов
   (`src/pages` + контент + `public/`), `redirects.yaml`
 - `pnpm check:links` (после `build`): каждый внутренний `href`/`src`/`srcset` в
   `dist/client` существует (файл, `<path>/index.html` или on-demand маршрут)

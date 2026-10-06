@@ -93,6 +93,17 @@ src/entities/<name>/
 `translationKey`. Первая запись — через `/content`, иначе списки пустые и `getStaticPaths`
 не порождает ни одного пути.
 
+**Тесты обязательны** — без них храповик покрытия (rule `tests-pipeline`) краснеет без подсказки
+(скелеты — `references/templates.md`):
+
+- `model/schema.test.ts` — валидный и невалидный frontmatter, дефолт `draft`, бюджеты
+  граничными литералами (не константами модуля)
+- `api/queries.test.ts` — по образцу `entities/post/api/queries.test.ts`: `vi.mock('astro:content')`
+  через `vi.hoisted`, фильтр черновиков и локали, сортировка, перевод — в обоих режимах `DEV`
+- записи коллекции — строкой в `COLLECTIONS` общих фикстур `src/pages/_tests/fixtures.ts`;
+  страницы списка и записи — строки в `src/pages/_tests/pages.astro.test.ts`, их адреса — в
+  ожидаемой карте `src/pages/_tests/endpoints.server.test.ts`
+
 ## feature
 
 ```
@@ -108,6 +119,11 @@ JavaScript**: форма шлёт нативный POST, ответ рисует
 проекта: строка в `docs/stack/rendering.md § Интерактивность` и бюджет (файл в `dist` —
 строка в `.size-limit.cjs`, инлайн — байты в unit-тесте).
 
+**Тесты обязательны** (образец — `features/contact-form`): `model/schema.test.ts` — значения и
+бюджеты полей граничными литералами; `api/<name>.server.test.ts` — каждый исход и строка лога
+без PII; `ui/<name>.astro.test.ts` — Container API + `expectNoA11yViolations`; маршрут фичи —
+тест в `src/pages/_tests/` (раздел route).
+
 ## widget
 
 ```
@@ -118,8 +134,7 @@ src/widgets/<name>/
 ```
 
 Widget заводится при **≥ 2 страницах-потребителях** или если это часть каркаса сайта.
-Блок одной страницы живёт рядом с ней — в `src/pages/_<name>/`; иначе Steiger поймает
-`insignificant-slice`.
+Блок одной страницы живёт рядом с ней — в `src/pages/_<name>/`.
 
 ## route
 
@@ -168,7 +183,7 @@ Astro и Node (`astro:content`, `node:*`): страница берёт данн�
 pnpm format           # Prettier для .astro: новый файл почти всегда не в его стиле
 pnpm typecheck        # нет битых импортов и пропсов
 pnpm lint             # границы FSD (ESLint boundaries) и правила
-pnpm steiger          # структура: public API, сегменты, значимость слайса
+pnpm steiger          # структура: public API, сегменты, имена
 pnpm test             # тесты артефакта и пороги покрытия
 ```
 
@@ -183,4 +198,4 @@ pnpm test             # тесты артефакта и пороги покры
 - ❌ Импорт мимо public API (`@/<layer>/<slice>/<segment>/…` или относительным путём из слайса)
 - ❌ Каталог вне слоёв (`src/components`, `src/lib`) и `eslint-disable` в коде
 - ❌ `prerender = false` на контентной странице
-- ❌ Слайс «на будущее» — Steiger `insignificant-slice`
+- ❌ Слайс «на будущее»: блок одной страницы — в `src/pages/_<name>/`

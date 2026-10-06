@@ -1,9 +1,4 @@
-import {
-  getPublicConfig,
-  getRuntimeConfig,
-  PUBLIC_CONFIG_KEYS,
-  SITE_ORIGIN_PLACEHOLDER,
-} from './runtime'
+import { getRuntimeConfig, SITE_ORIGIN_PLACEHOLDER } from './runtime'
 
 describe('runtime config', () => {
   const defaults = {
@@ -86,16 +81,5 @@ describe('runtime config', () => {
     for (const INDEXNOW_KEY of ['short', 'с-кириллицей', 'has space', 'x'.repeat(129)]) {
       expect(() => getRuntimeConfig({ INDEXNOW_KEY }), INDEXNOW_KEY).toThrow()
     }
-  })
-
-  it('публичный конфиг — только whitelist ключей', () => {
-    const publicConfig = getPublicConfig({
-      SITE_URL: 'https://demo.example',
-      RELEASE: 'v1',
-      INDEXNOW_KEY: 'a1b2c3d4-e5f6',
-    })
-    expect(Object.keys(publicConfig)).toEqual([...PUBLIC_CONFIG_KEYS])
-    expect(publicConfig).not.toHaveProperty('RELEASE')
-    expect(publicConfig).not.toHaveProperty('INDEXNOW_KEY')
   })
 })

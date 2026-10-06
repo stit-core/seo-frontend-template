@@ -7,8 +7,9 @@
 # LEFTHOOK_EXCLUDE, LEFTHOOK_BIN, LEFTHOOK_CONFIG), в команде с git или lefthook; lefthook
 # uninstall; запись в .git/hooks и в lefthook-local (rm, mv, chmod… или перенаправление).
 # Команда проверяется построчно; тела heredoc — данные (сообщение коммита может упоминать
-# флаги); флаги и переменные в строках в кавычках не ищутся. Это страховка от «удобного» обхода,
-# а не от обфускации. Сценарии — .gate-fixtures/guard.json, их держит pnpm check:gate.
+# флаги); флаги и переменные в строках в кавычках не ищутся, кроме тела `bash -c "…"` и
+# `eval "…"`. Это страховка от «удобного» обхода, а не от обфускации (`echo … | bash`, алиасы).
+# Сценарии — .gate-fixtures/guard.json, их держит pnpm check:gate.
 set -uo pipefail
 
 block() {
@@ -27,6 +28,13 @@ text=$(printf '%s\n' "$cmd" | awk '
     match($0, /(^|[^<])<<-?[ \t]*["'\'']?[A-Za-z_][A-Za-z0-9_]*/) {
         body = substr($0, RSTART, RLENGTH); sub(/^[^<]*<<-?[ \t]*["'\'']?/, "", body)
     }')
+
+# `bash -c "…"` (и `-lc`, `-c --`), `sh -c '…'`, `eval "…"` — та же команда: кавычки обёртки
+# снимаются до разбора.
+wrap="(((ba|z|da)?sh)[[:space:]]+-[a-zA-Z]*c[a-zA-Z]*([[:space:]]+--)?|eval)[[:space:]]+"
+text=$(printf '%s' "$text" | sed -E \
+    -e "s/(^|[;&|(\`[:space:]])$wrap\"(([^\"\\\\]|\\\\.)*)\"/\1 \6/g" \
+    -e "s/(^|[;&|(\`[:space:]])$wrap'([^']*)'/\1 \6/g")
 
 # Команда без строк в кавычках: сообщение коммита и шаблон grep — данные, а не присваивание.
 bare=$(printf '%s' "$text" | tr '\n' ';' | sed -E -e 's/"([^"\\]|\\.)*"//g' -e "s/'[^']*'//g")

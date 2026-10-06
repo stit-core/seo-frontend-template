@@ -3,8 +3,7 @@
 - **Роль:** сервис — Astro SSR-сайт (`<org>/site`). Работа приходит фазой программы из хаба
   `<org>/infra` (`parent: infra:<slug>`) или прямым заходом. Итог — образ в registry (`/release`);
   выкатка тега — только из хаба (`make bump SVC=site`).
-- **Гейт перед «готово»:** `pnpm check` (plan:check + typecheck + lint + format:check + test +
-  steiger + check:gate + check:content + build + check:links + seo:check + size).
+- **Гейт перед «готово»:** `pnpm check` (состав — rule `tests-pipeline` § Gate).
 - **Проверка планов:** `pnpm plan:check` (входит в `pnpm check`; pre-commit проверяет, когда
   меняется `.claude/plans/`).
 - **Сводка планов:** `pnpm plan:check --summary`.

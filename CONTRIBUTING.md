@@ -42,9 +42,7 @@
 ## Перед PR
 
 ```bash
-pnpm check      # gate: plan:check + typecheck + lint + format:check + test + steiger
-                #       + check:gate + check:content + build + check:links + seo:check
-                #       + size + test:http (HTTP-набор на prod-сервере)
+pnpm check      # gate — состав: .claude/rules/tests-pipeline.md § Gate
 pnpm test:e2e   # браузерный набор (axe, тема, форма без JS) — обязательный шаг /release
 ```
 

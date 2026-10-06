@@ -11,6 +11,8 @@ const EXT = ['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.astro']
 // файлы `<компонент>.astro/<n>.ts` процессора Astro).
 const SRC_CODE = 'src/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,astro}'
 const CLIENT_SCRIPTS = 'src/**/*.astro/*.{ts,js}'
+// Входы, навязанные Astro: тонкие связки, не слой. Новый вход (Actions…) — строкой здесь.
+const ASTRO_ENTRIES = 'src/{middleware,content.config,env.d}.ts'
 
 // Границы FSD держит именно ESLint: резолвер видит цели любого расширения (в т.ч. .astro),
 // а `no-restricted-imports` ловит deep-import по форме спецификатора без резолва вовсе.
@@ -25,8 +27,7 @@ const fsdSettings = {
     { type: 'entities', pattern: 'src/entities/*', capture: ['slice'] },
     { type: 'shared', pattern: 'src/shared/**', partialMatch: false },
   ],
-  // Входы, навязанные Astro (middleware.ts, content.config.ts, env.d.ts): тонкие связки, не слой.
-  'boundaries/files': [{ category: 'astro-entry', pattern: 'src/*.ts' }],
+  'boundaries/files': [{ category: 'astro-entry', pattern: ASTRO_ENTRIES }],
   'boundaries/include': ['src/**'],
   'import/resolver': { typescript: { project: './tsconfig.json', extensions: EXT } },
 }
@@ -87,13 +88,15 @@ const fsdRules = {
       default: 'disallow',
       policies: [
         {
+          // app не импортирует pages: страница сама импортирует документ-шелл, и обратная
+          // зависимость дала бы цикл.
           from: [{ element: { type: 'app' } }],
-          allow: to('app', 'pages', 'widgets', 'features', 'entities', 'shared'),
+          allow: to('app', 'widgets', 'features', 'entities', 'shared'),
         },
         {
           from: [{ element: { type: 'pages' } }],
           // Astro не оборачивает страницы снаружи — страница сама импортирует документ-шелл.
-          // Это единственный разрешённый импорт вверх; app/layouts не импортирует pages.
+          // Это единственный разрешённый импорт вверх.
           allow: [appLayouts, ...to('widgets', 'features', 'entities', 'shared')],
         },
         { from: [{ element: { type: 'widgets' } }], allow: to('features', 'entities', 'shared') },
@@ -108,11 +111,19 @@ const fsdRules = {
   'no-restricted-imports': ['error', { patterns: importPatterns }],
 }
 
+// Среда — runtime env через getRuntimeConfig(): `import.meta.env.<KEY>` Vite подставляет на сборке
+// (секрет уехал бы в бандл); `DEV` — признак `astro dev` для черновиков.
+const importMetaEnv = {
+  selector:
+    "MemberExpression[object.object.type='MetaProperty'][object.property.name='env'][property.name!='DEV']",
+  message: 'env: из import.meta.env — только DEV; конфигурация среды — getRuntimeConfig()',
+}
+
 // Цвет — только токен src/app/styles/index.css: литерал цвета в разметке компонента — сырой цвет.
 const COLOR = String.raw`#[0-9a-f]{3,8}\b|\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(`
 const CLASS = "JSXAttribute:matches([name.name='class'], [name.namespace.name='class'])"
-// Канон UI (rule shared-ui) в разметке .astro.
-const uiSyntax = [
+// Канон разметки .astro (rules shared-ui, render-safety).
+const astroSyntax = [
   {
     selector: "JSXOpeningElement[name.name='img']",
     message: 'UI: картинка — <Picture> из astro:assets (форматы, размеры, LCP), а не сырой <img>',
@@ -136,6 +147,13 @@ const uiSyntax = [
   {
     selector: `JSXAttribute[name.name=/^(fill|stroke|color|stop-color|flood-color)$/] > Literal[value=/${COLOR}/i]`,
     message: 'UI: сырой цвет в атрибуте — currentColor или токен',
+  },
+  {
+    // В разметку из env попадает только origin через absoluteUrl(): на prerender getRuntimeConfig()
+    // — значение сборки, а секрет уехал бы в HTML.
+    selector:
+      "ImportDeclaration[source.value='@/shared/config'] > :matches(ImportSpecifier[imported.name='getRuntimeConfig'], ImportNamespaceSpecifier)",
+    message: 'env в разметке: origin — absoluteUrl(), публичные id — site.ts, остальное — .ts фичи',
   },
 ]
 
@@ -189,7 +207,7 @@ export default defineConfig(
       parser: astroParser,
       parserOptions: { parser: tseslint.parser, extraFileExtensions: ['.astro'] },
     },
-    rules: { 'no-restricted-syntax': ['error', ...uiSyntax] },
+    rules: { 'no-restricted-syntax': ['error', ...astroSyntax, importMetaEnv] },
   },
   {
     files: [CLIENT_SCRIPTS],
@@ -211,9 +229,17 @@ export default defineConfig(
     rules: { 'no-restricted-imports': ['error', { patterns: clientPatterns }] },
   },
   {
+    files: ['src/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'],
+    rules: { 'no-restricted-syntax': ['error', importMetaEnv] },
+  },
+  {
     // Public API слайса/сегмента: только explicit re-exports — без своего кода, который баррель
     // исполнил бы у каждого импортёра. Примитивы Astro и Node не раздаются мимо API слайса.
-    files: ['src/{entities,features,widgets}/*/index.ts', 'src/shared/*/index.ts'],
+    files: [
+      'src/{entities,features,widgets}/*/index.ts',
+      'src/shared/*/index.ts',
+      'src/shared/{ui,lib}/*/index.ts',
+    ],
     rules: {
       'no-restricted-imports': [
         'error',
@@ -260,7 +286,7 @@ export default defineConfig(
   {
     // Точки входа, навязанные Astro: server-only код и коллекции контента
     // импортируются напрямую из модуля слайса, не через баррель.
-    files: ['src/*.ts'],
+    files: [ASTRO_ENTRIES],
     rules: { 'no-restricted-imports': 'off' },
   },
   {

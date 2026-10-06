@@ -24,12 +24,12 @@ description: Cockpit сессии — сводка состояния (ветк�
    ```bash
    grep -m1 '"name"' package.json                    # @stit/ssr-frontend-template ⇒ форк не развёрнут
    grep -rl '{{OPERATOR_' src/pages/legal/ | wc -l   # >0 ⇒ политика ПДн с плейсхолдерами
-   ls docs/stack/*.md 2>/dev/null | wc -l            # 0 ⇒ стек не проектировался
+   ls docs/stack/*.md | grep -vc README.md          # 0 ⇒ стек не проектировался
    ```
    плюс демо-идентичность: `SITE_NAME` в `src/shared/config/site.ts`, `COMPANY` в
    `src/entities/company/model/company.ts`, демо-записи в `content/redirects.yaml`
 4. **Стек**: какие `docs/stack/<kind>.md` есть и какие ещё `draft`
-   (`grep -l '^status: draft' docs/stack/*.md`); FSD-карта поверхности в
+   (`grep -l '^status: draft' docs/stack/*.md | grep -v README.md`); FSD-карта поверхности в
    `../strategy` (`docs/projects/<slug>/fsd/<surface>/`) заведена или нет
 5. **Гейты**: какие есть и когда их гонять — `pnpm check` (перед push),
    `pnpm test:e2e` (браузерный набор — обязательный шаг `/release`), `pnpm kin:diff` (advisory)

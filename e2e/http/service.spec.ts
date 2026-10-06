@@ -82,7 +82,7 @@ test.describe('on-demand: ответы приложения', () => {
   test('on-demand страницы: скрипты — только острова политики (prerendered держит seo:check)', async ({
     request,
   }) => {
-    for (const path of [UNKNOWN, '/now']) {
+    for (const path of [UNKNOWN, ...onDemandRoutes()]) {
       expect(scriptViolations(await (await request.get(path)).text()), path).toEqual([])
     }
   })

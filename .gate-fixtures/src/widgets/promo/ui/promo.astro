@@ -1,11 +1,13 @@
 ---
-// Нарушения канона UI и приложения: CSS UI-кита мимо токен-слоя, env процесса мимо
-// getRuntimeConfig(), console мимо log().
+// Нарушения канона UI и приложения: CSS UI-кита мимо токен-слоя, env процесса и import.meta.env
+// мимо getRuntimeConfig() и сам getRuntimeConfig() в разметке, console мимо log().
 import 'fake-ui-kit/kit.css'
+import { getRuntimeConfig } from '@/shared/config'
+import * as config from '@/shared/config'
 import Badge from './badge.astro'
 
 const promo = process.env.PROMO === '1'
-console.log(promo)
+console.log(promo, getRuntimeConfig().RELEASE, config.SITE_NAME, import.meta.env.SECRET_KEY)
 ---
 
 <!-- Нарушения: сырой <img> мимо <Picture>, client:* без фреймворка островов, инлайн-style, сырой

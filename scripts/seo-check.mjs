@@ -301,10 +301,14 @@ function checkMarkupVisible(where, path, body, blocks, page) {
 }
 
 // ---------- страницы ----------
+// Страница сборки — каталог с index.html или страница ошибки `<код>.html` в корне (её Astro
+// пишет файлом, адаптер отдаёт при сбое рендера).
+const isPage = (rel) => rel.endsWith('index.html') || /^\d{3}\.html$/.test(rel)
 const pages = new Map()
-for (const file of walk(client).filter((path) => path.endsWith('index.html'))) {
+for (const file of walk(client)) {
   const rel = relative(client, file).split(sep).join('/')
-  const path = `/${rel.replace(/\/?index\.html$/, '')}`
+  if (!isPage(rel)) continue
+  const path = `/${rel.replace(/\/?index\.html$/, '').replace(/\.html$/, '')}`
   const where = `dist/client/${rel}`
   const html = readFileSync(file, 'utf8')
   // Комментарий в разметке уезжает в каждую страницу и виден в исходнике: они живут во frontmatter.

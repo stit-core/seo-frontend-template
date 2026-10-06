@@ -65,8 +65,9 @@ docs/reference/deployment.md
 
 - `src/app/styles/index.css` — те же имена токенов и семантика; тема через `light-dark()`
   + `color-scheme` (системная без JS, `data-scheme` переключает).
-- Конфиги гейта — та же цепочка `typecheck → lint → format:check → test → steiger →
-  build → size` плюс `check:gate`; внутри шагов — инструменты Astro.
+- Конфиги гейта — общие шаги цепочки (`typecheck`, `lint`, `format:check`, `test`, `steiger`,
+  `check:gate`, `build`, `size`); внутри шагов — инструменты Astro, полный состав здешнего гейта —
+  rule `tests-pipeline` § Gate.
 - `CLAUDE.md`, `SECURITY.md`, правила, `docs/` — та же форма (ядро + роутер, path-scoped
   rules, карта документации); `SECURITY.md` — тот же контакт и процесс, скоуп под
   Node-образ и env контейнера.

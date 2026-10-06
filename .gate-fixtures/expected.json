@@ -6,15 +6,19 @@
     { "file": "src/widgets/a/ui/a.astro", "rule": "no-restricted-syntax" },
     { "file": "src/widgets/b/lib/crumbs.js", "rule": "boundaries/dependencies" },
     { "file": "src/entities/post/ui/post-card.astro", "rule": "boundaries/dependencies" },
+    { "file": "src/app/layouts/shell.astro", "rule": "boundaries/dependencies" },
     { "file": "src/pages/index.astro", "rule": "no-restricted-imports", "count": 3 },
     { "file": "src/entities/post/index.ts", "rule": "no-restricted-imports" },
     { "file": "src/features/search/index.ts", "rule": "no-restricted-syntax", "count": 2 },
     { "file": "src/features/search/ui/search-box.astro", "rule": "no-restricted-imports" },
+    { "file": "src/features/search/ui/search-box.astro", "rule": "no-restricted-syntax" },
     { "file": "src/components/promo.astro", "rule": "boundaries/no-unknown-files" },
+    { "file": "src/actions.ts", "rule": "boundaries/no-unknown-files" },
     { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-imports" },
     { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-properties" },
     { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-console" },
-    { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-syntax", "count": 6 }
+    { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-syntax", "count": 9 },
+    { "file": "src/shared/ui/button/index.ts", "rule": "no-restricted-syntax" }
   ],
   "steiger": [
     { "file": "src/widgets/a/ui/a.astro", "rule": "fsd/forbidden-imports" },
@@ -26,6 +30,7 @@
     { "file": "src/widgets/a/ui/a.astro", "rule": "lint/a11y/useAltText" }
   ],
   "seo": [
+    "dist/client/500.html: meta description: ожидается ровно один, найдено 0",
     "dist/client/about/index.html: <title>: ожидается ровно один, найдено 2",
     "dist/client/about/index.html: h1: ожидается ровно один, найдено 2",
     "dist/client/bot/index.html: noindex вне NOINDEX_ROUTES (scripts/lib/site-policy.mjs): страница выпадает из выдачи",
@@ -139,6 +144,7 @@
     "dist/client/domen/index.html: hreflang есть, а пары переводов в источнике нет"
   ],
   "links": [
+    "dist/client/index.html: /rss.xml — не существует",
     "dist/client/index.html: /net — не существует",
     "dist/client/index.html: /about/ — хвостовой слеш (лишний редирект)",
     "dist/client/index.html: /about.html — .html (дубль маршрута)",
@@ -172,6 +178,7 @@
     "src/entities/post/content/ru/telo.md:28: /blog/chernovik: ссылка на черновик",
     "src/entities/post/content/ru/telo.md:28: /blog/: хвостовой слеш — это лишний редирект",
     "src/entities/post/content/ru/telo.md:28: /blog.html: .html — дубль маршрута",
+    "src/pages/status.ts: on-demand маршрут без строки в карте docs/reference/rendering.md",
     "content/redirects.yaml: from / совпадает с существующим маршрутом",
     "content/redirects.yaml: to /net не существует"
   ]

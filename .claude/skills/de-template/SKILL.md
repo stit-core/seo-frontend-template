@@ -47,7 +47,7 @@ FSD-карту поверхности из соседнего `<org>/strategy`
 
 3. **State чист**:
    ```bash
-   grep -RlE '\*\*blocker\*\*' .claude/skills/stack-deep-dive/state/ 2>/dev/null \
+   grep -RlE '\*\*blocker:?\*\*' .claude/skills/stack-deep-dive/state/ 2>/dev/null \
      && echo "STOP: открытые blocker'ы в state — добей сначала" || echo "OK"
    ```
 
@@ -144,8 +144,9 @@ strategy; врезки «это страница шаблона» удали. Т
 
 Источник: `config.md`. Для каждого нового ключа — три места: Zod-схема
 `src/shared/config/runtime.ts`, `.env.example`, таблица `docs/reference/deployment.md`
-(колонка «в HTML?»). Ключ, который должен попасть в разметку, — ещё и
-`PUBLIC_CONFIG_KEYS`. Таблицу контракта не дублируй в `docs/stack/config.md` — ссылайся.
+(колонка «в HTML?»). Разметка env не читает: значение, которое должно попасть в HTML, — поле
+`src/shared/config/site.ts`, а не env. Таблицу контракта не дублируй в `docs/stack/config.md` —
+ссылайся.
 
 Ключи, которые оператор обязан задать на VPS, собери списком для handoff: как минимум
 `SITE_URL`, плюс канал доставки формы и `ROBOTS_POLICY` для staging.
@@ -162,15 +163,17 @@ strategy; врезки «это страница шаблона» удали. Т
 - `CONTRIBUTING.md` — про вклад в шаблон; либо переписать под свою команду, либо удалить
 - `docs/getting-started.md` — удалить: это путь потребителя шаблона
 - `docs/reference/kinship.md`, `scripts/kin-diff.mjs`, `package.json#scripts.kin:diff`
-  и строки о них в `README.md`/`CLAUDE.md`/`docs/README.md`/`docs/reference/ecosystem.md` —
-  удалить: родство двух канонических шаблонов проекта не касается
+  и строки о них в `README.md`/`CLAUDE.md`/`docs/README.md`/`docs/reference/ecosystem.md`/
+  `.claude/skills/smartdev/SKILL.md`/`.claude/skills/plan/references/repo.md` — удалить:
+  родство двух канонических шаблонов проекта не касается
 - `docs/reference/ecosystem.md` — оставить таблицу «сайт или приложение за логином», соседей,
   флоу и контракты (strategy, infra, registry, handoff), «этот шаблон» переписать на «этот
   сайт»; убрать разделы «Родство с `spa-frontend-template`» и «Шаблон vs проект». Имена
   шаблонов в карте соседей остаются: это происхождение форков
 - `docs/research/**` — удалить: исследование, из которого вырос шаблон, не часть проекта;
-  вместе с ним — ссылки на него в `.claude/rules/seo-invariants.md` и
-  `docs/reference/rendering.md`
+  вместе с ним — ссылки на него в `.claude/rules/seo-invariants.md`,
+  `docs/reference/rendering.md`, `biome.json` (исключение каталога) и
+  `src/app/styles/index.css` (комментарий к `source()`)
 - `.claude/skills/{init-service,de-template}` — удалить: одноразовые скиллы онбординга
   отработали, а их триггеры («свежий форк») на развёрнутом проекте только мешают.
   Остальные (`smartdev`, `plan`, `stack-deep-dive`, `scaffold`, `content`, `seo-audit`,

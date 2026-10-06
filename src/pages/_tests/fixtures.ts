@@ -47,11 +47,16 @@ export const POSTS: readonly PostEntry[] = [
   ),
 ]
 
+// Записи по имени коллекции: новая коллекция (`/scaffold collection`) — своя строка здесь.
+const COLLECTIONS: Record<string, readonly PostEntry[]> = { post: POSTS }
+
 // Модуль astro:content для vi.mock.
 export const astroContent = {
-  getCollection: (_collection: string, filter?: (entry: PostEntry) => unknown) =>
-    Promise.resolve(filter ? POSTS.filter(filter) : POSTS),
-  getEntry: (_collection: string, id: string) =>
-    Promise.resolve(POSTS.find((post) => post.id === id)),
+  getCollection: (collection: string, filter?: (entry: PostEntry) => unknown) => {
+    const entries = COLLECTIONS[collection] ?? []
+    return Promise.resolve(filter ? entries.filter(filter) : entries)
+  },
+  getEntry: (collection: string, id: string) =>
+    Promise.resolve(COLLECTIONS[collection]?.find((entry) => entry.id === id)),
   render: () => Promise.resolve({ Content: PostBody, headings: [] }),
 }

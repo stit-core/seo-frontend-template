@@ -53,7 +53,7 @@ cleanup
 
 echo "== прод-профиль ($ORIGIN) =="
 docker run -d --rm --name "$NAME" -p "$PORT:3000" \
-  -e SITE_URL="$ORIGIN" -e ROBOTS_POLICY=index >/dev/null || exit 1
+  -e SITE_URL="$ORIGIN" -e ROBOTS_POLICY=index "$IMAGE" >/dev/null || exit 1
 wait_healthz || {
   docker logs "$NAME" 2>&1 | tail -5
   fail "healthz не ответил"
@@ -100,7 +100,7 @@ done | sort -n | sed -n '10p' | sed 's/^/  медиана: /'
 echo "== контур staging (ROBOTS_POLICY=noindex) =="
 cleanup
 docker run -d --rm --name "$NAME" -p "$PORT:3000" \
-  -e SITE_URL="$ORIGIN" -e ROBOTS_POLICY=noindex >/dev/null || exit 1
+  -e SITE_URL="$ORIGIN" -e ROBOTS_POLICY=noindex "$IMAGE" >/dev/null || exit 1
 wait_healthz || {
   fail "staging-профиль не поднялся"
   exit 1

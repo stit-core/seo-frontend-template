@@ -49,7 +49,8 @@ const filled = {
 describe('/api/contact', () => {
   it('принятая заявка — 303 на подтверждение своей локали (PRG)', async () => {
     const ru = await send(post({ ...filled, locale: 'ru' }))
-    expect([ru.status, ru.headers.get('location')]).toEqual([303, '/contacts/spasibo'])
+    // У 303 только Location: тело и кеш-заголовки редиректа не нужны — его никто не кеширует.
+    expect([ru.status, [...ru.headers]]).toEqual([303, [['location', '/contacts/spasibo']]])
     const en = await send(post({ ...filled, locale: 'en' }))
     expect([en.status, en.headers.get('location')]).toEqual([303, '/en/contacts/spasibo'])
     expect(fetchMock).toHaveBeenCalledTimes(2)
@@ -101,6 +102,8 @@ describe('/api/contact', () => {
     const response = await send(post(filled))
     expect(response.status).toBe(500)
     expect(response.headers.get('cache-control')).toBe('private, no-store')
-    expect(await response.text()).toContain(t('ru', 'form.error.delivery'))
+    const html = await response.text()
+    expect(html).toContain(t('ru', 'form.error.delivery'))
+    expect(html).toContain('<meta name="robots" content="noindex"')
   })
 })

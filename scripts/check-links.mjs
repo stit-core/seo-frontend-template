@@ -1,10 +1,12 @@
-// Гейт ссылок на прод-сборке (после build): каждый внутренний href/src/srcset в dist/client
-// существует как файл или страница (<path>/index.html при build.format 'directory') либо
-// является on-demand маршрутом; ссылок с хвостовым слешем, на .html и на адреса из
-// content/redirects.yaml нет — каждая ссылка ведёт сразу на конечный документ.
+// Гейт ссылок на прод-сборке (после build): каждый внутренний href/src/srcset в dist/client —
+// корневой путь или абсолютный URL своего сайта (canonical, hreflang, RSS в <head>) — существует
+// как файл или страница (<path>/index.html при build.format 'directory') либо является on-demand
+// маршрутом; ссылок с хвостовым слешем, на .html и на адреса из content/redirects.yaml нет —
+// каждая ссылка ведёт сразу на конечный документ.
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { relative, resolve, sep } from 'node:path'
 import { load } from 'js-yaml'
+import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
 import { buildRedirectTable } from '../src/shared/redirects/table.ts'
 import { decode } from './lib/html.mjs'
 import { pageRoutes, walk } from './lib/routes.mjs'
@@ -27,6 +29,10 @@ const redirects = buildRedirectTable(
 )
 
 const ATTR_RE = /\b(href|src|srcset)=("([^"]*)"|'([^']*)')/gi
+// Свой origin в сборке — плейсхолдер; абсолютный URL на нём — внутренняя ссылка.
+const OWN_ORIGIN = new URL(SITE_ORIGIN_PLACEHOLDER).origin
+const ownPath = (url) =>
+  url === OWN_ORIGIN ? '/' : url.startsWith(`${OWN_ORIGIN}/`) ? url.slice(OWN_ORIGIN.length) : url
 
 function targets(html) {
   const out = []
@@ -39,7 +45,7 @@ function targets(html) {
       }
     } else out.push(value)
   }
-  return out
+  return out.map(ownPath)
 }
 
 function existsAsFileOrPage(path) {

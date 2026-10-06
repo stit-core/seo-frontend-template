@@ -15,8 +15,11 @@ pre-commit:
       run: pnpm prettier --write {staged_files}
       stage_fixed: true
     eslint:
-      # Всё, что линтит `pnpm lint`: src, e2e, scripts, конфиги; игнор решает eslint.config.js.
+      # Всё, что линтит `pnpm lint`: src, e2e, scripts, конфиги. Фикстуры гейта на гейт — заведомые
+      # нарушения со своим eslint.config.js: их линтит только check:gate.
       glob: "*.{ts,tsx,mts,cts,js,mjs,cjs,astro}"
+      exclude:
+        - ".gate-fixtures/**"
       # --cache: холодный старт ESLint с парсерами фреймворка — самый дорогой шаг гейта.
       run: pnpm eslint --fix --no-error-on-unmatched-pattern --no-warn-ignored --cache {staged_files}
       stage_fixed: true

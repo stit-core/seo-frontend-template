@@ -1,10 +1,5 @@
-export type { PublicConfig, RuntimeConfig, RuntimeEnv } from './runtime'
-export {
-  getPublicConfig,
-  getRuntimeConfig,
-  PUBLIC_CONFIG_KEYS,
-  SITE_ORIGIN_PLACEHOLDER,
-} from './runtime'
+export type { RuntimeConfig, RuntimeEnv } from './runtime'
+export { getRuntimeConfig, SITE_ORIGIN_PLACEHOLDER } from './runtime'
 export {
   METRIKA_ID,
   OG_DEFAULT_IMAGE,

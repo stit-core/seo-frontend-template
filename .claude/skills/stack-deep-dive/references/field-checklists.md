@@ -54,7 +54,8 @@
 
 **Anti-patterns**: поле `lang` во frontmatter (язык задаёт каталог); fallback «показать
 русскую версию под `/en`» (это дубль, нужен 404); коллекция без записи в реестре
-`scripts/lib/content.mjs` — гейты её не увидят.
+`scripts/lib/content.mjs` — каталог вне реестра валит `check:content`, а пары переводов не сверит
+`seo:check`.
 
 ---
 

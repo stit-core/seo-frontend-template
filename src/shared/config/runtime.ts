@@ -62,13 +62,3 @@ export function getRuntimeConfig(env: RuntimeEnv = process.env): RuntimeConfig {
     CAPTCHA_FAIL_MODE: unset(env.CAPTCHA_FAIL_MODE),
   })
 }
-
-// Явный whitelist того, что может попасть в HTML; остальное из process.env
-// в разметку не сериализуется.
-export const PUBLIC_CONFIG_KEYS = ['SITE_URL', 'ROBOTS_POLICY'] as const
-export type PublicConfig = Pick<RuntimeConfig, (typeof PUBLIC_CONFIG_KEYS)[number]>
-
-export function getPublicConfig(env?: RuntimeEnv): PublicConfig {
-  const { SITE_URL, ROBOTS_POLICY } = getRuntimeConfig(env)
-  return { SITE_URL, ROBOTS_POLICY }
-}

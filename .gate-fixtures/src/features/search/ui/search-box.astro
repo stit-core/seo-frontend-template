@@ -1,8 +1,9 @@
 <input type="search" aria-label="Поиск" />
 
 <script>
-  // Нарушение: клиентский <script> импортирует баррель с серверным кодом (Zod и env процесса).
+  // Нарушения: клиентский <script> импортирует баррель с серверным кодом (Zod и env процесса) и
+  // читает env сборки.
   import { SITE_NAME } from '@/shared/config'
 
-  document.title = SITE_NAME
+  document.title = `${SITE_NAME} ${import.meta.env.PUBLIC_TOKEN}`
 </script>

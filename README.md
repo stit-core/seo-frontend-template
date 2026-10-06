@@ -69,7 +69,7 @@ pnpm size             # бюджеты CSS / HTML
 pnpm kin:diff         # сверка обвязки с ../spa-frontend-template (advisory)
 pnpm ttfb <origin> …  # TTFB запущенного сервера: медиана/p90 20 запросов
 pnpm accept:image <image>   # приёмка собранного образа до пуша в registry
-pnpm check            # gate: plan:check + typecheck + lint + format + test + steiger + check:gate + check:content + build + check:links + seo:check + size + test:http
+pnpm check            # gate — состав: .claude/rules/tests-pipeline.md § Gate
 ```
 
 Перед claim «готово» / push — **`pnpm check`** (его же гоняет pre-push — для пушимого HEAD на
@@ -92,7 +92,7 @@ src/pages/        роутинг Astro = слой pages: index, about, contacts/
                   api/contact (on-demand); секции страниц — _blog/, _about/, _contacts/;
                   тесты маршрутов и страниц — _tests/
 src/widgets/      site-header, site-footer, post-list, breadcrumbs (видимые крошки)
-src/features/     contact-form (форма без JS и её обработчик), theme (единственный остров)
+src/features/     contact-form (форма без JS и её обработчик), theme (остров темы)
 src/entities/     post: content/{ru,en}/*.md + covers/, model, api, lib, ui; company: реквизиты
                   оператора для «О компании» и LocalBusiness
 src/shared/       config (runtime env, Zod; идентичность сайта), i18n, lib (+ testing), redirects,
@@ -101,7 +101,8 @@ src/shared/       config (runtime env, Zod; идентичность сайта)
 src/{content.config,middleware,env.d}.ts   навязанные Astro entry — тонкие входы
 docker/           Dockerfile (3 стадии), entrypoint.sh (штамповка SITE_URL), server.mjs
 e2e/              Playwright на prod-сборке: http/ — в гейте, browser/ — в /release
-scripts/          check-gate, check-content, check-links, seo-check, kin-diff, ttfb, accept-image
+scripts/          гейты (check-gate, check-content, check-links, seo-check, lib/), validate-plan,
+                  pre-push, kin-diff, ttfb, accept-image
 docs/stack/       формы платформенных артефактов (12 kinds) — заполняет /stack-deep-dive
 .claude/          правила (path-scoped) и скиллы (init-service, scaffold, content, release…)
 ```
@@ -161,11 +162,12 @@ shutdown под Traefik и отказывается стартовать без 
 Компоненты пишутся в проекте как `.astro` на собственном токен-слое
 (`src/app/styles/index.css`: Tailwind v4 `@theme` + семантические переменные, тема через
 `light-dark()` и `data-scheme`), без вендорных UI-китов. Ни одна страница не грузит внешних
-скриптов: из JavaScript в шаблоне только остров темы — инлайн-`<script>` в `<head>`, который
-применяет выбор до первой отрисовки и обслуживает переключатель. Картинки — `astro:assets` (`<Picture>`:
+скриптов: из JavaScript в шаблоне только острова — тема (инлайн-`<script>` в `<head>`, который
+применяет выбор до первой отрисовки и обслуживает переключатель) и счётчик при заданном
+`METRIKA_ID`. Картинки — `astro:assets` (`<Picture>`:
 AVIF/WebP с фолбэком, размеры заданы, обложка записи грузится с приоритетом). Скрипты, чужие
-ресурсы и картинки каждой страницы проверяет `seo:check`, доступность — браузерный axe в обеих
-темах на `/release`.
+ресурсы, размеры картинок и приоритет LCP каждой страницы проверяет `seo:check`, сырой `<img>` и
+цвета мимо токенов — ESLint, доступность — браузерный axe в обеих темах на `/release`.
 
 ## Из шаблона — в свой сайт
 

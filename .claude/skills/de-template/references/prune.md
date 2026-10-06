@@ -17,8 +17,10 @@ Reference-набор шаблона — **живой образец**, а не �
 
 Форма и политика ПДн — не «демо»: это минимум сайта, который принимает заявки. Страница
 `/now` — образец режима `dynamic`; если проекту она не нужна, удаляется вместе со строкой в
-карте маршрутов `docs/reference/rendering.md`, кейсом в `src/pages/_tests/pages.astro.test.ts`
-и упоминаниями `/now` в `e2e/http/service.spec.ts` и `e2e/browser/a11y.spec.ts`.
+карте маршрутов `docs/reference/rendering.md`, импортом и кейсом в
+`src/pages/_tests/pages.astro.test.ts`, ссылкой в подвале (`site-footer.astro`, его тест и ключ
+`footer.now` в `dict.ts` — иначе `check:links` упадёт на `/now`) и упоминаниями `/now` в
+`e2e/http/service.spec.ts` и `e2e/browser/a11y.spec.ts`.
 
 Цели e2e выводятся из сборки и контента (`e2e/site.ts`): смена или удаление записей, тегов и
 редиректов правок в `e2e/` не требует.
@@ -73,7 +75,7 @@ src/shared/seo/rss.ts  src/shared/seo/rss.test.ts
 | `content/redirects.yaml` | демо-записи (их цель `/blog` уходит вместе с блогом — `check:content` это поймает) |
 | `src/app/middleware/redirects.test.ts` | если таблица пустая — условие «непуста» меняется на «строится» |
 | `src/app/middleware/index.server.test.ts` | кейс «редиректы до роутинга» ходит по демо-адресам `/old` и `/blog/staraya-zametka` — заменить своими из `redirects.yaml` (нет `410` — убрать его половину кейса) |
-| `src/pages/_tests/fixtures.ts` | удалить вместе с `vi.mock('astro:content')` в тестах маршрутов: коллекции нет |
+| `src/pages/_tests/fixtures.ts`, `src/pages/_tests/post-body.astro` | удалить вместе с `vi.mock('astro:content')` в тестах маршрутов: коллекции нет |
 | `src/pages/_tests/endpoints.server.test.ts` | ожидаемая карта — без списков, тегов и записей; describe фидов убрать |
 | `src/pages/_tests/pages.astro.test.ts` | убрать строки `/blog`, `/en/blog` и таблицу маршрутов с параметрами |
 | `docs/reference/rendering.md` | убрать строки блога и фидов из карты маршрутов |
@@ -106,10 +108,10 @@ grep -rn '{{OPERATOR_' src/
 ```bash
 pnpm typecheck        # нет битых импортов
 pnpm lint             # границы и формат
-pnpm steiger          # структура без осиротевших слайсов
+pnpm steiger          # структура: public API, сегменты, имена
 pnpm test             # тесты удалённых слайсов ушли с ними; пороги покрытия — по факту (rule tests-pipeline)
 pnpm check            # полный гейт, включая check:content → build → check:links → seo:check
 ```
 
-`pnpm check` зелёный — прунинг закончен. `seo:check` при этом подтверждает, что в
-`dist/client` не осталось страниц со ссылками в никуда и дублей `title`/`description`.
+`pnpm check` зелёный — прунинг закончен: `check:links` подтверждает, что в `dist/client` не
+осталось ссылок в никуда, а `seo:check` — дублей `title`/`description`.

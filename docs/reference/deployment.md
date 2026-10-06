@@ -84,7 +84,7 @@ docker run --rm -p 3000:3000 -e SITE_URL=https://example.com <image>
 | `NODE_ENV` | режим Node | `production` (в образе) | нет |
 | `NODE_OPTIONS` | например `--max-old-space-size=384` (≈ 75 % `mem_limit`) | — | нет |
 | `SITE_URL` | канонический origin без хвостового слеша; **обязателен** | — | да (штамповка) |
-| `ROBOTS_POLICY` | `index` \| `noindex` → `X-Robots-Tag: noindex, nofollow` на on-demand ответах и `robots.txt` = `Disallow: /` | `index` | да |
+| `ROBOTS_POLICY` | `index` \| `noindex` → `X-Robots-Tag: noindex, nofollow` на on-demand ответах и `robots.txt` = `Disallow: /` | `index` | нет (заголовок и `robots.txt`) |
 | `RELEASE` | версия для логов | `unknown` | нет |
 | `LOG_LEVEL` | `debug` \| `info` \| `warn` \| `error` — JSON-лог запросов | `info` | нет |
 | `KEEP_ALIVE_TIMEOUT_MS` / `SHUTDOWN_TIMEOUT_MS` | обёртка сервера | `65000` / `15000` | нет |
@@ -99,8 +99,8 @@ docker run --rm -p 3000:3000 -e SITE_URL=https://example.com <image>
 | `SENTRY_DSN` / `SENTRY_ENVIRONMENT` | отправка серверных исключений; пусто — `@sentry/node` не грузится | `''` / `production` | нет |
 
 Пустое значение (`ROBOTS_POLICY=`) равносильно незаданному — берётся дефолт. Чтение —
-`src/shared/config` (`getRuntimeConfig()`, Zod по `process.env`); в HTML попадает только
-whitelist `PUBLIC_CONFIG_KEYS`. Шаблон локального `.env` — `.env.example`; его читает
+`src/shared/config` (`getRuntimeConfig()`, Zod по `process.env`); в HTML из env попадает только
+origin `SITE_URL` через `absoluteUrl()`. Шаблон локального `.env` — `.env.example`; его читает
 `pnpm start` (`node --env-file-if-exists=.env`), в образе файла нет.
 
 Публичные идентификаторы сайта — счётчик Метрики (`METRIKA_ID`) и токены подтверждения
@@ -118,8 +118,9 @@ prerendered-страница печатается на сборке, а обра
   Staging закрывается на Traefik (`basicAuth` + `customResponseHeaders: X-Robots-Tag`);
   `/index.html` и `/en/index.html` отвечают 200 — дубли главных, прикрываются
   `redirectRegex` там же
-- **On-demand** (`prerender = false`: `/healthz`, `/now`, `robots.txt`, `sitemap.xml`,
-  `rss.xml`, `/<INDEXNOW_KEY>.txt`, `404.astro` — то есть любой путь без статического файла)
+- **On-demand** (`prerender = false`: `/healthz`, `/now`, `/api/contact`, `robots.txt`,
+  `sitemap.xml`, фиды `rss.xml` и `en/rss.xml`, `/<INDEXNOW_KEY>.txt`, `404.astro` — то есть
+  любой путь без статического файла; список держит карта `rendering.md`)
   проходит через `app/middleware`: редиректы из
   `content/redirects.yaml` (301/308 с `Location`, query сохраняется; 410 с минимальным
   телом и `X-Robots-Tag: noindex`; один хоп, до роутинга), `X-Request-Id` (принимается или

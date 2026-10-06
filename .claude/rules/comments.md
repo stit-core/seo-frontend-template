@@ -1,6 +1,6 @@
 ---
 description: Только WHY-комментарии, на русском, кратко.
-paths: ["src/**/*.ts", "src/**/*.tsx", "scripts/**/*.ts", "*.config.ts"]
+paths: ["src/**/*.ts", "src/**/*.astro", "scripts/**", "e2e/**", ".claude/hooks/**", "*.config.ts"]
 ---
 
 # Комментарии

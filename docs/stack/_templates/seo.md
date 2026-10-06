@@ -83,7 +83,7 @@ hreflang выводится только для реально существу�
 |---|---|---|
 | Google Search Console | `<meta name="google-site-verification">` | `SITE_VERIFICATION.google` (`site.ts`); пусто — тега нет |
 | Яндекс Вебмастер | `<meta name="yandex-verification">` | `SITE_VERIFICATION.yandex` |
-| IndexNow | файл `/<ключ>.txt` + submit при публикации | `INDEXNOW_KEY` (env); пусто — файла нет |
+| IndexNow | файл `/<ключ>.txt`; submit — шаг чек-листа `/release` | `INDEXNOW_KEY` (env); пусто — файла нет |
 
 Альтернатива мета-тегу — HTML-файл в `public/` или запись DNS TXT.
 

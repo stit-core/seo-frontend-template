@@ -1,5 +1,5 @@
 ---
-description: env Node-процесса, SITE_URL и плейсхолдер origin, whitelist в HTML, секреты. Активируется при правке .env*, shared/config, docker/, astro.config.ts.
+description: env Node-процесса, SITE_URL и плейсхолдер origin, что из env попадает в HTML, секреты. Активируется при правке .env*, shared/config, docker/, astro.config.ts.
 paths: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/playwright.config.ts", "e2e/serve.mjs"]
 ---
 
@@ -39,9 +39,12 @@ paths: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/pl
 
 ## Что попадает в HTML
 
-Только `PUBLIC_CONFIG_KEYS` через `getPublicConfig()`; `process.env` целиком не
-сериализуется. Новый ключ в HTML — строка в whitelist + строка в таблице
-`docs/reference/deployment.md` (колонка «в HTML?»).
+Из env в разметку попадает только origin `SITE_URL` — через `absoluteUrl()` (`shared/seo`):
+плейсхолдер на сборке, который штампует entrypoint, и живое значение на on-demand. Остальное
+env читает серверный код (`.ts`), а не разметка: `getRuntimeConfig()` в `.astro`, `process.env`
+вне `shared/config` и `import.meta.env` (кроме `DEV`) валят ESLint, клиентскому `<script>`
+`@/shared/config` недоступен. Колонка
+«в HTML?» таблицы `docs/reference/deployment.md` — для каждого ключа.
 
 **Публичный per-site идентификатор — не env, а поле `shared/config/site.ts`** (`METRIKA_ID`,
 `SITE_VERIFICATION`, при появлении — site-key капчи): prerendered-страница печатается на
@@ -56,12 +59,13 @@ env: их читает on-demand код (`api/contact`, наблюдаемост
   локальный `.env` читает только `pnpm start`, в образ он не попадает
 - Секреты — только env контейнера (`SMTP_URL`, `FORM_BACKEND_URL`, `CAPTCHA_SECRET`); в логах —
   без PII, без тел запросов и без тела заявки. Пишет один `log()` (`shared/observability`) с
-  порогом `LOG_LEVEL` — и middleware, и форма (`console` в `src` вне `log.ts` валит ESLint); Sentry DSN public by design, но пустой по
+  порогом `LOG_LEVEL` — и middleware, и форма (`console` в `src` вне `log.ts` и тестов валит
+  ESLint); Sentry DSN public by design, но пустой по
   умолчанию — пакет тогда не грузится вовсе
 
 ## Что нельзя
 
-- ❌ `import.meta.env.VITE_*` для конфигурации среды
+- ❌ `import.meta.env.<KEY>` для конфигурации среды (ESLint: из него — только `DEV`)
 - ❌ Логировать `process.env`, cookie, query-строку, тело запроса
 - ❌ Читать `process.env` мимо `shared/config` — в `src` (кроме тестов) это ошибка ESLint
   `no-restricted-properties`. Исключения — код вне приложения:

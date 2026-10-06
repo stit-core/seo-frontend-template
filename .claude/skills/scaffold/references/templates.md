@@ -155,7 +155,7 @@ export const collections = { <name>: <name>Collection }
 ```
 
 `scripts/lib/content.mjs` — запись в реестре: каталог, схема, маршруты коллекции. Без
-неё `check:content` не увидит записи, а `seo:check` — пары переводов.
+неё каталог контента вне реестра валит `check:content`, а `seo:check` не сверит пары переводов.
 
 ```js
 {
@@ -172,7 +172,28 @@ export const collections = { <name>: <name>Collection }
 Обязанности: фильтр `draft` (виден только в `astro dev` — `import.meta.env.DEV`), фильтр
 локали по префиксу id, сортировка по `pubDate` вниз, поиск перевода по `translationKey`.
 Тесты — `vi.mock('astro:content')` с фикстурами через `vi.hoisted`, оба режима
-(`vi.stubEnv('DEV', false | true)`).
+(`vi.stubEnv('DEV', false | true)`): образец — `src/entities/post/api/queries.test.ts`.
+
+## collection — тесты схемы и маршрутов
+
+`model/schema.test.ts` — бюджеты граничными литералами: константа модуля под тестом молча
+сдвинулась бы вместе с ошибкой.
+
+```ts
+const image = (() =>
+  z.object({ src: z.string(), width: z.number(), height: z.number() })) as unknown as ImageFunction
+const schema = <name>Schema({ image })
+
+it('title — 25…65 знаков', () => {
+  expect(schema.safeParse({ ...valid, title: 'x'.repeat(25) }).success).toBe(true)
+  expect(schema.safeParse({ ...valid, title: 'x'.repeat(24) }).success).toBe(false)
+  expect(schema.safeParse({ ...valid, title: 'x'.repeat(66) }).success).toBe(false)
+})
+```
+
+`src/pages/_tests/fixtures.ts` — записи коллекции и строка в `COLLECTIONS` (мок
+`astro:content` отдаёт записи по имени коллекции); страницы списка и записи — строки в
+`pages.astro.test.ts` (как у page), их адреса — в ожидаемой карте `endpoints.server.test.ts`.
 
 ---
 

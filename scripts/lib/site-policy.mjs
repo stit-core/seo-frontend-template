@@ -5,7 +5,7 @@
 // не по месту в скрипте.
 
 // Служебные prerendered-маршруты без префикса локали: только им положен noindex.
-export const NOINDEX_ROUTES = ['/contacts/spasibo']
+export const NOINDEX_ROUTES = ['/contacts/spasibo', '/500']
 
 // Острова: исполняемый <script> страницы — только инлайн в <head> и с data-island из списка.
 export const ISLANDS = ['theme', 'metrika']

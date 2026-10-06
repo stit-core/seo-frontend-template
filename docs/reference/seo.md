@@ -27,8 +27,10 @@ OG-картинка, набор локалей, политика AI-крауле
 
 ## Чек-лист новой страницы
 
-Проходится при `/scaffold page`; те же пункты держат `seo:check` и HTTP-набор гейта (карта сайта,
-статусы, кеш).
+Проходится при `/scaffold page`. Измеримое держит гейт: `seo:check` — сниппет, canonical,
+hreflang, `og:image`, JSON-LD, крошки, `h1`, размеры и LCP картинок; HTTP-набор — карта сайта,
+404 и кеш страниц сборки; ESLint — сырой `<img>` мимо `<Picture>` (`alt` у `<Picture>` требует
+сам Astro). Смысл текста, кеш живого ответа и приватность — на авторе.
 
 1. **Индексируется?** Да — prerender (`static`), self-canonical, в карте сайта.
    Нет — проп `noindex`, вне карты, `Cache-Control` по смыслу ответа.
@@ -77,13 +79,13 @@ OG-картинка, набор локалей, политика AI-крауле
 | уровень | что ловит |
 |---|---|
 | unit `shared/seo/*.test.ts` | `absoluteUrl`, `alternates`, `buildRobotsTxt`, `buildSitemap`, `buildFeed`, фабрики JSON-LD (их выход проходит Zod-схему) |
-| Container API | `seo-head.astro`, `json-ld.astro`, `widgets/breadcrumbs` — разметка и axe |
-| `pnpm seo:check` (в `pnpm check`) | весь `dist/client`: один `<title>` и `<h1>`, description, self-canonical, `lang`, OG с существующей картинкой, сниппет уникальный, в бюджетах и не общий, полные пары hreflang на своём origin, разметка = видимое; `noindex` в любой форме, острова (и обработчики `on*=`), чужие ресурсы и типы JSON-LD — по списку `scripts/lib/site-policy.mjs`; картинки с размерами, LCP не lazy; страница у каждой опубликованной записи и маршрута `src/pages`, черновиков нет, hreflang только у сверенных пар |
-| `pnpm check:gate` | сам `seo:check` (и `check:links`, `check:content`) на негативной фикстуре `.gate-fixtures/seo` — ровно ожидаемые нарушения |
+| Container API | `seo-head.astro`, `json-ld.astro` — разметка `<head>`; `widgets/breadcrumbs` — разметка и axe |
+| `pnpm seo:check` (в `pnpm check`) | каждая страница `dist/client`, и страница ошибки `500.html`: один `<title>` и `<h1>`, description, self-canonical, `lang`, OG с существующей картинкой, сниппет уникальный, в бюджетах и не общий, полные пары hreflang на своём origin, разметка = видимое; `noindex` в любой форме, острова (и обработчики `on*=`), чужие ресурсы и типы JSON-LD — по списку `scripts/lib/site-policy.mjs`; картинки с размерами, LCP не lazy; страница у каждой опубликованной записи и маршрута `src/pages`, черновиков нет, hreflang только у сверенных пар |
+| `pnpm check:gate` | сам `seo:check`, `check:links` и `check:content` на негативных мини-проектах `.gate-fixtures/{seo,links,content}` — ровно ожидаемые нарушения |
 | `pnpm check:links` | каждый внутренний `href`/`src`/`srcset` сборки существует |
 | `pnpm check:content` | бюджеты и уникальность полей записей, ссылки в теле, `redirects.yaml` |
 | HTTP-набор `e2e/http/` (в `pnpm check`) | сырой HTML prod-сервера, в т.ч. под Googlebot: статусы и заголовки, штамповка origin, HTML on-demand маршрутов — только `noindex` и только острова политики, `robots.txt` (прод и staging) ↔ `sitemap.xml` ↔ `dist/client`, фиды, ключ IndexNow, вес HTML |
-| `/seo-audit` | прогон всего вышеперечисленного + curl по живому домену + внешние валидаторы |
+| `/seo-audit` | сборка, `seo:check`, `check:links`, HTTP-набор + curl по живому домену + внешние валидаторы |
 
 Ручное — раз на релиз: Rich Results Test, validator.schema.org, валидатор микроразметки
 Яндекса, PageSpeed Insights (mobile).

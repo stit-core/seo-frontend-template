@@ -1,7 +1,8 @@
 # Архитектура
 
 Feature-Sliced Design поверх файлового роутинга Astro. Нормативная часть — правило
-`.claude/rules/fsd-architecture.md` (его держит `pnpm lint`); здесь — карта и объяснения.
+`.claude/rules/fsd-architecture.md` (границы держит `pnpm lint`, структуру — `pnpm steiger`);
+здесь — карта и объяснения.
 
 ## Слои
 
@@ -26,26 +27,28 @@ app → pages → widgets → features → entities → shared
 ### Единственный импорт вверх
 
 `pages → app/layouts`. Astro не оборачивает страницы снаружи: документ-шелл (`<html>`,
-`<head>`, лендмарки) страница импортирует сама. Остальной `app` из `pages` недоступен —
-политика в `eslint.config.js`.
+`<head>`, лендмарки) страница импортирует сама. Остальной `app` из `pages` недоступен, а `app` не
+импортирует `pages` (иначе цикл) — политики в `eslint.config.js`.
 
 ## `src/pages` = роутинг
 
 `index.astro` → `/`, `en/index.astro` → `/en`, `healthz.ts` → `/healthz`. Подпапки —
-сегменты URL, а не слайсы, поэтому правила слайсов Steiger на `pages` выключены.
+сегменты URL, а не слайсы, поэтому правила Steiger о public API и сегментах слайсов
+(`public-api`, `no-layer-public-api`, `no-segmentless-slices`, `no-segments-on-sliced-layers`) на
+`pages` выключены.
 
 Секции одной страницы живут рядом с ней: `src/pages/_<name>/` — префикс `_` исключает
-каталог из роутинга. Widget заводится, когда блок нужен ≥ 2 страницам; иначе Steiger
-поймает `insignificant-slice`. Локали делят одну разметку: `pages/about.astro` и
-`pages/en/about.astro` — тонкие обёртки над `pages/_about/about-page.astro` с разным
-`locale`.
+каталог из роутинга. Widget заводится, когда блок нужен ≥ 2 страницам. Локали делят одну
+разметку: `pages/about.astro` и `pages/en/about.astro` — тонкие обёртки над
+`pages/_about/about-page.astro` с разным `locale`.
 
 ## Навязанные Astro точки входа
 
 `src/content.config.ts`, `src/middleware.ts`, `src/env.d.ts` — не слои, а тонкие входы:
 реэкспорт, декларация типов, регистрация коллекций. Логика — в `app/middleware`,
 `entities/<x>/model`, `features/<x>/api`. Других файлов вне слоёв нет: `src/components`,
-`src/lib` или новый вход Astro ESLint не пропустит, пока вход не объявлен в `eslint.config.js`.
+`src/lib` или новый вход Astro ESLint не пропустит, пока вход не объявлен в `ASTRO_ENTRIES`
+`eslint.config.js`.
 
 `content.config.ts` импортирует коллекцию **напрямую из модуля** слайса: через баррель
 dev-сервер теряет конфиг контента.
@@ -90,7 +93,7 @@ src/
 
 `ui/` `model/` `api/` `lib/` `config/` и — у сущности с текстами — `content/`.
 Группировка по типу (`components/`, `hooks/`, `utils/`, `types/`) запрещена: Steiger
-`no-reserved-folder-names`. Внутри слайса — относительные пути, снаружи —
+`segments-by-purpose`. Внутри слайса — относительные пути, снаружи —
 `@/<layer>/<slice>`.
 
 ## Кто что проверяет
@@ -98,7 +101,7 @@ src/
 | инструмент | задача |
 |---|---|
 | ESLint 10 (`boundaries` + `no-restricted-imports`) | **границы FSD** на всём коде `src`: направление импортов, deep-import (и относительным путём), файлы вне слоёв, примитивы Astro в баррелях, импорты клиентских `<script>`; директива `eslint-disable` в коде не действует |
-| Steiger | структура: public API, сегменты, имена, значимость слайса; на `.astro`-целях fail-open |
+| Steiger | структура: public API, сегменты, имена; на `.astro`-целях fail-open |
 | `astro check` | типы (`astro/tsconfigs/strictest`) |
 | Biome + Prettier | формат и базовые правила; `.astro` форматирует Prettier |
 | `.gate-fixtures/` + `pnpm check:gate` | заведомые нарушения обязаны валить линтеры и свои скрипты гейта ровно ожиданиями — иначе гейт деградирует молча |
@@ -115,9 +118,4 @@ E2E — `e2e/` вне FSD-графа, на прод-сборке: HTTP-набо�
 
 ## Гейт
 
-```
-plan:check → typecheck → lint → format:check → test → steiger → check:gate → check:content
-           → build → check:links → seo:check → size → test:http
-```
-
-`pnpm test:e2e` — браузерный набор, обязательный шаг `/release`: в гейт не входит, тянет браузер.
+`pnpm check` — состав и что держит каждый шаг: `.claude/rules/tests-pipeline.md` § Gate.

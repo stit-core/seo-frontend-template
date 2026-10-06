@@ -28,7 +28,12 @@
     "git push -uf origin main",
     "cd /tmp && git commit -n",
     "git add -A\ngit commit -n -m wip",
-    "git commit \\\n  -n -m wip"
+    "git commit \\\n  -n -m wip",
+    "bash -c \"LEFTHOOK=0 git push\"",
+    "sh -c 'git commit -n -m wip'",
+    "bash -lc \"LEFTHOOK=0 git push\"",
+    "bash -c -- \"git commit -n -m wip\"",
+    "eval \"LEFTHOOK=0 git push\""
   ],
   "allow": [
     "git commit -m \"fix: x\"",
@@ -53,6 +58,10 @@
     "echo \"git commit -n\" > notes.txt",
     "pnpm install --frozen-lockfile --prefer-offline",
     "git grep -n \"LEFTHOOK=0\"",
-    "git commit -m \"fix: x\n\nLEFTHOOK=0 и core-флаги в тексте — данные\""
+    "git commit -m \"fix: x\n\nLEFTHOOK=0 и core-флаги в тексте — данные\"",
+    "bash -c \"echo ok\"",
+    "bash -c 'pnpm -s lint'",
+    "bash -lc \"pnpm -s check\"",
+    "eval \"$(fnm env)\""
   ]
 }

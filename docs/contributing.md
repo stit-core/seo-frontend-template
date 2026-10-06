@@ -21,11 +21,11 @@
 
 | слой | где | что |
 |---|---|---|
-| гейт | `pnpm check` | всё, что проверяемо; сам гейт под гейтом — `pnpm check:gate` на `.gate-fixtures/` |
+| гейт | `pnpm check` | всё, что проверяемо без браузера и Docker; сам гейт под гейтом — `pnpm check:gate` на `.gate-fixtures/`; браузерный набор и приёмка образа — шаги `/release` |
 | git-хуки | `lefthook.yml` (`pnpm prepare`) | pre-commit — формат и линт staged, планы; commit-msg — commitlint; pre-push — `scripts/pre-push.sh`: чистое дерево, пушится HEAD, затем `pnpm check`; хук без lefthook — отказ |
 | хук Claude Code | `.claude/hooks/guard-bash.sh` (PreToolUse, Bash) | отказ `git commit -n`, `--no-veri…`, force-push, `core.hooksPath`, переменным lefthook, `lefthook uninstall`, записи в `.git/hooks`; сценарии — `.gate-fixtures/guard.json` |
 | permissions.deny | `.claude/settings.json` | `--no-verify`, `reset --hard`, `clean -f`, публикация пакетов; чтение и правка секретов (`.env`, `*.pem`, `*.key`), правка `.git/hooks` и `lefthook-local` |
-| правила | `.claude/rules/` | подсказка по теме файла; то, что они обещают машинного, держит гейт |
+| правила | `.claude/rules/` | подсказка по теме файла; их машинные обещания держит гейт, браузерные — шаг `/release` |
 | `CLAUDE.md` | корень | ядро и роутер, always-on |
 
 ## Правила
@@ -44,7 +44,7 @@
 | `seo-invariants` | head через layout, hreflang, JSON-LD, robots/sitemap/фиды, гейты |
 | `forms-antispam` | форма без JS, антиспам-лестница, согласие на ПДн, доставка |
 | `shared-ui` | токен-слой, тема, картинки, 0 JS по умолчанию |
-| `env-local` | env только runtime, `SITE_URL` и штамповка, whitelist в HTML, секреты |
+| `env-local` | env только runtime, `SITE_URL` и штамповка, что из env попадает в HTML, секреты |
 | `tests-pipeline` | два проекта Vitest, Container API, axe, Playwright, покрытие и пороги, состав гейта |
 | `comments` | комментарии только про «зачем», по-русски |
 | `forward-only` | тексты описывают текущее состояние, история — в `git log` |

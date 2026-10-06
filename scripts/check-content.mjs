@@ -1,6 +1,7 @@
 // Контентный гейт (до build): каждый .md коллекции проходит Zod-схему слайса, тело держит
 // инварианты (h1 только из title, alt у картинок, корневые ссылки на существующие маршруты),
-// переводы и content/redirects.yaml согласованы с маршрутами. Падает раньше и понятнее сборки.
+// переводы и content/redirects.yaml согласованы с маршрутами, у каждого on-demand маршрута —
+// строка в карте docs/reference/rendering.md. Падает раньше и понятнее сборки.
 // YAML читает js-yaml (им же Astro читает frontmatter); TS-модули — только «листовые»
 // (без alias-импортов), их Node исполняет напрямую. Реестр коллекций — scripts/lib/content.mjs
 // проверяемого корня.
@@ -203,11 +204,20 @@ for (const field of ['title', 'description']) {
 }
 
 // ---------- маршруты ----------
-const routes = new Set(
-  pageRoutes(resolve(root, 'src/pages'))
-    .filter((page) => !page.parametrized)
-    .map((page) => page.route),
-)
+const pagesDir = resolve(root, 'src/pages')
+const pages = pageRoutes(pagesDir)
+const routes = new Set(pages.filter((page) => !page.parametrized).map((page) => page.route))
+// On-demand — решение о кеше и индексации: строка в карте маршрутов, а не только флаг в файле.
+const renderMap = resolve(root, 'docs/reference/rendering.md')
+const mapRows = (existsSync(renderMap) ? readFileSync(renderMap, 'utf8') : '')
+  .split('\n')
+  .filter((line) => line.startsWith('|'))
+for (const page of pages.filter((item) => item.mode === 'dynamic')) {
+  const file = relative(pagesDir, page.file).split(sep).join('/')
+  if (!mapRows.some((row) => row.includes(`\`${file}\``))) {
+    fail(`src/pages/${file}`, 'on-demand маршрут без строки в карте docs/reference/rendering.md')
+  }
+}
 const publicDir = resolve(root, 'public')
 for (const file of existsSync(publicDir) ? walk(publicDir) : []) {
   routes.add(`/${relative(publicDir, file).split(sep).join('/')}`)

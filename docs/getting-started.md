@@ -103,8 +103,7 @@ pnpm check            # полный гейт
 ## Гейт перед push
 
 ```bash
-pnpm check    # plan:check → typecheck → lint → format:check → test → steiger → check:gate
-              # → check:content → build → check:links → seo:check → size → test:http
+pnpm check    # gate — состав: .claude/rules/tests-pipeline.md § Gate
 ```
 
 Его же гоняет pre-push — для пушимого HEAD на чистом дереве; `test:http` — HTTP-набор на

@@ -15,8 +15,8 @@ app → pages → widgets → features → entities → shared
   одного слоя импорт запрещён**: общее поднимается в `entities`/`shared` или
   композируется в widget/page
 - **Единственный импорт вверх**: страница импортирует документ-шелл `app/layouts/*` —
-  Astro не оборачивает страницы снаружи. `app/layouts` не импортирует `pages`; остальной
-  `app` из `pages` недоступен (policy в `eslint.config.js`)
+  Astro не оборачивает страницы снаружи. `app` не импортирует `pages` (иначе цикл), остальной
+  `app` из `pages` недоступен — политики в `eslint.config.js`
 
 ## `src/pages` = роутинг Astro
 
@@ -30,11 +30,11 @@ widget — только при ≥ 2 страницах. Server route — `src/p
 
 `src/content.config.ts`, `src/middleware.ts`, `src/env.d.ts` — не слои, а тонкие входы:
 реэкспорт (`middleware.ts`), регистрация коллекций (`content.config.ts`) или декларация типов
-(`env.d.ts`). ESLint знает их категорией файлов `src/*.ts` (импорт — только `app` и
-`entities`, `no-restricted-imports` выключен), Steiger их игнорирует. Логика — в
+(`env.d.ts`). ESLint знает их списком `ASTRO_ENTRIES` (`eslint.config.js`; импорт — только
+`app` и `entities`, `no-restricted-imports` выключен), Steiger их игнорирует. Логика — в
 `app/middleware`, `features/<x>/api`, `entities/<x>/model`. Любой другой файл вне слоёв
 (`src/components`, `src/lib`, новый вход Astro) — ошибка `boundaries/no-unknown-files`: вход
-заводится строкой в `eslint.config.js`.
+заводится строкой в `ASTRO_ENTRIES`.
 `content.config.ts` импортирует коллекцию **напрямую из модуля** слайса
 (`@/entities/<x>/model/collection`): через баррель dev-сервер теряет конфиг контента.
 
@@ -44,12 +44,12 @@ widget — только при ≥ 2 страницах. Server route — `src/p
   `.astro`: `export { default as PostCard } from './ui/post-card.astro'`. Сегменты `app`
   (`layouts`, `middleware`, `styles`) — модули, не баррели: импортируются по пути
   (`@/app/layouts/document.astro`, `@/app/middleware`)
-- В `index.ts` — **только** `export { x } from './…'`: без импортов, объявлений и
-  top-level вызовов (баррель исполнял бы свой код у каждого импортёра) — ESLint
-  `no-restricted-syntax`
-- Примитивы Astro и Node (`astro:*`, `node:*`) public API **не раздаёт**: страница берёт данные
-  запросами слайса (фильтр черновиков, локаль), а не `getCollection` напрямую — ESLint
-  `no-restricted-imports`
+- В `index.ts` слайса и сегмента `shared` (и примитива `shared/ui/<name>`, `shared/lib/<name>`) —
+  **только** `export { x } from './…'`: без импортов, объявлений и top-level вызовов (баррель
+  исполнял бы свой код у каждого импортёра) — ESLint `no-restricted-syntax`
+- Примитивы Astro и Node (`astro:*`, `node:*`) public API **не раздаёт** — ESLint
+  `no-restricted-imports` в баррелях; данные страница берёт запросами слайса (фильтр
+  черновиков, локаль), а не `getCollection` напрямую
 - Deep-import запрещён: `@/<layer>/<slice>/…` — `no-restricted-imports` по
   `@/<layer>/*/*`; `shared` — `@/shared/<segment>`, `@/shared/ui/<name>`,
   `@/shared/lib/<name>`
@@ -71,7 +71,7 @@ Frontmatter `.astro` и модули `.ts` исполняются на серв�
 `ui/` `model/` `api/` `lib/` `config/` + `content/` (markdown-коллекция сущности:
 `content/<locale>/<slug>.md`, обложки в `content/covers/`).
 Группировка по типу (`components/`, `hooks/`, `utils/`, `types/`) запрещена — Steiger
-`no-reserved-folder-names`.
+`segments-by-purpose`.
 
 ## Размещение
 

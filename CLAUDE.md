@@ -5,12 +5,12 @@
 / Tailwind v4 на собственном токен-слое / контент — Markdown в git внутри слайса сущности
 (Content Layer `glob`, Zod 4-схема) / i18n `ru` + `en` / SEO-слой `shared/seo` (canonical,
 hreflang, OG, JSON-LD; `robots.txt`/`sitemap.xml`/`rss.xml` on-demand на runtime origin) /
-форма обратной связи без JS (PRG, антиспам-лестница, один канал доставки) / тема — единственный
-остров / картинки `astro:assets` / FSD под линтером (ESLint 10 `boundaries` +
-`no-restricted-imports`; Steiger — структура) / Biome 2 + Prettier (только `*.astro`) /
-Vitest 5 (Container API) + Playwright на prod-сборке (HTTP-набор в гейте, браузер — в
-`/release`) / size-limit / pnpm 10 / lefthook. Один Node-образ на все среды: origin
-штампуется при старте.
+форма обратной связи без JS (PRG, антиспам-лестница, один канал доставки) / острова — тема и
+счётчик при заданном `METRIKA_ID` / картинки `astro:assets` / FSD под линтером
+(ESLint 10 `boundaries` + `no-restricted-imports`; Steiger — структура) / Biome 2 + Prettier
+(только `*.astro`) / Vitest 5 (Container API) + Playwright на prod-сборке (HTTP-набор в гейте,
+браузер — в `/release`) / size-limit / pnpm 10 / lefthook. Один Node-образ на все среды:
+origin штампуется при старте.
 
 Этот файл — **ядро (always-on) + роутер**. Детали — в `docs/`, контекстные правила — в
 `.claude/rules/` (подгружаются по `paths`, когда читаешь файл их темы; `forward-only` — всегда),
@@ -70,21 +70,21 @@ Vitest 5 (Container API) + Playwright на prod-сборке (HTTP-набор в
 | `pnpm build` | `astro build` → `dist/{client,server}` (с плейсхолдером origin) |
 | `pnpm start` | `node --env-file-if-exists=.env docker/server.mjs` — prod-сервер (требует `SITE_URL` и штамповку) |
 | `pnpm typecheck` | `astro check` |
-| `pnpm lint` | `biome check` + `eslint` — **здесь держатся границы FSD** |
+| `pnpm lint` | `biome check` + `eslint --max-warnings 0` — **здесь держатся границы FSD** и канон UI |
 | `pnpm format:check` | `biome format` + `prettier --check "src/**/*.astro"` |
 | `pnpm test` | Vitest: проекты `astro` (node, Container API) и `dom` (happy-dom), покрытие широкого объёма с порогами |
 | `pnpm test:http` | HTTP-набор `e2e/http/` после build: prod-сервер как контейнер (копия сборки, `entrypoint.sh` + `server.mjs`) на свободных портах, профили прод и staging |
 | `pnpm test:e2e` | build + браузерный набор `e2e/browser/`: axe в двух темах, тема, форма без JS — обязательный шаг `/release` |
 | `pnpm steiger` | структурный линтер FSD |
-| `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome и свои скрипты гейта (`seo:check`, `check:links`, `check:content`) — ровно нарушениями из `expected.json` |
-| `pnpm check:content` | контент-гейт до build: схема каждого `.md`, тело, переводы, ссылки, `content/redirects.yaml` |
-| `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` существуют |
+| `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome и свои скрипты гейта (`seo:check`, `check:links`, `check:content`) — ровно нарушениями из `expected.json`; guard-хук — отказ каждому обходу из `guard.json` |
+| `pnpm check:content` | контент-гейт до build: схема каждого `.md`, тело, переводы, ссылки, `content/redirects.yaml`, строка карты `rendering.md` у каждого on-demand маршрута |
+| `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` (и абсолютные URL своего сайта) существуют |
 | `pnpm seo:check` | после build: у каждой страницы `dist/client` title/description (уникальные, в бюджетах, не общие), self-canonical, `lang`, один h1, OG с картинкой, hreflang у каждой пары переводов, JSON-LD = видимое; `noindex`, острова, чужие ресурсы и типы JSON-LD — только по списку `scripts/lib/site-policy.mjs` |
 | `pnpm size` | бюджеты `.size-limit.cjs` (CSS, HTML главной и поста) |
 | `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
 | `pnpm ttfb <origin> <path…>` | TTFB запущенного сервера: медиана/p90 20 запросов (`scripts/ttfb.mjs`) |
-| `pnpm accept:image <image>` | приёмка собранного образа до пуша: fail-fast, штамповка, статусы, TTFB, staging, дренаж |
-| `pnpm check` | **gate**: plan:check → typecheck → lint → format:check → test → steiger → check:gate → check:content → build → check:links → seo:check → size → test:http |
+| `pnpm accept:image <image>` | приёмка собранного образа до пуша: fail-fast, штамповка, статусы, canonical, robots и карта, staging; TTFB и дренаж — печать без порога |
+| `pnpm check` | **gate**: шаги по порядку до первого красного — состав и что держит каждый: rule `tests-pipeline` § Gate |
 
 Перед claim «готово» / push — **`pnpm check`** (его же гоняет pre-push — для пушимого HEAD на
 чистом дереве).
@@ -95,7 +95,7 @@ Vitest 5 (Container API) + Playwright на prod-сборке (HTTP-набор в
 |---|---|
 | FSD под Astro: слои, навязанные entry, public API, server-only | rule `fsd-architecture` + `docs/reference/architecture.md` |
 | Контент: frontmatter и бюджеты, один h1, черновики, переводы, `redirects.yaml`, контент-гейты | rule `content-invariants` |
-| env, `SITE_URL`, плейсхолдер и штамповка, whitelist в HTML | rule `env-local` |
+| env, `SITE_URL`, плейсхолдер и штамповка, что из env попадает в HTML | rule `env-local` |
 | Режимы рендера, карта маршрутов, кеш-заголовки, канон `astro.config.ts`, рецепт D | `docs/reference/rendering.md` + rule `render-safety` |
 | Тесты: два проекта Vitest, Container API, axe, Playwright, покрытие и пороги | rule `tests-pipeline` |
 | UI на токенах, тема-остров, картинки и LCP, scoped-CSS, 0 JS | rule `shared-ui` |
@@ -153,11 +153,12 @@ Vitest 5 (Container API) + Playwright на prod-сборке (HTTP-набор в
 (`scripts/`, `.gate-fixtures/`, конфиги линтеров и Vitest, `.size-limit.cjs`, `lefthook.yml`,
 `.claude/`) — только по явной просьбе юзера.
 
-Хуки не обходятся из сессии: guard-хук `.claude/hooks/guard-bash.sh` отказывает `git commit -n`,
-`--no-veri…`, force-push, `core.hooksPath`, переменным lefthook (`LEFTHOOK=0`,
-`LEFTHOOK_EXCLUDE`…), `lefthook uninstall` и записи в `.git/hooks`; `--no-verify` закрыт ещё и
-deny-правилом. Пропустить pre-push может только сам юзер. `.env`, `*.pem`, `*.key` не
-коммитятся (`.gitignore`) и не читаются из сессии (deny): секреты живут только в env контейнера.
+Хуки не обходятся: пропуск pre-push — решение юзера, руками. Из сессии guard-хук
+`.claude/hooks/guard-bash.sh` отказывает `git commit -n`, `--no-veri…`, force-push,
+`core.hooksPath`, переменным lefthook (`LEFTHOOK=0`, `LEFTHOOK_EXCLUDE`…), `lefthook uninstall` и
+записи в `.git/hooks` (и внутри `bash -c "…"`, `eval "…"`) — это страховка от удобного обхода, а не
+от обфускации; `--no-verify` закрыт ещё и deny-правилом. `.env`, `*.pem`, `*.key` не коммитятся
+(`.gitignore`) и не читаются из сессии (deny): секреты живут только в env контейнера.
 
 ## Долгосрочное знание
 
