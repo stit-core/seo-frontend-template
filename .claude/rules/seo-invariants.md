@@ -92,7 +92,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   на отсутствующую страницу; JSON-LD (типы, `Organization`/`WebSite` на главной, форма
   `BreadcrumbList`)
 - unit `shared/seo/*.test.ts` (urls, robots, sitemap, rss, json-ld со схемой) и Container API
-  (`seo-head`, `json-ld.astro`, `widgets/breadcrumbs`)
+  (`seo-head`, `json-ld.astro`, `widgets/breadcrumbs`); маршруты `robots.txt` (прод, staging,
+  `AI_TRAINING=deny`), `sitemap.xml`, фиды и ключ — `src/pages/_tests/endpoints.server.test.ts`
 - e2e `seo.spec.ts` через `request` (сырой HTML, в т.ч. `User-Agent: Googlebot`): статусы, мета,
   hreflang взаимный, JSON-LD в `<head>` и ни одного `<script>` в `<body>`, `og:image` (дефолт и
   обложка), robots ↔ sitemap ↔ `dist/client`, фиды, ключ IndexNow, нет `noindex` в прод-профиле,

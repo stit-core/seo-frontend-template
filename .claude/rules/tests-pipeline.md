@@ -20,6 +20,9 @@ paths: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
   `Request`/`Response`): `app/middleware` с подменённым `getRuntimeConfig` (`vi.mock`
   `@/shared/config`) и `next`-заглушками; `docker/*` гоняется через `spawnSync` (fail-fast
   `server.mjs`, отказ и штамповка `entrypoint.sh` на временном `dist`)
+- **Маршруты** — `src/pages/_tests/` (каталог с `_` Astro не маршрутизирует): эндпоинты
+  вызываются напрямую (`endpoints.server.test.ts`), контент — общие фикстуры `fixtures.ts`
+  через `vi.mock('astro:content')`, режим сборки — `vi.stubEnv('DEV', false)`
 - **E2E** — `e2e/*.spec.ts`, Playwright на **prod-сборке**: webServer = `pnpm build` с
   плейсхолдером + `docker/entrypoint.sh` + `docker/server.mjs` на порту 3201, `url` —
   `/healthz` (не `/`), прод-профиль (`ROBOTS_POLICY=index`, демо-`INDEXNOW_KEY`). Сырой HTML —
@@ -40,6 +43,7 @@ paths: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
 | `app/middleware` | prerendered проходит как есть; `X-Request-Id` принят/сгенерирован; `Cache-Control: no-cache` на on-demand HTML и не перебивает заголовок роута; `X-Robots-Tag` только при `noindex`; редирект/410 до `next`; ошибка → лог 500 с тем же `rid` + rethrow; уровни лога и порог `LOG_LEVEL`, без query/cookie |
 | `shared/observability` | `captureServerError` — каждый кейс своим путём (`vi.resetModules()` + динамический импорт: клиент мемоизирован промисом модуля), пустой и битый `SENTRY_DSN` не роняют ответ; порог `LOG_LEVEL` проверяют оба потребителя `log()` — middleware и `contact-form` |
 | `shared/seo` | pure-тесты: `normalizePath`/`absoluteUrl` (runtime origin, плейсхолдер без env), `alternates` (взаимный набор, x-default, пусто без перевода), `buildRobotsTxt` (прод/staging/AI-блок), `buildSitemap` (lastmod, экранирование, лимит), `buildFeed` (self-ссылка, язык, лимит записей), фабрики JSON-LD — их выход проходит Zod-схему здесь, не на рендере; Container API: `seo-head.astro` (canonical, hreflang, OG, noindex), `json-ld.astro`, `widgets/breadcrumbs` (видимые крошки, без скриптов, axe) |
+| служебные маршруты (`src/pages/*.ts`) | `endpoints.server.test.ts`: `robots.txt` в профилях прод, staging и `AI_TRAINING=deny`; `sitemap.xml` — ровно индексируемые страницы фикстур, `lastmod` только у правки; фиды своей локали без черновика; ключ IndexNow и 404 чужого имени; `/healthz`; заголовки каждого |
 | head каждой страницы сборки (`dist/client`) | `pnpm seo:check` после build: один `<title>`/`<h1>`, description с `content`, self-canonical, `lang`, OG с существующей картинкой, hreflang у каждой пары переводов (списки/теги под обоими префиксами, записи по `translationKey`; взаимный, + x-default), уникальность title/description, JSON-LD (типы, Organization/WebSite на главной, форма BreadcrumbList), ни одного HTML-комментария в разметке; парсер `<head>` общий с e2e и `check:links` — `scripts/lib/html.mjs` |
 | контент целиком (`.md`, `redirects.yaml`, ссылки) | `pnpm check:content` до build, `pnpm check:links` после |
 | статусы, заголовки, `lang`, один `<h1>`, «0 script-ресурсов», axe страниц; списки без черновика, 404 на черновик/непереведённое, `/old` → 301 одним хопом, 410 с `noindex` | e2e (`smoke.spec.ts`, `content.spec.ts`) |

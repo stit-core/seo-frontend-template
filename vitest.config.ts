@@ -26,7 +26,7 @@ export default getViteConfig({
       ],
       reporter: [['text', { skipFull: true }]],
       // Храповик: пороги — факт, округлённый вниз; выросло покрытие — пороги растут тем же коммитом.
-      thresholds: { statements: 66, branches: 80, functions: 67, lines: 65 },
+      thresholds: { statements: 73, branches: 82, functions: 76, lines: 71 },
     },
     projects: [
       {
