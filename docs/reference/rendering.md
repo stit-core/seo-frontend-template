@@ -16,7 +16,8 @@ Static-first: страница предрендерится на сборке, �
 | `client` | каркас с сервера, данные на клиенте | `private, no-store` | нет и не планируется: приложение за логином — `spa-frontend-template` |
 
 Инварианты: индексируемая страница — `static` (или `cached`), и весь её контент — в первом
-HTML-ответе; `dynamic` в reference-наборе — всегда `noindex` и вне sitemap;
+HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML on-demand маршрута без `noindex`
+валит HTTP-набор);
 `prerender = false` — только со строкой в карте ниже и явным решением о `Cache-Control`.
 
 ## Карта маршрутов

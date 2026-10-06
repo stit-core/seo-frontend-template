@@ -18,7 +18,8 @@ export function walk(dir) {
 }
 
 const PAGE_EXT = /\.(astro|ts|js|mjs)$/
-const ON_DEMAND = /export\s+const\s+prerender\s*=\s*false/
+// Объявление — с начала строки: упоминание в тексте разметки (`/now`) режим не меняет.
+const ON_DEMAND = /^\s*export\s+const\s+prerender\s*=\s*false\b/m
 
 // Файлы и каталоги с префиксом `_` Astro из роутинга исключает (секции страниц).
 // Режим маршрута: `static` — prerender на сборке (файл в dist/client), `dynamic` — on-demand

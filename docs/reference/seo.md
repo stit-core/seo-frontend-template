@@ -82,7 +82,7 @@ OG-картинка, набор локалей, политика AI-крауле
 | `pnpm check:gate` | сам `seo:check` (и `check:links`, `check:content`) на негативной фикстуре `.gate-fixtures/seo` — ровно ожидаемые нарушения |
 | `pnpm check:links` | каждый внутренний `href`/`src`/`srcset` сборки существует |
 | `pnpm check:content` | бюджеты и уникальность полей записей, ссылки в теле, `redirects.yaml` |
-| HTTP-набор `e2e/http/` (в `pnpm check`) | сырой HTML prod-сервера, в т.ч. под Googlebot: статусы и заголовки, штамповка origin, ни одного `<script>` в `<body>`, `robots.txt` (прод и staging) ↔ `sitemap.xml` ↔ `dist/client`, фиды, ключ IndexNow, вес HTML |
+| HTTP-набор `e2e/http/` (в `pnpm check`) | сырой HTML prod-сервера, в т.ч. под Googlebot: статусы и заголовки, штамповка origin, HTML on-demand маршрутов — только `noindex` и только острова политики, `robots.txt` (прод и staging) ↔ `sitemap.xml` ↔ `dist/client`, фиды, ключ IndexNow, вес HTML |
 | `/seo-audit` | прогон всего вышеперечисленного + curl по живому домену + внешние валидаторы |
 
 Ручное — раз на релиз: Rich Results Test, validator.schema.org, валидатор микроразметки

@@ -122,8 +122,9 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   `AI_TRAINING=deny`), `sitemap.xml`, фиды и ключ — `src/pages/_tests/endpoints.server.test.ts`
 - HTTP-набор `e2e/http/` (`pnpm test:http`, шаг `pnpm check`) на prod-сервере из сборки: каждая
   страница — тот же HTML под `User-Agent: Googlebot`, canonical на runtime origin, в `<body>`
-  нет своего origin, нет `X-Robots-Tag` в прод-профиле; скрипты on-demand страниц — острова
-  политики; robots (прод и staging) ↔ sitemap ↔ `dist/client`, фиды, ключ IndexNow; размер HTML
+  нет своего origin, нет `X-Robots-Tag` в прод-профиле; HTML on-demand маршрута — только с
+  `noindex` (мета или заголовок), его скрипты — острова политики; robots (прод и staging) ↔
+  sitemap ↔ `dist/client`, фиды, ключ IndexNow; размер HTML
   < 300 КБ. Парсер `<head>` и `decode` сущностей один — `scripts/lib/html.mjs` (он же в
   `seo:check` и `check:links`)
 - Перед релизом вручную: Rich Results Test, validator.schema.org, валидатор Яндекса

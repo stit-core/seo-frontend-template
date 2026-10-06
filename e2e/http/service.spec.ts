@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { bodyOf, type HeadTag, headTags } from '../../scripts/lib/html.mjs'
+import { bodyOf, type HeadTag, headTags, isNoindex } from '../../scripts/lib/html.mjs'
 import { scriptViolations } from '../../scripts/lib/site-policy.mjs'
 import { SITE_ORIGIN_PLACEHOLDER } from '../../src/shared/config/runtime.ts'
 import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
@@ -33,7 +33,7 @@ function expectServicePage(html: string, path: string) {
 }
 
 test.describe('on-demand: ответы приложения', () => {
-  test('каждый маршрут prerender = false отвечает из приложения: X-Request-Id, без плейсхолдера и своего origin в теле', async ({
+  test('каждый маршрут prerender = false отвечает из приложения: X-Request-Id, HTML — только noindex, без плейсхолдера и своего origin в теле', async ({
     request,
     baseURL,
   }) => {
@@ -43,6 +43,13 @@ test.describe('on-demand: ответы приложения', () => {
       const body = await response.text()
       expect(body, path).not.toContain(PLACEHOLDER)
       if (body.includes('<body')) expect(bodyOf(body), path).not.toContain(baseURL)
+      // Индексируемая страница — только prerendered: on-demand документ вне карты сайта, и без
+      // noindex (метой или заголовком) он попал бы в индекс мимо неё.
+      if (body.includes('<html')) {
+        const closed =
+          isNoindex(headTags(body)) || /noindex/.test(response.headers()['x-robots-tag'] ?? '')
+        expect(closed, `${path}: on-demand HTML без noindex`).toBe(true)
+      }
     }
   })
 
