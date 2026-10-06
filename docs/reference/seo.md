@@ -63,12 +63,14 @@ hreflang, `og:image`, JSON-LD, крошки, `h1`, размеры и LCP кар�
 ## Три контура staging
 
 `<meta name="robots">` на prerendered-странице — значение **сборки**, а образ один на все
-среды. Поэтому не-прод закрывается снаружи, тремя независимыми контурами:
+среды. Поэтому не-прод закрывается снаружи разметки, тремя независимыми контурами:
 
-1. `ROBOTS_POLICY=noindex` ⇒ `robots.txt` = `Disallow: /` и `X-Robots-Tag` на on-demand
-   ответах;
-2. Traefik: `basicAuth` — настоящий замок (prerendered до приложения не доходит);
-3. Traefik: `customResponseHeaders: X-Robots-Tag` — на всё, включая статику.
+1. `ROBOTS_POLICY=noindex` ⇒ `robots.txt` = `Disallow: /` и `X-Robots-Tag: noindex, nofollow`
+   на каждом ответе процесса — обёртка сервера ставит его и статике, до которой приложение не
+   доходит;
+2. Traefik: `basicAuth` — настоящий замок: без пароля ответа нет вовсе;
+3. Traefik: `customResponseHeaders: X-Robots-Tag` — тот же заголовок на edge, независимо от env
+   контейнера.
 
 На проде наоборот: отдельные `noindex`-страницы (`/now`, 404, подтверждение заявки) в
 `robots.txt` **не** закрываются — закрытую обходом страницу робот не прочитает и не
@@ -84,7 +86,7 @@ hreflang, `og:image`, JSON-LD, крошки, `h1`, размеры и LCP кар�
 | `pnpm check:gate` | сам `seo:check`, `check:links` и `check:content` на негативных мини-проектах `.gate-fixtures/{seo,links,content}` — ровно ожидаемые нарушения |
 | `pnpm check:links` | каждый внутренний `href`/`src`/`srcset` сборки существует |
 | `pnpm check:content` | бюджеты и уникальность полей записей, ссылки в теле, `redirects.yaml` |
-| HTTP-набор `e2e/http/` (в `pnpm check`) | сырой HTML prod-сервера, в т.ч. под Googlebot: статусы и заголовки, штамповка origin, HTML on-demand маршрутов — только `noindex` и только острова политики, `robots.txt` (прод и staging) ↔ `sitemap.xml` ↔ `dist/client`, фиды, ключ IndexNow, вес HTML |
+| HTTP-набор `e2e/http/` (в `pnpm check`) | сырой HTML prod-сервера, в т.ч. под Googlebot: статусы и заголовки, штамповка origin, HTML on-demand маршрутов — только `noindex` и только острова политики, `robots.txt` (прод и staging) ↔ `sitemap.xml` ↔ `dist/client`, фиды, ключ IndexNow, вес HTML; staging — `X-Robots-Tag: noindex, nofollow` на каждом ответе, от страниц сборки и PNG до редиректов |
 | `/seo-audit` | сборка, `seo:check`, `check:links`, HTTP-набор + curl по живому домену + внешние валидаторы |
 
 Ручное — раз на релиз: Rich Results Test, validator.schema.org, валидатор микроразметки

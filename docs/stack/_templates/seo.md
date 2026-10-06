@@ -60,7 +60,7 @@ hreflang выводится только для реально существу�
 | агент | политика |
 |---|---|
 | `*` | `Allow: /` + абсолютная `Sitemap:` (`ROBOTS_POLICY=index`) |
-| весь сайт на staging | `Disallow: /` (`ROBOTS_POLICY=noindex`) — плюс `basicAuth` и `X-Robots-Tag` на Traefik |
+| весь сайт на staging | `ROBOTS_POLICY=noindex`: `Disallow: /` и `X-Robots-Tag` на каждом ответе процесса — плюс `basicAuth` и `X-Robots-Tag` на Traefik |
 | обучающие AI-краулеры | `AI_TRAINING=allow \| deny` — _решение владельца сайта_ |
 | `Clean-param` | _проектные трекинг-параметры; `utm_*`, `ysclid`, `yrclid` Яндекс срезает сам_ |
 

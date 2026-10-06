@@ -30,8 +30,9 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   сайта и вне пар hreflang: `noindex` на любой другой странице (в любой форме: `robots`,
   `googlebot`, `yandex`, `bingbot`, любым регистром) `seo:check` валит, карту против
   сборки сверяет HTTP-набор. На prerendered мета — значение сборки, поэтому
-  staging закрывают `ROBOTS_POLICY` (`robots.txt` + `X-Robots-Tag` на on-demand) и Traefik
-  (`basicAuth` + `X-Robots-Tag`) — три контура
+  staging закрывают `ROBOTS_POLICY` (`robots.txt` + `X-Robots-Tag: noindex, nofollow`, который
+  обёртка процесса ставит на каждый ответ, статику включительно) и Traefik (`basicAuth` +
+  `X-Robots-Tag`) — три контура
 - hreflang — только при реальном переводе (`alternatePath` из `findTranslation` и списков):
   полный взаимный набор `ru`, `en`, `x-default` (дефолтная локаль) с self-ссылкой, все на своём
   origin; без перевода —
@@ -124,7 +125,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   `AI_TRAINING=deny`), `sitemap.xml`, фиды и ключ — `src/pages/_tests/endpoints.server.test.ts`
 - HTTP-набор `e2e/http/` (`pnpm test:http`, шаг `pnpm check`) на prod-сервере из сборки: каждая
   страница — тот же HTML под `User-Agent: Googlebot`, canonical на runtime origin, в `<body>`
-  нет своего origin, нет `X-Robots-Tag` в прод-профиле; HTML on-demand маршрута — только с
+  нет своего origin, нет `X-Robots-Tag` в прод-профиле, а в staging он на каждом ответе (страницы
+  сборки, ассет, `public/*`, on-demand, 404, редиректы); HTML on-demand маршрута — только с
   `noindex` (мета или заголовок), его скрипты — острова политики; robots (прод и staging) ↔
   sitemap ↔ `dist/client`, фиды, ключ IndexNow; размер HTML
   < 300 КБ. Парсер `<head>` и `decode` сущностей один — `scripts/lib/html.mjs` (он же в

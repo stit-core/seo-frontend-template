@@ -108,8 +108,8 @@ wait_healthz || {
 }
 curl -s "http://127.0.0.1:$PORT/robots.txt" | grep -q 'Disallow: /' &&
   ok "robots.txt закрывает сайт" || fail "staging: robots.txt не закрыт"
-curl -sI "http://127.0.0.1:$PORT/healthz" | grep -qi 'x-robots-tag' &&
-  ok "X-Robots-Tag на on-demand ответе" || fail "staging: нет X-Robots-Tag"
+curl -sI "http://127.0.0.1:$PORT/" | grep -qi '^x-robots-tag: noindex, nofollow' &&
+  ok "X-Robots-Tag на странице сборки" || fail "staging: у страницы сборки нет X-Robots-Tag"
 
 echo "== дренаж (docker stop) =="
 start=$(date +%s%N)

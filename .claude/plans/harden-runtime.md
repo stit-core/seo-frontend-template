@@ -61,8 +61,12 @@ blocked-by: —
     не исполнена, `<script>` не внедрён; приняты только `https://ex.com/` и `http://ex.com`; `image.sh` на образе
     (`M/p2a/image-s2.log`) — те же отказы в alpine, PID 1 — node, `accept:image` зелёный; старт, рестарт и новый
     контейнер (`M/p2a/restarts-s2.log`) — `Last-Modified` = mtime сборки, ETag один и тот же
-- [ ] **AC3** — В staging (`ROBOTS_POLICY=noindex`) каждый ответ — HTML, статика, служебные — несёт
+- [x] **AC3** — В staging (`ROBOTS_POLICY=noindex`) каждый ответ — HTML, статика, служебные — несёт
   `X-Robots-Tag: noindex, nofollow`; в проде заголовка нет. Проверка: HTTP-набор, профили прод и staging
+  - Подтверждено: `staging.spec.ts` — каждая страница сборки, ассет `_astro`, PNG из `public/`, on-demand
+    маршруты, 404 и адреса `redirects.yaml`; `pages.spec.ts` — в проде у страниц заголовка нет; демо аудитора
+    (`M/p2a/fixdemo-s3.log`): в staging у каждого ответа ровно одна строка `noindex, nofollow`, в проде у
+    страниц и PNG — ни одной; обёртка без блока staging и `setHeader` без `writeHead` — красный набор
 - [ ] **AC4** — CSP ставит приложение на всех ответах (prerendered и on-demand); остров темы работает без
   нарушений; гейт сверяет хеши инлайн-скриптов с политикой. Проверка: `pnpm test:e2e` — 0 нарушений CSP;
   мутация скрипта темы без правки политики → красный `pnpm check`
@@ -99,9 +103,14 @@ blocked-by: —
     html/xml/txt с плейсхолдером, mtime сборки возвращается файлу; `entrypoint.sh` — штамповка и `exec`. Тесты —
     один список «не origin» для обёртки и entrypoint (с инъекциями аудита), mtime и неперезапись файлов.
     `pnpm check` зелёный; `stamp.sh`, `image.sh` и три старта — см. AC2
-- [ ] **S3** — `X-Robots-Tag: noindex, nofollow` на каждом ответе staging из `server.mjs`; ветка в middleware
+- [x] **S3** — `X-Robots-Tag: noindex, nofollow` на каждом ответе staging из `server.mjs`; ветка в middleware
   удалена; `infra-handoff.md` и `seo.md` — правда
   - Проверка: HTTP-набор staging → заголовок на `/`, статике, PNG, служебных · Закрывает: AC3 · Зависит от: S1
+  - Сделано: `docker/server.mjs` при `ROBOTS_POLICY=noindex` ставит заголовок каждому ответу — первым слушателем
+    запроса, значение пишет в `writeHead` последним; ветка и её тест в middleware удалены; `staging.spec.ts`
+    обходит страницы сборки, ассет, PNG, on-demand, 404 и редиректы; `accept:image` проверяет страницу сборки;
+    правда в `infra-handoff.md`, `seo.md`, `deployment.md`, `rendering.md`, правилах и записи про staging.
+    `pnpm check` зелёный
 - [ ] **S4** — `/_image` закрыт: в приложении, если Astro это позволяет без хака, и строкой в контракте edge;
   маршрут — в карте `rendering.md`
   - Проверка: HTTP-набор → `/_image` не обслуживается; `image-dos.sh` на образе → `/healthz` жив · Закрывает: AC5 · Зависит от: S1
@@ -153,8 +162,13 @@ blocked-by: —
   сервера проверяет снова: её запускают и без entrypoint (`pnpm start`).
 - Модуль схемы штамповка берёт из `DIST_DIR` (`<dist>/server/runtime-config.mjs`) — правило той сборки, которую
   штампует (копия в HTTP-наборе, временный dist тестов).
+- Заголовок staging пишется в `writeHead` ответа, а не одним `setHeader` из демо аудитора: адаптер передаёт
+  заголовки маршрута туда же, и `noindex` служебных файлов и 410 перекрыл бы политику процесса — прежняя
+  проверка «каждый on-demand ответ staging — `noindex, nofollow`» покраснела бы.
+- `accept:image` проверяет заголовок staging на странице сборки, а не на `/healthz`, запись блога про staging
+  переписана (`updatedDate`) — обе описывали прежнее ограничение «статику закрывает только Traefik».
 
 ## Где мы сейчас
-Этап A: S1–S2 сделаны — env проверяется целиком при старте, штамповка — `docker/stamp.mjs` по той же схеме, с
-mtime сборки. Следующий шаг — S3 (`X-Robots-Tag` staging на каждом ответе из `server.mjs`, ветка middleware
-удаляется, `infra-handoff.md` и `seo.md` — правда).
+Этап A: S1–S3 сделаны — env проверяется целиком при старте, штамповка — `docker/stamp.mjs` по той же схеме, с
+mtime сборки, `X-Robots-Tag` staging — на каждом ответе из обёртки. Следующий шаг — S4 (`/_image` не
+обслуживается наружу, строка в карте `rendering.md` и в контракте edge, `image-dos.sh` на образе).

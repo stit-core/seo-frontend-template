@@ -2,12 +2,11 @@ import type { APIContext, MiddlewareNext } from 'astro'
 import type * as SharedConfig from '@/shared/config'
 import type { RuntimeConfig } from '@/shared/config'
 
-// Живой process.env подменяется целиком; из конфига middleware и наблюдаемость читают
-// ровно эти ключи — остальные в тесте не участвуют.
+// Живой process.env подменяется целиком; из конфига наблюдаемость читает ровно эти ключи —
+// остальные в тесте не участвуют.
 const { env } = vi.hoisted(() => {
-  const env: Pick<RuntimeConfig, 'SITE_URL' | 'ROBOTS_POLICY' | 'LOG_LEVEL' | 'SENTRY_DSN'> = {
+  const env: Pick<RuntimeConfig, 'SITE_URL' | 'LOG_LEVEL' | 'SENTRY_DSN'> = {
     SITE_URL: 'https://demo.example',
-    ROBOTS_POLICY: 'index',
     LOG_LEVEL: 'info',
     SENTRY_DSN: '',
   }
@@ -57,7 +56,6 @@ const logged = (fn: (...args: unknown[]) => void) =>
 
 describe('app/middleware', () => {
   beforeEach(() => {
-    env.ROBOTS_POLICY = 'index'
     env.LOG_LEVEL = 'info'
     vi.spyOn(console, 'info').mockImplementation(() => {})
     vi.spyOn(console, 'warn').mockImplementation(() => {})
@@ -111,12 +109,6 @@ describe('app/middleware', () => {
     const response = await run('/api/x', plain)
     expect(response.headers.get('cache-control')).toBeNull()
     expect(response.headers.get('x-request-id')).toBeTruthy()
-  })
-
-  it('X-Robots-Tag только при ROBOTS_POLICY=noindex', async () => {
-    expect((await run('/now', page)).headers.get('x-robots-tag')).toBeNull()
-    env.ROBOTS_POLICY = 'noindex'
-    expect((await run('/now', page)).headers.get('x-robots-tag')).toBe('noindex, nofollow')
   })
 
   it('редиректы из content/redirects.yaml — до роутинга, next не вызывается', async () => {

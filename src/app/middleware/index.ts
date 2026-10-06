@@ -1,12 +1,11 @@
 import { defineMiddleware } from 'astro:middleware'
-import { getRuntimeConfig } from '@/shared/config'
 import { captureServerError, type LogLevel, log } from '@/shared/observability'
 import { matchRedirect, redirectResponse } from './redirects'
 
 // Всё ниже действует только на on-demand маршрутах: prerendered-страницы отдаёт
 // статик-хендлер адаптера раньше приложения (со своими `Cache-Control: public, max-age=0`
-// и ETag), и middleware их не видит. Поэтому staging закрывается ещё и на Traefik
-// (basicAuth + X-Robots-Tag). Путь без файла (в т.ч. любой из redirects.yaml) до
+// и ETag), и middleware их не видит — поэтому `X-Robots-Tag` staging ставит обёртка процесса
+// (docker/server.mjs) на каждый ответ. Путь без файла (в т.ч. любой из redirects.yaml) до
 // приложения доходит — 404-страница on-demand.
 export const onRequest = defineMiddleware(async (context, next) => {
   if (context.isPrerendered) return next()
@@ -15,7 +14,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   const rid = context.request.headers.get('x-request-id') ?? crypto.randomUUID()
   // Маршрут кладёт этот же rid в свои события (форма), и они сходятся со строкой запроса.
   context.locals.rid = rid
-  const { ROBOTS_POLICY } = getRuntimeConfig()
   const logRequest = (status: number) =>
     log(levelOf(status, context.url.pathname), {
       method: context.request.method,
@@ -43,9 +41,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
   // живой/персональный ответ ставит `private, no-store` сам, и он не перебивается.
   if (isHtml(response) && !response.headers.has('cache-control')) {
     response.headers.set('cache-control', 'no-cache')
-  }
-  if (ROBOTS_POLICY === 'noindex') {
-    response.headers.set('x-robots-tag', 'noindex, nofollow')
   }
   logRequest(response.status)
   return response

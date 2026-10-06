@@ -86,6 +86,9 @@ docker run --rm -p 3000:3000 -e SITE_URL=https://example.com <image>
   `[server] listen failed`
 - `KEEP_ALIVE_TIMEOUT_MS` / `SHUTDOWN_TIMEOUT_MS` — ключи той же схемы: пусто — дефолт, не
   целое число больше нуля — отказ старта
+- staging (`ROBOTS_POLICY=noindex`): `X-Robots-Tag: noindex, nofollow` на каждом ответе
+  процесса — и статики адаптера, до которой приложение не доходит, и on-demand; заголовок
+  ставится в `writeHead` ответа последним, поэтому значение маршрута его не перекрывает
 
 ## Env-контракт
 
@@ -95,7 +98,7 @@ docker run --rm -p 3000:3000 -e SITE_URL=https://example.com <image>
 | `NODE_ENV` | режим Node | `production` (в образе) | нет |
 | `NODE_OPTIONS` | например `--max-old-space-size=384` (≈ 75 % `mem_limit`) | — | нет |
 | `SITE_URL` | канонический origin `https://example.com`: схема, хост в нижнем регистре, порт — без пути, query и userinfo (хвостовые слеши срезаются); **обязателен** | — | да (штамповка) |
-| `ROBOTS_POLICY` | `index` \| `noindex` → `X-Robots-Tag: noindex, nofollow` на on-demand ответах и `robots.txt` = `Disallow: /` | `index` | нет (заголовок и `robots.txt`) |
+| `ROBOTS_POLICY` | `index` \| `noindex` → `X-Robots-Tag: noindex, nofollow` на каждом ответе процесса и `robots.txt` = `Disallow: /` | `index` | нет (заголовок и `robots.txt`) |
 | `RELEASE` | версия для логов | `unknown` | нет |
 | `LOG_LEVEL` | `debug` \| `info` \| `warn` \| `error` — JSON-лог запросов | `info` | нет |
 | `KEEP_ALIVE_TIMEOUT_MS` / `SHUTDOWN_TIMEOUT_MS` | обёртка сервера | `65000` / `15000` | нет |
@@ -126,10 +129,9 @@ prerendered-страница печатается на сборке, а обра
 
 - **Prerendered** страницы, `public/*` и `/_astro/*` отдаёт статик-хендлер адаптера **до**
   приложения со своими заголовками (`Cache-Control: public, max-age=0` + `ETag` +
-  `Last-Modified`; ассеты — `immutable`): middleware, `X-Robots-Tag`, JSON-лог их не видят.
-  Staging закрывается на Traefik (`basicAuth` + `customResponseHeaders: X-Robots-Tag`);
-  `/index.html` и `/en/index.html` отвечают 200 — дубли главных, прикрываются
-  `redirectRegex` там же
+  `Last-Modified`; ассеты — `immutable`): middleware и JSON-лог их не видят, `X-Robots-Tag`
+  staging ставит обёртка процесса; `/index.html` и `/en/index.html` отвечают 200 — дубли
+  главных, прикрываются `redirectRegex` на Traefik
 - **On-demand** (`prerender = false`: `/healthz`, `/now`, `/api/contact`, `robots.txt`,
   `sitemap.xml`, фиды `rss.xml` и `en/rss.xml`, `/<INDEXNOW_KEY>.txt`, `404.astro` — то есть
   любой путь без статического файла; список держит карта `rendering.md`)
@@ -140,8 +142,7 @@ prerendered-страница печатается на сборке, а обра
   PII; успешный `/healthz` — только на `debug`; 404/410 — `warn`; ошибка рендера
   логируется со статусом 500 и тем же `rid`, ответ строит Astro), `Cache-Control: no-cache`
   на HTML без явного заголовка (404/410 включительно; `now` ставит `private, no-store`
-  сам), `X-Robots-Tag` при `ROBOTS_POLICY=noindex`. Режимы и карта маршрутов —
-  `rendering.md`
+  сам). Режимы и карта маршрутов — `rendering.md`
 - Нормализация: `/en/` → 301 `/en` (адаптер — для каталогов `dist/client`, Astro — для
   остальных путей до middleware, поэтому `/old/` → `/old` → правило из `redirects.yaml`),
   `/about.html` → 404 при `build.format: 'directory'`
@@ -168,8 +169,8 @@ prerendered-страница печатается на сборке, а обра
 - Тело запроса прокси ограничивает своим лимитом; приложение отвечает `413` на
   `Content-Length` больше 64 КБ и не читает такое тело, а `bodySizeLimit` адаптера —
   последний рубеж
-- Staging закрывается там же: `basicAuth` + `customResponseHeaders: X-Robots-Tag` (prerendered
-  до приложения не доходит), `redirectRegex` для `/index.html` и `/en/index.html`,
+- Staging закрывается и там: `basicAuth` + `customResponseHeaders: X-Robots-Tag` — независимо
+  от `ROBOTS_POLICY` контейнера; `redirectRegex` для `/index.html` и `/en/index.html`,
   `www` → apex и `http` → `https`, `compress`, `secure-headers@file`
 
 Готовый `compose/site.yml`, роутеры и middleware Traefik, CrowdSec и приёмка первого

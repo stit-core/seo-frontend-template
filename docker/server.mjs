@@ -32,6 +32,24 @@ done.catch((err) => {
 http.keepAliveTimeout = config.KEEP_ALIVE_TIMEOUT_MS
 http.headersTimeout = config.KEEP_ALIVE_TIMEOUT_MS + 5_000
 
+// Staging закрыт на каждом ответе процесса: prerendered и public/* статик-хендлер адаптера отдаёт
+// раньше приложения, поэтому заголовок ставит обёртка. Ставит в writeHead, последним: заголовки
+// маршрута (служебные файлы и 410 со своим noindex) адаптер передаёт туда же, и они перекрыли бы
+// политику процесса.
+if (config.ROBOTS_POLICY === 'noindex') {
+  http.prependListener('request', (_request, response) => {
+    const writeHead = response.writeHead
+    response.writeHead = (...args) => {
+      const headers = args.find((arg) => typeof arg === 'object' && arg !== null)
+      for (const name of Object.keys(headers ?? {})) {
+        if (name.toLowerCase() === 'x-robots-tag') delete headers[name]
+      }
+      response.setHeader('x-robots-tag', 'noindex, nofollow')
+      return writeHead.apply(response, args)
+    }
+  })
+}
+
 const graceMs = config.SHUTDOWN_TIMEOUT_MS
 let closing = false
 

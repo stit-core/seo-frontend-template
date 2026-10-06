@@ -16,7 +16,7 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
   `getRuntimeConfig()`, `process.env` дают значения **сборки** (origin — плейсхолдер, который
   штампует entrypoint). Год в подвале — год релиза, это честно; «текущее время» — нет.
   `<meta name="robots">` prerendered-страницы — тоже значение сборки: staging закрывают
-  `ROBOTS_POLICY` на on-demand (`robots.txt`, `X-Robots-Tag`) и Traefik
+  `ROBOTS_POLICY` (`robots.txt` и `X-Robots-Tag` обёртки процесса на каждом ответе) и Traefik
 - Request-only API не в prerender-маршрутах: `Astro.request.headers` там пустой (Astro пишет
   warn), `Astro.url.search` и тело запроса — пустые, `Astro.clientAddress` бросает,
   `Astro.cookies` и `Astro.response.headers` ни на что не влияют. Нужен запрос — маршрут
@@ -45,8 +45,8 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
   без PII, query, cookie и тел запросов, и только через `log()` из `shared/observability`
   (порог `LOG_LEVEL`): `console.*` напрямую мимо порога не пишут ни middleware, ни маршруты —
   ESLint `no-console`
-- 404/410 — честный статус, не soft-404, с `noindex`; `X-Robots-Tag` staging действует только
-  на on-demand — на prerendered его ставит Traefik
+- 404/410 — честный статус, не soft-404, с `noindex`; `X-Robots-Tag` staging ставит обёртка
+  процесса (`docker/server.mjs`) на каждый ответ, prerendered включительно, — не middleware
 
 ## Остров (клиент)
 

@@ -112,14 +112,16 @@ origin; остаток плейсхолдера в любом файле `dist/c
 - Prerendered и `public/*` отдаёт статик-хендлер адаптера (`send`): `Cache-Control: public,
   max-age=0` + `ETag` + `Last-Modified` от mtime файла (штамповка возвращает файлу mtime
   сборки, рестарт их не меняет) — условный запрос, 304 при совпадении; `/_astro/*` —
-  `public, max-age=31536000, immutable`. Приложение (middleware, `X-Robots-Tag`, JSON-лог) их
-  не видит — staging закрывает Traefik: `basicAuth` + `customResponseHeaders: X-Robots-Tag`
+  `public, max-age=31536000, immutable`. Приложение (middleware, JSON-лог) их не видит
 - On-demand проходит через `app/middleware`: `X-Request-Id`, JSON-лог, `Cache-Control: no-cache`
-  для HTML без явного заголовка (404/410 включительно), `X-Robots-Tag: noindex, nofollow` при
-  `ROBOTS_POLICY=noindex`. Роут задаёт заголовок сам, когда ответ живой или персональный:
-  `now` — `private, no-store`, `healthz` — `no-store`; middleware его не перебивает. Crawler-файлы
+  для HTML без явного заголовка (404/410 включительно). Роут задаёт заголовок сам, когда ответ
+  живой или персональный: `now` — `private, no-store`, `healthz` — `no-store`; middleware его
+  не перебивает. Crawler-файлы
   (`robots.txt`, `sitemap.xml`, фиды, ключ IndexNow) ставят короткий `public, max-age` и
   `X-Robots-Tag: noindex` сами: это не страницы выдачи, а обход их не блокирует
+- Staging (`ROBOTS_POLICY=noindex`): `X-Robots-Tag: noindex, nofollow` на каждом ответе процесса —
+  prerendered, `public/*`, ассеты и on-demand — ставит обёртка `docker/server.mjs`, последним:
+  значение маршрута его не перекрывает
 - Почему `no-cache`, а не `max-age`: без CDN `s-maxage` не на кого рассчитывать, а `max-age` на
   своём домене оставляет у пользователей старую страницу после релиза; `no-cache` — «спроси
   сервер», и для prerendered это дешёвый 304 по ETag
@@ -137,8 +139,8 @@ origin; остаток плейсхолдера в любом файле `dist/c
 ## Рецепт D: `cached` — рендер на запрос с кешем процесса (опция, кода нет)
 
 **Когда нужен.** Контент приходит из CMS/API и должен обновляться без релиза; страниц слишком
-много для prerender на каждую сборку; нужна runtime-политика на индексируемых страницах (тогда
-`X-Robots-Tag` ставит приложение). Для git-контента D не нужен: публикация = релиз.
+много для prerender на каждую сборку; разметка индексируемой страницы зависит от runtime env. Для
+git-контента D не нужен: публикация = релиз.
 
 **Что включить.**
 
