@@ -44,6 +44,22 @@ describe('PostArticle', () => {
     expect(html.match(/<time[\s>]/g)).toHaveLength(1)
   })
 
+  // seo:check узнаёт кандидата в LCP по месту — картинка над h1; место и загрузку обложки держит
+  // этот тест: под заголовком и с lazy она прошла бы гейт.
+  it('обложка — кандидат в LCP: над h1, грузится сразу и с приоритетом, размеры заданы', async () => {
+    const container = await AstroContainer.create()
+    const cover = { src: '/_astro/cover.png', width: 1600, height: 900, format: 'png' as const }
+    const html = await container.renderToString(PostArticle, {
+      props: { post: { ...post, data: { ...post.data, cover, coverAlt: 'Обложка записи' } } },
+    })
+    const img = /<img\b[^>]*>/.exec(html)
+    expect(img?.index).toBeLessThan(html.search(/<h1[\s>]/))
+    expect(img?.[0]).toContain('fetchpriority="high"')
+    expect(img?.[0]).not.toContain('loading="lazy"')
+    expect(img?.[0]).toMatch(/\swidth="\d+"/)
+    expect(img?.[0]).toMatch(/\sheight="\d+"/)
+  })
+
   it('черновик (astro dev) помечен', async () => {
     const container = await AstroContainer.create()
     const html = await container.renderToString(PostArticle, {

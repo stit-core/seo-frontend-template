@@ -48,7 +48,7 @@ paths: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
 |---|---|
 | `shared/config` | дефолты, пустые значения, валидация, whitelist; `server.mjs`/`entrypoint.sh` — отказ без `SITE_URL`, с плейсхолдером и без схемы, штамповка `dist/client` (несколько вхождений в строке), остаточная проверка, идемпотентность, `exec` (PID команды — PID entrypoint) и код выхода команды; согласованность литерала плейсхолдера |
 | `shared/i18n`, `shared/lib` | pure-тесты |
-| `entities/*/ui/*.astro`, `widgets/*/ui/*.astro` | Container API + axe; у миниатюры карточки — размеры слота и кандидаты `srcset` не крупнее двух плотностей |
+| `entities/*/ui/*.astro`, `widgets/*/ui/*.astro` | Container API + axe; у миниатюры карточки — размеры слота и кандидаты `srcset` не крупнее двух плотностей; обложка статьи — над h1, без `lazy`, с `fetchpriority="high"` и размерами |
 | `entities/*/model/schema.ts` | valid/invalid frontmatter, дефолт `draft`, бюджеты — граничными литералами, а не константами модуля, заглушка `image()` |
 | `shared/redirects`, `app/middleware/redirects` | pure-тесты: дубли/цепочки/статусы, пустая таблица, query в `Location`, 410; точное совпадение `from` на реальном `content/redirects.yaml` |
 | `app/middleware` | prerendered проходит как есть; `X-Request-Id` принят/сгенерирован; `Cache-Control: no-cache` на on-demand HTML и не перебивает заголовок роута; `X-Robots-Tag` только при `noindex`; редирект/410 до `next`; ошибка → лог 500 с тем же `rid` + rethrow; уровни лога и порог `LOG_LEVEL`, без query/cookie |
