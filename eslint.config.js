@@ -7,6 +7,10 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 const EXT = ['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.astro']
+// Код слайсов любого расширения: frontmatter .astro, модули, клиентские <script> (виртуальные
+// файлы `<компонент>.astro/<n>.ts` процессора Astro).
+const SRC_CODE = 'src/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs,astro}'
+const CLIENT_SCRIPTS = 'src/**/*.astro/*.{ts,js}'
 
 // Границы FSD держит именно ESLint: резолвер видит цели любого расширения (в т.ч. .astro),
 // а `no-restricted-imports` ловит deep-import по форме спецификатора без резолва вовсе.
@@ -21,6 +25,8 @@ const fsdSettings = {
     { type: 'entities', pattern: 'src/entities/*', capture: ['slice'] },
     { type: 'shared', pattern: 'src/shared/**', partialMatch: false },
   ],
+  // Входы, навязанные Astro (middleware.ts, content.config.ts, env.d.ts): тонкие связки, не слой.
+  'boundaries/files': [{ category: 'astro-entry', pattern: 'src/*.ts' }],
   'boundaries/include': ['src/**'],
   'import/resolver': { typescript: { project: './tsconfig.json', extensions: EXT } },
 }
@@ -45,6 +51,24 @@ const publicApiPatterns = [
     ],
     message: 'FSD: импорт мимо public API сегмента shared',
   },
+  {
+    // Относительный путь, вышедший из слайса в каталог слоя, — импорт мимо `@/`: public API и
+    // направление слоёв читаются только по алиасу.
+    regex: String.raw`^(\.\.?/)+(app|pages|widgets|features|entities|shared)/`,
+    message:
+      'FSD: из слайса наружу — только `@/<layer>/<slice>`, относительный путь — внутри слайса',
+  },
+]
+
+// Клиентский <script> исполняется в браузере: импортирует только модули без серверного кода.
+// Баррель тянет в бандл всё, что за ним (`@/shared/config` — это Zod и env процесса).
+const CLIENT_MODULES = ['@/shared/lib', '@/shared/i18n']
+const clientPatterns = [
+  ...publicApiPatterns,
+  {
+    regex: String.raw`^(?!\.\.?/|(${CLIENT_MODULES.join('|')})$)`,
+    message: `FSD: клиентскому <script> — только свой слайс и ${CLIENT_MODULES.join(', ')}`,
+  },
 ]
 
 const fsdRules = {
@@ -66,9 +90,12 @@ const fsdRules = {
         { from: [{ element: { type: 'widgets' } }], allow: to('features', 'entities', 'shared') },
         { from: [{ element: { type: 'features' } }], allow: to('entities', 'shared') },
         { from: [{ element: { type: 'entities' } }], allow: to('shared') },
+        { from: [{ file: { categories: 'astro-entry' } }], allow: to('app', 'entities') },
       ],
     },
   ],
+  // Файл вне слоёв (src/components, src/lib…) — мимо всех границ сразу.
+  'boundaries/no-unknown-files': 'error',
   'no-restricted-imports': ['error', { patterns: publicApiPatterns }],
 }
 
@@ -82,8 +109,13 @@ export default defineConfig(
       'test-results/**',
       '.gate-fixtures/**',
       'docs/**',
+      // Worktree агентов: чужая незаконченная работа не роняет lint этого дерева.
+      '.claude/**',
     ],
   },
+  // Правило выключается только блоком этого файла — с причиной. Комментарий-директива в коде не
+  // действует, а её предупреждение роняет `pnpm lint` (`--max-warnings 0`).
+  { linterOptions: { noInlineConfig: true } },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...astro.configs['flat/recommended'],
@@ -93,17 +125,14 @@ export default defineConfig(
     // Логика слайсов и e2e: здесь можно позволить typed-lint.
     files: ['src/**/*.{ts,mts,cts}', 'e2e/**/*.ts'],
     // Виртуальные блоки клиентских <script> (процессор Astro) не лежат на диске: project
-    // service их не видит, и boundaries на них молча не срабатывает — линтятся блоком ниже.
-    ignores: ['src/**/*.astro/*.ts'],
+    // service их не видит — они разбираются блоком ниже.
+    ignores: [CLIENT_SCRIPTS],
     extends: [tseslint.configs.recommendedTypeChecked],
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
     },
-    plugins: { boundaries },
-    settings: fsdSettings,
     rules: {
-      ...fsdRules,
       '@typescript-eslint/consistent-type-imports': [
         'error',
         { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
@@ -120,26 +149,29 @@ export default defineConfig(
       parser: astroParser,
       parserOptions: { parser: tseslint.parser, extraFileExtensions: ['.astro'] },
     },
-    plugins: { boundaries },
-    settings: fsdSettings,
-    rules: fsdRules,
   },
   {
-    // Клиентские <script> Astro-процессор отдаёт как виртуальные файлы.
-    // Без этого блока импорты из них не проверяются НИЧЕМ.
-    files: ['src/**/*.astro/*.ts', 'src/**/*.astro/*.js'],
+    files: [CLIENT_SCRIPTS],
     languageOptions: {
       parser: tseslint.parser,
       sourceType: 'module',
       parserOptions: { projectService: false },
     },
+  },
+  {
+    // Границы FSD — на всём коде src: модули, frontmatter и клиентские <script>.
+    files: [SRC_CODE],
     plugins: { boundaries },
     settings: fsdSettings,
     rules: fsdRules,
   },
   {
-    // Public API слайса/сегмента: только explicit re-exports. Импорт, объявление или
-    // top-level вызов в баррели тянет server-only код и контент в клиентский граф.
+    files: [CLIENT_SCRIPTS],
+    rules: { 'no-restricted-imports': ['error', { patterns: clientPatterns }] },
+  },
+  {
+    // Public API слайса/сегмента: только explicit re-exports — без своего кода, который баррель
+    // исполнил бы у каждого импортёра. Примитивы Astro и Node не раздаются мимо API слайса.
     files: ['src/{entities,features,widgets}/*/index.ts', 'src/shared/*/index.ts'],
     rules: {
       'no-restricted-imports': [
@@ -149,7 +181,7 @@ export default defineConfig(
             ...publicApiPatterns,
             {
               group: ['astro:*', 'node:*'],
-              message: 'FSD: server-only символы не реэкспортируются из public API слайса',
+              message: 'FSD: примитивы Astro и Node не реэкспортируются из public API слайса',
             },
           ],
         },
@@ -166,7 +198,7 @@ export default defineConfig(
   {
     // Точки входа, навязанные Astro: server-only код и коллекции контента
     // импортируются напрямую из модуля слайса, не через баррель.
-    files: ['src/content.config.ts', 'src/middleware.ts', 'src/actions/**'],
+    files: ['src/*.ts'],
     rules: { 'no-restricted-imports': 'off' },
   },
   {

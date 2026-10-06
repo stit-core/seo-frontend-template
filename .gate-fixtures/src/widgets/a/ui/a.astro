@@ -13,8 +13,8 @@ import BCard from '../../b/ui/b.astro'
 </section>
 
 <script>
-  // Нарушение: cross-slice импорт из клиентского <script>.
+  // Нарушение: cross-slice импорт из клиентского <script> (и не клиентский модуль).
   import { helper } from '@/widgets/b'
 
-  console.info(helper())
+  document.title = helper()
 </script>

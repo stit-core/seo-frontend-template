@@ -21,7 +21,8 @@
 
 - **FSD строго нисходяще** — `app → pages → widgets → features → entities → shared`;
   границы держит ESLint (`pnpm lint`), структуру — Steiger. Rule `fsd-architecture`.
-- **Public API** — `index.ts` с explicit re-exports; server-only символы в нём не живут.
+- **Public API** — `index.ts` с explicit re-exports, без своего кода и примитивов `astro:*`;
+  клиентский `<script>` импортирует только модули без серверного кода.
 - **UI — `.astro` на собственном токен-слое** (`src/app/styles/index.css`), без вендорных
   UI-китов. Rule `shared-ui`.
 - **0 JS на контентных страницах**; остров — по решению и под бюджетом: файл в `dist` —

@@ -1,0 +1,8 @@
+<input type="search" aria-label="Поиск" />
+
+<script>
+  // Нарушение: клиентский <script> импортирует баррель с серверным кодом (Zod и env процесса).
+  import { SITE_NAME } from '@/shared/config'
+
+  document.title = SITE_NAME
+</script>

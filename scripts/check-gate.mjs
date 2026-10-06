@@ -36,7 +36,15 @@ function countBy(keys) {
   return map
 }
 
-const eslint = lint('eslint', ['--format', 'json', '--config', 'eslint.config.js', 'src'])
+const eslint = lint('eslint', [
+  '--no-error-on-unmatched-pattern',
+  '--format',
+  'json',
+  '--config',
+  'eslint.config.js',
+  'src',
+  '.claude',
+])
 const fatal = eslint.flatMap((f) =>
   f.messages.filter((m) => m.fatal).map((m) => `${rel(f.filePath)}: ${m.message}`),
 )

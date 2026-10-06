@@ -130,7 +130,8 @@ Vitest 5 (Container API) + Playwright на prod-сборке (HTTP-набор в
 - Форма — без JS: PRG, антиспам-лестница, тело заявки не логируется
 - Лог — один `log()` из `shared/observability`, без PII
 - UI — `.astro` на токен-слое `src/app/styles/index.css`; вендорные UI-киты не подключаются
-- TypeScript strict; `as any` — только с причиной (Biome ловит его лишь предупреждением)
+- TypeScript strict; `any` в коде `src` запрещён (ESLint, кроме тестов); правило не выключается
+  комментарием — только блоком `eslint.config.js` с причиной
 - Комментарии — только WHY, кратко, по-русски; текст репо — forward-only
 
 ## Git workflow

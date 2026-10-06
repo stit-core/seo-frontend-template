@@ -22,8 +22,8 @@ export default defineConfig([
     },
   },
   {
-    // Файлы, жёстко навязанные Astro: это не слои FSD, а точки входа (реэкспорты).
-    ignores: ['src/content.config.ts', 'src/middleware.ts', 'src/actions/**', 'src/env.d.ts'],
+    // Входы, навязанные Astro (middleware.ts, content.config.ts, env.d.ts), — не слои FSD.
+    ignores: ['src/*.ts'],
   },
   {
     // src/pages — файловый роутинг: index.astro это маршрут '/', подпапки en/ blog/ [slug]/ —

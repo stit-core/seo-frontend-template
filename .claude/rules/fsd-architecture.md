@@ -1,5 +1,5 @@
 ---
-description: FSD под Astro — слои, навязанные entry, public API, server-only, размещение; границы держит ESLint.
+description: FSD под Astro — слои, навязанные entry, public API, сервер и клиент, размещение; границы держит ESLint.
 paths: ["src/**/*.ts", "src/**/*.astro", "steiger.config.ts", "eslint.config.js", ".gate-fixtures/**"]
 ---
 
@@ -28,10 +28,13 @@ widget — только при ≥ 2 страницах. Server route — `src/p
 
 ## Навязанные Astro точки входа
 
-`src/content.config.ts`, `src/middleware.ts`, `src/actions/**`, `src/env.d.ts` — не слои,
-а тонкие входы: реэкспорт (`middleware.ts`), пустое объявление (`content.config.ts`) или
-декларация типов (`env.d.ts`). Steiger их игнорирует, `no-restricted-imports` на них
-выключен. Логика — в `app/middleware`, `features/<x>/api`, `entities/<x>/model`.
+`src/content.config.ts`, `src/middleware.ts`, `src/env.d.ts` — не слои, а тонкие входы:
+реэкспорт (`middleware.ts`), регистрация коллекций (`content.config.ts`) или декларация типов
+(`env.d.ts`). ESLint знает их категорией файлов `src/*.ts` (импорт — только `app` и
+`entities`, `no-restricted-imports` выключен), Steiger их игнорирует. Логика — в
+`app/middleware`, `features/<x>/api`, `entities/<x>/model`. Любой другой файл вне слоёв
+(`src/components`, `src/lib`, новый вход Astro) — ошибка `boundaries/no-unknown-files`: вход
+заводится строкой в `eslint.config.js`.
 `content.config.ts` импортирует коллекцию **напрямую из модуля** слайса
 (`@/entities/<x>/model/collection`): через баррель dev-сервер теряет конфиг контента.
 
@@ -42,15 +45,26 @@ widget — только при ≥ 2 страницах. Server route — `src/p
   (`layouts`, `middleware`, `styles`) — модули, не баррели: импортируются по пути
   (`@/app/layouts/document.astro`, `@/app/middleware`)
 - В `index.ts` — **только** `export { x } from './…'`: без импортов, объявлений и
-  top-level вызовов (barrel + вызов тянет zod/контент в клиентский граф) —
-  ESLint `no-restricted-syntax`
-- Server-only (`astro:*`, `node:*`) **не реэкспортируется** из `index.ts` — ESLint
-  `no-restricted-imports`. Серверный entry слайса (`api/action.ts`,
-  `model/collection.ts`) импортирует только навязанный entry Astro, напрямую
+  top-level вызовов (баррель исполнял бы свой код у каждого импортёра) — ESLint
+  `no-restricted-syntax`
+- Примитивы Astro и Node (`astro:*`, `node:*`) public API **не раздаёт**: страница берёт данные
+  запросами слайса (фильтр черновиков, локаль), а не `getCollection` напрямую — ESLint
+  `no-restricted-imports`
 - Deep-import запрещён: `@/<layer>/<slice>/…` — `no-restricted-imports` по
   `@/<layer>/*/*`; `shared` — `@/shared/<segment>`, `@/shared/ui/<name>`,
   `@/shared/lib/<name>`
-- Внутри слайса — относительные пути; снаружи — `@/<layer>/<slice>`
+- Внутри слайса — относительные пути; снаружи — `@/<layer>/<slice>`: относительный путь из
+  слайса в каталог слоя (`../../entities/…`) — та же ошибка `no-restricted-imports`
+
+## Сервер и клиент
+
+Frontmatter `.astro` и модули `.ts` исполняются на сервере — на сборке или на запросе, поэтому
+серверный код (запросы к `astro:content`, env процесса, Sentry) в слайсах и за их баррелями
+законен. Клиентский код — только `<script>` острова (rule `shared-ui`): в бандл уезжает всё, что
+за его импортами, и баррель `@/shared/config` притащил бы Zod и env процесса. Поэтому
+клиентский `<script>` импортирует только свой слайс и модули без серверного кода —
+`CLIENT_MODULES` в `eslint.config.js` (`@/shared/lib`, `@/shared/i18n`); другое — ошибка
+`no-restricted-imports`, данные сервера острову передаёт разметка (`data-*`, `define:vars`).
 
 ## Сегменты слайса
 
@@ -78,7 +92,10 @@ widget — только при ≥ 2 страницах. Server route — `src/p
 ## Кто что проверяет
 
 - **Границы держит `pnpm lint`**: ESLint `boundaries` с резолвером + `no-restricted-imports`
-  (в т.ч. клиентские `<script>` в `.astro`). Steiger — структура (public API, сегменты,
+  на всём коде `src` любого расширения, включая клиентские `<script>` в `.astro`; файл вне
+  слоёв — `boundaries/no-unknown-files`. Директива `eslint-disable` в коде не действует
+  (`noInlineConfig`), а её предупреждение роняет lint (`--max-warnings 0`): исключение из
+  правила — блоком `eslint.config.js` с причиной. Steiger — структура (public API, сегменты,
   имена); он fail-open на `.astro`-целях и `export … from`
 - Негативные фикстуры `.gate-fixtures/` (`pnpm check:gate`) обязаны валить
   ESLint/Steiger/Biome. Новое правило границ — новая фикстура + строка в `expected.json`

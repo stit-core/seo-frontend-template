@@ -78,7 +78,7 @@ src/entities/<name>/
 ├─ api/queries.ts                  списки, запись, перевод; фильтр draft и локали
 ├─ lib/paths.ts                    маршруты коллекции
 ├─ ui/<name>-card.astro            карточка списка
-└─ index.ts                        explicit re-export без server-only символов
+└─ index.ts                        explicit re-export без примитивов astro:* и node:*
 ```
 
 Плюс три точки регистрации, без них коллекции «нет»:
@@ -157,9 +157,10 @@ export { listPosts } from './api/queries'
 export { default as PostCard } from './ui/post-card.astro'
 ```
 
-Без `export *`, без импортов, без объявлений и вызовов в самом `index.ts` и без
-server-only символов (`astro:content`, `node:*`) — их серверный entry импортирует
-напрямую из модуля.
+Без `export *`, без импортов, без объявлений и вызовов в самом `index.ts` и без примитивов
+Astro и Node (`astro:content`, `node:*`): страница берёт данные запросами слайса. Клиентский
+`<script>` импортирует только свой слайс, `@/shared/lib` и `@/shared/i18n` (rule
+`fsd-architecture`).
 
 ## Post-flight (обязательно)
 
@@ -179,6 +180,7 @@ pnpm test             # тесты артефакта и пороги покры
 - ❌ `export *` из `index.ts`
 - ❌ Импорт соседнего слайса того же слоя — поднимай общее в `entities`/`shared` или
   композируй в widget/page
-- ❌ Импорт мимо public API (`@/<layer>/<slice>/<segment>/…`)
+- ❌ Импорт мимо public API (`@/<layer>/<slice>/<segment>/…` или относительным путём из слайса)
+- ❌ Каталог вне слоёв (`src/components`, `src/lib`) и `eslint-disable` в коде
 - ❌ `prerender = false` на контентной странице
 - ❌ Слайс «на будущее» — Steiger `insignificant-slice`

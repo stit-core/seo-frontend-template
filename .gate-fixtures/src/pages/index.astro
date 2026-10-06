@@ -1,10 +1,14 @@
 ---
-// Нарушения: deep-import мимо public API — в .astro-цель и в .ts-цель.
+// Нарушения: deep-import мимо public API — в .astro-цель и в .ts-цель (директива ESLint его не
+// выключает), относительным путём из слайса наружу.
 import PostCard from '@/entities/post/ui/post-card.astro'
+// eslint-disable-next-line no-restricted-imports
 import { PostSchema } from '@/entities/post/model/schema'
+import Card from '../entities/post/ui/post-card.astro'
 ---
 
 <main>
   <PostCard />
+  <Card />
   <p>{PostSchema.title}</p>
 </main>

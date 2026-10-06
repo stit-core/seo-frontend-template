@@ -11,17 +11,22 @@
 
 ## Линтеры — `src/`
 
-ESLint, Steiger и Biome гоняются из этого каталога по `src/`; считаются только ошибки (severity
-error). В `expected.json` — `{ file, rule, count }`, `count` по умолчанию 1.
+ESLint, Steiger и Biome гоняются из этого каталога по `src/` (ESLint — ещё и по `.claude/`:
+вложенный worktree агента lint не видит, и находок там быть не должно); считаются только ошибки
+(severity error). В `expected.json` — `{ file, rule, count }`, `count` по умолчанию 1.
 
 | файл | нарушение | ловит |
 |---|---|---|
-| `src/widgets/a/ui/a.astro` | cross-slice `widgets/a → widgets/b`: через `@/widgets/b` во frontmatter и в клиентском `<script>`, относительным путём в `.astro`-цель | ESLint `boundaries/dependencies` ×3, Steiger `fsd/forbidden-imports` |
+| `src/widgets/a/ui/a.astro` | cross-slice `widgets/a → widgets/b`: через `@/widgets/b` во frontmatter и в клиентском `<script>` (там это ещё и не клиентский модуль), относительным путём в `.astro`-цель | ESLint `boundaries/dependencies` ×3 и `no-restricted-imports`, Steiger `fsd/forbidden-imports` |
+| `src/widgets/b/lib/crumbs.js` | cross-slice `widgets/b → widgets/a` из `.js`-модуля | ESLint `boundaries/dependencies`, Steiger `fsd/forbidden-imports` |
+| `src/features/search/ui/search-box.astro` | клиентский `<script>` импортирует `@/shared/config` (Zod и env процесса в бандле) | ESLint `no-restricted-imports` |
+| `src/components/promo.astro` | файл вне слоёв FSD | ESLint `boundaries/no-unknown-files` |
 | `src/widgets/a/ui/a.astro` | `<img>` без `alt` | ESLint `astro/jsx-a11y/alt-text`, Biome `lint/a11y/useAltText` |
 | `src/entities/post/ui/post-card.astro` | импорт вверх `entities → widgets` | ESLint `boundaries/dependencies`, Steiger `fsd/forbidden-imports` |
-| `src/pages/index.astro` | deep-import в `.astro`-цель и в `.ts`-цель | ESLint `no-restricted-imports` (обе), Steiger `fsd/no-public-api-sidestep` (только `.ts`) |
-| `src/entities/post/index.ts` | реэкспорт server-only `astro:content` из public API | ESLint `no-restricted-imports` |
+| `src/pages/index.astro` | deep-import в `.astro`-цель и в `.ts`-цель (над вторым — `eslint-disable-next-line`, который не действует), относительным путём из слайса в каталог слоя | ESLint `no-restricted-imports` ×3, Steiger `fsd/no-public-api-sidestep` (только `.ts`) |
+| `src/entities/post/index.ts` | реэкспорт `astro:content` из public API | ESLint `no-restricted-imports` |
 | `src/features/search/index.ts` | импорт и объявление в баррели вместо `export { x } from` | ESLint `no-restricted-syntax` ×2 |
+| `.claude/worktrees/agent/src/x.ts` | `any` в чужом worktree | ничем: каталог в ignores ESLint |
 
 Обвязка: `tsconfig.json` (extends корневого, свои `paths`), `eslint.config.js` и
 `steiger.config.ts` (реэкспорт корневых — паттерны считаются от этого каталога),

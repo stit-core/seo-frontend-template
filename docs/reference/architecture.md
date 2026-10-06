@@ -42,9 +42,10 @@ app → pages → widgets → features → entities → shared
 
 ## Навязанные Astro точки входа
 
-`src/content.config.ts`, `src/middleware.ts`, `src/env.d.ts` (и `src/actions/**`, если
-появятся) — не слои, а тонкие входы: реэкспорт, декларация типов, регистрация коллекций.
-Логика — в `app/middleware`, `entities/<x>/model`, `features/<x>/api`.
+`src/content.config.ts`, `src/middleware.ts`, `src/env.d.ts` — не слои, а тонкие входы:
+реэкспорт, декларация типов, регистрация коллекций. Логика — в `app/middleware`,
+`entities/<x>/model`, `features/<x>/api`. Других файлов вне слоёв нет: `src/components`,
+`src/lib` или новый вход Astro ESLint не пропустит, пока вход не объявлен в `eslint.config.js`.
 
 `content.config.ts` импортирует коллекцию **напрямую из модуля** слайса: через баррель
 dev-сервер теряет конфиг контента.
@@ -58,9 +59,14 @@ dev-сервер теряет конфиг контента.
 export { default as PostCard } from './ui/post-card.astro'
 ```
 
-Внутри `index.ts` нет импортов, объявлений и вызовов: баррель с вычисленным значением
-тянет zod и контент в любой граф, который его коснулся. Server-only символы (`astro:*`,
-`node:*`) из барреля не реэкспортируются — серверный entry слайса импортирует их сам.
+Внутри `index.ts` нет импортов, объявлений и вызовов: баррель исполнял бы свой код у каждого
+импортёра. Примитивы Astro и Node (`astro:*`, `node:*`) он не раздаёт — страница берёт данные
+запросами слайса, а не `getCollection` напрямую.
+
+Frontmatter и модули `.ts` исполняются на сервере (сборка или запрос), поэтому серверный код в
+слайсах и за баррелями законен. Клиентский код — только `<script>` острова: он импортирует свой
+слайс и модули без серверного кода (`@/shared/lib`, `@/shared/i18n`), а не, например,
+`@/shared/config` — тот притащил бы в бандл Zod и env процесса.
 
 Сегменты `app` (`layouts`, `middleware`, `styles`) — модули, а не баррели: у них один
 потребитель и нет смысла в промежуточном файле.
@@ -91,7 +97,7 @@ src/
 
 | инструмент | задача |
 |---|---|
-| ESLint 10 (`boundaries` + `no-restricted-imports`) | **границы FSD**: направление импортов, deep-import, server-only в баррелях, клиентские `<script>` |
+| ESLint 10 (`boundaries` + `no-restricted-imports`) | **границы FSD** на всём коде `src`: направление импортов, deep-import (и относительным путём), файлы вне слоёв, примитивы Astro в баррелях, импорты клиентских `<script>`; директива `eslint-disable` в коде не действует |
 | Steiger | структура: public API, сегменты, имена, значимость слайса; на `.astro`-целях fail-open |
 | `astro check` | типы (`astro/tsconfigs/strictest`) |
 | Biome + Prettier | формат и базовые правила; `.astro` форматирует Prettier |
