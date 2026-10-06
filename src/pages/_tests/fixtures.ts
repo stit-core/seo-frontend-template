@@ -1,3 +1,4 @@
+import type { CollectionEntry, CollectionKey } from 'astro:content'
 import type { PostData, PostEntry } from '@/entities/post'
 import PostBody from './post-body.astro'
 
@@ -47,16 +48,21 @@ export const POSTS: readonly PostEntry[] = [
   ),
 ]
 
-// Записи по имени коллекции: новая коллекция (`/scaffold collection`) — своя строка здесь.
-const COLLECTIONS: Record<string, readonly PostEntry[]> = { post: POSTS }
+// Записи каждой коллекции сайта по имени: коллекция из content.config.ts без своей строки
+// здесь (`/scaffold collection`) — ошибка typecheck, а не тихо пустой мок.
+const COLLECTIONS: { [K in CollectionKey]: readonly CollectionEntry<K>[] } = { post: POSTS }
+
+type Entry = CollectionEntry<CollectionKey>
 
 // Модуль astro:content для vi.mock.
 export const astroContent = {
-  getCollection: (collection: string, filter?: (entry: PostEntry) => unknown) => {
-    const entries = COLLECTIONS[collection] ?? []
+  getCollection: (collection: CollectionKey, filter?: (entry: Entry) => unknown) => {
+    const entries: readonly Entry[] = COLLECTIONS[collection]
     return Promise.resolve(filter ? entries.filter(filter) : entries)
   },
-  getEntry: (collection: string, id: string) =>
-    Promise.resolve(COLLECTIONS[collection]?.find((entry) => entry.id === id)),
+  getEntry: (collection: CollectionKey, id: string) => {
+    const entries: readonly Entry[] = COLLECTIONS[collection]
+    return Promise.resolve(entries.find((entry) => entry.id === id))
+  },
   render: () => Promise.resolve({ Content: PostBody, headings: [] }),
 }

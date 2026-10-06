@@ -112,16 +112,25 @@ const fsdRules = {
 }
 
 // Среда — runtime env через getRuntimeConfig(): `import.meta.env.<KEY>` Vite подставляет на сборке
-// (секрет уехал бы в бандл); `DEV` — признак `astro dev` для черновиков.
+// (секрет уехал бы в бандл); `DEV` — признак `astro dev` для черновиков. Сам объект `import.meta.env`
+// — в любом месте, кроме `.DEV`: ключ, деструктуризация, присваивание.
 const importMetaEnv = {
   selector:
-    "MemberExpression[object.object.type='MetaProperty'][object.property.name='env'][property.name!='DEV']",
+    "MemberExpression[object.type='MetaProperty'][property.name='env']:not(MemberExpression[property.name='DEV'] > *)",
   message: 'env: из import.meta.env — только DEV; конфигурация среды — getRuntimeConfig()',
 }
 
 // Цвет — только токен src/app/styles/index.css: литерал цвета в разметке компонента — сырой цвет.
-const COLOR = String.raw`#[0-9a-f]{3,8}\b|\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(`
+// `url(#id)` — ссылка на градиент или маску SVG, а не цвет.
+const FUNCTION_COLOR = String.raw`\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(`
+const HEX = String.raw`(?<!url\(['"]?)#[0-9a-f]{3,8}\b`
+const COLOR = `${HEX}|${FUNCTION_COLOR}`
+// В CSS hex-цвет — значение объявления: за ним `;` или `}` раньше `{`; `#add {` — id-селектор.
+const CSS_COLOR = `${HEX}[^{};]*[;}]|${FUNCTION_COLOR}`
 const CLASS = "JSXAttribute:matches([name.name='class'], [name.namespace.name='class'])"
+// Строка разметки — литерал или кусок шаблонной строки.
+const colorIn = (attribute) =>
+  `${attribute} :matches(Literal[value=/${COLOR}/i], TemplateElement[value.raw=/${COLOR}/i])`
 // Канон разметки .astro (rules shared-ui, render-safety).
 const astroSyntax = [
   {
@@ -137,15 +146,15 @@ const astroSyntax = [
     message: 'UI: инлайн-style — значения через утилиты токен-слоя src/app/styles/index.css',
   },
   {
-    selector: `${CLASS} Literal[value=/${COLOR}/i]`,
+    selector: colorIn(CLASS),
     message: 'UI: сырой цвет в классе — семантическая утилита токен-слоя',
   },
   {
-    selector: `JSXElement[openingElement.name.name='style'] > AstroRawText[value=/${COLOR}/i]`,
+    selector: `JSXElement[openingElement.name.name='style'] > AstroRawText[value=/${CSS_COLOR}/i]`,
     message: 'UI: сырой цвет в <style> — токен src/app/styles/index.css',
   },
   {
-    selector: `JSXAttribute[name.name=/^(fill|stroke|color|stop-color|flood-color)$/] > Literal[value=/${COLOR}/i]`,
+    selector: colorIn('JSXAttribute[name.name=/^(fill|stroke|color|stop-color|flood-color)$/]'),
     message: 'UI: сырой цвет в атрибуте — currentColor или токен',
   },
   {

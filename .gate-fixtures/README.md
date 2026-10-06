@@ -23,7 +23,8 @@ ESLint, Steiger и Biome гоняются из этого каталога по 
 | `src/components/promo.astro` | файл вне слоёв FSD | ESLint `boundaries/no-unknown-files` |
 | `src/actions.ts` | новый вход в корне `src` без строки в `ASTRO_ENTRIES` | ESLint `boundaries/no-unknown-files` |
 | `src/widgets/a/ui/a.astro` | `<img>` без `alt` (и сырой `<img>` мимо `<Picture>`) | ESLint `astro/jsx-a11y/alt-text` и `no-restricted-syntax`, Biome `lint/a11y/useAltText` |
-| `src/widgets/promo/ui/promo.astro` | канон UI и приложения: CSS UI-кита, `process.env`, `import.meta.env`, `getRuntimeConfig()` и `import *` из `@/shared/config`, `console` во frontmatter; сырой `<img>`, `client:load`, инлайн-`style`, сырой цвет в классе, в `fill` SVG и в `<style>` | ESLint `no-restricted-imports`, `no-restricted-properties`, `no-console`, `no-restricted-syntax` ×9 |
+| `src/widgets/promo/ui/promo.astro` | канон UI и приложения: CSS UI-кита, `process.env`, `import.meta.env` ключом и деструктуризацией, `getRuntimeConfig()` и `import *` из `@/shared/config`, `console` во frontmatter; сырой `<img>`, `client:load`, инлайн-`style`, сырой цвет в классе (литералом и в шаблонной строке), в `fill` SVG и в `<style>` | ESLint `no-restricted-imports`, `no-restricted-properties`, `no-console`, `no-restricted-syntax` ×11 |
+| `src/widgets/promo/ui/badge.astro` | законное: `fill="url(#fade)"` и id-селектор `#add` из hex-букв в `<style>` | ничем |
 | `src/entities/post/ui/post-card.astro` | импорт вверх `entities → widgets` | ESLint `boundaries/dependencies`, Steiger `fsd/forbidden-imports` |
 | `src/app/layouts/shell.astro` | `app → pages`: обратная зависимость к странице, которая импортирует шелл | ESLint `boundaries/dependencies` |
 | `src/pages/index.astro` | deep-import в `.astro`-цель и в `.ts`-цель (над вторым — `eslint-disable-next-line`, который не действует), относительным путём из слайса в каталог слоя | ESLint `no-restricted-imports` ×3, Steiger `fsd/no-public-api-sidestep` (только `.ts`) |

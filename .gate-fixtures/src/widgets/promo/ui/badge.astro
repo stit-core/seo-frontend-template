@@ -1,1 +1,16 @@
-<span>badge</span>
+<!-- Законный канон без находок: url(#fade) — ссылка на градиент, #add — id-селектор из hex-букв. -->
+<span id="add">
+  badge
+  <svg viewBox="0 0 1 1" aria-hidden="true">
+    <defs>
+      <linearGradient id="fade"><stop offset="0" stop-color="currentColor" /></linearGradient>
+    </defs>
+    <path fill="url(#fade)" d="M0 0h1v1H0z" />
+  </svg>
+</span>
+
+<style>
+  #add {
+    display: inline-grid;
+  }
+</style>

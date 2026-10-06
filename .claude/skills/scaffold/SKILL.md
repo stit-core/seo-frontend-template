@@ -100,9 +100,10 @@ src/entities/<name>/
   граничными литералами (не константами модуля)
 - `api/queries.test.ts` — по образцу `entities/post/api/queries.test.ts`: `vi.mock('astro:content')`
   через `vi.hoisted`, фильтр черновиков и локали, сортировка, перевод — в обоих режимах `DEV`
-- записи коллекции — строкой в `COLLECTIONS` общих фикстур `src/pages/_tests/fixtures.ts`;
-  страницы списка и записи — строки в `src/pages/_tests/pages.astro.test.ts`, их адреса — в
-  ожидаемой карте `src/pages/_tests/endpoints.server.test.ts`
+- записи коллекции — строкой в `COLLECTIONS` общих фикстур `src/pages/_tests/fixtures.ts` (без
+  неё — ошибка typecheck); страницы списка и записи — строки в
+  `src/pages/_tests/pages.astro.test.ts`, их адреса — в ожидаемой карте
+  `src/pages/_tests/endpoints.server.test.ts`
 
 ## feature
 
