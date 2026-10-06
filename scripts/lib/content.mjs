@@ -2,6 +2,8 @@
 // где лежат .md, чем валидируются, какие маршруты порождают (без префикса локали — его
 // подставляет localePath). Новая коллекция — запись здесь. TS-модули — только «листовые»
 // (без alias-импортов): их Node исполняет напрямую.
+import { resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { POSTS_PER_PAGE, pageCount } from '../../src/entities/post/lib/paginate.ts'
 import { postSchema } from '../../src/entities/post/model/schema.ts'
 
@@ -36,6 +38,18 @@ export const collections = [
     ],
   },
 ]
+
+/**
+ * Реестр проверяемого проекта — его `scripts/lib/content.mjs`: у сайта это модуль выше, у
+ * мини-проектов check:gate (`.gate-fixtures/<скрипт>`) — свой. Гейт на гейт поэтому не зависит
+ * от коллекций сайта: их добавляет /scaffold, переименовывает и удаляет /de-template.
+ * @param {string} root
+ * @returns {Promise<Collection[]>}
+ */
+export async function collectionsOf(root) {
+  const registry = await import(pathToFileURL(resolve(root, 'scripts/lib/content.mjs')).href)
+  return registry.collections
+}
 
 // Frontmatter между строками `---` и тело; без frontmatter — undefined.
 /**

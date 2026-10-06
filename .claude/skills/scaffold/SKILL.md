@@ -85,7 +85,8 @@ src/entities/<name>/
 
 1. `src/content.config.ts` — импорт **напрямую из модуля** (`@/entities/<name>/model/collection`)
 2. `scripts/lib/content.mjs` — запись в реестре `collections` (каталог, схема, порождаемые
-   маршруты): по нему работают `check:content` и `seo:check`
+   маршруты): по нему работают `check:content` и `seo:check`; `.gate-fixtures/` не трогается —
+   у мини-проектов гейта на гейт свой реестр
 3. страницы списка и записи в `src/pages/**` (обе локали) + строки в карте маршрутов
 
 Схема обязана дать: бюджеты `title`/`description`, `pubDate`, `draft` с дефолтом `false`,

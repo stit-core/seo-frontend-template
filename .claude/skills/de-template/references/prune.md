@@ -11,7 +11,9 @@ Reference-набор шаблона — **живой образец**, а не �
 `src/pages/{index,about,contacts/*,legal/privacy,404,500,now,healthz,robots.txt,sitemap.xml,[key].txt,api/contact}`,
 секции `_about/`, `_contacts/`, `src/features/{contact-form,theme}`,
 `src/entities/company`, `src/widgets/{site-header,site-footer,breadcrumbs}`,
-`src/shared/**`, `src/app/**`, `.gate-fixtures/`, `docker/`, `scripts/`, гейты.
+`src/shared/**`, `src/app/**`, `.gate-fixtures/`, `docker/`, `scripts/`, гейты. Фикстуры гейта на
+гейт не правятся ни в каком режиме: у мини-проектов `.gate-fixtures/` свой реестр коллекций, и
+прунинг или переименование коллекций сайта их не касаются.
 
 Форма и политика ПДн — не «демо»: это минимум сайта, который принимает заявки. Страница
 `/now` — образец режима `dynamic`; если проекту она не нужна, удаляется вместе со строкой в

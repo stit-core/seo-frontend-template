@@ -22,7 +22,7 @@ import { relative, resolve, sep } from 'node:path'
 import { load } from 'js-yaml'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
 import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../src/shared/i18n/locale.ts'
-import { collections, splitFrontmatter } from './lib/content.mjs'
+import { collectionsOf, splitFrontmatter } from './lib/content.mjs'
 import { bodyOf, decode, headTags, normalizeSpace, textOf } from './lib/html.mjs'
 import { pageRoutes, walk } from './lib/routes.mjs'
 import {
@@ -36,6 +36,7 @@ import {
 
 // Корень проекта; другой корень — негативные фикстуры check:gate (`.gate-fixtures/<скрипт>`).
 const root = resolve(process.argv[2] ?? resolve(import.meta.dirname, '..'))
+const collections = await collectionsOf(root)
 const client = resolve(root, 'dist/client')
 if (!existsSync(client)) {
   console.error('seo:check: dist/client не найден — сначала pnpm build')
@@ -505,6 +506,10 @@ const entryPaths = new Set()
 const draftPaths = new Set()
 for (const collection of collections) {
   const dir = resolve(root, collection.dir)
+  if (!existsSync(dir)) {
+    fail(collection.dir, 'каталога коллекции нет — поправьте реестр scripts/lib/content.mjs')
+    continue
+  }
   for (const file of walk(dir).filter((name) => name.endsWith('.md'))) {
     const [locale, name] = relative(dir, file).split(sep)
     const data = load(splitFrontmatter(readFileSync(file, 'utf8')).frontmatter)

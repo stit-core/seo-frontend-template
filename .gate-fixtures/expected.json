@@ -109,6 +109,7 @@
     "dist/client/en/blog/post/index.html: hreflang ru → https://__site_origin__/blog/zapis не взаимный",
     "dist/client/hreflang/index.html: hreflang de → https://__site_origin__/de/hreflang: страницы нет в сборке",
     "dist/client/xdefault/index.html: hreflang en → https://__site_origin__/en/xdefault: страницы нет в сборке",
+    "src/entities/bez-kataloga/content: каталога коллекции нет — поправьте реестр scripts/lib/content.mjs",
     "dist/client/blog/odinokaya: страницы нет в сборке, хотя запись не черновик",
     "dist/client/blog/chernovik/index.html: страница черновика в сборке: черновик виден только в astro dev",
     "dist/client/kontakty: страницы нет в сборке, хотя маршрут есть в src/pages",
@@ -128,7 +129,8 @@
     "dist/client/index.html: /net.png — не существует"
   ],
   "content": [
-    "src/entities/case/content: каталог контента без записи в реестре коллекций scripts/lib/content.mjs",
+    "src/entities/vne-reestra/content: каталог контента без записи в реестре коллекций scripts/lib/content.mjs",
+    "src/entities/bez-kataloga/content: каталога коллекции нет — поправьте реестр scripts/lib/content.mjs",
     "src/entities/post/content/ru/Plohoy_Slug.md: slug «Plohoy_Slug»: только a-z, 0-9 и дефисы",
     "src/entities/post/content/ru/bez-frontmatter.md: нет frontmatter между строками ---",
     "src/entities/post/content/ru/front.md: frontmatter: Unrecognized key: \"lang\"",

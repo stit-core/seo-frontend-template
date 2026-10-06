@@ -2,7 +2,8 @@
 // инварианты (h1 только из title, alt у картинок, корневые ссылки на существующие маршруты),
 // переводы и content/redirects.yaml согласованы с маршрутами. Падает раньше и понятнее сборки.
 // YAML читает js-yaml (им же Astro читает frontmatter); TS-модули — только «листовые»
-// (без alias-импортов), их Node исполняет напрямую. Реестр коллекций — scripts/lib/content.mjs.
+// (без alias-импортов), их Node исполняет напрямую. Реестр коллекций — scripts/lib/content.mjs
+// проверяемого корня.
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, extname, relative, resolve, sep } from 'node:path'
 import { load, YAMLException } from 'js-yaml'
@@ -11,11 +12,12 @@ import { SLUG_RE } from '../src/entities/post/model/schema.ts'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
 import { localePath, SUPPORTED_LOCALES } from '../src/shared/i18n/locale.ts'
 import { buildRedirectTable, isExternalTarget } from '../src/shared/redirects/table.ts'
-import { collections, splitFrontmatter } from './lib/content.mjs'
+import { collectionsOf, splitFrontmatter } from './lib/content.mjs'
 import { pageRoutes, walk } from './lib/routes.mjs'
 
 // Корень проекта; другой корень — негативные фикстуры check:gate (`.gate-fixtures/<скрипт>`).
 const root = resolve(process.argv[2] ?? resolve(import.meta.dirname, '..'))
+const collections = await collectionsOf(root)
 const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.svg', '.gif'])
 // Голый хост плейсхолдера: ловит и полный URL, и упоминание без схемы.
 const PLACEHOLDER = new URL(SITE_ORIGIN_PLACEHOLDER).hostname
