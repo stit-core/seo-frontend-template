@@ -110,7 +110,8 @@ origin; остаток плейсхолдера в любом файле `dist/c
 ## Заголовки
 
 - Prerendered и `public/*` отдаёт статик-хендлер адаптера (`send`): `Cache-Control: public,
-  max-age=0` + `ETag` + `Last-Modified` — условный запрос, 304 при совпадении; `/_astro/*` —
+  max-age=0` + `ETag` + `Last-Modified` от mtime файла (штамповка возвращает файлу mtime
+  сборки, рестарт их не меняет) — условный запрос, 304 при совпадении; `/_astro/*` —
   `public, max-age=31536000, immutable`. Приложение (middleware, `X-Robots-Tag`, JSON-лог) их
   не видит — staging закрывает Traefik: `basicAuth` + `customResponseHeaders: X-Robots-Tag`
 - On-demand проходит через `app/middleware`: `X-Request-Id`, JSON-лог, `Cache-Control: no-cache`

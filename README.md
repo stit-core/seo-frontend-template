@@ -99,7 +99,7 @@ src/shared/       config (runtime env, Zod; идентичность сайта)
                   seo (absoluteUrl, hreflang, SeoHead, JSON-LD, robots/sitemap/rss), antispam
                   (шов капчи), observability (JSON-лог с порогом LOG_LEVEL, Sentry по DSN), ui
 src/{content.config,middleware,env.d}.ts   навязанные Astro entry — тонкие входы
-docker/           Dockerfile (3 стадии), entrypoint.sh (штамповка SITE_URL), server.mjs
+docker/           Dockerfile (3 стадии), entrypoint.sh + stamp.mjs (штамповка SITE_URL), server.mjs
 e2e/              Playwright на prod-сборке: http/ — в гейте, browser/ — в /release
 scripts/          гейты (check-gate, check-content, check-links, seo-check, lib/), validate-plan,
                   pre-push, kin-diff, ttfb, accept-image

@@ -16,7 +16,7 @@ if (!existsSync(join(root, 'dist/client'))) {
 const app = mkdtempSync(join(tmpdir(), 'site-e2e-'))
 cpSync(join(root, 'dist'), join(app, 'dist'), { recursive: true })
 mkdirSync(join(app, 'docker'))
-for (const file of ['entrypoint.sh', 'server.mjs']) {
+for (const file of ['entrypoint.sh', 'stamp.mjs', 'server.mjs']) {
   cpSync(join(root, 'docker', file), join(app, 'docker', file))
 }
 symlinkSync(join(root, 'node_modules'), join(app, 'node_modules'))

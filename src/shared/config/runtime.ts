@@ -3,6 +3,11 @@ import { z } from 'zod'
 // Значение `site` на сборке; entrypoint контейнера штампует его в реальный SITE_URL.
 export const SITE_ORIGIN_PLACEHOLDER = 'https://__site_origin__'
 
+// Origin уходит дословно в canonical, карту сайта и штамповку prerendered-выхода, поэтому —
+// ровно схема http(s), хост в нижнем регистре (IDN — punycode) и порт: ни пути, ни query, ни
+// userinfo, ни пробелов и спецсимволов. Одно правило для старта сервера и для штамповки.
+const ORIGIN_RE = /^https?:\/\/[a-z\d]([a-z\d.-]*[a-z\d])?(:\d{1,5})?$/
+
 // Ключ IndexNow (indexnow.org): 8–128 символов a-z, A-Z, 0-9 и дефис; подтверждается файлом /<ключ>.txt.
 const INDEXNOW_KEY_RE = /^[a-zA-Z0-9-]{8,128}$/
 
@@ -10,9 +15,14 @@ const INDEXNOW_KEY_RE = /^[a-zA-Z0-9-]{8,128}$/
 const milliseconds = (fallback: number) => z.coerce.number().int().positive().default(fallback)
 
 const RuntimeConfigSchema = z.object({
+  // Плейсхолдер — значение сборки; процесс, который отдаёт сайт, его не принимает (loadServerConfig).
   SITE_URL: z
-    .url({ protocol: /^https?$/, error: 'expected an absolute http(s) URL' })
+    .string()
     .transform((value) => value.replace(/\/+$/, ''))
+    .refine(
+      (value) => value === SITE_ORIGIN_PLACEHOLDER || ORIGIN_RE.test(value),
+      'expected an origin like https://example.com: http(s), lowercase host, optional port; no path, query or credentials',
+    )
     .default(SITE_ORIGIN_PLACEHOLDER),
   ROBOTS_POLICY: z.enum(['index', 'noindex']).default('index'),
   RELEASE: z.string().min(1).default('unknown'),

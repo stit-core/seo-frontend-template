@@ -23,17 +23,23 @@ paths: [".env*", "src/shared/config/**", "docker/**", "astro.config.ts", "e2e/pl
 ## `SITE_URL` и плейсхолдер
 
 - Сборка печёт `site: 'https://__site_origin__'` (`astro.config.ts`, при пустом или
-  незаданном `SITE_URL`); `docker/entrypoint.sh` при старте штампует `SITE_URL` в
-  `dist/client/**/*.{html,xml,txt}` и падает, если плейсхолдер остался в любом файле
-  `dist/client` (`DIST_DIR` — тот же скрипт для копии сборки в e2e, `e2e/serve.mjs`).
-  `dist/server` не штампуется: on-demand маршруты берут origin из runtime `SITE_URL`
+  незаданном `SITE_URL`); `docker/entrypoint.sh` при старте запускает `docker/stamp.mjs`: он
+  заменяет плейсхолдер на `SITE_URL` строкой (не `sed` и не регулярным выражением — данные из
+  env не исполняются) в тех `dist/client/**/*.{html,xml,txt}`, где он есть, возвращает файлу
+  mtime сборки (`Last-Modified` и ETag не меняются от рестарта) и падает, если плейсхолдер
+  остался в любом файле `dist/client` (`DIST_DIR` — тот же скрипт для копии сборки в e2e,
+  `e2e/serve.mjs`). `dist/server` не штампуется: on-demand маршруты берут origin из runtime
+  `SITE_URL`
 - Штамповка пишет в `/app/dist/client` — сервис без `read_only: true` либо writable-bind
   этого пути
+- `SITE_URL` — ровно origin: схема `http(s)`, хост в нижнем регистре (IDN — punycode) и порт;
+  путь, query, userinfo, пробелы и спецсимволы — отказ. Правило одно — поле схемы
+  `shared/config/runtime.ts`
 - Рантайм **не стартует**, если env не проходит схему (опечатка в любом ключе — сообщение с
-  ключом и правилом, без значения), без `SITE_URL`, с плейсхолдером или с не-`http(s)` URL:
-  `docker/server.mjs` проверяет env целиком до загрузки приложения (`loadServerConfig`; модуль
-  схемы сборка кладёт отдельным файлом `dist/server/runtime-config.mjs`), `docker/entrypoint.sh`
-  — `SITE_URL` до штамповки
+  ключом и правилом, без значения), без `SITE_URL` или с плейсхолдером: `docker/stamp.mjs` и
+  `docker/server.mjs` проверяют env целиком (`loadServerConfig`; модуль схемы сборка кладёт
+  отдельным файлом `dist/server/runtime-config.mjs`) — до записи файлов и до загрузки
+  приложения
 - HTML на сборке не предсжимать — плейсхолдер уедет внутрь `.br`/`.gz`
 - Абсолютные URL — только в `<head>`, JSON-LD, фидах, sitemap; в теле — корневые
   относительные

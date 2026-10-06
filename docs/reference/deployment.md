@@ -27,7 +27,7 @@ Dockerfile монтирует его необязательно.
   lightningcss / `@astrojs/compiler` / satteri, `@types/node`, `caniuse-lite`, `prismjs`):
   выход Astro не self-contained, `entry.mjs` импортит `astro`/`zod`, `/_image` — `sharp`
 - **runtime** — `node_modules` из prod-deps, `dist/`, `package.json`, `docker/{entrypoint.sh,
-  server.mjs}`; `USER node`, `EXPOSE 3000`, `HEALTHCHECK wget …:${PORT:-3000}/healthz`,
+  stamp.mjs,server.mjs}`; `USER node`, `EXPOSE 3000`, `HEALTHCHECK wget …:${PORT:-3000}/healthz`,
   `ENTRYPOINT entrypoint.sh`, `CMD node ./docker/server.mjs`
 
 В контекст сборки попадают только `package.json`, `pnpm-lock.yaml`, `.npmrc`,
@@ -44,22 +44,28 @@ docker run --rm -p 3000:3000 -e SITE_URL=https://example.com <image>
 
 Контейнер не стартует (код 1, сообщение с префиксом `[entrypoint]` / `[server]`), если
 любой ключ env не проходит схему (сообщение называет ключ и правило, значение не печатает),
-`SITE_URL` пуст, без схемы `http(s)://`, равен плейсхолдеру сборки или после штамповки
-плейсхолдер где-то остался.
+`SITE_URL` пуст, не origin вида `https://example.com`, равен плейсхолдеру сборки или после
+штамповки плейсхолдер где-то остался.
 
-## Штамповка origin (`docker/entrypoint.sh`)
+## Штамповка origin (`docker/entrypoint.sh` → `docker/stamp.mjs`)
 
-Заменяет `https://__site_origin__` на `SITE_URL` (все хвостовые слеши срезаются) в
-`*.html | *.xml | *.txt` внутри `dist/client`, затем проверяет, что в `dist/client` не
-осталось ни одного файла с плейсхолдером (иначе — код 1 со списком файлов: расширение не
-учтено). `dist/server` не трогается: on-demand маршруты берут origin из runtime `SITE_URL`
-(`Astro.site` для URL не используется), а в бандле лежит константа плейсхолдера, по
-которой конфиг отличает «не задано». Занимает единицы миллисекунд, пишет одну строку в лог;
-повторный старт того же контейнера проходит чисто.
+`entrypoint.sh` запускает `node docker/stamp.mjs` и затем `exec` команды. Штамповка
+проверяет env той же схемой, что старт сервера (`loadServerConfig` из
+`dist/server/runtime-config.mjs`): `SITE_URL` — ровно origin (схема `http(s)`, хост в нижнем
+регистре — IDN в punycode — и порт; ни пути, ни query, ни userinfo, ни пробелов; хвостовые
+слеши срезаются), иначе код 1 до записи файлов. Затем заменяет `https://__site_origin__` на
+`SITE_URL` строкой (данные из env не исполняются: ни `sed`, ни регулярных выражений) в тех
+`*.html | *.xml | *.txt` внутри `dist/client`, где он есть, и возвращает каждому файлу mtime
+сборки: от него `Last-Modified` и ETag статик-хендлера, поэтому старт и рестарт не делают
+страницы «изменёнными». Плейсхолдер в файле другого типа — код 1 со списком файлов
+(расширение не учтено). `dist/server` не трогается: on-demand маршруты берут origin из runtime
+`SITE_URL` (`Astro.site` для URL не используется), а в бандле лежит константа плейсхолдера,
+по которой конфиг отличает «не задано». Пишет одну строку в лог с числом проштампованных
+файлов; повторный старт того же контейнера файлов не трогает.
 
 - `DIST_DIR` (дефолт `/app/dist`) — тот же скрипт штампует копию локальной сборки в e2e (`e2e/serve.mjs`)
 - HTML на сборке **не предсжимается** — иначе плейсхолдер уедет внутрь `.br`/`.gz`
-- Штамповка пишет в `/app/dist/client` (`sed -i`): сервис `site` в compose — без
+- Штамповка перезаписывает файлы в `/app/dist/client`: сервис `site` в compose — без
   `read_only: true`, либо этот путь — writable-bind
 
 ## Обёртка сервера (`docker/server.mjs`)
@@ -88,7 +94,7 @@ docker run --rm -p 3000:3000 -e SITE_URL=https://example.com <image>
 | `PORT` / `HOST` | слушатель адаптера (тот же `PORT` читает `HEALTHCHECK`) | `3000` / `0.0.0.0` | нет |
 | `NODE_ENV` | режим Node | `production` (в образе) | нет |
 | `NODE_OPTIONS` | например `--max-old-space-size=384` (≈ 75 % `mem_limit`) | — | нет |
-| `SITE_URL` | канонический origin без хвостового слеша; **обязателен** | — | да (штамповка) |
+| `SITE_URL` | канонический origin `https://example.com`: схема, хост в нижнем регистре, порт — без пути, query и userinfo (хвостовые слеши срезаются); **обязателен** | — | да (штамповка) |
 | `ROBOTS_POLICY` | `index` \| `noindex` → `X-Robots-Tag: noindex, nofollow` на on-demand ответах и `robots.txt` = `Disallow: /` | `index` | нет (заголовок и `robots.txt`) |
 | `RELEASE` | версия для логов | `unknown` | нет |
 | `LOG_LEVEL` | `debug` \| `info` \| `warn` \| `error` — JSON-лог запросов | `info` | нет |

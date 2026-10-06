@@ -68,6 +68,25 @@ describe('runtime config', () => {
     )
   })
 
+  it('SITE_URL — ровно origin: схема http(s), хост в нижнем регистре, порт', () => {
+    for (const SITE_URL of [
+      'http://localhost:3000',
+      'http://127.0.0.1:3201',
+      'https://xn--80ak6aa92e.xn--p1ai',
+      'https://shop-1.example',
+    ]) {
+      expect(getRuntimeConfig({ SITE_URL }).SITE_URL).toBe(SITE_URL)
+    }
+    for (const SITE_URL of [
+      'https://ex.com/sub',
+      'https://u:p@ex.com',
+      'https://Ex.com',
+      'https://',
+    ]) {
+      expect(() => getRuntimeConfig({ SITE_URL }), SITE_URL).toThrow('SITE_URL')
+    }
+  })
+
   it('принимает ключ IndexNow и политику AI-краулеров как есть', () => {
     expect(getRuntimeConfig({ INDEXNOW_KEY: 'a1b2c3d4-e5f6', AI_TRAINING: 'deny' })).toMatchObject({
       INDEXNOW_KEY: 'a1b2c3d4-e5f6',
