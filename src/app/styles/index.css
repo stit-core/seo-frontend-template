@@ -11,7 +11,7 @@
 
 @theme {
   /* Палитра Tailwind по умолчанию выключена: цвет — только семантический токен ниже, а
-   * `text-zinc-500` не даёт ни байта CSS. */
+   * `text-zinc-500` не даёт ни байта CSS (держит index.server.test.ts). */
   --color-*: initial;
 
   --font-sans:

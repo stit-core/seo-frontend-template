@@ -50,6 +50,7 @@ paths: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
 |---|---|
 | `shared/config` | дефолты, пустые значения, валидация; `server.mjs`/`entrypoint.sh` — отказ без `SITE_URL`, с плейсхолдером и без схемы, штамповка `dist/client` (несколько вхождений в строке), остаточная проверка, идемпотентность, `exec` (PID команды — PID entrypoint) и код выхода команды; согласованность литерала плейсхолдера |
 | `shared/i18n`, `shared/lib` | pure-тесты |
+| токен-слой `app/styles/index.css` | `index.server.test.ts`: компилятор Tailwind на настоящем токен-слое — классы палитры по умолчанию (`text-zinc-500`, `text-white`) не дают CSS, семантическая утилита даёт |
 | `entities/*/ui/*.astro`, `widgets/*/ui/*.astro` | Container API + axe; у миниатюры карточки — размеры слота и кандидаты `srcset` не крупнее двух плотностей; обложка статьи — над h1, без `lazy`, с `fetchpriority="high"` и размерами |
 | `entities/*/model/schema.ts` | valid/invalid frontmatter, дефолт `draft`, бюджеты — граничными литералами, а не константами модуля, заглушка `image()` |
 | `shared/redirects`, `app/middleware/redirects` | pure-тесты: дубли/цепочки/статусы, пустая таблица, query в `Location`, 410; точное совпадение `from` на реальном `content/redirects.yaml` |
@@ -121,4 +122,4 @@ paths: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
 - ❌ `vitest-axe` (заброшен) — свой хелпер поверх `axe-core`
 - ❌ Vitest browser mode / `vitest-browser-astro` (несовместим с Astro 7 / Vitest 5)
 - ❌ Тесты, импортирующие соседний слайс мимо public API
-- ❌ Snapshot-тесты страниц; тесты CSS
+- ❌ Snapshot-тесты страниц; тесты значений и раскладки CSS
