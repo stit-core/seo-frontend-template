@@ -25,7 +25,7 @@ export default getViteConfig({
         'src/pages/_tests/**',
       ],
       reporter: [['text', { skipFull: true }]],
-      // Храповик: пороги — факт, округлённый вниз; выросло покрытие — пороги растут тем же коммитом.
+      // Храповик (rule tests-pipeline): пороги — факт, округлённый вниз; пол — 90 %.
       thresholds: { statements: 99, branches: 96, functions: 100, lines: 99 },
     },
     projects: [

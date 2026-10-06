@@ -33,7 +33,7 @@
 | `forms-antispam` | форма без JS, антиспам-лестница, согласие на ПДн, доставка |
 | `shared-ui` | токен-слой, тема, картинки, 0 JS по умолчанию |
 | `env-local` | env только runtime, `SITE_URL` и штамповка, whitelist в HTML, секреты |
-| `tests-pipeline` | два проекта Vitest, Container API, axe, Playwright, состав гейта |
+| `tests-pipeline` | два проекта Vitest, Container API, axe, Playwright, покрытие и пороги, состав гейта |
 | `comments` | комментарии только про «зачем», по-русски |
 | `forward-only` | тексты описывают текущее состояние, история — в `git log` |
 

@@ -69,6 +69,9 @@ e2e/content.spec.ts
 | `content/redirects.yaml` | демо-записи (их цель `/blog` уходит вместе с блогом — `check:content` это поймает) |
 | `src/app/middleware/redirects.test.ts` | если таблица пустая — условие «непуста» меняется на «строится» |
 | `src/app/middleware/index.server.test.ts` | кейс «редиректы до роутинга» ходит по демо-адресам `/old` и `/blog/staraya-zametka` — заменить своими из `redirects.yaml` (нет `410` — убрать его половину кейса) |
+| `src/pages/_tests/fixtures.ts` | удалить вместе с `vi.mock('astro:content')` в тестах маршрутов: коллекции нет |
+| `src/pages/_tests/endpoints.server.test.ts` | ожидаемая карта — без списков, тегов и записей; describe фидов убрать |
+| `src/pages/_tests/pages.astro.test.ts` | убрать строки `/blog`, `/en/blog` и таблицу маршрутов с параметрами |
 | `e2e/{seo,rendering,a11y}.spec.ts` | убрать слаги записей, проверки фидов, тегов и страниц списка |
 | `docs/reference/rendering.md` | убрать строки блога и фидов из карты маршрутов |
 
@@ -101,7 +104,7 @@ grep -rn '{{OPERATOR_' src/
 pnpm typecheck        # нет битых импортов
 pnpm lint             # границы и формат
 pnpm steiger          # структура без осиротевших слайсов
-pnpm test             # тесты удалённых слайсов ушли вместе с ними
+pnpm test             # тесты удалённых слайсов ушли с ними; пороги покрытия — по факту (rule tests-pipeline)
 pnpm check            # полный гейт, включая check:content → build → check:links → seo:check
 ```
 

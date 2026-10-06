@@ -87,7 +87,8 @@ src/app/          layouts/document.astro (<head> из props: SeoHead + JSON-LD),
 src/pages/        роутинг Astro = слой pages: index, about, contacts/{index,spasibo},
                   legal/privacy, blog/{index,[slug],page/[page],tag/[tag]}, en/… , 500 (prerender);
                   404, healthz, now, robots.txt, sitemap.xml, rss.xml, en/rss.xml, [key].txt,
-                  api/contact (on-demand); секции страниц — _blog/, _about/, _contacts/
+                  api/contact (on-demand); секции страниц — _blog/, _about/, _contacts/;
+                  тесты маршрутов и страниц — _tests/
 src/widgets/      site-header, site-footer, post-list, breadcrumbs (видимые крошки)
 src/features/     contact-form (форма без JS и её обработчик), theme (единственный остров)
 src/entities/     post: content/{ru,en}/*.md + covers/, model, api, lib, ui; company: реквизиты

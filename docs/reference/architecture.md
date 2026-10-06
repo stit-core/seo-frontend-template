@@ -73,6 +73,7 @@ src/
 ├─ pages/         index · about · contacts/{index,spasibo} · legal/privacy · blog/**
 │                 en/** · 404 · 500 · now · healthz · robots.txt · sitemap.xml
 │                 rss.xml · [key].txt · api/contact · секции _about/ _blog/ _contacts/
+│                 · тесты маршрутов _tests/
 ├─ widgets/       site-header · site-footer · post-list · breadcrumbs
 ├─ features/      contact-form · theme
 ├─ entities/      post (content/{ru,en}/*.md + covers, model, api, lib, ui) · company

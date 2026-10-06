@@ -94,7 +94,7 @@ Vitest 5 (Container API) + Playwright на prod-сборке / size-limit / pnpm
 | Контент: frontmatter и бюджеты, один h1, черновики, переводы, `redirects.yaml`, контент-гейты | rule `content-invariants` |
 | env, `SITE_URL`, плейсхолдер и штамповка, whitelist в HTML | rule `env-local` |
 | Режимы рендера, карта маршрутов, кеш-заголовки, канон `astro.config.ts`, рецепт D | `docs/reference/rendering.md` + rule `render-safety` |
-| Тесты: два проекта Vitest, Container API, axe, Playwright | rule `tests-pipeline` |
+| Тесты: два проекта Vitest, Container API, axe, Playwright, покрытие и пороги | rule `tests-pipeline` |
 | UI на токенах, тема-остров, картинки и LCP, scoped-CSS, 0 JS | rule `shared-ui` |
 | Форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка | rule `forms-antispam` |
 | Deployment: образ, entrypoint, `server.mjs`, env-контракт, требования к прокси | `docs/reference/deployment.md` |
