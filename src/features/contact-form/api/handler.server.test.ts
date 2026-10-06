@@ -13,8 +13,9 @@ vi.mock('@/shared/antispam', async (importOriginal) => {
 const ORIGIN = 'http://localhost:3000'
 const BACKEND = 'http://backend.internal/leads'
 
-// Канал доставки в тесте — backend со стабом fetch: наружу тест не ходит.
-const env: RuntimeEnv = { FORM_DELIVERY: 'backend', FORM_BACKEND_URL: BACKEND }
+// Канал доставки в тесте — backend со стабом fetch: наружу тест не ходит. Порог лога — debug:
+// проверка PII в afterEach видит события любого уровня, а не только с порога info по умолчанию.
+const env: RuntimeEnv = { FORM_DELIVERY: 'backend', FORM_BACKEND_URL: BACKEND, LOG_LEVEL: 'debug' }
 const context = { rid: 'test-rid', env, retryDelaysMs: [0, 0] }
 
 const MESSAGE = 'Нужен сайт с блогом, формой заявки и картой сайта.'
@@ -203,7 +204,13 @@ describe('обработчик формы', () => {
       verify: () => Promise.resolve(false),
     })
     const outcome = await handleContactRequest(post(filled), context)
-    expect(outcome).toMatchObject({ status: 'invalid', notice: 'form.error.captcha', errors: {} })
+    expect(outcome).toEqual({
+      status: 'invalid',
+      locale: 'ru',
+      values: { name: filled.name, email: filled.email, message: MESSAGE, consent: true },
+      errors: {},
+      notice: 'form.error.captcha',
+    })
     expect(fetchMock).not.toHaveBeenCalled()
     expect(logged()).toContain('captcha')
   })

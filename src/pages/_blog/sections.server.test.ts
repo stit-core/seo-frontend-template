@@ -1,5 +1,5 @@
 import { getPost, listPosts, type Post, paginate } from '@/entities/post'
-import { t } from '@/shared/i18n'
+import { type DictKey, t } from '@/shared/i18n'
 import { blogPosting, breadcrumbList } from '@/shared/seo'
 import { blogListPageModel, postPageModel, tagPageModel } from './sections'
 
@@ -16,6 +16,12 @@ beforeEach(() => {
 })
 afterEach(() => vi.unstubAllEnvs())
 
+// Слова каркаса — из словаря: форк, переименовавший раздел, остаётся зелёным.
+const ru = (key: DictKey) => t('ru', key)
+const home = { name: ru('nav.home'), href: '/' }
+const blog = { name: ru('blog.title'), href: '/blog' }
+const page2 = `${ru('blog.page')} 2`
+
 const post = async (locale: 'ru' | 'en', slug: string): Promise<Post> => {
   const found = await getPost(locale, slug)
   if (!found) throw new Error(`${locale}/${slug} нет в фикстурах`)
@@ -28,11 +34,7 @@ describe('страница записи', () => {
     const model = await postPageModel(para)
     expect(model.alternatePath).toBe('/blog/pair')
     expect(model.ogImage).toBeUndefined()
-    expect(model.crumbs).toEqual([
-      { name: 'Главная', href: '/' },
-      { name: 'Блог', href: '/blog' },
-      { name: 'Запись с переводом' },
-    ])
+    expect(model.crumbs).toEqual([home, blog, { name: 'Запись с переводом' }])
     expect(model.jsonLd).toEqual([
       blogPosting({
         locale: 'ru',
@@ -46,7 +48,7 @@ describe('страница записи', () => {
 
     const pair = await postPageModel(await post('en', 'pair'))
     expect(pair.alternatePath).toBe('/blog/para')
-    expect(pair.crumbs[1]).toEqual({ name: 'Blog', href: '/en/blog' })
+    expect(pair.crumbs[1]).toEqual({ name: t('en', 'blog.title'), href: '/en/blog' })
   })
 
   it('правка без перевода: hreflang нет, dateModified и article:modified_time — из updatedDate', async () => {
@@ -89,9 +91,9 @@ describe('страница списка', () => {
   it('первая страница: ссылка на перевод, крошка без ссылки, только «дальше»', async () => {
     const model = await blogListPageModel('ru', paginate(await listPosts('ru'), 1))
     expect(model.alternatePath).toBe('/blog')
-    expect(model.heading).toBe('Блог')
-    expect(model.description).toBe(t('ru', 'blog.description'))
-    expect(model.crumbs).toEqual([{ name: 'Главная', href: '/' }, { name: 'Блог' }])
+    expect(model.heading).toBe(ru('blog.title'))
+    expect(model.description).toBe(ru('blog.description'))
+    expect(model.crumbs).toEqual([home, { name: ru('blog.title') }])
     expect(model.tags).toEqual(['astro', 'seo'])
     expect(model.pagination).toEqual({
       current: 1,
@@ -104,13 +106,9 @@ describe('страница списка', () => {
   it('страница 2: своё имя в сниппете; у английского блога её нет — и ссылки на перевод нет', async () => {
     const model = await blogListPageModel('ru', paginate(await listPosts('ru'), 2))
     expect(model.alternatePath).toBeUndefined()
-    expect(model.heading).toBe('Блог — страница 2')
-    expect(model.description).toBe(`${t('ru', 'blog.description')} — страница 2`)
-    expect(model.crumbs).toEqual([
-      { name: 'Главная', href: '/' },
-      { name: 'Блог', href: '/blog' },
-      { name: 'страница 2' },
-    ])
+    expect(model.heading).toBe(`${ru('blog.title')} — ${page2}`)
+    expect(model.description).toBe(`${ru('blog.description')} — ${page2}`)
+    expect(model.crumbs).toEqual([home, blog, { name: page2 }])
     expect(model.pagination).toEqual({
       current: 2,
       last: 2,
@@ -135,14 +133,10 @@ describe('страница тега', () => {
 
   it('заголовок, сниппет и крошки', async () => {
     const model = await tagPageModel('ru', 'astro')
-    expect(model.heading).toBe('Записи с тегом #astro')
-    expect(model.title).toBe('Тег #astro — Блог')
-    expect(model.description).toBe(`Записи с тегом #astro. ${t('ru', 'blog.lead')}`)
-    expect(model.crumbs).toEqual([
-      { name: 'Главная', href: '/' },
-      { name: 'Блог', href: '/blog' },
-      { name: '#astro' },
-    ])
+    expect(model.heading).toBe(`${ru('blog.tagLead')} #astro`)
+    expect(model.title).toBe(`${ru('blog.tag')} #astro — ${ru('blog.title')}`)
+    expect(model.description).toBe(`${ru('blog.tagLead')} #astro. ${ru('blog.lead')}`)
+    expect(model.crumbs).toEqual([home, blog, { name: '#astro' }])
     expect(model.jsonLd).toEqual([breadcrumbList(model.crumbs)])
   })
 })

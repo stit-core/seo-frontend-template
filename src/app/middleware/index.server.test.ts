@@ -156,7 +156,8 @@ describe('app/middleware', () => {
   })
 
   it('строка лога не содержит query и cookie', async () => {
-    await run('/now?token=secret', page, { headers: { cookie: 'session=abc' } })
+    // Значения вне алфавита hex: в строке лога есть случайный UUID запроса.
+    await run('/now?token=secret', page, { headers: { cookie: 'session=private-cookie' } })
     const [entry] = logged(console.info)
     expect(Object.keys(entry ?? {})).toEqual([
       'ts',
@@ -171,6 +172,6 @@ describe('app/middleware', () => {
     expect(typeof entry?.ts).toBe('string')
     expect(typeof entry?.dur_ms).toBe('number')
     expect(JSON.stringify(entry)).not.toContain('secret')
-    expect(JSON.stringify(entry)).not.toContain('abc')
+    expect(JSON.stringify(entry)).not.toContain('private-cookie')
   })
 })

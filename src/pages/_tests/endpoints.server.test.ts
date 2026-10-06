@@ -16,6 +16,10 @@ const get = (route: APIRoute, params: Record<string, string> = {}): Promise<Resp
 
 beforeEach(() => {
   vi.stubEnv('SITE_URL', ORIGIN)
+  // Профиль — прод-умолчания, а не окружение оболочки: staging и ключ задают сами кейсы.
+  vi.stubEnv('ROBOTS_POLICY', 'index')
+  vi.stubEnv('AI_TRAINING', 'allow')
+  vi.stubEnv('INDEXNOW_KEY', '')
   // Vitest работает в dev-режиме Vite; режим сборки, где черновиков нет, задаётся явно.
   vi.stubEnv('DEV', false)
 })
