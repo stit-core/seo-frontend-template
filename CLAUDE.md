@@ -76,7 +76,7 @@ Vitest 5 (Container API) + Playwright на prod-сборке (HTTP-набор в
 | `pnpm test:http` | HTTP-набор `e2e/http/` после build: prod-сервер как контейнер (копия сборки, `entrypoint.sh` + `server.mjs`) на свободных портах, профили прод и staging |
 | `pnpm test:e2e` | build + браузерный набор `e2e/browser/`: axe в двух темах, тема, форма без JS — обязательный шаг `/release` |
 | `pnpm steiger` | структурный линтер FSD |
-| `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome |
+| `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome и свои скрипты гейта (`seo:check`, `check:links`, `check:content`) — ровно нарушениями из `expected.json` |
 | `pnpm check:content` | контент-гейт до build: схема каждого `.md`, тело, переводы, ссылки, `content/redirects.yaml` |
 | `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` существуют |
 | `pnpm seo:check` | после build: у каждой страницы `dist/client` title/description (уникальные), self-canonical, `lang`, один h1, OG с картинкой, hreflang у каждой пары переводов, валидный JSON-LD |

@@ -3,7 +3,7 @@
 // переводы и content/redirects.yaml согласованы с маршрутами. Падает раньше и понятнее сборки.
 // YAML читает js-yaml (им же Astro читает frontmatter); TS-модули — только «листовые»
 // (без alias-импортов), их Node исполняет напрямую. Реестр коллекций — scripts/lib/content.mjs.
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, extname, relative, resolve, sep } from 'node:path'
 import { load, YAMLException } from 'js-yaml'
 import { z } from 'zod'
@@ -14,7 +14,8 @@ import { buildRedirectTable, isExternalTarget } from '../src/shared/redirects/ta
 import { collections, splitFrontmatter } from './lib/content.mjs'
 import { pageRoutes, walk } from './lib/routes.mjs'
 
-const root = resolve(import.meta.dirname, '..')
+// Корень проекта; другой корень — негативные фикстуры check:gate (`.gate-fixtures/<скрипт>`).
+const root = resolve(process.argv[2] ?? resolve(import.meta.dirname, '..'))
 const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.svg', '.gif'])
 // Голый хост плейсхолдера: ловит и полный URL, и упоминание без схемы.
 const PLACEHOLDER = new URL(SITE_ORIGIN_PLACEHOLDER).hostname
@@ -48,10 +49,25 @@ function imageStub(dir) {
     })
 }
 
+// ---------- реестр против каталогов ----------
+// Контент живёт в src/entities/<слайс>/content; каталог вне реестра не проверяет ни один гейт.
+const entitiesDir = resolve(root, 'src/entities')
+const registered = new Set(collections.map((collection) => resolve(root, collection.dir)))
+for (const slice of existsSync(entitiesDir) ? readdirSync(entitiesDir) : []) {
+  const dir = resolve(entitiesDir, slice, 'content')
+  if (existsSync(dir) && !registered.has(dir)) {
+    fail(rel(dir), 'каталог контента без записи в реестре коллекций scripts/lib/content.mjs')
+  }
+}
+
 // ---------- документы ----------
 const docs = []
 for (const collection of collections) {
   const dir = resolve(root, collection.dir)
+  if (!existsSync(dir)) {
+    fail(collection.dir, 'каталога коллекции нет — поправьте реестр scripts/lib/content.mjs')
+    continue
+  }
   for (const file of walk(dir).filter((path) => path.endsWith('.md'))) {
     const where = rel(file)
     const [locale, name, ...deeper] = relative(dir, file).split(sep)
@@ -191,7 +207,9 @@ const routes = new Set(
     .map((page) => page.route),
 )
 const publicDir = resolve(root, 'public')
-for (const file of walk(publicDir)) routes.add(`/${relative(publicDir, file).split(sep).join('/')}`)
+for (const file of existsSync(publicDir) ? walk(publicDir) : []) {
+  routes.add(`/${relative(publicDir, file).split(sep).join('/')}`)
+}
 const draftRoutes = new Set()
 for (const collection of collections) {
   for (const locale of SUPPORTED_LOCALES) {

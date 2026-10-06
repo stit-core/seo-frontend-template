@@ -1,0 +1,3 @@
+- from: /
+  to: /net
+  status: 301

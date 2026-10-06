@@ -93,4 +93,8 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
   `model/schema.ts`, `lib/paginate.ts`, `shared/redirects/table.ts`, `shared/i18n/locale.ts`,
   `shared/config/runtime.ts`
 - Новая коллекция — запись в реестре `collections` модуля `scripts/lib/content.mjs` (каталог,
-  схема, порождаемые маршруты)
+  схема, порождаемые маршруты): каталог `src/entities/*/content` вне реестра и запись реестра без
+  каталога — ошибка `check:content`
+- Сами скрипты под гейтом: негативные фикстуры `.gate-fixtures/{content,links}` обязаны давать
+  ровно нарушения из `expected.json` (`pnpm check:gate`); новая проверка — новое нарушение в
+  фикстуре тем же коммитом

@@ -15,9 +15,10 @@ import { load } from 'js-yaml'
 import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../src/shared/i18n/locale.ts'
 import { collections, splitFrontmatter } from './lib/content.mjs'
 import { decode, headTags } from './lib/html.mjs'
-import { walk } from './lib/routes.mjs'
+import { pageRoutes, walk } from './lib/routes.mjs'
 
-const root = resolve(import.meta.dirname, '..')
+// Корень проекта; другой корень — негативные фикстуры check:gate (`.gate-fixtures/<скрипт>`).
+const root = resolve(process.argv[2] ?? resolve(import.meta.dirname, '..'))
 const client = resolve(root, 'dist/client')
 if (!existsSync(client)) {
   console.error('seo:check: dist/client не найден — сначала pnpm build')
@@ -272,16 +273,28 @@ for (const [path, page] of pages) {
   // Служебные страницы hreflang не выводят: у пары noindex-страниц нечего сверять.
   if (!entryPaths.has(path) && !page.noindex) pair(`route:${routeOf(path)}`, localeOf(path), path)
 }
+
+// Сборка против источника: страница у каждой опубликованной записи и у каждого
+// prerendered-маршрута src/pages — частичная сборка не проходит молча.
+for (const path of entryPaths) {
+  if (!pages.has(path)) fail(`dist/client${path}`, 'страницы нет в сборке, хотя запись не черновик')
+}
+for (const { route, prerender, parametrized } of pageRoutes(resolve(root, 'src/pages'))) {
+  if (!prerender || parametrized) continue
+  // Страницы ошибок Astro пишет файлом `<код>.html`, остальные — каталогом с index.html.
+  const built = pages.has(route) || existsSync(resolve(client, `.${route}.html`))
+  if (!built) fail(`dist/client${route}`, 'страницы нет в сборке, хотя маршрут есть в src/pages')
+}
+
 let pairs = 0
+const paired = new Set()
 for (const group of groups.values()) {
   if (group.size < 2) continue
   pairs++
   for (const [, path] of group) {
     const page = pages.get(path)
-    if (!page) {
-      fail(`dist/client${path}`, 'страницы нет в сборке, хотя запись не черновик')
-      continue
-    }
+    if (!page) continue
+    paired.add(path)
     for (const [locale, twin] of group) {
       const href = page.hrefs.get(locale)
       if (href === undefined) fail(page.where, `нет hreflang ${locale} → ${twin}, а перевод есть`)
@@ -291,13 +304,19 @@ for (const group of groups.values()) {
     }
   }
 }
+// И обратно: hreflang — только у страниц сверенных пар. Иначе перевод, которого источник не
+// знает (или сверка, которая не прочитала источник), проходит молча.
+for (const [path, page] of pages) {
+  if (page.hrefs.size > 0 && !paired.has(path)) {
+    fail(page.where, 'hreflang есть, а пары переводов в источнике нет')
+  }
+}
 
 // ---------- итог ----------
 if (errors.length > 0) {
   console.error(`seo:check: ${errors.length} нарушений\n  ${errors.join('\n  ')}`)
   process.exit(1)
 }
-const withAlternates = [...pages.values()].filter((page) => page.hrefs.size > 0).length
 console.info(
-  `seo:check: ${pages.size} страниц (с hreflang ${withAlternates}, пар переводов ${pairs}), title/description уникальны, JSON-LD валиден — ok`,
+  `seo:check: ${pages.size} страниц (записей ${entryPaths.size}, пар переводов ${pairs}, с hreflang ${paired.size}), title/description уникальны, JSON-LD валиден — ok`,
 )

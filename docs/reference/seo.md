@@ -77,7 +77,8 @@ OG-картинка, набор локалей, политика AI-крауле
 |---|---|
 | unit `shared/seo/*.test.ts` | `absoluteUrl`, `alternates`, `buildRobotsTxt`, `buildSitemap`, `buildFeed`, фабрики JSON-LD (их выход проходит Zod-схему) |
 | Container API | `seo-head.astro`, `json-ld.astro`, `widgets/breadcrumbs` — разметка и axe |
-| `pnpm seo:check` (в `pnpm check`) | весь `dist/client`: один `<title>` и `<h1>`, description, self-canonical, `lang`, OG с существующей картинкой, уникальность сниппетов, полные пары hreflang, типы JSON-LD |
+| `pnpm seo:check` (в `pnpm check`) | весь `dist/client`: один `<title>` и `<h1>`, description, self-canonical, `lang`, OG с существующей картинкой, уникальность сниппетов, полные пары hreflang, типы JSON-LD; страница у каждой опубликованной записи и маршрута `src/pages`, hreflang только у сверенных пар |
+| `pnpm check:gate` | сам `seo:check` (и `check:links`, `check:content`) на негативной фикстуре `.gate-fixtures/seo` — ровно ожидаемые нарушения |
 | `pnpm check:links` | каждый внутренний `href`/`src`/`srcset` сборки существует |
 | `pnpm check:content` | бюджеты и уникальность полей записей, ссылки в теле, `redirects.yaml` |
 | HTTP-набор `e2e/http/` (в `pnpm check`) | сырой HTML prod-сервера, в т.ч. под Googlebot: статусы и заголовки, штамповка origin, ни одного `<script>` в `<body>`, `robots.txt` (прод и staging) ↔ `sitemap.xml` ↔ `dist/client`, фиды, ключ IndexNow, разметка записи с переводом, вес HTML |

@@ -1,5 +1,7 @@
 node_modules
 dist
+# Мини-сборки негативных фикстур check:gate — часть репо, не выход сборки.
+!/.gate-fixtures/*/dist
 .astro
 coverage
 .vitest

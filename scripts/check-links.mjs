@@ -9,7 +9,8 @@ import { buildRedirectTable } from '../src/shared/redirects/table.ts'
 import { decode } from './lib/html.mjs'
 import { pageRoutes, walk } from './lib/routes.mjs'
 
-const root = resolve(import.meta.dirname, '..')
+// Корень проекта; другой корень — негативные фикстуры check:gate (`.gate-fixtures/<скрипт>`).
+const root = resolve(process.argv[2] ?? resolve(import.meta.dirname, '..'))
 const client = resolve(root, 'dist/client')
 if (!existsSync(client)) {
   console.error('check:links: dist/client не найден — сначала pnpm build')

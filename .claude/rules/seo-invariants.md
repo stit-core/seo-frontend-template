@@ -90,7 +90,10 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   каждой пары переводов (главные, списки и теги под обоими префиксами локалей; записи — twin по
   `translationKey` из frontmatter, реестр коллекций `scripts/lib/content.mjs`) и ни одной ссылки
   на отсутствующую страницу; JSON-LD (типы, `Organization`/`WebSite` на главной, форма
-  `BreadcrumbList`)
+  `BreadcrumbList`); сборка против источника — страница у каждой опубликованной записи и
+  prerendered-маршрута `src/pages`, hreflang только у страниц сверенных пар. Сам скрипт под
+  гейтом: фикстура `.gate-fixtures/seo` обязана давать ровно нарушения из `expected.json`
+  (`pnpm check:gate`)
 - unit `shared/seo/*.test.ts` (urls, robots, sitemap, rss, json-ld со схемой) и Container API
   (`seo-head`, `json-ld.astro`, `widgets/breadcrumbs`); маршруты `robots.txt` (прод, staging,
   `AI_TRAINING=deny`), `sitemap.xml`, фиды и ключ — `src/pages/_tests/endpoints.server.test.ts`

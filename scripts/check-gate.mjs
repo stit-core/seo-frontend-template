@@ -1,17 +1,24 @@
-// Гейт на гейт: негативные фикстуры .gate-fixtures/ обязаны валить ESLint, Steiger и Biome
-// теми же конфигами, что и src/. Иначе деградация (Steiger fail-open, пустой a11y-конфиг,
-// потерянный резолвер boundaries) остаётся незамеченной: прогон зелёный, границы никто не держит.
+// Гейт на гейт: негативные фикстуры .gate-fixtures/ обязаны валить линтеры (ESLint, Steiger,
+// Biome — теми же конфигами, что и src/) и собственные скрипты гейта (seo:check, check:links,
+// check:content) — ровно нарушениями из expected.json, не больше и не меньше. Иначе деградация
+// (Steiger fail-open, пустой a11y-конфиг, потерянный резолвер boundaries, ослабленная проверка
+// скрипта) остаётся незамеченной: прогон зелёный, а держать нечем. Пустая или урезанная секция
+// expected.json — тоже деградация: её ловит точное совпадение.
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { isAbsolute, relative, resolve } from 'node:path'
 
 const root = resolve(import.meta.dirname, '..')
-const cwd = resolve(root, '.gate-fixtures')
-const bin = (name) => resolve(root, 'node_modules/.bin', name)
-const expected = JSON.parse(readFileSync(resolve(cwd, 'expected.json'), 'utf8'))
+const fixtures = resolve(root, '.gate-fixtures')
+const expected = JSON.parse(readFileSync(resolve(fixtures, 'expected.json'), 'utf8'))
 
-function run(name, args) {
-  const result = spawnSync(bin(name), args, { cwd, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
+const LINTERS = ['eslint', 'steiger', 'biome']
+// Скрипт гейта и корень его фикстуры: мини-проект в .gate-fixtures/<секция>.
+const SCRIPTS = { seo: 'seo-check.mjs', links: 'check-links.mjs', content: 'check-content.mjs' }
+
+function lint(name, args) {
+  const bin = resolve(root, 'node_modules/.bin', name)
+  const result = spawnSync(bin, args, { cwd: fixtures, encoding: 'utf8', maxBuffer: 64 << 20 })
   if (result.error) throw result.error
   // Ненулевой код здесь ожидаем (нарушения найдены); важен только разбираемый JSON.
   const start = Math.min(...['{', '['].map((c) => result.stdout.indexOf(c)).filter((i) => i >= 0))
@@ -21,18 +28,15 @@ function run(name, args) {
   return JSON.parse(result.stdout.slice(start))
 }
 
-const rel = (path) => (isAbsolute(path) ? relative(cwd, path) : path)
+const rel = (path) => (isAbsolute(path) ? relative(fixtures, path) : path)
 
-function countBy(pairs) {
+function countBy(keys) {
   const map = new Map()
-  for (const [file, rule] of pairs) {
-    const key = `${file}|${rule}`
-    map.set(key, (map.get(key) ?? 0) + 1)
-  }
+  for (const key of keys) map.set(key, (map.get(key) ?? 0) + 1)
   return map
 }
 
-const eslint = run('eslint', ['--format', 'json', '--config', 'eslint.config.js', 'src'])
+const eslint = lint('eslint', ['--format', 'json', '--config', 'eslint.config.js', 'src'])
 const fatal = eslint.flatMap((f) =>
   f.messages.filter((m) => m.fatal).map((m) => `${rel(f.filePath)}: ${m.message}`),
 )
@@ -41,42 +45,76 @@ if (fatal.length > 0) {
   process.exit(1)
 }
 
-// Считаются только ошибки: правило, понижённое до warn, гейт не валит — значит, не поймано.
+// Линтеры: считаются только ошибки — правило, понижённое до warn, гейт не валит, значит, не
+// поймано. Ключ — «файл  правило», ожидание — их число.
 const found = {
-  eslint: countBy(
-    eslint.flatMap((f) =>
-      f.messages
-        .filter((m) => m.ruleId && m.severity === 2)
-        .map((m) => [rel(f.filePath), m.ruleId]),
-    ),
+  eslint: eslint.flatMap((f) =>
+    f.messages
+      .filter((m) => m.ruleId && m.severity === 2)
+      .map((m) => `${rel(f.filePath)}  ${m.ruleId}`),
   ),
-  steiger: countBy(
-    run('steiger', ['src', '--reporter', 'json'])
-      .filter((d) => d.severity === 'error')
-      .map((d) => [rel(d.location.path), d.ruleName]),
-  ),
-  biome: countBy(
-    run('biome', ['lint', '--config-path', 'biome.gate.json', '--reporter', 'json', 'src'])
-      .diagnostics.filter((d) => d.severity === 'error')
-      .map((d) => [rel(d.location.path), d.category]),
-  ),
+  steiger: lint('steiger', ['src', '--reporter', 'json'])
+    .filter((d) => d.severity === 'error')
+    .map((d) => `${rel(d.location.path)}  ${d.ruleName}`),
+  biome: lint('biome', ['lint', '--config-path', 'biome.gate.json', '--reporter', 'json', 'src'])
+    .diagnostics.filter((d) => d.severity === 'error')
+    .map((d) => `${rel(d.location.path)}  ${d.category}`),
+}
+const want = {}
+for (const tool of LINTERS) {
+  want[tool] = (expected[tool] ?? []).flatMap(({ file, rule, count = 1 }) =>
+    Array.from({ length: count }, () => `${file}  ${rule}`),
+  )
 }
 
-let missing = 0
-for (const [tool, rules] of Object.entries(expected)) {
-  console.info(`${tool}:`)
-  for (const { file, rule, min = 1 } of rules) {
-    const actual = found[tool].get(`${file}|${rule}`) ?? 0
-    const ok = actual >= min
-    if (!ok) missing++
-    console.info(
-      `  ${ok ? '✓' : '✗'} ${file}  ${rule}${min > 1 ? ` ×${min}` : ''}${ok ? '' : ` — поймано ${actual}`}`,
+// Скрипты гейта: свой корень у каждого, код выхода 1, строки нарушений — те, что под заголовком.
+for (const [section, script] of Object.entries(SCRIPTS)) {
+  const result = spawnSync(
+    process.execPath,
+    [resolve(root, 'scripts', script), resolve(fixtures, section)],
+    { encoding: 'utf8' },
+  )
+  if (result.error) throw result.error
+  if (result.status !== 1) {
+    console.error(
+      `check:gate: ${script} на фикстурах вышел с кодом ${result.status}, а не 1\n${result.stdout}${result.stderr}`,
     )
+    process.exit(1)
   }
+  found[section] = result.stderr
+    .split('\n')
+    .filter((line) => line.startsWith('  '))
+    .map((line) => line.slice(2))
+  want[section] = expected[section] ?? []
 }
 
-if (missing > 0) {
-  console.error(`\ncheck:gate: ${missing} ожидаемых нарушений не поймано — гейт деградировал`)
+let problems = 0
+for (const section of [...LINTERS, ...Object.keys(SCRIPTS)]) {
+  if (want[section].length === 0) {
+    console.error(`✗ ${section}: секция expected.json пуста — гейт на гейт выключен`)
+    problems++
+    continue
+  }
+  const wanted = countBy(want[section])
+  const got = countBy(found[section])
+  const lines = []
+  for (const [key, count] of wanted) {
+    const actual = got.get(key) ?? 0
+    if (actual !== count) lines.push(`  ✗ ${key} — ожидалось ${count}, поймано ${actual}`)
+  }
+  for (const [key, count] of got) {
+    if (!wanted.has(key)) lines.push(`  ✗ ${key} — нет в expected.json (×${count})`)
+  }
+  problems += lines.length
+  console.info(
+    lines.length === 0
+      ? `✓ ${section}: нарушений ${want[section].length} — ровно ожидаемые`
+      : `✗ ${section}:\n${lines.join('\n')}`,
+  )
+}
+
+if (problems > 0) {
+  console.error(`\ncheck:gate: ${problems} расхождений с expected.json — гейт деградировал`)
   process.exit(1)
 }
-console.info('\ncheck:gate: все ожидаемые нарушения пойманы')
+console.info('\ncheck:gate: каждая фикстура поймана ровно ожидаемыми нарушениями')

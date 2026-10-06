@@ -61,7 +61,7 @@ pnpm test             # Vitest: unit + Container API (.astro) + axe, покры�
 pnpm test:http        # после build: HTTP-набор на prod-сервере, профили прод и staging
 pnpm test:e2e         # build + браузерный набор: axe в двух темах, тема, форма без JS
 pnpm steiger          # структурный линтер FSD
-pnpm check:gate       # негативные фикстуры обязаны валить линтеры
+pnpm check:gate       # негативные фикстуры обязаны валить линтеры и скрипты гейта
 pnpm check:content    # контент-гейт: схема .md, тело, переводы, ссылки, redirects.yaml
 pnpm check:links      # после build: все внутренние ссылки в dist/client существуют
 pnpm seo:check        # после build: head каждой страницы (title/description/canonical/lang/h1/OG/hreflang/JSON-LD)
