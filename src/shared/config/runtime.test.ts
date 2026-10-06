@@ -73,15 +73,35 @@ describe('runtime config', () => {
       'http://localhost:3000',
       'http://127.0.0.1:3201',
       'https://xn--80ak6aa92e.xn--p1ai',
-      'https://shop-1.example',
+      'https://shop-1.example:65535',
     ]) {
       expect(getRuntimeConfig({ SITE_URL }).SITE_URL).toBe(SITE_URL)
     }
+    // Путь, query, userinfo, пробелы, пустой хост и пустая метка, регистр, порт вне 1–65535 и
+    // спецсимволы — в том числе строки с командами sed (`e`, `w`) и вставкой `<script>`.
     for (const SITE_URL of [
-      'https://ex.com/sub',
-      'https://u:p@ex.com',
-      'https://Ex.com',
+      'demo.example',
+      'localhost:3000',
+      'mailto:a@b',
       'https://',
+      'https://ex.com/sub',
+      'https://ex.com?x=1',
+      'https://ex.com/#x',
+      'https://u:p@ex.com',
+      'https://ex.com ',
+      'HTTPS://EX.COM',
+      'https://Ex.com',
+      'https://ex..com',
+      'https://-ex.com',
+      'https://ex.com:0',
+      'https://ex.com:080',
+      'https://ex.com:99999',
+      'https://ex.com&',
+      'https://ex.com|x',
+      'https://ex.com\\',
+      'https://ex.com\nfoo',
+      'https://ex.com|;s|<head>|<head><script>alert(1)</script>|;#',
+      'https://ex.com|g;w /tmp/stamp-w\n#',
     ]) {
       expect(() => getRuntimeConfig({ SITE_URL }), SITE_URL).toThrow('SITE_URL')
     }
@@ -143,7 +163,7 @@ describe('loadServerConfig: env процесса, который отдаёт с
     }
   })
 
-  it('с настоящим origin — конфиг целиком, опечатка в любом ключе — отказ', () => {
+  it('с настоящим origin — конфиг целиком, значение вне формата — отказ', () => {
     expect(loadServerConfig({ SITE_URL: 'https://demo.example/' }).SITE_URL).toBe(
       'https://demo.example',
     )

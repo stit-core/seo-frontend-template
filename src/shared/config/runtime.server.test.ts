@@ -50,27 +50,8 @@ const spawn = (command: string, args: string[], env: Record<string, string>) => 
   return result
 }
 
-// SITE_URL — ровно origin. Одно правило для старта сервера и штамповки: путь, query, userinfo,
-// пробелы, пустой хост, регистр и спецсимволы, включая инъекции в sed из аудита.
-const NOT_AN_ORIGIN = [
-  'demo.example',
-  'localhost:3000',
-  'mailto:a@b',
-  'https://',
-  'https://ex.com/sub',
-  'https://ex.com?x=1',
-  'https://ex.com/#x',
-  'https://u:p@ex.com',
-  'https://ex.com ',
-  'HTTPS://EX.COM',
-  'https://ex.com&',
-  'https://ex.com|x',
-  'https://ex.com\\',
-  'https://ex.com\nfoo',
-  'https://ex.com|;s|<head>|<head><script>alert(1)</script>|;#',
-  'https://ex.com|g;w /tmp/stamp-w\n#',
-]
-
+// Правило origin целиком держит юнит схемы (runtime.test.ts) — в процессе, без запуска Node.
+// Здесь — что обёртка и entrypoint применяют именно его: по нескольку значений на процесс.
 describe('docker/server.mjs: env целиком проверяется до загрузки приложения', () => {
   // Раскладка образа без сборки: обёртка и модуль конфига. Приложения в раскладке нет: дальше
   // проверки env процесс не уходит.
@@ -101,15 +82,16 @@ describe('docker/server.mjs: env целиком проверяется до за
   })
 
   it('не стартует, если SITE_URL — не origin', () => {
-    for (const SITE_URL of NOT_AN_ORIGIN) {
+    for (const SITE_URL of ['https://ex.com/sub', 'https://u:p@ex.com', 'https://ex.com|x']) {
       const result = run({ SITE_URL })
       expect(result.status, SITE_URL).toBe(1)
       expect(result.stderr, SITE_URL).toContain('[server] invalid env — SITE_URL:')
     }
   })
 
-  // Опечатки оператора из аудита (SEC-03): без проверки при старте — полуживой контейнер.
-  it('опечатка в любом ключе — отказ с именем ключа, значение в лог не попадает', () => {
+  // Опечатки оператора в значениях enum, ключа IndexNow и таймаута: без проверки при старте —
+  // полуживой контейнер.
+  it('значения вне формата — отказ: строка называет каждый ключ, значений в ней нет', () => {
     const typos = {
       LOG_LEVEL: 'verbose',
       INDEXNOW_KEY: 'short',
@@ -118,10 +100,11 @@ describe('docker/server.mjs: env целиком проверяется до за
       AI_TRAINING: 'blocked',
       SHUTDOWN_TIMEOUT_MS: '15s',
     }
+    const result = run({ SITE_URL: 'https://demo.example', ...typos })
+    expect(result.status).toBe(1)
+    expect(result.stderr).toContain('[server] invalid env — ')
     for (const [key, value] of Object.entries(typos)) {
-      const result = run({ SITE_URL: 'https://demo.example', [key]: value })
-      expect(result.status, key).toBe(1)
-      expect(result.stderr, key).toContain(`[server] invalid env — ${key}:`)
+      expect(result.stderr, key).toContain(`${key}:`)
       expect(result.stderr, key).not.toContain(value)
     }
   })
@@ -158,11 +141,17 @@ describe('docker/entrypoint.sh: SITE_URL по схеме, штамповка dis
     })
   })
 
+  // Строки, которыми атакуют подстановку origin в разметку: команды sed (`e`, `w`) и вставка
+  // `<script>`.
   it('SITE_URL — не origin: отказ до штамповки, данные из env не исполняются', () => {
     const html = `<link rel="canonical" href="${SITE_ORIGIN_PLACEHOLDER}/"><head>`
     withDist({ 'client/index.html': html }, (dist) => {
       const pwned = join(dist, 'pwned')
-      for (const SITE_URL of [...NOT_AN_ORIGIN, `https://ex.com|;e touch ${pwned}\n#`]) {
+      for (const SITE_URL of [
+        'https://ex.com|;s|<head>|<head><script>alert(1)</script>|;#',
+        `https://ex.com|g;w ${pwned}\n#`,
+        `https://ex.com|;e touch ${pwned}\n#`,
+      ]) {
         const result = run({ SITE_URL, DIST_DIR: dist })
         expect(result.status, SITE_URL).toBe(1)
         expect(result.stderr, SITE_URL).toContain('[entrypoint] invalid env — SITE_URL:')
@@ -172,7 +161,7 @@ describe('docker/entrypoint.sh: SITE_URL по схеме, штамповка dis
     })
   })
 
-  it('опечатка в другом ключе env — отказ до штамповки', () => {
+  it('значение вне формата в другом ключе — отказ до штамповки', () => {
     const html = `<a href="${SITE_ORIGIN_PLACEHOLDER}/en">`
     withDist({ 'client/index.html': html }, (dist) => {
       const result = run({ SITE_URL: 'https://demo.example', LOG_LEVEL: 'verbose', DIST_DIR: dist })

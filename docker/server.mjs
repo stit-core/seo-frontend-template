@@ -5,8 +5,8 @@
 import { loadServerConfig } from '../dist/server/runtime-config.mjs'
 
 // Fail-fast: env проверяется целиком до загрузки приложения — той же схемой, что его читает
-// (shared/config). Иначе опечатка в ключе поднимает полуживой контейнер: статика 200, а каждый
-// on-demand ответ, включая /healthz и robots.txt, — 500.
+// (shared/config). Иначе значение вне формата поднимает полуживой контейнер: статика 200, а
+// каждый on-demand ответ, включая /healthz и robots.txt, — 500.
 let config
 try {
   config = loadServerConfig()

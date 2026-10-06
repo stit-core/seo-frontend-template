@@ -4,9 +4,17 @@ import { z } from 'zod'
 export const SITE_ORIGIN_PLACEHOLDER = 'https://__site_origin__'
 
 // Origin уходит дословно в canonical, карту сайта и штамповку prerendered-выхода, поэтому —
-// ровно схема http(s), хост в нижнем регистре (IDN — punycode) и порт: ни пути, ни query, ни
-// userinfo, ни пробелов и спецсимволов. Одно правило для старта сервера и для штамповки.
-const ORIGIN_RE = /^https?:\/\/[a-z\d]([a-z\d.-]*[a-z\d])?(:\d{1,5})?$/
+// ровно схема http(s), хост в нижнем регистре (IDN — punycode) из непустых меток и порт
+// 1–65535: ни пути, ни query, ни userinfo, ни пробелов и спецсимволов. Одно правило для старта
+// сервера и для штамповки.
+const LABEL = String.raw`[a-z\d](?:[a-z\d-]*[a-z\d])?`
+const ORIGIN_RE = new RegExp(String.raw`^https?://${LABEL}(?:\.${LABEL})*(?::([1-9]\d{0,4}))?$`)
+
+function isOrigin(value: string): boolean {
+  const match = ORIGIN_RE.exec(value)
+  const port = match?.[1]
+  return match !== null && (port === undefined || Number(port) <= 65_535)
+}
 
 // Ключ IndexNow (indexnow.org): 8–128 символов a-z, A-Z, 0-9 и дефис; подтверждается файлом /<ключ>.txt.
 const INDEXNOW_KEY_RE = /^[a-zA-Z0-9-]{8,128}$/
@@ -20,8 +28,8 @@ const RuntimeConfigSchema = z.object({
     .string()
     .transform((value) => value.replace(/\/+$/, ''))
     .refine(
-      (value) => value === SITE_ORIGIN_PLACEHOLDER || ORIGIN_RE.test(value),
-      'expected an origin like https://example.com: http(s), lowercase host, optional port; no path, query or credentials',
+      (value) => value === SITE_ORIGIN_PLACEHOLDER || isOrigin(value),
+      'expected an origin like https://example.com: http(s), lowercase host, optional port 1-65535; no path, query or credentials',
     )
     .default(SITE_ORIGIN_PLACEHOLDER),
   ROBOTS_POLICY: z.enum(['index', 'noindex']).default('index'),
