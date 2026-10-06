@@ -176,7 +176,7 @@ for (const doc of docs) {
     ]
     for (const url of urls) {
       const kind = classify(url)
-      if (kind === 'relative') fail(where, `ссылка ${url}: используйте корневой путь /…`)
+      if (kind === 'relative') fail(where, `ссылка ${url}: относительная, нужен корневой путь`)
       if (kind === 'internal') internalLinks.push({ where, url })
     }
   })

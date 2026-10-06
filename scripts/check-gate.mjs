@@ -67,6 +67,11 @@ for (const tool of LINTERS) {
   )
 }
 
+// Строка ожидания с «…» на конце сверяется по началу: дальше — текст сторонней библиотеки (Zod,
+// js-yaml), его меняет обновление зависимости, а не регресс скрипта.
+const expectedKey = (line, keys) =>
+  keys.find((key) => key.endsWith('…') && line.startsWith(key.slice(0, -1))) ?? line
+
 // Скрипты гейта: свой корень у каждого, код выхода 1, строки нарушений — те, что под заголовком.
 for (const [section, script] of Object.entries(SCRIPTS)) {
   const result = spawnSync(
@@ -81,11 +86,11 @@ for (const [section, script] of Object.entries(SCRIPTS)) {
     )
     process.exit(1)
   }
+  want[section] = expected[section] ?? []
   found[section] = result.stderr
     .split('\n')
     .filter((line) => line.startsWith('  '))
-    .map((line) => line.slice(2))
-  want[section] = expected[section] ?? []
+    .map((line) => expectedKey(line.slice(2), want[section]))
 }
 
 let problems = 0
