@@ -181,5 +181,10 @@
     "src/pages/status.ts: on-demand маршрут без строки в карте docs/reference/rendering.md",
     "content/redirects.yaml: from / совпадает с существующим маршрутом",
     "content/redirects.yaml: to /net не существует"
+  ],
+  "plans": [
+    "E .claude/plans/sub: вне модели планов — план живёт в .claude/plans/<slug>.md, бэклог в .claude/plans/backlog.md (skill /plan)",
+    "E .claude/plans/y.markdown: вне модели планов — план живёт в .claude/plans/<slug>.md, бэклог в .claude/plans/backlog.md (skill /plan)",
+    "E .claude/plans/z.MD: вне модели планов — план живёт в .claude/plans/<slug>.md, бэклог в .claude/plans/backlog.md (skill /plan)"
   ]
 }

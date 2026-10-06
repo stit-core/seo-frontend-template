@@ -1,9 +1,9 @@
 // Гейт на гейт: негативные фикстуры .gate-fixtures/ обязаны валить линтеры (ESLint, Steiger,
 // Biome — теми же конфигами, что и src/) и собственные скрипты гейта (seo:check, check:links,
-// check:content) — ровно нарушениями из expected.json, не больше и не меньше. Иначе деградация
-// (Steiger fail-open, пустой a11y-конфиг, потерянный резолвер boundaries, ослабленная проверка
-// скрипта) остаётся незамеченной: прогон зелёный, а держать нечем. Пустая или урезанная секция
-// expected.json — тоже деградация: её ловит точное совпадение. Периметр — так же: guard-хук
+// check:content, plan:check) — ровно нарушениями из expected.json, не больше и не меньше. Иначе
+// деградация (Steiger fail-open, пустой a11y-конфиг, потерянный резолвер boundaries, ослабленная
+// проверка скрипта) остаётся незамеченной: прогон зелёный, а держать нечем. Пустая или урезанная
+// секция expected.json — тоже деградация: её ловит точное совпадение. Периметр — так же: guard-хук
 // Claude Code обязан отказать каждому обходу из .gate-fixtures/guard.json и пропустить работу.
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
@@ -102,6 +102,22 @@ for (const [section, script] of Object.entries(SCRIPTS)) {
     .map((line) => expectedKey(line.slice(2), want[section]))
 }
 
+// Валидатор планов берёт корень из git: фикстура — свой проект, git не поднимается выше неё.
+const plans = spawnSync('bash', [resolve(root, 'scripts/validate-plan.sh')], {
+  cwd: resolve(fixtures, 'plans'),
+  env: { ...process.env, GIT_CEILING_DIRECTORIES: fixtures },
+  encoding: 'utf8',
+})
+if (plans.error) throw plans.error
+if (plans.status !== 1) {
+  console.error(
+    `check:gate: validate-plan.sh на фикстуре вышел с кодом ${plans.status}, а не 1\n${plans.stdout}`,
+  )
+  process.exit(1)
+}
+want.plans = expected.plans ?? []
+found.plans = plans.stdout.split('\n').filter((line) => /^[EW] /.test(line))
+
 // Guard-хук: отказ — код 2 (так Claude Code блокирует вызов), пропуск — 0.
 const guard = JSON.parse(readFileSync(resolve(fixtures, 'guard.json'), 'utf8'))
 const guardCode = (command) =>
@@ -126,7 +142,7 @@ console.info(
     ? `✓ guard: обходов ${guard.block.length} — отказ, обычных команд ${guard.allow?.length ?? 0} — пропуск`
     : `✗ guard:\n${guardLines.join('\n')}`,
 )
-for (const section of [...LINTERS, ...Object.keys(SCRIPTS)]) {
+for (const section of [...LINTERS, ...Object.keys(SCRIPTS), 'plans']) {
   if (want[section].length === 0) {
     console.error(`✗ ${section}: секция expected.json пуста — гейт на гейт выключен`)
     problems++

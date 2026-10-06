@@ -5,7 +5,8 @@
 #   .claude/plans/<slug>.md  — один активный план: frontmatter (status / parent / blocked-by),
 #                              H1 `# <slug> — <заголовок>`, разделы `## …`;
 #   .claude/plans/backlog.md — кандидаты в работу, по пункту `- **<id>** — …`.
-# Закрытый план удаляется — история в git log.
+# Закрытый план удаляется — история в git log. Другое в .claude/plans/ (подкаталог, `.markdown`,
+# `.MD`, roadmap.md) — ошибка: такой план не проверяется и не виден в сводке.
 #
 # Использование:
 #   validate-plan.sh              проверить все планы и бэклог; exit 1 при ошибках
@@ -24,20 +25,20 @@ cd "$ROOT" || exit 1
 PLANS_DIR=.claude/plans
 MODE=validate
 declare -a FILES=()
+declare -a OUTSIDE=()
 
 case "${1:-}" in
   --summary) MODE=summary; shift ;;
   --handoff) MODE=handoff; shift ;;
-  -h|--help) sed -n '2,19p' "$0"; exit 0 ;;
+  -h|--help) sed -n '2,20p' "$0"; exit 0 ;;
 esac
 if [ "$#" -gt 0 ]; then
   FILES=("$@")
-else
-  if [ -d "$PLANS_DIR" ]; then
-    for f in "$PLANS_DIR"/*.md; do
-      [ -e "$f" ] && FILES+=("$f")
-    done
-  fi
+elif [ -d "$PLANS_DIR" ]; then
+  for f in "$PLANS_DIR"/*; do
+    [ -e "$f" ] || continue
+    if [ -f "$f" ] && [[ $f == *.md && $f != */roadmap.md ]]; then FILES+=("$f"); else OUTSIDE+=("$f"); fi
+  done
 fi
 
 # Один проход awk на файл: печатает записи `E|<msg>`, `W|<msg>`, `S|<line>`, `H|<line>`, `B|<n>`.
@@ -226,10 +227,10 @@ summary=""
 handoff=""
 report=""
 
-if [ "$#" -eq 0 ] && [ -f "$PLANS_DIR/roadmap.md" ]; then
-  report+="E $PLANS_DIR/roadmap.md: такого файла в модели планов нет — план живёт в $PLANS_DIR/<slug>.md, бэклог в $PLANS_DIR/backlog.md (skill /plan)"$'\n'
+for f in "${OUTSIDE[@]}"; do
+  report+="E $f: вне модели планов — план живёт в $PLANS_DIR/<slug>.md, бэклог в $PLANS_DIR/backlog.md (skill /plan)"$'\n'
   errors=$((errors + 1))
-fi
+done
 if [ "$#" -eq 0 ] && [ ! -f "$PLANS_DIR/backlog.md" ]; then
   report+="E $PLANS_DIR/backlog.md: файла нет — бэклог обязателен (пустой — строка «_пусто_»)"$'\n'
   errors=$((errors + 1))
@@ -237,7 +238,6 @@ fi
 
 for f in "${FILES[@]}"; do
   [ -f "$f" ] || { report+="E $f: файл не найден"$'\n'; errors=$((errors + 1)); continue; }
-  case "$(basename "$f")" in roadmap.md) continue ;; esac
   out=$(check_file "$f")
   [ "$(basename "$f")" = "backlog.md" ] || plans=$((plans + 1))
   while IFS= read -r rec; do

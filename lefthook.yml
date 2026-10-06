@@ -24,7 +24,7 @@ pre-commit:
       run: pnpm eslint --fix --no-error-on-unmatched-pattern --no-warn-ignored --cache {staged_files}
       stage_fixed: true
     plans:
-      glob: ".claude/plans/*.md"
+      glob: ".claude/plans/**"
       run: bash scripts/validate-plan.sh
 
 commit-msg:
