@@ -273,7 +273,7 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
         replacement: "https://${DOMAIN}/${1}"
         permanent: true
 
-    # Дубли главных: /index.html и /en/index.html отдаются со статусом 200.
+    # Дубль каждой страницы: <путь>/index.html отдаётся 200 тем же HTML, но без CSP приложения.
     strip-index-html:
       redirectRegex:
         regex: "^https?://([^/]+)(/.*)?/index\\.html$"
@@ -411,12 +411,12 @@ accessLog:
 | `scripts/preflight-dns.sh` | при активном профиле `site` добавить в `hosts` `www.$DOMAIN` — иначе LE-сертификат на www молча не выпустится, а роутер `site-www` есть |
 | `scripts/tools/smoke.d/90-site.sh` | **новый** drop-in (контракт — в шапке `scripts/tools/smoke-run.sh`): блок `-- site --`, read-only, self `exit 0`, проблема — строкой `ATTENTION:` в колонке 0. Проверяет: liveness `docker exec site wget -qO- http://127.0.0.1:3000/healthz`; `/` — 200 и TTFB (на не-прод ожидается 401 — замок стоит); `/robots.txt` — на проде без `Disallow: /` и с абсолютным `Sitemap:`, на не-прод `Disallow: /`; `/sitemap.xml` — непустой список `<loc>`, все URL на своём домене и по https; `X-Robots-Tag: noindex` — на не-прод есть, на проде нет |
 | `compose/landing.yml` | заглушка на корне остаётся до первого разворота сайта: она держит выпуск LE-сертификата на `${DOMAIN}`. После разворота `compose/landing.yml` + `configs/landing/` удаляются (сам роутер сайта её и так перебивает приоритетом) |
-| `.claude/rules/traefik-routing.md` | раздел «Корневой домен и www»: корень — задокументированное исключение из сабдоменного канона; www — отдельный роутер с `redirectRegex`; `${1}` переживает envsubst; в цепочке публичного сайта, в отличие от API, есть `compress` |
+| `.claude/rules/traefik-routing.md` | раздел «Корневой домен и www»: корень — задокументированное исключение из сабдоменного канона; www — отдельный роутер с `redirectRegex`; `${1}` переживает envsubst; в цепочке публичного сайта, в отличие от API, есть `compress`; в таблице chain'ов `secure-headers@file` — HSTS, nosniff, `Referrer-Policy`, `Permissions-Policy` (камера, микрофон и геолокация закрыты), без XSS-filter: состав из 1.3, он общий для всех публичных роутеров |
 | `.claude/rules/compose-and-services.md` | абзац «Node-сервисы с рендером»: `init: true`; `read_only` **несовместим** со штамповкой origin; `stop_grace_period` ↔ `SHUTDOWN_TIMEOUT_MS`; `mem_limit` ↔ `NODE_OPTIONS --max-old-space-size` (≈ 75 %); `deploy.resources` не использовать; `replicas` несовместимы с `container_name` |
 | `docs/reference/architecture.md` | `site` переезжает из «Что НЕ в шаблоне (overlay-services)» в основную схему слоёв (корень `${DOMAIN}`, рядом с backend на `api.`); в таблице ролей multi-host у `edge` появляется `site` |
 | `docs/project/README.md` § «Generates → инфра» | строка для `frontend` (`hosting: here`): индексируемый сайт → профиль `site` → `compose/site.yml`; текущая формулировка «— (always-on landing)» верна только для статической заглушки |
 | `docs/project/_templates/service.md` | в подсказках `Hosting`/`Route` — вариант Node-сервиса на корневом домене: профиль `site`, порт 3000, healthcheck `/healthz`, www-редирект |
-| `.claude/skills/add-service/SKILL.md` | вариант «Node-сервис на корневом домене»: два роутера (apex + www), Traefik-side healthcheck на сервисе, `init: true`, запрет `read_only`, обязательный env (`SITE_URL`), лимит частоты на публичный POST |
+| `.claude/skills/add-service/SKILL.md` | вариант «Node-сервис на корневом домене»: два роутера (apex + www), Traefik-side healthcheck на сервисе, `init: true`, запрет `read_only`, обязательный env (`SITE_URL`), лимит частоты на публичный POST; публичный сервис, которому нужны камера, микрофон или геолокация (видеосвязь, карта «рядом со мной»), получает свой headers-middleware вместо `secure-headers@file` — с тем же составом и своим `permissionsPolicy`, а не послабление общего: иначе браузер молча отвечает `NotAllowedError`, в логах ничего |
 | `.claude/skills/de-template/SKILL.md` | в списке always-on (`traefik`, `crowdsec`, `landing`) оговорить: при сайте на корне `landing` прунится вместе с `configs/landing/` |
 
 ### 1.7 Приёмка первого деплоя
@@ -438,6 +438,7 @@ curl -sI  https://<domain>/net-takogo          # 404 (не 200 и не реди�
 curl -sI  http://<domain>/                     # ровно один 301/308 на https
 curl -sI  https://www.<domain>/                # ровно один 301 на apex
 curl -sI  https://<domain>/index.html          # 301 на /
+curl -sI  https://<domain>/about/index.html    # 301 на /about — дубль любой страницы, без CSP
 curl -sI  https://<domain>/<любая-страница>/   # 301 без слеша (хвостовой слеш срезается)
 curl -sI  https://<domain>/healthz             # 200, Cache-Control: no-store
 curl -sI 'https://<domain>/_image?href=/og-default.png&f=webp'   # 403 на edge (без него — 404 приложения)

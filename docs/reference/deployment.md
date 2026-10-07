@@ -136,8 +136,10 @@ prerendered-страница печатается на сборке, а обра
 - **Prerendered** страницы, `public/*` и `/_astro/*` отдаёт статик-хендлер адаптера **до**
   приложения со своими заголовками (`Cache-Control: public, max-age=0` + `ETag` +
   `Last-Modified`; ассеты — `immutable`): middleware и JSON-лог их не видят, `X-Robots-Tag`
-  staging ставит обёртка процесса; `/index.html` и `/en/index.html` отвечают 200 — дубли
-  главных, прикрываются `redirectRegex` на Traefik. Метод запроса хендлер не смотрит (`POST /` —
+  staging ставит обёртка процесса. Каждая страница отвечает и по `<путь>/index.html`
+  (`/index.html`, `/about/index.html`) — 200 тем же HTML, но без CSP: заголовки сборки адаптер
+  ищет по маршруту, а такой путь маршрутом не является; дубли закрывает `strip-index-html` на
+  Traefik (301 на путь без `/index.html`). Метод запроса хендлер не смотрит (`POST /` —
   200 со страницей, `TRACE` — 500 с ошибкой в логе): лишние методы режет edge. По симлинку внутри
   `dist/client` он отдаёт файл, на который тот указывает, — в `public/` симлинков нет
 - **On-demand** (`prerender = false`: `/healthz`, `/now`, `/api/contact`, `robots.txt`,
@@ -187,7 +189,7 @@ prerendered-страница печатается на сборке, а обра
   chunked`) читает до `bodySizeLimit` адаптера (1 МБ, дальше — `400`) — 64 КБ для него держит
   только прокси
 - Staging закрывается и там: `basicAuth` + `customResponseHeaders: X-Robots-Tag` — независимо
-  от `ROBOTS_POLICY` контейнера; `redirectRegex` для `/index.html` и `/en/index.html`,
+  от `ROBOTS_POLICY` контейнера; `redirectRegex` для `<путь>/index.html`,
   `www` → apex и `http` → `https`, `compress`, `secure-headers@file`
 
 Готовый `compose/site.yml`, роутеры и middleware Traefik, CrowdSec и приёмка первого

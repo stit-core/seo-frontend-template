@@ -51,7 +51,8 @@ status: draft
 | ошибка рендера on-demand | `500` + `noindex` | `src/pages/500.astro` |
 
 Редиректы — данные, один хоп, без цепочек; `meta refresh` и `redirects` в
-`astro.config.ts` не используются. Дубли главной (`/index.html`) закрывает Traefik.
+`astro.config.ts` не используются. Дубль каждой страницы по `<путь>/index.html` (200 без CSP)
+закрывает Traefik — 301 на путь без `/index.html`.
 
 ## Навигация
 
