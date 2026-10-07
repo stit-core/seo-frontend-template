@@ -69,7 +69,7 @@ origin штампуется при старте.
 | `pnpm dev` | `astro dev` — демон Astro 7 (`pnpm astro dev stop`), порт 4321 |
 | `pnpm build` | `astro build` → `dist/{client,server}` (с плейсхолдером origin) |
 | `pnpm start` | `node --env-file-if-exists=.env docker/server.mjs` — prod-сервер (требует `SITE_URL` и штамповку) |
-| `pnpm typecheck` | `astro check` |
+| `pnpm typecheck` | `astro sync` + `astro-check` (чекер `@astrojs/check`; сам `astro check` при сбое загрузки чекера выходит с 0) |
 | `pnpm lint` | `biome check` + `eslint --max-warnings 0` — **здесь держатся границы FSD** и канон UI |
 | `pnpm format:check` | `biome format` + `prettier --check "src/**/*.astro"` |
 | `pnpm test` | Vitest: проекты `astro` (node, Container API) и `dom` (happy-dom), покрытие широкого объёма с порогами |

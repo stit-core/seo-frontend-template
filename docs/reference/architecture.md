@@ -102,7 +102,7 @@ src/
 |---|---|
 | ESLint 10 (`boundaries` + `no-restricted-imports`) | **границы FSD** на всём коде `src`: направление импортов, deep-import (и относительным путём), файлы вне слоёв, примитивы Astro в баррелях, импорты клиентских `<script>`; директива `eslint-disable` в коде не действует |
 | Steiger | структура: public API, сегменты, имена; на `.astro`-целях fail-open |
-| `astro check` | типы (`astro/tsconfigs/strictest`) |
+| `astro-check` (`pnpm typecheck`) | типы (`astro/tsconfigs/strictest`) |
 | Biome + Prettier | формат и базовые правила; `.astro` форматирует Prettier |
 | `.gate-fixtures/` + `pnpm check:gate` | заведомые нарушения обязаны валить линтеры и свои скрипты гейта ровно ожиданиями — иначе гейт деградирует молча |
 

@@ -106,7 +106,7 @@ paths: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
 | шаг | что держит |
 |---|---|
 | `plan:check` | формат планов `.claude/plans/` |
-| `typecheck` | `astro check`, `astro/tsconfigs/strictest` |
+| `typecheck` | `astro sync` + `astro-check` из `@astrojs/check`, `astro/tsconfigs/strictest`: обёртка `astro check` при сбое загрузки чекера спрашивает установку и выходит с 0 |
 | `lint` | Biome и ESLint (`--max-warnings 0`): границы FSD, канон UI и приложения, a11y разметки |
 | `format:check` | Biome; `.astro` — Prettier |
 | `test` | Vitest с покрытием и порогами `vitest.config.ts` |

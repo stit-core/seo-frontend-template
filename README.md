@@ -54,7 +54,7 @@ DIST_DIR=dist SITE_URL=http://localhost:3000 sh docker/entrypoint.sh pnpm start
 pnpm dev              # astro dev
 pnpm build            # astro build → dist/{client,server}
 pnpm start            # prod-сервер docker/server.mjs (нужны SITE_URL и штамповка entrypoint'ом)
-pnpm typecheck        # astro check
+pnpm typecheck        # astro sync + astro-check (типы .astro и .ts)
 pnpm lint             # Biome + ESLint (границы FSD — здесь)
 pnpm format:check     # Biome + Prettier для *.astro
 pnpm test             # Vitest: unit + Container API (.astro) + axe, покрытие с порогами

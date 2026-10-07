@@ -11,7 +11,7 @@
     "dev": "astro dev",
     "build": "astro build",
     "start": "node --env-file-if-exists=.env ./docker/server.mjs",
-    "typecheck": "astro check",
+    "typecheck": "astro sync && astro-check",
     "lint": "biome check . && eslint . --max-warnings 0",
     "lint:fix": "biome check --write . && eslint --fix .",
     "format": "biome format --write . && prettier --write \"src/**/*.astro\"",
