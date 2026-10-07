@@ -41,109 +41,98 @@ blocked-by: —
 - [x] **AC1** — Неверный runtime-конфиг не даёт полуживого контейнера: значение вне формата у любого ключа
   схемы — отказ старта с понятной ошибкой, а не 500 на `/healthz` и `robots.txt`. Проверка: сценарии `M/security/badenv.sh` →
   процесс не стартует, код ≠ 0, сообщение называет ключ; тест сервера
-  - Подтверждено: `badenv.sh` на сборке HEAD (`M/p2a/badenv-s1.log`) — все четыре опечатки: процесс не
-    поднялся, код 1, строка `[server] invalid env — <ключ>: …`; плюс `AI_TRAINING=no` и
-    `SHUTDOWN_TIMEOUT_MS=15s` — то же; `runtime.server.test.ts` ловит обёртку без проверки env (3 красных)
+  - Подтверждено: `badenv.sh` (`M/p2a/badenv-s1.log`) — четыре опечатки и ещё две: код 1, `[server] invalid env —
+    <ключ>: …`; `runtime.server.test.ts` ловит обёртку без проверки env (3 красных)
 - [x] **AC2** — `SITE_URL` проверяется одинаково строго на старте и при штамповке (пробел, пустой хост, userinfo,
   путь, `|`, `&`, `\` — отказ); штамповка не исполняет данные; `Last-Modified` и ETag HTML не меняются между
   рестартами без новой сборки. Проверка: сценарии `M/security/stamp.sh` и `image.sh` → отказ; три рестарта →
   одинаковые `Last-Modified`
-  - Подтверждено: `stamp.sh` на сборке HEAD (`M/p2a/stamp-s2.log`) — 14 из 16 значений отказ до записи, `e`
-    не исполнена, `<script>` не внедрён; приняты только `https://ex.com/` и `http://ex.com`; `image.sh` на образе
-    (`M/p2a/image-s2.log`) — те же отказы в alpine, PID 1 — node, `accept:image` зелёный; старт, рестарт и новый
-    контейнер (`M/p2a/restarts-s2.log`) — `Last-Modified` = mtime сборки, ETag один и тот же
+  - Подтверждено: `stamp.sh` (`M/p2a/stamp-s2.log`) — 14 из 16 значений отказ до записи, данные не исполнены;
+    `image.sh` (`M/p2a/image-s2.log`) — те же отказы в образе, PID 1 — node; старт, рестарт и новый контейнер
+    (`M/p2a/restarts-s2.log`) — `Last-Modified` = mtime сборки, ETag один и тот же
 - [x] **AC3** — В staging (`ROBOTS_POLICY=noindex`) каждый ответ — HTML, статика, служебные — несёт
   `X-Robots-Tag: noindex, nofollow`; в проде заголовка нет. Проверка: HTTP-набор, профили прод и staging
-  - Подтверждено: `staging.spec.ts` — каждая страница сборки, ассет `_astro`, PNG из `public/`, on-demand
-    маршруты, 404 и адреса `redirects.yaml`; `pages.spec.ts` — в проде у страниц заголовка нет; демо аудитора
-    (`M/p2a/fixdemo-s3.log`): в staging у каждого ответа ровно одна строка `noindex, nofollow`, в проде у
-    страниц и PNG — ни одной; обёртка без блока staging и `setHeader` без `writeHead` — красный набор
+  - Подтверждено: `staging.spec.ts` — страницы, ассет, PNG, on-demand, 404, редиректы; в проде заголовка нет;
+    демо аудитора (`M/p2a/fixdemo-s3.log`) — в staging ровно одна строка у каждого ответа, в проде ни одной;
+    обёртка без блока staging и `setHeader` без `writeHead` — красный набор
 - [x] **AC4** — CSP ставит приложение на всех ответах (prerendered и on-demand); остров темы работает без
   нарушений; гейт сверяет хеши инлайн-скриптов с политикой. Проверка: `pnpm test:e2e` — 0 нарушений CSP;
   мутация скрипта темы без правки политики → красный `pnpm check`
-  - Подтверждено: `pnpm test:e2e` — 79 / 79, в каждом тесте ни одного нарушения CSP в консоли Chromium; тело
-    темы без правки политики → красный `pnpm check` на шаге `test`, отдельно — красный HTTP-набор и 76 красных
-    браузерных тестов с текстом нарушения; ещё 5 поломок красные (`M/p2b/mut/`: без `staticHeaders`, без `csp`,
-    `frame-ancestors *`, `'unsafe-inline'`, тело счётчика); образ — `accept:image` зелёный, CSP на `/` и 404;
-    счётчик под CSP в Chromium (заглушка tag.js: fetch, beacon, пиксель) — 0 нарушений (`M/p2b/exp-metrika-csp.log`)
+  - Подтверждено: `pnpm test:e2e` — 79 / 79 без нарушений CSP; тело темы без правки политики → красный `test`,
+    HTTP-набор и 76 браузерных тестов; ещё 5 поломок красные (`M/p2b/mut/`); `accept:image` — CSP на `/` и 404;
+    счётчик под CSP в Chromium — 0 нарушений (`M/p2b/exp-metrika-csp.log`); ослабления валидатора B — `M/p2c/mut/`
 - [x] **AC5** — `/_image` наружу не обслуживается: запросы из SEC-02 не кладут `/healthz`. Проверка: HTTP-набор
   и сценарий нагрузки `M/security/image-dos.sh` на образе → `/healthz` отвечает
-  - Подтверждено: `service.spec.ts` — `/_image` на картинку сборки, `public/` и чужую — 404 текстом, on-demand HTML
-    на него не ссылается; `image-dos.sh` на образе с профилем compose (`M/p2a/image-dos-s4b.log`): avif q=100 из
-    6000×4000 — 404 за 5 мс (в аудите — 68 с и 236 МБ), 8 параллельных — 26 мс, поток 400×50 — все 404, `/healthz` —
-    200 за 59 мс под потоком, память 33 → 35 МиБ, OOM нет
-- [ ] **AC6** — Менеджер пакетов — pnpm ≥ 10.34 без corepack, конфиг читается и pnpm 11/12 (`pnpm-workspace.yaml`),
+  - Подтверждено: `service.spec.ts` — `/_image` на любую картинку — 404 текстом; `image-dos.sh` на образе
+    (`M/p2a/image-dos-s4b.log`): avif q=100 из 6000×4000 — 404 за 5 мс (в аудите — 68 с и 236 МБ), поток 400×50 —
+    все 404, `/healthz` — 200 за 59 мс под потоком, память 33 → 35 МиБ
+- [x] **AC6** — Менеджер пакетов — pnpm ≥ 10.34 без corepack, конфиг читается и pnpm 11/12 (`pnpm-workspace.yaml`),
   `minimumReleaseAge` задан; образ собирается на Node 24 и Node 26; `pnpm audit --prod --audit-level=high` —
   шаг `/release`, на HEAD 0 high. Проверка: `docker build` на обеих версиях через `M/exclusive.sh`; `pnpm audit`
+  - Подтверждено: pnpm 10.34.6 без corepack; настройки `pnpm-workspace.yaml` читают 10.34.6, 11.28.4 и 12.9.1
+    (`config get`, установка из lockfile без записи, `peers check`, `audit`); образ без corepack собран на
+    Node 24.21.0 и 26.10.0 (`--build-arg NODE_VERSION`), `accept:image` зелёный на обоих
+    (`M/p2c/accept-s10-node{24,26}.log`); `pnpm audit --prod --audit-level=high` — 0, шаг 2 `/release`
 - [x] **AC7** — Политика обновлений живёт там, где переживает `/de-template` (`docs/stack/_templates/dependencies.md`):
   N / N−1, триггеры пересмотра стека, правило «пороги покрытия пересчитываются тем же коммитом»; патч Astro не
   краснит гейт. Проверка: `astro` 7.3.5 (или новее в пределах мажора) → `pnpm check` зелёный
   - Подтверждено: `dependencies.md § Обновления` шаблона — правила (патчи раз в месяц, мажор Astro N / N−1, Node,
     pnpm, аудит, пороги покрытия тем же коммитом), ежемесячная процедура, R-1…R-7; `pnpm check` зелёный на Astro
     7.3.5 и на 7.3.6 с адаптером 11.1.7 (`M/p2c/check-astro736.log`)
-- [ ] **AC8** — Приёмка образа держит то, что печатает: дренаж SIGTERM в пределах таймаута, отказ без `SITE_URL`
+- [x] **AC8** — Приёмка образа держит то, что печатает: дренаж SIGTERM в пределах таймаута, отказ без `SITE_URL`
   за конечное время. Проверка: `pnpm accept:image` на образе HEAD → зелёный; регресс (`exec` убран, старт без
   `SITE_URL` висит) → красный
+  - Подтверждено: образы HEAD на Node 24 и 26 — отказ без `SITE_URL` (код 1, лог называет ключ), дренаж 299–315 мс
+    с кодом 0; регрессы (`M/p2c/regress/`) — красные: без `exec` — «SIGTERM не дошёл до node (20347 мс, код 137)»,
+    `SITE_URL` по умолчанию — «работает дольше 20 с»; прежний скрипт первый пропускал, на втором висел
 - [x] **AC9** — Заголовки безопасности распределены одним списком «приложение / инфра» в `infra-handoff.md`
   (CSP с `frame-ancestors` — приложение; HSTS, `nosniff`, `Referrer-Policy`, `Permissions-Policy` — Traefik),
   устаревшие `browserXssFilter` и `sslRedirect` в требованиях отсутствуют. Проверка: чтение + HTTP-набор
   проверяет заголовки приложения
-  - Подтверждено: `infra-handoff.md § 1.3` — таблица «заголовок / кто / значение» и целевой `secure-headers`;
-    `browserXssFilter` и `sslRedirect` названы только снимаемыми, `X-Frame-Options` не ставит никто; HTTP-набор
-    — CSP у каждой страницы и ни одного заголовка edge у страниц сборки и on-demand ответов; поломка
-    «middleware ставит `X-Frame-Options`» — красный `test:http` (`M/p2b/mut/xfo-middleware.log`)
+  - Подтверждено: `infra-handoff.md § 1.3` — таблица «заголовок / кто / значение» и `secure-headers` без
+    `browserXssFilter` и `sslRedirect`; HTTP-набор — CSP у каждой страницы, заголовков edge нет; «middleware ставит
+    `X-Frame-Options`» — красный `test:http` (`M/p2b/mut/xfo-middleware.log`)
 
 ## Шаги
 ### Этап A — образ: старт, штамповка, staging, `/_image`
 - [x] **S1** — Весь runtime-конфиг проверяется при старте процесса; middleware не разбирает env на каждый запрос
   - Проверка: сценарии `badenv.sh` → отказ старта; тесты сервера · Закрывает: AC1 · Зависит от: —
-  - Сделано: `loadServerConfig` в `shared/config/runtime.ts` — env целиком той же схемой плюс настоящий
-    `SITE_URL`; сборка кладёт модуль отдельным `dist/server/runtime-config.mjs` (плагин в `astro.config.ts`),
-    `docker/server.mjs` вызывает его до загрузки приложения и берёт оттуда таймауты; разбор env — один на
-    набор значений (запросы получают готовый объект); тесты — ошибка с ключом без значения, кеш разбора,
-    обёртка в раскладке образа на опечатках аудита. `pnpm check` зелёный, `badenv.sh` — отказ старта
+  - Сделано: `loadServerConfig` (`shared/config/runtime.ts`) — env целиком той же схемой и настоящий `SITE_URL`;
+    модуль сборки `dist/server/runtime-config.mjs` зовёт `docker/server.mjs` до приложения, разбор — один на набор
+    значений; тесты — ключ без значения, кеш, обёртка на опечатках. `pnpm check` зелёный, `badenv.sh` — отказ
 - [x] **S2** — Штамповка: одна строгая проверка `SITE_URL` для `entrypoint.sh` и `server.mjs`, подстановка без
   исполнения данных, только файлы с плейсхолдером, время изменения файлов сохраняется
   - Проверка: сценарии `stamp.sh` → отказ; три рестарта → одинаковый `Last-Modified` · Закрывает: AC2 · Зависит от: S1
-  - Сделано: правило «ровно origin» — поле `SITE_URL` схемы (`runtime.ts`); штамповка — `docker/stamp.mjs`:
-    env той же схемой (`loadServerConfig` из модуля сборки в `DIST_DIR`), замена строкой без `sed`, только
-    html/xml/txt с плейсхолдером, mtime сборки возвращается файлу; `entrypoint.sh` — штамповка и `exec`. Тесты —
-    один список «не origin» для обёртки и entrypoint (с инъекциями аудита), mtime и неперезапись файлов.
-    `pnpm check` зелёный; `stamp.sh`, `image.sh` и три старта — см. AC2
+  - Сделано: правило «ровно origin» — поле `SITE_URL` схемы; штамповка — `docker/stamp.mjs` (env той же схемой из
+    модуля сборки в `DIST_DIR`, замена строкой без `sed`, только html/xml/txt с плейсхолдером, mtime сборки);
+    `entrypoint.sh` — штамповка и `exec`; тесты — список «не origin», mtime. `pnpm check` зелёный; сценарии — AC2
 - [x] **S3** — `X-Robots-Tag: noindex, nofollow` на каждом ответе staging из `server.mjs`; ветка в middleware
   удалена; `infra-handoff.md` и `seo.md` — правда
   - Проверка: HTTP-набор staging → заголовок на `/`, статике, PNG, служебных · Закрывает: AC3 · Зависит от: S1
-  - Сделано: `docker/server.mjs` при `ROBOTS_POLICY=noindex` ставит заголовок каждому ответу — первым слушателем
-    запроса, значение пишет в `writeHead` последним; ветка и её тест в middleware удалены; `staging.spec.ts`
-    обходит страницы сборки, ассет, PNG, on-demand, 404 и редиректы; `accept:image` проверяет страницу сборки;
-    правда в `infra-handoff.md`, `seo.md`, `deployment.md`, `rendering.md`, правилах и записи про staging.
-    `pnpm check` зелёный
+  - Сделано: `docker/server.mjs` при `ROBOTS_POLICY=noindex` ставит заголовок каждому ответу (первым слушателем, в
+    `writeHead` последним); ветка middleware удалена; `staging.spec.ts` обходит все виды ответов; `accept:image` —
+    страницу сборки; правда в доках, правилах и записи про staging. `pnpm check` зелёный
 - [x] **S4** — `/_image` закрыт: в приложении, если Astro это позволяет без хака, и строкой в контракте edge;
   маршрут — в карте `rendering.md`
   - Проверка: HTTP-набор → `/_image` не обслуживается; `image-dos.sh` на образе → `/healthz` жив · Закрывает: AC5 · Зависит от: S1
-  - Сделано: для `astro build` `image.endpoint.entrypoint` — `src/pages/_image.ts` (404 текстом на любой метод),
-    в `astro dev` endpoint штатный; строка в карте `rendering.md`; в контракте edge — роутер `site-image` с
-    `deny-all` (403 до процесса) и строка приёмки; тесты — эндпоинт и HTTP-набор. `pnpm check` зелёный,
-    `image-dos.sh` и `accept:image` на образе — см. AC5
+  - Сделано: для `astro build` `image.endpoint.entrypoint` — `src/pages/_image.ts` (404 текстом), в `astro dev` —
+    штатный; строка карты `rendering.md`; в контракте edge — роутер `site-image` (403 до процесса) и строка
+    приёмки; тесты — эндпоинт и HTTP-набор. `pnpm check` зелёный; `image-dos.sh` и `accept:image` — AC5
 
 ### Этап B — CSP и заголовки
 - [x] **S5** — CSP в приложении: `security.csp` с хешами инлайн-скриптов из одного места политики островов,
   `staticHeaders`, базовые директивы; Метрика — источники только при заданном счётчике; гейт сверяет хеши
   - Проверка: `pnpm test:e2e` → 0 нарушений CSP; мутация скрипта темы → красный `pnpm check` · Закрывает: AC4 · Зависит от: S4
-  - Сделано: `contentSecurityPolicy()` в `scripts/lib/site-policy.mjs` — защитные директивы, `RESOURCE_ORIGINS` и
-    острова (`hash`, `on`, `sources`); конфиг — `security.csp` и `staticHeaders: true`; счётчик берёт
-    идентификатор из `data-counter`; тесты островов сверяют хеш тела с политикой, HTTP-набор — CSP каждой
-    страницы (защита литералами, хеши инлайн-скриптов и стилей), браузерный набор — 0 нарушений;
-    `accept:image` — CSP на `/` и 404; `.dockerignore` пропускает политику. `pnpm check` зелёный
+  - Сделано: `contentSecurityPolicy()` (`scripts/lib/site-policy.mjs`) — защитные директивы, `RESOURCE_ORIGINS`,
+    острова (`hash`, `on`, `sources`); `security.csp` и `staticHeaders: true`; счётчик — `data-counter`; тесты
+    островов, HTTP-набор, браузер — 0 нарушений; `accept:image` — CSP на `/` и 404. `pnpm check` зелёный
 - [x] **S6** — Контракт заголовков: список «приложение / инфра» в `infra-handoff.md`; лимит тела формы,
   природа origin-check, методы и симлинки статики — правдой в правилах (SEC-07…09)
   - Проверка: HTTP-набор проверяет заголовки приложения; чтение контракта · Закрывает: AC9 · Зависит от: S5
-  - Сделано: `infra-handoff.md § 1.3` — один список заголовков безопасности и целевой `secure-headers`
-    (`permissionsPolicy`, без `browserXssFilter`, `sslRedirect` и `frameDeny`); роутер сайта — `Host` и
-    `GET`/`HEAD`, приёмка — заголовки по списку, `POST` и `TRACE` не 200; chunked-тело формы, origin-check как
-    антиспам за Host-роутингом, методы и симлинки статики — правдой в `forms-antispam`, `render-safety`,
-    `deployment.md` и комментариях; требование «`X-Forwarded-*` обязателен» снято — приложение их не читает;
-    HTTP-набор держит, что заголовков edge приложение не ставит. `pnpm check` зелёный
+  - Сделано: `infra-handoff.md § 1.3` — один список заголовков и `secure-headers` (`permissionsPolicy`, без
+    `browserXssFilter`, `sslRedirect`, `frameDeny`); роутер — `Host` и `GET`/`HEAD`; chunked-тело, origin-check как
+    антиспам, методы и симлинки статики — правдой в правилах и доках; «`X-Forwarded-*` обязателен» снято; HTTP-набор
+    держит, что заголовков edge приложение не ставит. `pnpm check` зелёный
 
 ### Этап C — стек и обновления
 - [x] **S7** — pnpm ≥ 10.34 без corepack (Dockerfile, доки), конфиг в `pnpm-workspace.yaml`, `.npmrc` — только
@@ -169,9 +158,12 @@ blocked-by: —
     отстал или потерял `standalone`); `/smartdev` напоминает по дате `pnpm-lock.yaml`, `/release` — шаг 2
     `pnpm audit --prod --audit-level=high`; запрет `@astrojs/sitemap` — с настоящей причиной; роутер CLAUDE.md,
     `SECURITY.md`, чек-лист `/stack-deep-dive`. `pnpm check` зелёный
-- [ ] **S10** — Образ: версия Node — аргумент сборки, образ проверен на Node 24 и 26; `accept:image` проверяет
+- [x] **S10** — Образ: версия Node — аргумент сборки, образ проверен на Node 24 и 26; `accept:image` проверяет
   дренаж и отказ без `SITE_URL` с таймаутом
   - Проверка: `accept:image` на обеих версиях → зелёный; регресс-сценарии → красный · Закрывает: AC6, AC8 · Зависит от: S7
+  - Сделано: `ARG NODE_VERSION=24` в `docker/Dockerfile`; `engines` — `^24.16.0 || >=26.3.0` (минимум
+    зависимостей); `accept:image` — отказ без `SITE_URL` с опросом до 20 с, дренаж — строка `[server] SIGTERM`,
+    код 0 и время меньше `SHUTDOWN_TIMEOUT_MS`; доки образа и `/release`. Проверка — AC6, AC8; `pnpm check` зелёный
 - [ ] **S11** — Приёмка фазы независимым агентом: сценарии аудита SEC-02…04, SEO-02, SEO-08, GEO-09 на образе;
   гейт зелёный
   - Проверка: каждый сценарий — ожидаемый отказ или зелёный; `pnpm check` → зелёный · Закрывает: AC1, AC2, AC3, AC4, AC5 · Зависит от: S10
@@ -285,6 +277,11 @@ blocked-by: —
 - Тесты `.astro` — разбором, а не подстрокой тега: dev-режим Vitest аннотирует теги (`data-astro-source-*`, Astro
   включает их с тулбаром), а выключать тулбар в тестах — подгонка под сырой HTML; подстрока остаётся для
   присутствия тега и отдельного атрибута.
+- Мажор Node — `ARG NODE_VERSION`, умолчание 24 (Active LTS); на 26 — по политике после 2026-10-28, одной строкой.
+  `accept:image` ждёт отказ опросом `docker inspect` до 20 с, а не `timeout`: его нет в macOS; дренаж — по коду
+  выхода и строке лога, контейнер staging поэтому без `--rm`.
+- `runtime-sharp` не взят: sharp с libvips — ≈ 20 МБ из 359, а prod-deps без него — правка вне шагов этапа;
+  бэклог — с весом в триггере.
 - Автообновление — ежемесячная процедура в обвязке, а не Renovate: раннера и бота в экосистеме нет (CI нет, R15),
   конфиг без исполнителя обещал бы обновления, которых никто не делает. Напоминание — `/smartdev`, уязвимости —
   шаг `/release`. Политика — в форме `dependencies.md`: её копирует `/stack-deep-dive`, `/de-template` её не трогает.
@@ -293,7 +290,8 @@ blocked-by: —
 Этапы A (S1–S4) и B (S5–S6) приняты валидаторами (`M/validation-harden-runtime-{A,B}.md`, PASS); замечания B
 закрыты фиксами: HTTP-набор читает CSP как браузер, держит ответы формы и CSP своей копии сборки, сайт со
 счётчиком проходит typecheck, дубли `<путь>/index.html` и `Permissions-Policy` — правдой в контракте edge.
-Этап C: S7–S9 сделаны — pnpm 10.34.6 без corepack, настройки в `pnpm-workspace.yaml` (читают pnpm 10–12),
+Этап C (S7–S10) сделан: pnpm 10.34.6 без corepack, настройки в `pnpm-workspace.yaml` (читают pnpm 10–12),
 строгие peer, `pnpm audit --prod` без high и шагом `/release`; `typecheck` не проходит молча; Astro 7.3.5, тесты
-`.astro` — разбором; политика обновлений — в `dependencies.md` шаблона. Следующее — S10 (Node — аргумент сборки,
-образ на Node 24 и 26, дренаж и отказ без `SITE_URL` в `accept:image`).
+`.astro` — разбором; политика обновлений — в `dependencies.md` шаблона; Node — аргумент сборки, образ принят на 24
+и 26, `accept:image` держит отказ без `SITE_URL` и дренаж. Следующее — валидатор этапа C, затем S11 — приёмка
+фазы отдельным агентом.

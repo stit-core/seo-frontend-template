@@ -11,7 +11,7 @@ status: draft
 
 | поле | значение |
 |---|---|
-| образ | `node:24-alpine`, три стадии (`build` → `prod-deps` → `runtime`), `USER node` |
+| образ | `node:${NODE_VERSION}-alpine` — аргумент сборки, умолчание — Active LTS (24); стадии `pnpm` → `build` и `prod-deps` → `runtime`, `USER node` |
 | адаптер | `@astrojs/node` в режиме `standalone`, автостарт выключен |
 | обёртка | `docker/server.mjs` — keep-alive, дренаж, fail-fast по env целиком (схема `shared/config`) |
 | порт / хост | `PORT=3000` / `HOST=0.0.0.0` |
@@ -29,7 +29,7 @@ status: draft
 
 | поле | значение |
 |---|---|
-| Node dev | `24 LTS` (`.nvmrc`) |
+| Node dev | `24 LTS` (`.nvmrc`); `engines` — `^24.16.0 \|\| >=26.3.0`, минимум зависимостей |
 | менеджер пакетов | `pnpm` — версия `packageManager`, ставится `npm i -g` (corepack нет в Node ≥ 25); настройки — `pnpm-workspace.yaml`, в `.npmrc` — только реестр и токены |
 | модули | ESM-only (`"type": "module"`) |
 | TypeScript | `astro/tsconfigs/strictest`, `astro sync` + `astro-check` в гейте |
@@ -46,7 +46,7 @@ status: draft
 ## Generates
 
 - `.nvmrc`, `package.json#engines`
-- `docker/Dockerfile` — стадии и `HEALTHCHECK`
+- `docker/Dockerfile` — стадии, `NODE_VERSION` и `HEALTHCHECK`
 - `docker/server.mjs` — таймауты и дренаж
 - `config.md` — env `PORT`, `HOST`, `NODE_OPTIONS`, `KEEP_ALIVE_TIMEOUT_MS`, `SHUTDOWN_TIMEOUT_MS`
 - handoff в `<org>/infra` — `mem_limit`, `stop_grace_period`, число реплик

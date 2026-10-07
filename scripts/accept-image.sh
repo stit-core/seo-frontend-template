@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
-# Приёмка собранного образа до пуша в registry: отказ без SITE_URL, штамповка origin,
-# статусы ключевых маршрутов, canonical, CSP, robots и карта, контур staging; заголовки, TTFB и
-# дренаж — печать без порога.
+# Приёмка собранного образа до пуша в registry: отказ без SITE_URL за конечное время, штамповка
+# origin, статусы ключевых маршрутов, canonical, CSP, robots и карта, контур staging, дренаж по
+# SIGTERM; заголовки и TTFB — печать без порога.
 # Использование: pnpm accept:image <image> [port]
 set -u
 
@@ -9,6 +9,10 @@ IMAGE=${1:-}
 PORT=${2:-3211}
 NAME=site-accept-$$
 ORIGIN=https://accept.example
+# Отказ без SITE_URL — доли секунды; дольше — контейнер поднялся без origin и ждёт трафика.
+REFUSE_S=20
+# Умолчание SHUTDOWN_TIMEOUT_MS обёртки: дренаж обязан уложиться в него, docker stop ждёт дольше.
+DRAIN_MS=15000
 
 if [ -z "$IMAGE" ]; then
   echo "usage: pnpm accept:image <image> [port]" >&2
@@ -44,11 +48,24 @@ docker image inspect "$IMAGE" >/dev/null 2>&1 || {
 }
 docker images "$IMAGE" --format '  размер: {{.Size}}'
 
-echo "== старт без SITE_URL: обязан упасть =="
-if docker run --rm --name "$NAME" "$IMAGE" >/dev/null 2>&1; then
-  fail "контейнер поднялся без SITE_URL"
+running() { [ "$(docker inspect -f '{{.State.Running}}' "$NAME" 2>/dev/null)" = "true" ]; }
+exit_code() { docker inspect -f '{{.State.ExitCode}}' "$NAME"; }
+
+echo "== старт без SITE_URL: отказ за $REFUSE_S с =="
+docker run -d --name "$NAME" "$IMAGE" >/dev/null || exit 1
+i=0
+while running && [ "$i" -lt $((REFUSE_S * 4)) ]; do
+  i=$((i + 1))
+  sleep 0.25
+done
+if running; then
+  fail "контейнер без SITE_URL работает дольше $REFUSE_S с"
+elif [ "$(exit_code)" = "0" ]; then
+  fail "контейнер без SITE_URL вышел с кодом 0"
+elif docker logs "$NAME" 2>&1 | grep -q 'SITE_URL'; then
+  ok "отказ без SITE_URL: код $(exit_code), лог называет SITE_URL"
 else
-  ok "fail-fast без SITE_URL"
+  fail "контейнер без SITE_URL упал, но лог не называет SITE_URL"
 fi
 cleanup
 
@@ -106,7 +123,8 @@ done | sort -n | sed -n '10p' | sed 's/^/  медиана: /'
 
 echo "== контур staging (ROBOTS_POLICY=noindex) =="
 cleanup
-docker run -d --rm --name "$NAME" -p "$PORT:3000" \
+# Без --rm: после docker stop нужны код выхода и лог.
+docker run -d --name "$NAME" -p "$PORT:3000" \
   -e SITE_URL="$ORIGIN" -e ROBOTS_POLICY=noindex "$IMAGE" >/dev/null || exit 1
 wait_healthz || {
   fail "staging-профиль не поднялся"
@@ -117,10 +135,19 @@ curl -s "http://127.0.0.1:$PORT/robots.txt" | grep -q 'Disallow: /' &&
 curl -sI "http://127.0.0.1:$PORT/" | grep -qi '^x-robots-tag: noindex, nofollow' &&
   ok "X-Robots-Tag на странице сборки" || fail "staging: у страницы сборки нет X-Robots-Tag"
 
-echo "== дренаж (docker stop) =="
+# SIGTERM доходит до node, только если entrypoint отдал ему процесс (exec): иначе PID 1 — оболочка,
+# сигнал теряется, и docker stop добивает контейнер SIGKILL (код 137) по истечении -t.
+echo "== дренаж: SIGTERM до node, выход 0 быстрее $DRAIN_MS мс =="
 start=$(date +%s%N)
-docker stop "$NAME" >/dev/null 2>&1
-echo "  $(((($(date +%s%N) - start)) / 1000000)) мс"
+docker stop -t $((DRAIN_MS / 1000 + 5)) "$NAME" >/dev/null 2>&1
+ms=$((($(date +%s%N) - start) / 1000000))
+if ! docker logs "$NAME" 2>&1 | grep -q '\[server\] SIGTERM'; then
+  fail "дренаж: SIGTERM не дошёл до node ($ms мс, код $(exit_code))"
+elif [ "$(exit_code)" != "0" ] || [ "$ms" -ge "$DRAIN_MS" ]; then
+  fail "дренаж: $ms мс, код $(exit_code) — ждали 0 быстрее $DRAIN_MS мс"
+else
+  ok "дренаж: $ms мс, код 0"
+fi
 
 echo
 if [ "$fails" -gt 0 ]; then

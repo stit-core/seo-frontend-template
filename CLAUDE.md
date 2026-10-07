@@ -83,7 +83,7 @@ origin штампуется при старте.
 | `pnpm size` | бюджеты `.size-limit.cjs` (CSS, HTML главной и поста) |
 | `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
 | `pnpm ttfb <origin> <path…>` | TTFB запущенного сервера: медиана/p90 20 запросов (`scripts/ttfb.mjs`) |
-| `pnpm accept:image <image>` | приёмка собранного образа до пуша: fail-fast, штамповка, статусы, canonical, robots и карта, staging; TTFB и дренаж — печать без порога |
+| `pnpm accept:image <image>` | приёмка собранного образа до пуша: отказ без `SITE_URL` за 20 с, штамповка, статусы, canonical, robots и карта, staging, дренаж по SIGTERM быстрее `SHUTDOWN_TIMEOUT_MS`; TTFB — печать без порога |
 | `pnpm check` | **gate**: шаги по порядку до первого красного — состав и что держит каждый: rule `tests-pipeline` § Gate |
 
 Перед claim «готово» / push — **`pnpm check`** (его же гоняет pre-push — для пушимого HEAD на

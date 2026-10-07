@@ -1,5 +1,9 @@
+# Мажор Node — аргумент сборки: умолчание — Active LTS, новый чётный мажор проверяется сборкой с
+# --build-arg NODE_VERSION=<мажор> и приёмкой образа (docs/stack/_templates/dependencies.md § Обновления).
+ARG NODE_VERSION=24
+
 # ── pnpm ────────────────────────────────────────────────────────────
-FROM node:24-alpine AS pnpm
+FROM node:${NODE_VERSION}-alpine AS pnpm
 
 WORKDIR /app
 # Стор pnpm — $PNPM_HOME/store: его держит cache-mount между сборками.
@@ -46,7 +50,7 @@ RUN rm -rf \
       node_modules/.pnpm/prismjs*
 
 # ── runtime ─────────────────────────────────────────────────────────
-FROM node:24-alpine
+FROM node:${NODE_VERSION}-alpine
 
 WORKDIR /app
 ENV NODE_ENV=production \

@@ -1,8 +1,8 @@
 # Deployment
 
-Один Node-образ (`node:24-alpine`) на любую среду. Сборка ничего не знает о среде: в
-prerendered-выход запекается плейсхолдер origin, а при старте контейнера он штампуется
-в реальный `SITE_URL`. Всё остальное приходит env-переменными процесса.
+Один Node-образ (`node:<NODE_VERSION>-alpine`, по умолчанию 24 — Active LTS) на любую среду. Сборка
+ничего не знает о среде: в prerendered-выход запекается плейсхолдер origin, а при старте контейнера
+он штампуется в реальный `SITE_URL`. Всё остальное приходит env-переменными процесса.
 
 ## Образ
 
@@ -12,7 +12,9 @@ docker build -f docker/Dockerfile --secret id=npmrc,src=$HOME/.npmrc \
 ```
 
 Без `~/.npmrc` флаг `--secret` убирают: buildx падает на отсутствующем файле секрета, а
-Dockerfile монтирует его необязательно.
+Dockerfile монтирует его необязательно. Мажор Node — аргумент сборки `NODE_VERSION` (умолчание —
+в `docker/Dockerfile`); новый LTS проверяется сборкой с `--build-arg NODE_VERSION=<мажор>` и
+`pnpm accept:image` — правило `docs/stack/_templates/dependencies.md § Обновления`.
 
 Стадии `docker/Dockerfile`:
 
@@ -82,7 +84,9 @@ origin из runtime `SITE_URL` (`Astro.site` для URL не используе�
   прокси переиспользует соединение, которое Node уже закрывает, и ловит 502
 - дренаж на `SIGTERM`/`SIGINT`: `close()` + `closeIdleConnections()` каждые 200 мс,
   потолок `SHUTDOWN_TIMEOUT_MS` (15 с; держать ≤ `stop_grace_period` compose);
-  `docker stop` без трафика — доли секунды, запрос в полёте доезжает
+  `docker stop` без трафика — доли секунды, запрос в полёте доезжает. Сигнал доходит до node,
+  потому что `entrypoint.sh` отдаёт ему процесс (`exec`); `pnpm accept:image` держит это — выход 0
+  быстрее `SHUTDOWN_TIMEOUT_MS` и строка `[server] SIGTERM` в логе
 - fail-fast: env целиком проверяется до загрузки приложения той же схемой, что его читает
   (`loadServerConfig` из `src/shared/config/runtime.ts`; сборка кладёт этот модуль отдельным
   файлом `dist/server/runtime-config.mjs`, и экземпляр у обёртки и приложения общий — запросы

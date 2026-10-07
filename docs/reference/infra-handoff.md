@@ -14,8 +14,8 @@
 
 ## Сервис `site` одним экраном
 
-- **Образ**: `node:24-alpine`, один Node-процесс, `USER node` (uid 1000), `EXPOSE 3000`,
-  собственный `HEALTHCHECK` на `/healthz`. `ENTRYPOINT /app/docker/entrypoint.sh`,
+- **Образ**: `node:24-alpine` (мажор Node — аргумент сборки), один Node-процесс, `USER node` (uid
+  1000), `EXPOSE 3000`, собственный `HEALTHCHECK` на `/healthz`. `ENTRYPOINT /app/docker/entrypoint.sh`,
   `CMD node ./docker/server.mjs`. Registry-путь — `<registry>/<org>/site:vX.Y.Z`,
   `:latest`/`:edge` не выпускаются.
 - **Static-first**: HTML контентных страниц собран на сборке и лежит в `/app/dist/client`;
