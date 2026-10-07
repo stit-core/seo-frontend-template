@@ -152,9 +152,16 @@ blocked-by: —
     HTTP-набор держит, что заголовков edge приложение не ставит. `pnpm check` зелёный
 
 ### Этап C — стек и обновления
-- [ ] **S7** — pnpm ≥ 10.34 без corepack (Dockerfile, доки), конфиг в `pnpm-workspace.yaml`, `.npmrc` — только
+- [x] **S7** — pnpm ≥ 10.34 без corepack (Dockerfile, доки), конфиг в `pnpm-workspace.yaml`, `.npmrc` — только
   auth, `minimumReleaseAge`, строгие peer; lockfile обновлён в пределах диапазонов
   - Проверка: `pnpm install --frozen-lockfile` зелёный под pnpm 10 и 12; `pnpm audit --prod` → 0 high · Закрывает: AC6 · Зависит от: —
+  - Сделано: `packageManager: pnpm@10.34.6`; `pnpm-workspace.yaml` — `allowBuilds`, `minimumReleaseAge` 4320,
+    `strictPeerDependencies` с одним правилом для tsconfck, `auditConfig`; `.npmrc` и `package.json#pnpm` удалены;
+    lockfile — `pnpm update` в диапазонах (devalue 5.9.3, smol-toml 1.9.0, source-map-js 1.2.2), sharp 0.35.5;
+    `eslint-plugin-jsx-a11y` убран — a11y `.astro` держат Biome и axe; образ — стадия `pnpm` с `npm install -g`
+    версии `packageManager`. Установка из lockfile под pnpm 10.34.6, 11.28.4 и 12.9.1 зелёная, lockfile не тронут,
+    `peers check` чист (`M/p2c/pnpm1{1,2}-*-s7.log`); `pnpm audit --prod --audit-level=high` — 0 (было 6 high);
+    образ на Node 24 собран, `accept:image` зелёный (`M/p2c/accept-s7-node24.log`); `pnpm check` зелёный
 - [ ] **S8** — Стек без ловушек: Astro до последнего патча, тесты `.astro` сверяют DOM, а не сырой HTML;
   TypeScript `~6.0` записан с причиной; a11y-плагин ESLint с поддержкой ESLint 10 или убран
   - Проверка: `pnpm check` зелёный на новом патче Astro · Закрывает: AC7 · Зависит от: S7
@@ -270,9 +277,23 @@ blocked-by: —
 - Origin-check назван антиспамом: у формы нет cookie и сессии, границы CSRF нет; чужой `Host` отсекает
   Host-роутинг edge. Требование «`X-Forwarded-*` обязателен» снято — приложение их не читает.
 - Симлинки `public/` — правилом, а не проверкой: каталог под контролем автора, сборка симлинков не порождает.
+- pnpm — без corepack: образ ставит `npm install -g` ровно версию `packageManager` (одна точка версии, стадия
+  `pnpm` общая для build и prod-deps), разработчик — `npm i -g pnpm@10`, точную версию pnpm подтягивает сам.
+- Настройки pnpm — `pnpm-workspace.yaml`: `allowBuilds` вместо `onlyBuiltDependencies` (его pnpm 11+ молча не
+  читает, `allowBuilds` пишет и 10.34); `.npmrc` удалён — hoist-ключи гейту не нужны, в нём живут только реестр и
+  токены, а в образ они приходят секретом `npmrc`. `allowBuilds` — только пакеты со скриптами установки: esbuild и
+  lefthook — да, unrs-resolver — нет (бинарник приходит optional-пакетом, а неразрешённый скрипт pnpm 11+ роняет).
+- `minimumReleaseAge` — 3 суток: окно, в которое npm разрешает снять релиз; pnpm 11+ сверяет с ним и lockfile.
+- Строгие peer потребовали в S7 убрать `eslint-plugin-jsx-a11y` (peer `eslint ≤ 9`): a11y `.astro` держит Biome —
+  18 правил `lint/a11y/*` на разметке, — отрисованное — axe; замена `-x` дублировала бы их. Известный конфликт —
+  строка `peerDependencyRules` с причиной: tsconfck плагина Steiger объявляет TypeScript ^5, а читает tsconfig.
+- `pnpm audit --prod`: high без исправления — `http-cache-semantics` через astro (только сборка, кеш удалённых
+  картинок, общего кеша нет) — `auditConfig.ignoreGhsas` с причиной; dev-дерево (`braces` без патча) в образ не
+  едет. sharp 0.35.5 — точный пин, в диапазонах его не взять: правка рядом с lockfile.
 
 ## Где мы сейчас
 Этапы A (S1–S4) и B (S5–S6) приняты валидаторами (`M/validation-harden-runtime-{A,B}.md`, PASS); замечания B
 закрыты фиксами: HTTP-набор читает CSP как браузер, держит ответы формы и CSP своей копии сборки, сайт со
 счётчиком проходит typecheck, дубли `<путь>/index.html` и `Permissions-Policy` — правдой в контракте edge.
-Следующее — этап C: S7 (pnpm без corepack).
+Этап C: S7 сделан — pnpm 10.34.6 без corepack, настройки в `pnpm-workspace.yaml` (читают pnpm 10–12), строгие
+peer, `pnpm audit --prod` без high. Следующее — S8 (патч Astro, тесты `.astro` по DOM, TypeScript `~6.0`).

@@ -89,6 +89,8 @@ swap, fallback или optional. Сторонний скрипт (счётчик)
 | документ-шелл: `<html lang>`, `<head>` со `<slot name="head">`, лендмарки, skip-link | `app/layouts/document.astro` |
 | переключатель темы | `features/theme` (`ThemeInit` в `<head>`, `ThemeToggle` в шапке) |
 
-Форматирует `.astro` Prettier (`pnpm format`), линтят Biome и ESLint
-(`astro/jsx-a11y/*`: `alt`, `lang`, заголовки, интерактив без клавиатуры; канон этого правила —
-`no-restricted-syntax` в `eslint.config.js`, фикстура `.gate-fixtures/src/widgets/promo`).
+Форматирует `.astro` Prettier (`pnpm format`), линтят Biome (a11y-группа `lint/a11y/*`: `alt`,
+`lang`, содержимое ссылок и заголовков, `type` кнопки, `tabindex`, роли и aria, интерактив без
+клавиатуры) и ESLint (канон этого правила — `no-restricted-syntax` в `eslint.config.js`, фикстура
+`.gate-fixtures/src/widgets/promo`); доступность отрисованного — axe в тестах компонентов и в
+браузерном наборе.

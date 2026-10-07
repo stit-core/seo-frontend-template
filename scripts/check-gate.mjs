@@ -1,10 +1,11 @@
 // Гейт на гейт: негативные фикстуры .gate-fixtures/ обязаны валить линтеры (ESLint, Steiger,
 // Biome — теми же конфигами, что и src/) и собственные скрипты гейта (seo:check, check:links,
 // check:content, plan:check) — ровно нарушениями из expected.json, не больше и не меньше. Иначе
-// деградация (Steiger fail-open, пустой a11y-конфиг, потерянный резолвер boundaries, ослабленная
-// проверка скрипта) остаётся незамеченной: прогон зелёный, а держать нечем. Пустая или урезанная
-// секция expected.json — тоже деградация: её ловит точное совпадение. Периметр — так же: guard-хук
-// Claude Code обязан отказать каждому обходу из .gate-fixtures/guard.json и пропустить работу.
+// деградация (Steiger fail-open, выключенная a11y-группа Biome, потерянный резолвер boundaries,
+// ослабленная проверка скрипта) остаётся незамеченной: прогон зелёный, а держать нечем. Пустая или
+// урезанная секция expected.json — тоже деградация: её ловит точное совпадение. Периметр — так же:
+// guard-хук Claude Code обязан отказать каждому обходу из .gate-fixtures/guard.json и пропустить
+// работу.
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 import { isAbsolute, relative, resolve } from 'node:path'

@@ -23,7 +23,6 @@
 .claude/skills/plan/references/plan-template.md
 scripts/validate-plan.sh
 .commitlintrc.cjs
-.npmrc
 .nvmrc
 LICENSE
 src/shared/lib/index.ts
@@ -88,3 +87,6 @@ docs/reference/deployment.md
 - Негативные фикстуры гейта `.gate-fixtures/` + `check:gate`.
 - Тема через `light-dark()` в токен-слое.
 - `toThrowError` → `toThrow` в `invariant.test.ts` (в Vitest 5 алиас помечен deprecated).
+- pnpm ≥ 10.34 без corepack (в Node ≥ 25 его нет; в образе — `npm install -g` версии
+  `packageManager`), настройки — `pnpm-workspace.yaml` (их читают pnpm 10.34, 11 и 12:
+  `allowBuilds`, `minimumReleaseAge`, `strictPeerDependencies`), `.npmrc` — только реестр и токены.

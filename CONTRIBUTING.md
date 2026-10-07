@@ -11,7 +11,7 @@
 - Подними окружение:
 
   ```bash
-  nvm use && corepack enable && corepack prepare pnpm@10 --activate
+  nvm use && npm i -g pnpm@10   # точную версию проекта (packageManager) pnpm подтянет сам
   pnpm install
   pnpm prepare        # lefthook git-hooks
   pnpm dev            # http://localhost:4321
@@ -37,7 +37,7 @@
   поведение.
 - **PR** — форкни репозиторий, заведи ветку, открой pull request с понятным «зачем».
   Держи PR сфокусированным.
-- Правка `docker/*`, `.npmrc`, `package.json#dependencies`, новый остров или новая
+- Правка `docker/*`, `pnpm-workspace.yaml`, `package.json#dependencies`, новый остров или новая
   интеграция Astro — обоснование в PR отдельно.
 
 ## Перед PR

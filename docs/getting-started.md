@@ -39,7 +39,7 @@ FSD-карта сайта), дальше работа идёт из операц
 
 ```bash
 nvm use                                   # Node 24
-corepack enable && corepack prepare pnpm@10 --activate
+npm i -g pnpm@10                          # точную версию проекта (packageManager) pnpm подтянет сам
 pnpm install
 pnpm prepare                              # lefthook git-hooks
 pnpm dev                                  # http://localhost:4321

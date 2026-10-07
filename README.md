@@ -32,8 +32,8 @@ Playwright · size-limit · pnpm 10 · lefthook + commitlint.
 ## Быстрый старт
 
 ```bash
-# Node 24 + pnpm 10
-nvm use && corepack enable && corepack prepare pnpm@10 --activate
+# Node 24 (.nvmrc) + pnpm 10: точную версию проекта (packageManager) pnpm подтянет сам
+nvm use && npm i -g pnpm@10
 
 pnpm install
 pnpm prepare         # lefthook git-hooks

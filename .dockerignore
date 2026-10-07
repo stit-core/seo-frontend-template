@@ -1,6 +1,6 @@
-# Сборке нужны только package.json, pnpm-lock.yaml, .npmrc, astro.config.ts, tsconfig.json,
-# src, public, content, docker и политика сборки (из неё конфиг строит CSP) — остальное в контекст
-# не попадает.
+# Сборке нужны только package.json, pnpm-lock.yaml, pnpm-workspace.yaml, astro.config.ts,
+# tsconfig.json, src, public, content, docker и политика сборки (из неё конфиг строит CSP) —
+# остальное в контекст не попадает.
 node_modules
 dist
 .astro

@@ -1,11 +1,18 @@
-# ── build ───────────────────────────────────────────────────────────
-FROM node:24-alpine AS build
+# ── pnpm ────────────────────────────────────────────────────────────
+FROM node:24-alpine AS pnpm
 
 WORKDIR /app
+# Стор pnpm — $PNPM_HOME/store: его держит cache-mount между сборками.
 ENV PNPM_HOME=/pnpm CI=1
-RUN corepack enable && corepack prepare pnpm@10.0.0 --activate
 
-COPY package.json pnpm-lock.yaml .npmrc ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+# Ровно версия packageManager и без corepack: в Node ≥ 25 его нет.
+RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
+    npm install -g "$(node -p "require('./package.json').packageManager")"
+
+# ── build ───────────────────────────────────────────────────────────
+FROM pnpm AS build
+
 # --ignore-scripts: `prepare` → `lefthook install` требует git, а скрипты зависимостей
 # сборке не нужны — нативные бинарники приходят optional-пакетами.
 RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
@@ -20,13 +27,8 @@ RUN pnpm build
 # ── prod-deps ───────────────────────────────────────────────────────
 # Выход Astro не self-contained: entry.mjs импортит astro/zod, сервис картинок — sharp.
 # Ставим только dependencies.
-FROM node:24-alpine AS prod-deps
+FROM pnpm AS prod-deps
 
-WORKDIR /app
-ENV PNPM_HOME=/pnpm CI=1
-RUN corepack enable && corepack prepare pnpm@10.0.0 --activate
-
-COPY package.json pnpm-lock.yaml .npmrc ./
 RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
     --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --prod --ignore-scripts

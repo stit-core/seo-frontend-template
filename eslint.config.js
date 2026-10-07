@@ -186,7 +186,6 @@ export default defineConfig(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   ...astro.configs['flat/recommended'],
-  ...astro.configs['flat/jsx-a11y-recommended'],
   { languageOptions: { globals: { ...globals.browser, ...globals.node } } },
   {
     // Логика слайсов и e2e: здесь можно позволить typed-lint.

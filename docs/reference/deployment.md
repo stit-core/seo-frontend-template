@@ -16,10 +16,12 @@ Dockerfile монтирует его необязательно.
 
 Стадии `docker/Dockerfile`:
 
-- **build** — corepack + pnpm 10, `pnpm install --frozen-lockfile --ignore-scripts` (store
-  через `--mount=type=cache`, `~/.npmrc` оператора — через необязательный
-  `--mount=type=secret,id=npmrc`; скрипты зависимостей сборке не нужны, а `prepare` →
-  `lefthook install` требует git),
+- **pnpm** — `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml` и `npm install -g` ровно
+  версии `packageManager`: corepack не нужен (в Node ≥ 25 его нет); `~/.npmrc` оператора (реестр и
+  токены) — через необязательный `--mount=type=secret,id=npmrc` здесь и в установках ниже
+- **build** — `pnpm install --frozen-lockfile --ignore-scripts` (store через
+  `--mount=type=cache`; скрипты зависимостей сборке не нужны, а `prepare` → `lefthook install`
+  требует git),
   `pnpm build` без `SITE_URL` — `astro.config.ts` подставляет плейсхолдер
   `https://__site_origin__`
 - **prod-deps** — `pnpm install --prod --ignore-scripts` + прунинг build-машинерии,
@@ -30,7 +32,7 @@ Dockerfile монтирует его необязательно.
   stamp.mjs,server.mjs}`; `USER node`, `EXPOSE 3000`, `HEALTHCHECK wget …:${PORT:-3000}/healthz`,
   `ENTRYPOINT entrypoint.sh`, `CMD node ./docker/server.mjs`
 
-В контекст сборки попадают только `package.json`, `pnpm-lock.yaml`, `.npmrc`,
+В контекст сборки попадают только `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`,
 `astro.config.ts`, `tsconfig.json`, `src/` (включая контент `src/entities/*/content/**`),
 `public/`, `content/` (`redirects.yaml` разбирается на сборке, в серверный бандл попадают
 данные), `docker/` и политика сборки `scripts/lib/site-policy.mjs` (из неё конфиг строит CSP)

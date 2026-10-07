@@ -30,7 +30,7 @@ status: draft
 | поле | значение |
 |---|---|
 | Node dev | `24 LTS` (`.nvmrc`) |
-| менеджер пакетов | `pnpm 10` через corepack |
+| менеджер пакетов | `pnpm` — версия `packageManager`, ставится `npm i -g` (corepack нет в Node ≥ 25); настройки — `pnpm-workspace.yaml`, в `.npmrc` — только реестр и токены |
 | модули | ESM-only (`"type": "module"`) |
 | TypeScript | `astro/tsconfigs/strictest`, `astro check` в гейте |
 | origin на сборке | плейсхолдер `https://__site_origin__`; реальный `SITE_URL` штампует entrypoint |

@@ -1,0 +1,26 @@
+# Настройки pnpm — здесь, а не в .npmrc и package.json#pnpm: этот файл читают pnpm 10.34, 11 и 12.
+# В .npmrc остаются только реестр и токены.
+
+# Скрипты установки — только у этих пакетов; у остальных их нет или они не нужны (бинарник
+# unrs-resolver приходит optional-пакетом, его postinstall лишь перепроверяет).
+allowBuilds:
+  esbuild: true
+  lefthook: true
+  unrs-resolver: false
+
+# Версия моложе трёх суток не ставится: столько npm даёт автору снять релиз, а реестру — отозвать
+# вредоносный.
+minimumReleaseAge: 4320
+
+# Конфликт peer — ошибка установки; известный и безвредный — строкой ниже, с причиной.
+strictPeerDependencies: true
+peerDependencyRules:
+  allowedVersions:
+    # tsconfck (через плагин Steiger) объявляет TypeScript ^5, а читает только tsconfig — гейт на 6 зелёный.
+    tsconfck>typescript: '6'
+
+auditConfig:
+  ignoreGhsas:
+    # http-cache-semantics (через astro): исправления нет. Astro зовёт его только на сборке — кеш
+    # удалённых картинок; общего кеша между пользователями, где уязвимость раскрывает чужой ответ, нет.
+    - GHSA-ch52-4w7c-c8xp

@@ -2,7 +2,6 @@
   "eslint": [
     { "file": "src/widgets/a/ui/a.astro", "rule": "boundaries/dependencies", "count": 3 },
     { "file": "src/widgets/a/ui/a.astro", "rule": "no-restricted-imports" },
-    { "file": "src/widgets/a/ui/a.astro", "rule": "astro/jsx-a11y/alt-text" },
     { "file": "src/widgets/a/ui/a.astro", "rule": "no-restricted-syntax" },
     { "file": "src/widgets/b/lib/crumbs.js", "rule": "boundaries/dependencies" },
     { "file": "src/entities/post/ui/post-card.astro", "rule": "boundaries/dependencies" },

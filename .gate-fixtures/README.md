@@ -5,9 +5,9 @@
 в чём-то расходится с `expected.json`: ожидаемое нарушение не поймано (правило выключено,
 понижено до warn, проверка в скрипте ослаблена) или поймано лишнее (ожидание удалено —
 `expected.json` урезан). Пустая секция — тоже ошибка: гейт на гейт выключен. Это защита от
-молчаливых деградаций: Steiger fail-open на нерезолвимых импортах, `eslint-plugin-astro` без
-`eslint-plugin-jsx-a11y` разворачивает a11y-конфиг в ноль правил, `boundaries` без резолвера не
-видит `@/`-импорты, правка `seo:check` «под новую коллекцию» тихо выключает сверку.
+молчаливых деградаций: Steiger fail-open на нерезолвимых импортах, выключенная a11y-группа Biome
+пропускает разметку без `alt`, `boundaries` без резолвера не видит `@/`-импорты, правка
+`seo:check` «под новую коллекцию» тихо выключает сверку.
 
 ## Линтеры — `src/`
 
@@ -22,7 +22,7 @@ ESLint, Steiger и Biome гоняются из этого каталога по 
 | `src/features/search/ui/search-box.astro` | клиентский `<script>` импортирует `@/shared/config` (Zod и env процесса в бандле) и читает `import.meta.env` | ESLint `no-restricted-imports`, `no-restricted-syntax` |
 | `src/components/promo.astro` | файл вне слоёв FSD | ESLint `boundaries/no-unknown-files` |
 | `src/actions.ts` | новый вход в корне `src` без строки в `ASTRO_ENTRIES` | ESLint `boundaries/no-unknown-files` |
-| `src/widgets/a/ui/a.astro` | `<img>` без `alt` (и сырой `<img>` мимо `<Picture>`) | ESLint `astro/jsx-a11y/alt-text` и `no-restricted-syntax`, Biome `lint/a11y/useAltText` |
+| `src/widgets/a/ui/a.astro` | `<img>` без `alt` (и сырой `<img>` мимо `<Picture>`) | Biome `lint/a11y/useAltText`, ESLint `no-restricted-syntax` |
 | `src/widgets/promo/ui/promo.astro` | канон UI и приложения: CSS UI-кита, `process.env`, `import.meta.env` ключом и деструктуризацией, `getRuntimeConfig()` и `import *` из `@/shared/config`, `console` во frontmatter; сырой `<img>`, `client:load`, инлайн-`style`, сырой цвет в классе (литералом и в шаблонной строке), в `fill` SVG и в `<style>` | ESLint `no-restricted-imports`, `no-restricted-properties`, `no-console`, `no-restricted-syntax` ×11 |
 | `src/widgets/promo/ui/badge.astro` | законное: `fill="url(#fade)"` и id-селектор `#add` из hex-букв в `<style>` | ничем |
 | `src/entities/post/ui/post-card.astro` | импорт вверх `entities → widgets` | ESLint `boundaries/dependencies`, Steiger `fsd/forbidden-imports` |
