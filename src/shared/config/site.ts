@@ -20,14 +20,18 @@ export const PRIVACY_POLICY_VERSION = '2026-09-17'
 
 // Публичные per-site идентификаторы живут здесь, а не в env: prerendered-страница печатается
 // на сборке, а образ собирается без env — runtime-значение до неё не доходит. /de-template
-// подставляет проектные.
+// подставляет проектные. Тип — string, а не литерал пустой строки: с проектным значением проверка
+// «задано ли» иначе не компилируется.
 
 // Счётчик Яндекс Метрики; пусто — аналитики нет и ни одного стороннего скрипта.
-export const METRIKA_ID = ''
+export const METRIKA_ID: string = ''
 
 // Подтверждение домена в Search Console и Вебмастере: токен из панели. Пусто — тега нет;
 // альтернатива — HTML-файл в public/ или запись DNS TXT.
-export const SITE_VERIFICATION = { google: '', yandex: '' } as const
+export const SITE_VERIFICATION: { readonly google: string; readonly yandex: string } = {
+  google: '',
+  yandex: '',
+}
 
 // Социальная карточка по умолчанию, 1200×630 (public/og-default.png); у записи с обложкой —
 // её обложка.

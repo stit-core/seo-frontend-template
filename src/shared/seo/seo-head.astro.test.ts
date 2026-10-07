@@ -1,4 +1,5 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import type { SITE_VERIFICATION } from '@/shared/config'
 import SeoHead from './seo-head.astro'
 
 const ORIGIN = 'https://demo.example'
@@ -17,6 +18,14 @@ const base = { title: 'Запись', description: 'Описание запис�
 
 describe('SeoHead', () => {
   afterEach(() => vi.unstubAllEnvs())
+
+  // /de-template ставит токены в site.ts: теги с ними проходят typecheck, только если поля — string.
+  it('токены подтверждения домена — строки, а не литералы умолчания', () => {
+    expectTypeOf<typeof SITE_VERIFICATION>().toEqualTypeOf<{
+      readonly google: string
+      readonly yandex: string
+    }>()
+  })
 
   it('индексируемая страница: title-шаблон, self-canonical, OG с дефолтной картинкой, twitter:card', async () => {
     const html = await render('/blog/x', base)

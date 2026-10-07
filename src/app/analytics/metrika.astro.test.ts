@@ -23,6 +23,11 @@ const render = async () => {
 }
 
 describe('Metrika', () => {
+  // /de-template ставит номер в site.ts: остров с ним проходит typecheck, только если поле — string.
+  it('идентификатор счётчика — строка, а не литерал умолчания', () => {
+    expectTypeOf<typeof SharedConfig.METRIKA_ID>().toEqualTypeOf<string>()
+  })
+
   it('без идентификатора счётчика разметка пуста — сторонних скриптов на сайте нет', async () => {
     config.METRIKA_ID = ''
     expect((await render()).trim()).toBe('')
