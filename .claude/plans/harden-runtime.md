@@ -138,11 +138,11 @@ blocked-by: —
 - [x] **S7** — pnpm ≥ 10.34 без corepack (Dockerfile, доки), конфиг в `pnpm-workspace.yaml`, `.npmrc` — только
   auth, `minimumReleaseAge`, строгие peer; lockfile обновлён в пределах диапазонов
   - Проверка: `pnpm install --frozen-lockfile` зелёный под pnpm 10 и 12; `pnpm audit --prod` → 0 high · Закрывает: AC6 · Зависит от: —
-  - Сделано: `pnpm@10.34.6`; `pnpm-workspace.yaml` — `allowBuilds`, `minimumReleaseAge` 4320, строгие peer,
-    `auditConfig`; `.npmrc` и `package.json#pnpm` удалены; lockfile — `pnpm update` в диапазонах, sharp 0.35.5;
+  - Сделано: `pnpm@10.34.6`; `pnpm-workspace.yaml` — `allowBuilds`, `minimumReleaseAge` 4320, строгие peer;
+    `.npmrc` и `package.json#pnpm` удалены; lockfile — `pnpm update` в диапазонах, sharp 0.35.5;
     `eslint-plugin-jsx-a11y` убран; образ — стадия `pnpm` с `npm install -g`. Установка из lockfile под pnpm 10.34.6,
     11.28.4 и 12.9.1 зелёная, lockfile не тронут, `peers check` чист (`M/p2c/pnpm1{1,2}-*-s7.log`); `pnpm audit
-    --prod --audit-level=high` — 0 (было 6 high); образ на Node 24 — `accept:image` зелёный; `pnpm check` зелёный
+    --prod --audit-level=high` — 0; образ на Node 24 — `accept:image` зелёный; `pnpm check` зелёный
 - [x] **S8** — Стек без ловушек: Astro до последнего патча, тесты `.astro` сверяют DOM, а не сырой HTML;
   TypeScript `~6.0` записан с причиной; a11y-плагин ESLint с поддержкой ESLint 10 или убран
   - Проверка: `pnpm check` зелёный на новом патче Astro · Закрывает: AC7 · Зависит от: S7
@@ -268,12 +268,17 @@ blocked-by: —
   секретом `npmrc`.
 - Строгие peer потребовали в S7 убрать `eslint-plugin-jsx-a11y` (peer `eslint ≤ 9`): a11y `.astro` держат 18 правил
   Biome `lint/a11y/*` и axe. Известный конфликт — строка `peerDependencyRules`: tsconfck Steiger объявляет TS ^5.
-- `pnpm audit --prod`: high без исправления — `http-cache-semantics` через astro (только сборка, общего кеша нет) —
-  `auditConfig.ignoreGhsas` с причиной; dev-дерево в образ не едет. sharp 0.35.5 — точный пин, вне диапазонов.
+- `pnpm audit --prod --audit-level=high` — 0 без исключений: `http-cache-semantics` 4.3.0 (через astro) вне
+  уязвимого диапазона GHSA-ch52-4w7c-c8xp (≤ 4.2.0), `auditConfig` нет; high dev-дерева (`braces` через
+  `eslint-plugin-boundaries`) аудит релиза не смотрит — в образ оно не едет. sharp 0.35.5 — точный пин, вне диапазонов.
 - `typecheck` — `astro sync && astro-check`: `astro check`, не загрузив чекер, выходит с 0 — гейт прошёл без типов
   (`M/p2c/check-s7.log`); бинарь чекера падает с 1 (`M/p2c/fail{open,closed}-astro-check.log`).
-- Патч Astro — последний, прошедший выдержку: 7.3.6 и адаптер 11.1.7 (2026-10-06) pnpm 12 в lockfile не пускает
-  (`ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`); гейт на них зелёный — войдут ближайшим обновлением.
+- Первый ежемесячный цикл — по процедуре политики: 17 прямых зависимостей — последние патчи и миноры своих мажоров,
+  прошедшие выдержку (прод — `nodemailer` 10.0.14, `@sentry/node` 10.76.0); покрытие и `engines` не сдвинулись. Не
+  вошли: моложе выдержки — Astro 7.3.6 и адаптер 11.1.7 (гейт на них зелёный), `@sentry/node` 10.76.1, `nodemailer`
+  10.0.15, `typescript-eslint` 8.71.1, `lefthook` 2.1.17, `axe-core` 4.14.0; мажоры — не циклом, по таблице:
+  `@sentry/node` 11, Steiger 0.7 с плагином 0.8 (у 0.x мажор — минор; `steiger` и `check:gate` зелёные, но дубли
+  zod 3, TypeScript 5.9 и строка peer tsconfck остаются), `@types/node` 26 (в такт Node 24), js-yaml 5, TypeScript 7.
 - Тесты `.astro` — разбором, а не подстрокой тега: dev-режим Vitest аннотирует теги (`data-astro-source-*`, Astro
   включает их с тулбаром), а выключать тулбар в тестах — подгонка под сырой HTML; подстрока остаётся для
   присутствия тега и отдельного атрибута.
@@ -285,13 +290,11 @@ blocked-by: —
 - Автообновление — ежемесячная процедура в обвязке, а не Renovate: раннера и бота в экосистеме нет (CI нет, R15),
   конфиг без исполнителя обещал бы обновления, которых никто не делает. Напоминание — `/smartdev`, уязвимости —
   шаг `/release`. Политика — в форме `dependencies.md`: её копирует `/stack-deep-dive`, `/de-template` её не трогает.
+  Шаг обновления — `pnpm up -L` (свой мажор) и `pnpm add -E <пакет>@<версия>` (патч при новом мажоре): `pnpm add -E
+  <пакет>@<мажор>` пишет диапазон вместо пина, `pnpm outdated` при новом мажоре патчей текущего не показывает; там
+  же `biome migrate` и нижние границы `engines` — установкой с `engine-strict`.
 
 ## Где мы сейчас
-Этапы A (S1–S4) и B (S5–S6) приняты валидаторами (`M/validation-harden-runtime-{A,B}.md`, PASS); замечания B
-закрыты фиксами: HTTP-набор читает CSP как браузер, держит ответы формы и CSP своей копии сборки, сайт со
-счётчиком проходит typecheck, дубли `<путь>/index.html` и `Permissions-Policy` — правдой в контракте edge.
-Этап C (S7–S10) сделан: pnpm 10.34.6 без corepack, настройки в `pnpm-workspace.yaml` (читают pnpm 10–12),
-строгие peer, `pnpm audit --prod` без high и шагом `/release`; `typecheck` не проходит молча; Astro 7.3.5, тесты
-`.astro` — разбором; политика обновлений — в `dependencies.md` шаблона; Node — аргумент сборки, образ принят на 24
-и 26, `accept:image` держит отказ без `SITE_URL` и дренаж. Следующее — валидатор этапа C, затем S11 — приёмка
-фазы отдельным агентом.
+Этапы A–C приняты валидаторами (`M/validation-harden-runtime-{A,B,C}.md`, PASS). Неблокирующие замечания C
+закрываются коммитами: N1 — первый ежемесячный цикл обновлений по политике (процедура поправлена по его итогам)
+сделан, N2–N10 — следующими. Следующее после них — S11, приёмка фазы отдельным агентом.

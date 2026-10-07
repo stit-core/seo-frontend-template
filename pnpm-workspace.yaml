@@ -23,9 +23,3 @@ peerDependencyRules:
   allowedVersions:
     # tsconfck (через плагин Steiger) объявляет TypeScript ^5, а читает только tsconfig — гейт на 6 зелёный.
     tsconfck>typescript: '6'
-
-auditConfig:
-  ignoreGhsas:
-    # http-cache-semantics (через astro): исправления нет. Astro зовёт его только на сборке — кеш
-    # удалённых картинок; общего кеша между пользователями, где уязвимость раскрывает чужой ответ, нет.
-    - GHSA-ch52-4w7c-c8xp
