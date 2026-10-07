@@ -36,7 +36,8 @@ paths: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
   (`_blog/sections.ts`), её unit-тест — там же
 - **E2E** — Playwright на **prod-сборке** (`e2e/playwright.config.ts`). Сервер — как контейнер
   (`e2e/serve.mjs`): копия `dist/` в раскладке образа (путь сборки в её `entry.mjs` — путь копии:
-  CSP статики — из её `_headers.json`), штамповка `docker/entrypoint.sh`, `docker/server.mjs`,
+  CSP статики — из её `_headers.json`; пути сборки в `entry.mjs` нет — отказ старта, а не заголовки
+  `dist/` репо), штамповка `docker/entrypoint.sh`, `docker/server.mjs`,
   живость — по `/healthz` (не `/`). Порты — свободные, свои у каждого
   прогона: чужой сервер не переиспользуется (`reuseExistingServer: false`), а `dist/` остаётся
   с плейсхолдером. Цели — из сборки и контента, не демо-slug'и (`e2e/site.ts`: prerendered- и

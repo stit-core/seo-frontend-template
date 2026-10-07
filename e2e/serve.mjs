@@ -23,15 +23,21 @@ if (!existsSync(join(root, 'dist/client'))) {
   process.exit(1)
 }
 
+// CSP статики адаптер читает из dist/_headers.json по абсолютному пути сборки, зашитому в entry.mjs:
+// копия получает свой путь, как образ — /app, и набор проверяет заголовки этой копии. Пути в
+// entry.mjs нет — замена молча не сработала бы, и набор читал бы заголовки dist/ репо.
+const built = pathToFileURL(join(root, 'dist')).href
+const entry = readFileSync(join(root, 'dist/server/entry.mjs'), 'utf8')
+if (!entry.includes(built)) {
+  console.error(`[serve] в entry.mjs нет пути сборки ${built} — заголовки копии не подменить`)
+  process.exit(1)
+}
+
 const app = mkdtempSync(join(tmpdir(), 'site-e2e-'))
 cpSync(join(root, 'dist'), join(app, 'dist'), { recursive: true })
-// CSP статики адаптер читает из dist/_headers.json по абсолютному пути сборки, зашитому в entry.mjs:
-// копия получает свой путь, как образ — /app, и набор проверяет заголовки этой копии.
-const entry = join(app, 'dist/server/entry.mjs')
-const built = pathToFileURL(join(root, 'dist')).href
 writeFileSync(
-  entry,
-  readFileSync(entry, 'utf8').replaceAll(built, pathToFileURL(join(app, 'dist')).href),
+  join(app, 'dist/server/entry.mjs'),
+  entry.replaceAll(built, pathToFileURL(join(app, 'dist')).href),
 )
 mkdirSync(join(app, 'docker'))
 for (const file of ['entrypoint.sh', 'stamp.mjs', 'server.mjs']) {
