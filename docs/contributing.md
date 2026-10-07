@@ -21,7 +21,7 @@
 
 | слой | где | что |
 |---|---|---|
-| гейт | `pnpm check` | всё, что проверяемо без браузера и Docker; сам гейт под гейтом — `pnpm check:gate` на `.gate-fixtures/`; браузерный набор и приёмка образа — шаги `/release` |
+| гейт | `pnpm check` | всё, что проверяемо без браузера и Docker; сам гейт под гейтом — `pnpm check:gate` на `.gate-fixtures/`; браузерный набор, аудит прод-зависимостей и приёмка образа — шаги `/release` |
 | git-хуки | `lefthook.yml` (`pnpm prepare`) | pre-commit — формат и линт staged, планы; commit-msg — commitlint; pre-push — `scripts/pre-push.sh`: чистое дерево, пушится HEAD, затем `pnpm check`; хук без lefthook — отказ |
 | хук Claude Code | `.claude/hooks/guard-bash.sh` (PreToolUse, Bash) | отказ `git commit -n`, `--no-veri…`, force-push, `core.hooksPath`, переменным lefthook, `lefthook uninstall`, записи в `.git/hooks` (и `sed -i`) — и в теле `bash -c`, `eval`, `bash <<EOF`; пределы — шапка хука, сценарии — `.gate-fixtures/guard.json` |
 | permissions.deny | `.claude/settings.json` | `--no-verify`, `reset --hard`, `clean -f`, публикация пакетов; Read и Edit секретов (`.env`, `*.pem`, `*.key`; Bash это не закрывает), Edit `.git/hooks` и `lefthook-local` |

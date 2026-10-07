@@ -94,7 +94,7 @@ pnpm check            # полный гейт
 
 ```bash
 /seo-audit            # build + seo:check + HTTP-набор + curl по домену
-/release              # образ, приёмка (pnpm accept:image), тег, пуш, handoff в <org>/infra
+/release              # аудит зависимостей, образ, приёмка (pnpm accept:image), тег, пуш, handoff в <org>/infra
 ```
 
 Сайт живёт за Traefik в `<org>/infra`; что ему нужно от прокси (rate-limit на форму,

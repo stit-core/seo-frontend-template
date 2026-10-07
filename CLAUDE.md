@@ -60,7 +60,7 @@ origin штампуется при старте.
 | `/scaffold` | `page` · `collection` · `feature` · `widget` · `route` по канону |
 | `/content` | запись коллекции: frontmatter в бюджетах, перевод, `check:content` |
 | `/seo-audit` | прогон `seo:check` + HTTP-набора + curl по домену, отчёт |
-| `/release` | образ, приёмка, тег, пуш, handoff в `<org>/infra` |
+| `/release` | аудит прод-зависимостей, образ, приёмка, тег, пуш, handoff в `<org>/infra` |
 
 ## Команды
 
@@ -104,6 +104,7 @@ origin штампуется при старте.
 | SEO: head через `DocumentLayout`, hreflang, OG, JSON-LD, `robots.txt`/`sitemap.xml`/фиды/ключ IndexNow, staging в три контура, гейты `seo:check` и HTTP-набор | rule `seo-invariants` + `docs/reference/seo.md` |
 | Наблюдаемость: JSON-лог, `X-Request-Id`, `/healthz`, Sentry по DSN | `docs/reference/observability.md` |
 | Платформа проекта: 12 kinds, порядок волн, гейт `stable` | `docs/stack/README.md` |
+| Обновления стека: ритм, мажоры N / N−1, аудит, условия пересмотра | `docs/stack/dependencies.md § Обновления` (в шаблоне — `docs/stack/_templates/`) |
 | Экосистема: соседи, флоу (хаб `<org>/infra` или прямой заход), контракты, STOP на image-in-registry | `docs/reference/ecosystem.md` |
 | Что инфра обязана сделать под сервис `site`: `compose/site.yml`, Traefik, CrowdSec, приёмка | `docs/reference/infra-handoff.md` |
 | Путь потребителя шаблона: форк → свой сайт | `docs/getting-started.md` |

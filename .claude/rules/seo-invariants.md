@@ -86,7 +86,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   поисково-ответные не трогаются; `Host`/`Crawl-delay` не выводятся; `Clean-param` — строкой в
   `buildRobotsTxt`, когда появятся проектные трекинг-параметры (`utm_*`, `ysclid`, `yrclid` Яндекс
   срезает сам)
-- `sitemap.xml` — свой маршрут (`@astrojs/sitemap` строит URL от build-time origin): ровно
+- `sitemap.xml` — свой маршрут (у `@astrojs/sitemap` `lastmod` не из `updatedDate`, отбор страниц —
+  `filter`, карта — шардами `sitemap-index.xml`): ровно
   индексируемые prerendered-страницы сборки (главные, статические страницы из списка
   `STATIC_ROUTES` в `pages/sitemap.xml.ts`, списки, записи без черновиков, теги) — HTTP-набор
   гейта сверяет с `dist/client` за вычетом `noindex`; новая индексируемая страница вне коллекций —

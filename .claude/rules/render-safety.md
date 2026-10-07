@@ -79,7 +79,8 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 интеграция `closed-image-endpoint` в самом конфиге — часть канона, а не подключаемый пакет;
 картинки оптимизирует сборка, трансформации на запрос наружу нет; в `astro dev` endpoint
 штатный. Интеграций-пакетов `@astrojs/react` (фреймворк островов ради одного переключателя) и
-`@astrojs/sitemap` (строит URL от build-time origin) нет.
+`@astrojs/sitemap` (`lastmod` не из `updatedDate`, страницы — `filter`, а не список индексируемых,
+шарды вместо одного файла) нет.
 
 CSP — `security.csp` из политики сборки (`contentSecurityPolicy()`, `scripts/lib/site-policy.mjs`:
 защитные директивы, чужие origin, хеши островов; хеши своих стилей Astro добавляет сам) и

@@ -211,7 +211,7 @@ DIST_DIR=dist SITE_URL=http://localhost:3000 sh docker/entrypoint.sh pnpm start
 
 ## Release handoff
 
-CI-runner'а в экосистеме нет: сборку, приёмку (`pnpm accept:image`), тег и пуш образа делает
-разработчик по `/release` (`.claude/skills/release/SKILL.md`). Выкатку выполняет `<org>/infra` —
-`make bump SVC=site TAG=vX.Y.Z` (правит `SITE_TAG` в `.env` VPS + force-recreate); отсюда
-деплой-команды не запускаются.
+CI-runner'а в экосистеме нет: аудит прод-зависимостей, сборку, приёмку (`pnpm accept:image`), тег и
+пуш образа делает разработчик по `/release` (`.claude/skills/release/SKILL.md`). Выкатку выполняет
+`<org>/infra` — `make bump SVC=site TAG=vX.Y.Z` (правит `SITE_TAG` в `.env` VPS + force-recreate);
+отсюда деплой-команды не запускаются.

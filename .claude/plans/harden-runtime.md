@@ -16,25 +16,16 @@ blocked-by: —
 ## Контекст
 - Программа, метод и решения владельца (R16 — пакет правок `docker/*` разрешён; R17 — CSP в приложении,
   `/_image` закрыт на edge; R24 — стек) — `audit-program.md`.
-- Находки фазы (подробности, `file:line`, воспроизведения — `~/.cache/stit-ssr-audit/reports/`):
-  - `security.md`: SEC-01 (CSP; рабочий вариант с хешем скрипта темы — `M/security/csp-variant-B.diff`),
-    SEC-02 (`/_image` — DoS, `M/security/image-dos.sh`), SEC-03 (ленивая валидация env, `M/security/badenv.sh`),
-    SEC-04 (инъекция в `sed`, `M/security/stamp.sh`, `image.sh`), SEC-05 (`pnpm audit`), SEC-06 (заголовки —
-    что обязана инфра), SEC-07 (лимит тела и chunked), SEC-08 (origin-check — антиспам, а не CSRF), SEC-09
-    (методы и симлинки статики);
-  - `seo.md`: SEO-02 (`X-Robots-Tag` в staging — четыре строки в `server.mjs`, демо — `M/seo/fixdemo.log`),
-    SEO-08 (Last-Modified и ETag меняются на каждом старте — `touch -r`);
-  - `geo.md`: GEO-09 (опечатка env → `robots.txt` 500);
-  - `stack.md`: STK-02 (pnpm 10.0.0 и corepack; corepack нет в Node ≥ 25), STK-03 (политики обновлений нет,
-    lockfile с исправимыми high), STK-04 (pnpm 11/12 не читают конфиг в `package.json#pnpm` и `.npmrc`), STK-05
-    (TypeScript 7 ломает гейт), STK-06 (патч Astro 7.3.5 краснит тесты сырого HTML), STK-07 (peer и
-    `eslint-plugin-jsx-a11y` без ESLint 10), STK-10 (Node 26 станет LTS 2026-10-28), STK-11, STK-12;
-  - `tests.md`: TST-11 (дренаж и `exec` в образе — проверка в `accept:image`); хвост P1 — таймаут шага «старт
-    без `SITE_URL`» в `accept-image.sh`.
-- Гейт после P1: `pnpm check` (покрытие с храповиком, HTTP-набор `test:http` на копии сборки с настоящими
-  `entrypoint.sh` и `server.mjs`, гейт на гейт); браузерный `pnpm test:e2e` и `pnpm accept:image <образ>` —
-  шаги `/release`. Правки `docker/*` проверяются HTTP-набором и приёмкой образа; Docker — через
-  `M/exclusive.sh`.
+- Находки фазы (подробности, `file:line`, воспроизведения — `~/.cache/stit-ssr-audit/reports/`): `security.md`
+  SEC-01…09 (CSP, `/_image` — DoS, ленивая валидация env, инъекция в `sed`, `pnpm audit`, заголовки инфры, лимит
+  тела, origin-check, методы и симлинки статики; сценарии — `M/security/`); `seo.md` SEO-02 (`X-Robots-Tag` в
+  staging), SEO-08 (Last-Modified на каждом старте); `geo.md` GEO-09 (опечатка env → `robots.txt` 500); `stack.md`
+  STK-02…07, STK-10…12 (pnpm и corepack, политика обновлений, конфиг pnpm 11/12, TypeScript 7, патч Astro, peer и
+  a11y-плагин, Node 26, дрейф версий, причина запрета `@astrojs/sitemap`); `tests.md` TST-11 (дренаж и `exec` —
+  в `accept:image`) и хвост P1 — таймаут шага «старт без `SITE_URL`».
+- Гейт после P1: `pnpm check` (покрытие с храповиком, HTTP-набор на копии сборки с настоящими `entrypoint.sh` и
+  `server.mjs`, гейт на гейт); `pnpm test:e2e` и `pnpm accept:image <образ>` — шаги `/release`. Правки `docker/*`
+  проверяются HTTP-набором и приёмкой образа; Docker — через `M/exclusive.sh`.
 - Острова изменит P4 (остров предпочтений, острова движения по бюджету): CSP строится так, чтобы новый остров
   добавлялся одной строкой политики, а не правкой механизма.
 
@@ -84,9 +75,12 @@ blocked-by: —
 - [ ] **AC6** — Менеджер пакетов — pnpm ≥ 10.34 без corepack, конфиг читается и pnpm 11/12 (`pnpm-workspace.yaml`),
   `minimumReleaseAge` задан; образ собирается на Node 24 и Node 26; `pnpm audit --prod --audit-level=high` —
   шаг `/release`, на HEAD 0 high. Проверка: `docker build` на обеих версиях через `M/exclusive.sh`; `pnpm audit`
-- [ ] **AC7** — Политика обновлений живёт там, где переживает `/de-template` (`docs/stack/_templates/dependencies.md`):
+- [x] **AC7** — Политика обновлений живёт там, где переживает `/de-template` (`docs/stack/_templates/dependencies.md`):
   N / N−1, триггеры пересмотра стека, правило «пороги покрытия пересчитываются тем же коммитом»; патч Astro не
   краснит гейт. Проверка: `astro` 7.3.5 (или новее в пределах мажора) → `pnpm check` зелёный
+  - Подтверждено: `dependencies.md § Обновления` шаблона — правила (патчи раз в месяц, мажор Astro N / N−1, Node,
+    pnpm, аудит, пороги покрытия тем же коммитом), ежемесячная процедура, R-1…R-7; `pnpm check` зелёный на Astro
+    7.3.5 и на 7.3.6 с адаптером 11.1.7 (`M/p2c/check-astro736.log`)
 - [ ] **AC8** — Приёмка образа держит то, что печатает: дренаж SIGTERM в пределах таймаута, отказ без `SITE_URL`
   за конечное время. Проверка: `pnpm accept:image` на образе HEAD → зелёный; регресс (`exec` убран, старт без
   `SITE_URL` висит) → красный
@@ -167,10 +161,14 @@ blocked-by: —
     тесты `.astro` сверяют разбор (`parseHtml`, `<head>` — `headTags()`), правило — `tests-pipeline`, шаблон —
     `/scaffold`; TypeScript `~6.0` с причиной — `dependencies.md` шаблона; a11y-плагин убран в S7. `pnpm check`
     зелёный на 7.3.5 и на 7.3.6 с адаптером 11.1.7 (`M/p2c/check-astro736.log`); покрытие не сдвинулось
-- [ ] **S9** — Политика обновлений в `docs/stack/_templates/dependencies.md`: N / N−1, триггеры пересмотра (в том
+- [x] **S9** — Политика обновлений в `docs/stack/_templates/dependencies.md`: N / N−1, триггеры пересмотра (в том
   числе судьба `@astrojs/node` standalone), автообновление (Renovate-конфиг или ежемесячная процедура),
   пересчёт порогов покрытия; `pnpm audit` — шаг `/release`
   - Проверка: чтение; `/release` содержит шаг · Закрывает: AC6, AC7 · Зависит от: S8
+  - Сделано: `§ Обновления` — правила, ежемесячная процедура командами гейта, R-1…R-7 (R-7 — `@astrojs/node`
+    отстал или потерял `standalone`); `/smartdev` напоминает по дате `pnpm-lock.yaml`, `/release` — шаг 2
+    `pnpm audit --prod --audit-level=high`; запрет `@astrojs/sitemap` — с настоящей причиной; роутер CLAUDE.md,
+    `SECURITY.md`, чек-лист `/stack-deep-dive`. `pnpm check` зелёный
 - [ ] **S10** — Образ: версия Node — аргумент сборки, образ проверен на Node 24 и 26; `accept:image` проверяет
   дренаж и отказ без `SITE_URL` с таймаутом
   - Проверка: `accept:image` на обеих версиях → зелёный; регресс-сценарии → красный · Закрывает: AC6, AC8 · Зависит от: S7
@@ -287,11 +285,15 @@ blocked-by: —
 - Тесты `.astro` — разбором, а не подстрокой тега: dev-режим Vitest аннотирует теги (`data-astro-source-*`, Astro
   включает их с тулбаром), а выключать тулбар в тестах — подгонка под сырой HTML; подстрока остаётся для
   присутствия тега и отдельного атрибута.
+- Автообновление — ежемесячная процедура в обвязке, а не Renovate: раннера и бота в экосистеме нет (CI нет, R15),
+  конфиг без исполнителя обещал бы обновления, которых никто не делает. Напоминание — `/smartdev`, уязвимости —
+  шаг `/release`. Политика — в форме `dependencies.md`: её копирует `/stack-deep-dive`, `/de-template` её не трогает.
 
 ## Где мы сейчас
 Этапы A (S1–S4) и B (S5–S6) приняты валидаторами (`M/validation-harden-runtime-{A,B}.md`, PASS); замечания B
 закрыты фиксами: HTTP-набор читает CSP как браузер, держит ответы формы и CSP своей копии сборки, сайт со
 счётчиком проходит typecheck, дубли `<путь>/index.html` и `Permissions-Policy` — правдой в контракте edge.
-Этап C: S7 и S8 сделаны — pnpm 10.34.6 без corepack, настройки в `pnpm-workspace.yaml` (читают pnpm 10–12),
-строгие peer, `pnpm audit --prod` без high; `typecheck` не проходит молча; Astro 7.3.5, тесты `.astro` — разбором.
-Следующее — S9 (политика обновлений в `dependencies.md` шаблона, `pnpm audit` в `/release`).
+Этап C: S7–S9 сделаны — pnpm 10.34.6 без corepack, настройки в `pnpm-workspace.yaml` (читают pnpm 10–12),
+строгие peer, `pnpm audit --prod` без high и шагом `/release`; `typecheck` не проходит молча; Astro 7.3.5, тесты
+`.astro` — разбором; политика обновлений — в `dependencies.md` шаблона. Следующее — S10 (Node — аргумент сборки,
+образ на Node 24 и 26, дренаж и отказ без `SITE_URL` в `accept:image`).
