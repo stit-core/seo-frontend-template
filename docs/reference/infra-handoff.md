@@ -33,7 +33,7 @@
   остался в каком-то файле после штамповки.
 - **Приложение не сжимает ответы; из заголовков безопасности ставит только
   `Content-Security-Policy`** — у каждой страницы, с `frame-ancestors 'none'`. Сжатие и остальные
-  заголовки — Traefik.
+  заголовки — Traefik; кто что ставит — один список в 1.3.
   В staging (`ROBOTS_POLICY=noindex`) `X-Robots-Tag: noindex, nofollow` на каждом ответе —
   и prerendered-страниц со статикой, которые отдаёт статик-хендлер до middleware, — ставит
   обёртка процесса. Замок staging (`basicAuth`) — только на Traefik.
@@ -146,7 +146,8 @@ services:
 
       # Корневой домен — задокументированное исключение из сабдоменного канона.
       # Заглушку на корне перебивает приоритетом (у неё priority=1).
-      traefik.http.routers.site.rule: Host(`${DOMAIN}`)
+      # Только GET и HEAD: статик-хендлер отдаёт файл на любой метод, а POST у сайта один — форма.
+      traefik.http.routers.site.rule: Host(`${DOMAIN}`) && (Method(`GET`) || Method(`HEAD`))
       traefik.http.routers.site.entrypoints: websecure
       traefik.http.routers.site.tls: "true"
       traefik.http.routers.site.tls.certresolver: letsencrypt
@@ -227,12 +228,36 @@ staging закрывают и контуры Traefik (1.3).
 
 ### 1.3 `configs/traefik/dynamic/middlewares.yml.tpl` — дельта
 
-Существующие `crowdsec`, `secure-headers`, `rate-limit` остаются; в `secure-headers`
-снимается `sslRedirect` (удалён в Traefik v3 и избыточен — `http → https` делает
-redirection на entrypoint `web`) и добавляется `frameDeny: true`. Приложение эти
-заголовки не дублирует.
+**Заголовки безопасности — один список.** Каждый ставит ровно один участник, второй его не
+дублирует (HTTP-набор сайта держит, что приложение ставит из них только CSP):
 
-Новые middleware:
+| заголовок | ставит | значение |
+|---|---|---|
+| `Content-Security-Policy` | приложение — у каждой страницы, prerendered и on-demand | `default-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; script-src` и `style-src` — свои файлы и хеши инлайна сборки |
+| `Strict-Transport-Security` | Traefik, `secure-headers` | `max-age=31536000; includeSubDomains` |
+| `X-Content-Type-Options` | Traefik, `secure-headers` | `nosniff` |
+| `Referrer-Policy` | Traefik, `secure-headers` | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | Traefik, `secure-headers` | `camera=(), microphone=(), geolocation=()` |
+
+Не ставит никто: `X-Frame-Options` — встраивание во фрейм закрывает `frame-ancestors 'none'`
+CSP приложения; `X-XSS-Protection` — фильтра в современных браузерах нет, а в старых он сам
+давал утечки. Поэтому из `secure-headers` снимаются `browserXssFilter` и `sslRedirect` (в Traefik v3
+его нет, `http → https` делает redirection на entrypoint `web`), `frameDeny` не добавляется:
+
+```yaml
+    secure-headers:
+      headers:
+        forceSTSHeader: true
+        stsSeconds: 31536000
+        stsIncludeSubdomains: true
+        contentTypeNosniff: true
+        referrerPolicy: "strict-origin-when-cross-origin"
+        # Сервису проекта, которому нужны камера или геолокация, — свой middleware, а не
+        # послабление здесь.
+        permissionsPolicy: "camera=(), microphone=(), geolocation=()"
+```
+
+`crowdsec` и `rate-limit` остаются как есть. Новые middleware:
 
 ```yaml
     compress:
@@ -264,7 +289,8 @@ redirection на entrypoint `web`) и добавляется `frameDeny: true`. 
 
     form-body-limit:
       buffering:
-        # Приложение отвечает 413 выше 64 КиБ и такое тело не читает.
+        # Приложение отвечает 413 на Content-Length выше 64 КиБ; тело без длины (chunked) оно
+        # читает до лимита адаптера (1 МиБ) — 64 КиБ для него держит только эта буферизация.
         maxRequestBodyBytes: 65536
         memRequestBodyBytes: 65536
 
@@ -298,10 +324,15 @@ redirection на entrypoint `web`) и добавляется `frameDeny: true`. 
   заставил бы читать клиентский `X-Forwarded-For`, который на границе никем не подписан:
   лимит обходится подделкой заголовка. Глубина появляется только вместе с доверенным
   CDN/прокси перед Traefik.
-- **`X-Forwarded-Proto` и `X-Forwarded-For` обязаны доезжать до сервиса**, а `Host` —
-  сохраняться (`passHostHeader` по умолчанию `true`). TLS терминируется на Traefik, и
-  процесс видит запрос как `http://<Host>`; форма сверяет `Origin` заявки с runtime
-  `SITE_URL` и без этих заголовков отвечает 403 на честную отправку.
+- **Роутер сайта — строго `Host(${DOMAIN})`, `Host` доходит до сервиса как есть
+  (`passHostHeader` по умолчанию), порт контейнера наружу не публикуется.** Origin-check формы —
+  антиспам-ступень, а не граница CSRF: кроме `SITE_URL` он доверяет origin, собранному из `Host`
+  запроса (прямое обращение к контейнеру), и запрос с чужим `Host` и тем же `Origin` прошёл бы.
+  Такой запрос до сервиса не доходит только благодаря Host-роутингу edge; catch-all роутер или
+  опубликованный порт эту защиту снимают. `X-Forwarded-*` приложение не читает: схему и origin
+  оно берёт из `SITE_URL`.
+- **Методы — `GET` и `HEAD` на `site`, `POST` — только `site-form`.** Статик-хендлер адаптера
+  отдаёт файл на любой метод (`POST /` — 200 со страницей), а `TRACE` — 500 с ошибкой в логе.
 - **429, а не 403, для избыточного трафика.** Лимит частоты Traefik отдаёт 429 — это
   сигнал «замедлись», который краулер понимает. Бан (403) для поискового робота —
   выпадение из индекса, поэтому верифицированные боты не должны доходить до WAF-решения
@@ -413,8 +444,10 @@ curl -sI 'https://<domain>/_image?href=/og-default.png&f=webp'   # 403 на edge
 curl -s   https://<domain>/ | grep -c __site_origin__      # 0 — плейсхолдер проштампован
 ```
 
-5. Edge: HSTS, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`,
-   `Referrer-Policy` присутствуют в ответе; `Content-Encoding: br` на HTML.
+5. Заголовки — по списку 1.3: от edge `Strict-Transport-Security`, `X-Content-Type-Options:
+   nosniff`, `Referrer-Policy`, `Permissions-Policy`; от приложения `Content-Security-Policy` с
+   `frame-ancestors 'none'`; `X-Frame-Options` и `X-XSS-Protection` нет; `Content-Encoding: br`
+   на HTML; `curl -X POST https://<domain>/` и `curl -X TRACE https://<domain>/` — не 200.
 6. CrowdSec: `cscli decisions list` — верифицированные боты не забанены;
    `cscli metrics` показывает непустой источник acquisition.
 7. Лимит формы: серия POST на `/api/contact` упирается в **429**, а не в 403 и не в

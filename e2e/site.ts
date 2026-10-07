@@ -163,6 +163,21 @@ export function cspProblems(html: string, header: string | undefined): string[] 
   return problems
 }
 
+// Заголовки безопасности поделены (docs/reference/infra-handoff.md § 1.3): HSTS, nosniff,
+// Referrer-Policy и Permissions-Policy ставит edge, X-Frame-Options и X-XSS-Protection — никто.
+// Приложение ставит из них только CSP: второй источник дал бы дубль заголовка.
+const EDGE_HEADERS = [
+  'strict-transport-security',
+  'x-content-type-options',
+  'referrer-policy',
+  'permissions-policy',
+  'x-frame-options',
+  'x-xss-protection',
+]
+
+export const edgeHeadersIn = (headers: Record<string, string>): string[] =>
+  EDGE_HEADERS.filter((name) => name in headers)
+
 // Правила content/redirects.yaml.
 export function redirects(): RedirectRule[] {
   const data = load(readFileSync(resolve(root, 'content/redirects.yaml'), 'utf8'))

@@ -44,7 +44,8 @@ export default defineConfig({
   output: 'static',
   // Дефолтный лимит тела у адаптера — 1 ГиБ, а разбор формы буферизует тело в heap процесса
   // (`--max-old-space-size=384`): предел на порядок ниже потолка памяти. Свой, куда более
-  // тесный предел формы держит `features/contact-form`.
+  // тесный предел формы держит `features/contact-form` по Content-Length; тело без длины
+  // (chunked) в процессе ограничивает только этот.
   adapter: node({
     mode: 'standalone',
     experimentalDisableStreaming: true,

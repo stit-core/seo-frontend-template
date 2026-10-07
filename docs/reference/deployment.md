@@ -137,7 +137,9 @@ prerendered-страница печатается на сборке, а обра
   приложения со своими заголовками (`Cache-Control: public, max-age=0` + `ETag` +
   `Last-Modified`; ассеты — `immutable`): middleware и JSON-лог их не видят, `X-Robots-Tag`
   staging ставит обёртка процесса; `/index.html` и `/en/index.html` отвечают 200 — дубли
-  главных, прикрываются `redirectRegex` на Traefik
+  главных, прикрываются `redirectRegex` на Traefik. Метод запроса хендлер не смотрит (`POST /` —
+  200 со страницей, `TRACE` — 500 с ошибкой в логе): лишние методы режет edge. По симлинку внутри
+  `dist/client` он отдаёт файл, на который тот указывает, — в `public/` симлинков нет
 - **On-demand** (`prerender = false`: `/healthz`, `/now`, `/api/contact`, `robots.txt`,
   `sitemap.xml`, фиды `rss.xml` и `en/rss.xml`, `/<INDEXNOW_KEY>.txt`, `404.astro` — то есть
   любой путь без статического файла, и закрытый `/_image` — 404 текстом; список держит карта
@@ -154,11 +156,11 @@ prerendered-страница печатается на сборке, а обра
   остальных путей до middleware, поэтому `/old/` → `/old` → правило из `redirects.yaml`),
   `/about.html` → 404 при `build.format: 'directory'`
 - Сжатия в процессе нет — жмёт Traefik (`compress`)
-- `Content-Security-Policy` (с `frame-ancestors 'none'`) ставит приложение у каждой страницы —
-  prerendered из `dist/_headers.json`, on-demand в ответе (`rendering.md § Заголовки`);
-  остальные security-заголовки (`Strict-Transport-Security`, `X-Content-Type-Options: nosniff`,
-  `X-Frame-Options: DENY`, `Referrer-Policy`) — Traefik (`secure-headers@file`), приложение их не
-  дублирует
+- Заголовки безопасности поделены: `Content-Security-Policy` (с `frame-ancestors 'none'`) ставит
+  приложение у каждой страницы — prerendered из `dist/_headers.json`, on-demand в ответе
+  (`rendering.md § Заголовки`); `Strict-Transport-Security`, `X-Content-Type-Options`,
+  `Referrer-Policy` и `Permissions-Policy` — Traefik (`secure-headers@file`). Список со
+  значениями — `infra-handoff.md § 1.3`; приложение заголовков edge не ставит (держит HTTP-набор)
 
 ## Требования к прокси (чек-лист оператора)
 
@@ -170,17 +172,20 @@ prerendered-страница печатается на сборке, а обра
   этого пути. `sourceCriterion` не задаётся: прокси стоит на границе, и источником по
   умолчанию считается адрес клиента — `ipStrategy.depth` заставил бы читать клиентский
   `X-Forwarded-For`, который никем не подписан
-- `X-Forwarded-Proto` (и `X-Forwarded-For`) от прокси обязателен: TLS терминируется снаружи,
-  и процесс видит запрос как `http://<Host>`. Схему прокси адаптер не читает, поэтому
-  канонический origin приложение берёт только из `SITE_URL`, а origin заявки сверяет с ним
-  `features/contact-form` (`security.checkOrigin` Astro выключен — он отвечал бы 403 на любой
-  POST формы из браузера)
+- Роутер сайта — строго `Host(<домен>)`, методы `GET` и `HEAD`; `POST` — только `/api/contact`,
+  порт контейнера наружу не публикуется. Origin-check формы — антиспам, а не граница CSRF: он
+  доверяет и origin из `Host` запроса, и чужой `Host` с тем же `Origin` до процесса не доходит
+  только благодаря Host-роутингу. `X-Forwarded-*` приложение не читает: TLS терминируется
+  снаружи, процесс видит запрос как `http://<Host>`, поэтому канонический origin — только
+  `SITE_URL`, а origin заявки сверяет с ним `features/contact-form` (`security.checkOrigin` Astro
+  выключен — он отвечал бы 403 на любой POST формы из браузера)
 - `/_image` закрыт и на edge (роутер на `Path(/_image)` и `PathPrefix(/_image/)` с отказом —
   `public/_images/…` он не задевает): приложение отвечает 404, но трансформация картинок на
   запрос не должна доходить до процесса
-- Тело запроса прокси ограничивает своим лимитом; приложение отвечает `413` на
-  `Content-Length` больше 64 КБ и не читает такое тело, а `bodySizeLimit` адаптера —
-  последний рубеж
+- Тело формы прокси ограничивает буферизацией (64 КБ): приложение отвечает `413` на
+  `Content-Length` больше 64 КБ и не читает такое тело, но тело без длины (`Transfer-Encoding:
+  chunked`) читает до `bodySizeLimit` адаптера (1 МБ, дальше — `400`) — 64 КБ для него держит
+  только прокси
 - Staging закрывается и там: `basicAuth` + `customResponseHeaders: X-Robots-Tag` — независимо
   от `ROBOTS_POLICY` контейнера; `redirectRegex` для `/index.html` и `/en/index.html`,
   `www` → apex и `http` → `https`, `compress`, `secure-headers@file`

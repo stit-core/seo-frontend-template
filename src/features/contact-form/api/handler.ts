@@ -31,8 +31,8 @@ export interface ContactContext extends DeliveryOptions {
   rid: string
 }
 
-// Четыре коротких поля с потолками схемы не дают и 3 КБ. Тело больше лимита не читается
-// вовсе: formData() буферизует его в heap процесса, у которого свой потолок.
+// Четыре коротких поля с потолками схемы не дают и 3 КБ. Тело с заявленной длиной больше лимита
+// не читается вовсе: formData() буферизует его в heap процесса, у которого свой потолок.
 const MAX_BODY_BYTES = 64 * 1024
 
 const FORM_CONTENT_TYPES = ['application/x-www-form-urlencoded', 'multipart/form-data']
@@ -46,7 +46,8 @@ function logContact(level: LogLevel, fields: LogFields, env: DeliveryOptions['en
 // за TLS-терминирующим прокси адаптер строит URL запроса как `http://<Host>` и браузерный
 // `https://…` ему никогда не равен. Канонический origin — runtime SITE_URL; origin запроса
 // остаётся для прямого обращения к контейнеру. Заголовка нет вовсе — отказ: браузер всегда
-// шлёт Origin на POST формы.
+// шлёт Origin на POST формы. Это антиспам, а не граница CSRF: origin запроса собран из `Host`, и
+// скрипт с чужим `Host` и тем же Origin прошёл бы — его не пускает Host-роутинг edge.
 function isTrustedOrigin(request: Request, env: DeliveryOptions['env']): boolean {
   const header = request.headers.get('origin') ?? request.headers.get('referer')
   if (header === null || header === '') return false
@@ -58,8 +59,9 @@ function isTrustedOrigin(request: Request, env: DeliveryOptions['env']): boolean
   }
 }
 
-// Заявленная длина больше лимита — отказ до чтения тела. Запрос без Content-Length (chunked)
-// упрётся в лимит адаптера, и разбор тела отвалится как битый.
+// Заявленная длина больше лимита — отказ до чтения тела. Тело без Content-Length (chunked) эта
+// проверка не меряет: оно читается до лимита адаптера (дальше разбор отвалится как битый), а 64 КБ
+// для него держит буферизация прокси.
 function isTooLarge(request: Request): boolean {
   const length = Number(request.headers.get('content-length'))
   return Number.isFinite(length) && length > MAX_BODY_BYTES

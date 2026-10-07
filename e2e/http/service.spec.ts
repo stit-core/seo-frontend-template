@@ -4,7 +4,14 @@ import { scriptViolations } from '../../scripts/lib/site-policy.mjs'
 import { SITE_ORIGIN_PLACEHOLDER } from '../../src/shared/config/runtime.ts'
 import { OG_DEFAULT_IMAGE } from '../../src/shared/config/site.ts'
 import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
-import { cspProblems, entries, onDemandRoutes, prerenderedPaths, redirects } from '../site'
+import {
+  cspProblems,
+  edgeHeadersIn,
+  entries,
+  onDemandRoutes,
+  prerenderedPaths,
+  redirects,
+} from '../site'
 
 const PLACEHOLDER = new URL(SITE_ORIGIN_PLACEHOLDER).hostname
 const UNKNOWN = '/net-takogo-adresa'
@@ -34,13 +41,14 @@ function expectServicePage(html: string, path: string) {
 }
 
 test.describe('on-demand: ответы приложения', () => {
-  test('каждый маршрут prerender = false отвечает из приложения: X-Request-Id, HTML — только noindex и с CSP, без плейсхолдера и своего origin в теле', async ({
+  test('каждый маршрут prerender = false отвечает из приложения: X-Request-Id, без заголовков edge, HTML — только noindex и с CSP, без плейсхолдера и своего origin в теле', async ({
     request,
     baseURL,
   }) => {
     for (const path of onDemandRoutes()) {
       const response = await request.get(path, { maxRedirects: 0 })
       expect(response.headers()['x-request-id'], path).toBeTruthy()
+      expect(edgeHeadersIn(response.headers()), path).toEqual([])
       const body = await response.text()
       expect(body, path).not.toContain(PLACEHOLDER)
       if (body.includes('<body')) expect(bodyOf(body), path).not.toContain(baseURL)

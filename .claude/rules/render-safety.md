@@ -1,6 +1,6 @@
 ---
 description: Безопасность рендера в трёх моментах — сборка (секреты не в клиенте, build-time значения), запрос (request-only API не в prerender, модульное состояние не в on-demand, prerender=false только с записью в rendering.md и Cache-Control), остров (server islands не для индексируемого).
-paths: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
+paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.config.ts"]
 ---
 
 # Render-safety
@@ -29,6 +29,9 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
   сборки — плейсхолдер. Origin — runtime `SITE_URL` (on-demand) или плейсхолдер в `<head>`
   prerendered-страницы, который штампует контейнер
 - HTML на сборке не предсжимается: штамповка не заглянет внутрь `.br`/`.gz`
+- `public/` — только файлы, без симлинков: статик-хендлер адаптера идёт по симлинку внутри
+  `dist/client`, и ссылка наружу отдала бы чужой файл; метод запроса он не смотрит — лишние
+  методы режет edge (`docs/reference/deployment.md`)
 
 ## Запрос (on-demand)
 
