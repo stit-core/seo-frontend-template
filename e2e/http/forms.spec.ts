@@ -1,7 +1,7 @@
 import { type APIRequestContext, expect, test } from '@playwright/test'
 import { scriptViolations } from '../../scripts/lib/site-policy.mjs'
 import { localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
-import { originOf } from '../site'
+import { cspProblems, edgeHeadersIn, originOf } from '../site'
 
 const MESSAGE = 'Нужен сайт с блогом, формой заявки и картой сайта. Бюджет обсудим.'
 
@@ -75,8 +75,11 @@ test.describe('обработчик формы /api/contact: HTTP-контрак
     expect(html).toContain('<meta name="robots" content="noindex"')
     expect(html).not.toContain('rel="canonical"')
     expect(html).toContain('role="alert"')
-    // Страница ответа — on-demand HTML: скрипты на ней — только острова политики.
+    // Страница ответа — on-demand HTML: скрипты на ней — только острова политики, и CSP та же, что у
+    // страниц сайта.
     expect(scriptViolations(html)).toEqual([])
+    expect(cspProblems(html, response.headers()['content-security-policy'])).toEqual([])
+    expect(edgeHeadersIn(response.headers())).toEqual([])
     // Поля возвращаются заполненными: письмо не набирают заново.
     expect(html).toContain(`value="${email}"`)
     expect(await delivered(request)).not.toContain(email)
@@ -93,6 +96,8 @@ test.describe('обработчик формы /api/contact: HTTP-контрак
     expect(html).toContain('role="alert"')
     expect(html).toContain('<meta name="robots" content="noindex"')
     expect(scriptViolations(html)).toEqual([])
+    expect(cspProblems(html, response.headers()['content-security-policy'])).toEqual([])
+    expect(edgeHeadersIn(response.headers())).toEqual([])
   })
 
   test('чужой или отсутствующий Origin — 403 до разбора заявки', async ({ request }) => {

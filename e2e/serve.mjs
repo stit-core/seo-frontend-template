@@ -3,9 +3,19 @@
 // на месте: сборка остаётся с плейсхолдером origin (её читают seo:check и следующие прогоны), а
 // у каждого сервера свой SITE_URL. Профиль (SITE_URL, ROBOTS_POLICY, PORT, канал формы) — env.
 import { spawn } from 'node:child_process'
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync } from 'node:fs'
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 const root = resolve(import.meta.dirname, '..')
 if (!existsSync(join(root, 'dist/client'))) {
@@ -15,6 +25,14 @@ if (!existsSync(join(root, 'dist/client'))) {
 
 const app = mkdtempSync(join(tmpdir(), 'site-e2e-'))
 cpSync(join(root, 'dist'), join(app, 'dist'), { recursive: true })
+// CSP статики адаптер читает из dist/_headers.json по абсолютному пути сборки, зашитому в entry.mjs:
+// копия получает свой путь, как образ — /app, и набор проверяет заголовки этой копии.
+const entry = join(app, 'dist/server/entry.mjs')
+const built = pathToFileURL(join(root, 'dist')).href
+writeFileSync(
+  entry,
+  readFileSync(entry, 'utf8').replaceAll(built, pathToFileURL(join(app, 'dist')).href),
+)
 mkdirSync(join(app, 'docker'))
 for (const file of ['entrypoint.sh', 'stamp.mjs', 'server.mjs']) {
   cpSync(join(root, 'docker', file), join(app, 'docker', file))

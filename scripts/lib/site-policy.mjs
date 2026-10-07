@@ -32,6 +32,7 @@ export const ISLANDS = {
 // Чужие origin, с которых страница может грузить ресурсы (стили, шрифты, картинки, фреймы;
 // скрипт — только инлайн-остров). Пусто: всё своё — и юридически (трансграничная передача), и по
 // весу первого экрана.
+/** @type {string[]} */
 export const RESOURCE_ORIGINS = []
 
 /**
@@ -40,28 +41,45 @@ export const RESOURCE_ORIGINS = []
  */
 export const cspHash = (body) => `sha256-${createHash('sha256').update(body).digest('base64')}`
 
+// Защитные директивы CSP — значения без источников островов: остров не открывает плагины, чужой
+// <base>, отправку форм наружу и встраивание сайта во фрейм.
+const PROTECTED_DIRECTIVES = {
+  'object-src': "'none'",
+  'base-uri': "'self'",
+  'form-action': "'self'",
+  'frame-ancestors': "'none'",
+}
+
 /**
  * CSP сайта — значение `security.csp` Astro: всё своё, чужой origin — из RESOURCE_ORIGINS и у
  * острова, который его грузит, исполняемый инлайн — тела островов по хешу. Хеши стилей и файлов
- * сборки Astro добавляет сам.
+ * сборки Astro добавляет сам. Каждая директива печатается один раз: браузер действует по первому
+ * вхождению и молча отбрасывает дубль.
  * @returns {Exclude<NonNullable<import('astro').AstroUserConfig['security']>['csp'], boolean | undefined>}
  */
 export function contentSecurityPolicy() {
+  for (const [name, island] of Object.entries(ISLANDS)) {
+    for (const directive of Object.keys(island.sources ?? {})) {
+      if (Object.hasOwn(PROTECTED_DIRECTIVES, directive)) {
+        throw new Error(`ISLANDS.${name}: источники острова в защитной директиве ${directive}`)
+      }
+    }
+  }
   const islands = Object.values(ISLANDS).filter((island) => island.on !== false)
   const sources = (directive) => islands.flatMap((island) => island.sources?.[directive] ?? [])
   // Явная директива перекрывает default-src: своё и чужие origin ресурсов — в каждой.
-  const allow = (directive) => ["'self'", ...RESOURCE_ORIGINS, ...sources(directive)]
+  const allow = (directive) => [...new Set(["'self'", ...RESOURCE_ORIGINS, ...sources(directive)])]
   // script-src и style-src Astro собирает сам — из scriptDirective и styleDirective.
-  const named = new Set(islands.flatMap((island) => Object.keys(island.sources ?? {})))
-  const fetchDirectives = [...named].filter((name) => !['script-src', 'style-src'].includes(name))
+  const fetchDirectives = new Set([
+    'default-src',
+    ...islands.flatMap((island) => Object.keys(island.sources ?? {})),
+  ])
+  fetchDirectives.delete('script-src')
+  fetchDirectives.delete('style-src')
   return {
     directives: [
-      `default-src ${allow('default-src').join(' ')}`,
-      ...fetchDirectives.map((directive) => `${directive} ${allow(directive).join(' ')}`),
-      "object-src 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "frame-ancestors 'none'",
+      ...[...fetchDirectives].map((directive) => `${directive} ${allow(directive).join(' ')}`),
+      ...Object.entries(PROTECTED_DIRECTIVES).map(([directive, value]) => `${directive} ${value}`),
     ],
     // Внешних скриптов у сайта нет: чужой origin скрипта — только у острова, который его грузит.
     scriptDirective: {

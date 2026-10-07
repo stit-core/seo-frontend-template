@@ -5,7 +5,7 @@ import { load } from 'js-yaml'
 import { collections, splitFrontmatter } from '../scripts/lib/content.mjs'
 import { headTags, isNoindex } from '../scripts/lib/html.mjs'
 import { pageRoutes, walk } from '../scripts/lib/routes.mjs'
-import { cspHash } from '../scripts/lib/site-policy.mjs'
+import { cspHash, ISLANDS, RESOURCE_ORIGINS } from '../scripts/lib/site-policy.mjs'
 import { type Locale, localePath } from '../src/shared/i18n/locale.ts'
 import { buildRedirectTable, type RedirectRule } from '../src/shared/redirects/table.ts'
 
@@ -114,37 +114,59 @@ export function entries(): Entry[] {
 }
 
 // Защита CSP — литералами, а не политикой сборки: ослабленная политика краснеет здесь.
-const CSP_EXACT = [
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "frame-ancestors 'none'",
-]
-// Источник, который пропускает чужой код или стиль целиком: подстановка, схема, инлайн без хеша.
-const CSP_WILDCARD = /^(\*|[a-z][a-z\d+.-]*:|'unsafe-inline'|'unsafe-eval'|'unsafe-hashes')$/
+const CSP_PROTECTED: Record<string, string> = {
+  'object-src': "'none'",
+  'base-uri': "'self'",
+  'form-action': "'self'",
+  'frame-ancestors': "'none'",
+}
+// Источник, который пропускает чужое без разбора, — запрещён в любой директиве, даже в политике.
+const CSP_ANY = /\*|^'unsafe-/
+const CSP_HASH = /^'sha(256|384|512)-[\w+/]+={0,2}'$/
 
-// CSP страницы так, как её видит браузер: заголовок есть, защитные директивы на месте, загрузка —
-// своё и перечисленные origin без подстановок, каждый инлайн-скрипт и инлайн-стиль документа
-// разрешён хешем.
+// Острова политики, как их читает CSP: включён ли остров на этой сборке и его чужие origin.
+const islands: { hash: string; on?: boolean; sources?: Partial<Record<string, string[]>> }[] =
+  Object.values(ISLANDS)
+
+// Чужие origin, которые политика разрешает директиве: ресурсы сайта (скрипту — нет, внешних
+// скриптов у сайта нет) и источники включённых островов.
+const policyOrigins = (directive: string): string[] => [
+  ...(directive === 'script-src' ? [] : RESOURCE_ORIGINS),
+  ...islands
+    .filter((island) => island.on !== false)
+    .flatMap((island) => island.sources?.[directive] ?? []),
+]
+
+// CSP страницы так, как её применяет браузер: директива действует по первому вхождению (дубль он
+// отбрасывает), защитные — ровно литералы, источник сверх своего и хеша — только из политики, и
+// каждый инлайн-скрипт и инлайн-стиль документа разрешён хешем.
 export function cspProblems(html: string, header: string | undefined): string[] {
   if (!header) return ['нет заголовка Content-Security-Policy']
-  const directives = header
-    .split(';')
-    .map((directive) => directive.trim().split(/\s+/).join(' '))
-    .filter(Boolean)
-  const sourcesOf = (name: string) =>
-    directives
-      .find((directive) => directive.startsWith(`${name} `))
-      ?.split(' ')
-      .slice(1)
-  const problems = CSP_EXACT.filter((required) => !directives.includes(required)).map(
-    (required) => `нет «${required}»`,
-  )
+  const problems: string[] = []
+  const directives = new Map<string, string[]>()
+  for (const directive of header.split(';')) {
+    const [name, ...sources] = directive.trim().split(/\s+/)
+    if (!name) continue
+    if (directives.has(name.toLowerCase())) {
+      problems.push(`${name} дважды: браузер берёт первое вхождение`)
+    } else directives.set(name.toLowerCase(), sources)
+  }
+  for (const [name, value] of Object.entries(CSP_PROTECTED)) {
+    const sources = directives.get(name)?.join(' ')
+    if (sources !== value) problems.push(`${name} ${sources ?? '—'} вместо ${value}`)
+  }
   for (const name of ['default-src', 'script-src', 'style-src']) {
-    const sources = sourcesOf(name)
-    if (!sources) problems.push(`нет ${name}`)
-    for (const source of sources?.filter((value) => CSP_WILDCARD.test(value)) ?? []) {
-      problems.push(`${name} пропускает всё: ${source}`)
+    if (!directives.has(name)) problems.push(`нет ${name}`)
+  }
+  for (const [name, sources] of directives) {
+    if (Object.hasOwn(CSP_PROTECTED, name)) continue
+    const allowed = new Set(["'self'", ...policyOrigins(name)])
+    const hashed = name === 'script-src' || name === 'style-src'
+    for (const source of sources) {
+      if (CSP_ANY.test(source)) problems.push(`${name} пропускает всё: ${source}`)
+      else if (!allowed.has(source) && !(hashed && CSP_HASH.test(source))) {
+        problems.push(`${name} пропускает ${source} — его нет в политике`)
+      }
     }
   }
   for (const [element, name] of [
@@ -155,7 +177,7 @@ export function cspProblems(html: string, header: string | undefined): string[] 
     for (const [, attrs = '', body = ''] of html.matchAll(pattern)) {
       // JSON-LD — данные, а не код: CSP его не исполняет и не блокирует.
       if (attrs.includes('type="application/ld+json"')) continue
-      if (!sourcesOf(name)?.includes(`'${cspHash(body)}'`)) {
+      if (!directives.get(name)?.includes(`'${cspHash(body)}'`)) {
         problems.push(`<${element}${attrs}>: ${name} не пропускает ${cspHash(body)}`)
       }
     }
