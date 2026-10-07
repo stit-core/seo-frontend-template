@@ -1,6 +1,7 @@
 import type { GetStaticPathsResult } from 'astro'
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
+import { parseHtml } from '@/shared/lib/testing'
 import { headTags } from '../../../scripts/lib/html.mjs'
 import NotFound from '../404.astro'
 import ServerError from '../500.astro'
@@ -173,6 +174,7 @@ describe('маршруты с параметрами', () => {
     const head = await render(PostRu.default, '/blog/para', first?.props)
     expect(head.hreflang).toEqual(pair('/blog/para', '/en/blog/pair'))
     expect(head.jsonLd).toEqual(['BlogPosting', 'BreadcrumbList'])
-    expect(head.html).toContain('<p>Тело записи.</p>')
+    const paragraphs = [...parseHtml(head.html).querySelectorAll('article p')]
+    expect(paragraphs.map((paragraph) => paragraph.textContent)).toContain('Тело записи.')
   })
 })

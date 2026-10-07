@@ -1,5 +1,6 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { t } from '@/shared/i18n'
+import { parseHtml } from '@/shared/lib/testing'
 import Contact from '../api/contact.astro'
 
 const ORIGIN = 'https://demo.example'
@@ -90,8 +91,9 @@ describe('/api/contact', () => {
     expect(response.status).toBe(200)
     expect(response.headers.get('cache-control')).toBe('private, no-store')
     const html = await response.text()
-    expect(html).toContain('<html lang="en"')
-    expect(html).toContain('<meta name="robots" content="noindex">')
+    const doc = parseHtml(html)
+    expect(doc.documentElement.getAttribute('lang')).toBe('en')
+    expect(doc.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex')
     expect(html).toContain('role="alert"')
     expect(html).toContain('value="Мария"')
     expect(fetchMock).not.toHaveBeenCalled()
@@ -104,6 +106,8 @@ describe('/api/contact', () => {
     expect(response.headers.get('cache-control')).toBe('private, no-store')
     const html = await response.text()
     expect(html).toContain(t('ru', 'form.error.delivery'))
-    expect(html).toContain('<meta name="robots" content="noindex"')
+    expect(parseHtml(html).querySelector('meta[name="robots"]')?.getAttribute('content')).toBe(
+      'noindex',
+    )
   })
 })

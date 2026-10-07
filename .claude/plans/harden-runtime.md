@@ -155,16 +155,18 @@ blocked-by: —
 - [x] **S7** — pnpm ≥ 10.34 без corepack (Dockerfile, доки), конфиг в `pnpm-workspace.yaml`, `.npmrc` — только
   auth, `minimumReleaseAge`, строгие peer; lockfile обновлён в пределах диапазонов
   - Проверка: `pnpm install --frozen-lockfile` зелёный под pnpm 10 и 12; `pnpm audit --prod` → 0 high · Закрывает: AC6 · Зависит от: —
-  - Сделано: `packageManager: pnpm@10.34.6`; `pnpm-workspace.yaml` — `allowBuilds`, `minimumReleaseAge` 4320,
-    `strictPeerDependencies` с одним правилом для tsconfck, `auditConfig`; `.npmrc` и `package.json#pnpm` удалены;
-    lockfile — `pnpm update` в диапазонах (devalue 5.9.3, smol-toml 1.9.0, source-map-js 1.2.2), sharp 0.35.5;
-    `eslint-plugin-jsx-a11y` убран — a11y `.astro` держат Biome и axe; образ — стадия `pnpm` с `npm install -g`
-    версии `packageManager`. Установка из lockfile под pnpm 10.34.6, 11.28.4 и 12.9.1 зелёная, lockfile не тронут,
-    `peers check` чист (`M/p2c/pnpm1{1,2}-*-s7.log`); `pnpm audit --prod --audit-level=high` — 0 (было 6 high);
-    образ на Node 24 собран, `accept:image` зелёный (`M/p2c/accept-s7-node24.log`); `pnpm check` зелёный
-- [ ] **S8** — Стек без ловушек: Astro до последнего патча, тесты `.astro` сверяют DOM, а не сырой HTML;
+  - Сделано: `pnpm@10.34.6`; `pnpm-workspace.yaml` — `allowBuilds`, `minimumReleaseAge` 4320, строгие peer,
+    `auditConfig`; `.npmrc` и `package.json#pnpm` удалены; lockfile — `pnpm update` в диапазонах, sharp 0.35.5;
+    `eslint-plugin-jsx-a11y` убран; образ — стадия `pnpm` с `npm install -g`. Установка из lockfile под pnpm 10.34.6,
+    11.28.4 и 12.9.1 зелёная, lockfile не тронут, `peers check` чист (`M/p2c/pnpm1{1,2}-*-s7.log`); `pnpm audit
+    --prod --audit-level=high` — 0 (было 6 high); образ на Node 24 — `accept:image` зелёный; `pnpm check` зелёный
+- [x] **S8** — Стек без ловушек: Astro до последнего патча, тесты `.astro` сверяют DOM, а не сырой HTML;
   TypeScript `~6.0` записан с причиной; a11y-плагин ESLint с поддержкой ESLint 10 или убран
   - Проверка: `pnpm check` зелёный на новом патче Astro · Закрывает: AC7 · Зависит от: S7
+  - Сделано: Astro 7.3.5 — последний патч старше `minimumReleaseAge`; три теста подстрок тегов на нём краснели —
+    тесты `.astro` сверяют разбор (`parseHtml`, `<head>` — `headTags()`), правило — `tests-pipeline`, шаблон —
+    `/scaffold`; TypeScript `~6.0` с причиной — `dependencies.md` шаблона; a11y-плагин убран в S7. `pnpm check`
+    зелёный на 7.3.5 и на 7.3.6 с адаптером 11.1.7 (`M/p2c/check-astro736.log`); покрытие не сдвинулось
 - [ ] **S9** — Политика обновлений в `docs/stack/_templates/dependencies.md`: N / N−1, триггеры пересмотра (в том
   числе судьба `@astrojs/node` standalone), автообновление (Renovate-конфиг или ежемесячная процедура),
   пересчёт порогов покрытия; `pnpm audit` — шаг `/release`
@@ -182,14 +184,12 @@ blocked-by: —
   приложением экземпляр модуля: проверка при старте и есть тот разбор, что читают запросы.
 - Разбор env кешируется по снимку значений ключей схемы — запросы не гоняют Zod, а `vi.stubEnv` и инъекция
   env в тестах остаются верными без сброса кеша.
-- `KEEP_ALIVE_TIMEOUT_MS` и `SHUTDOWN_TIMEOUT_MS` — ключи схемы, мусор — отказ старта, а не
-  «предупреждение и дефолт» — правило «значение вне формата — отказ» (AC1); `PORT`/`HOST` читает адаптер, их
-  мусор и так роняет старт (`ERR_SOCKET_BAD_PORT`, `listen failed`).
+- `KEEP_ALIVE_TIMEOUT_MS` и `SHUTDOWN_TIMEOUT_MS` — ключи схемы: мусор — отказ старта (AC1), а не «дефолт с
+  предупреждением»; `PORT`/`HOST` читает адаптер, их мусор и так роняет старт (`ERR_SOCKET_BAD_PORT`).
 - Ошибка конфига — `invalid env — <ключ>: <правило>` без значения и по-английски, как остальные строки
   процесса (сообщение ключа IndexNow переведено) — среди ключей есть секреты.
-- Тест обёртки — раскладка образа во временном каталоге, где модуль конфига переотдаёт TS-исходник схемы
-  (Node снимает типы) — проверка идёт в шаге `test` до сборки; связку на настоящей сборке держит HTTP-набор:
-  его серверы стартуют через неё.
+- Тест обёртки — раскладка образа во временном каталоге, модуль конфига переотдаёт TS-исходник схемы (Node снимает
+  типы): проверка в шаге `test` до сборки; связку на настоящей сборке держит HTTP-набор — его серверы стартуют так.
 - Штамповка — Node-скрипт `docker/stamp.mjs`, `entrypoint.sh` — только он и `exec`: правило `SITE_URL` одно
   (поле схемы), а замена строкой (`split`/`join`) данные не исполняет. Правило — регулярное выражение «ровно
   origin», а не `new URL(…).origin`: URL-парсер пропускает в хост `&` и другие символы; IPv6 не принимается.
@@ -282,11 +282,16 @@ blocked-by: —
   `auditConfig.ignoreGhsas` с причиной; dev-дерево в образ не едет. sharp 0.35.5 — точный пин, вне диапазонов.
 - `typecheck` — `astro sync && astro-check`: `astro check`, не загрузив чекер, выходит с 0 — гейт прошёл без типов
   (`M/p2c/check-s7.log`); бинарь чекера падает с 1 (`M/p2c/fail{open,closed}-astro-check.log`).
+- Патч Astro — последний, прошедший выдержку: 7.3.6 и адаптер 11.1.7 (2026-10-06) pnpm 12 в lockfile не пускает
+  (`ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION`); гейт на них зелёный — войдут ближайшим обновлением.
+- Тесты `.astro` — разбором, а не подстрокой тега: dev-режим Vitest аннотирует теги (`data-astro-source-*`, Astro
+  включает их с тулбаром), а выключать тулбар в тестах — подгонка под сырой HTML; подстрока остаётся для
+  присутствия тега и отдельного атрибута.
 
 ## Где мы сейчас
 Этапы A (S1–S4) и B (S5–S6) приняты валидаторами (`M/validation-harden-runtime-{A,B}.md`, PASS); замечания B
 закрыты фиксами: HTTP-набор читает CSP как браузер, держит ответы формы и CSP своей копии сборки, сайт со
 счётчиком проходит typecheck, дубли `<путь>/index.html` и `Permissions-Policy` — правдой в контракте edge.
-Этап C: S7 сделан — pnpm 10.34.6 без corepack, настройки в `pnpm-workspace.yaml` (читают pnpm 10–12), строгие
-peer, `pnpm audit --prod` без high; `typecheck` не проходит молча при сломанном чекере. Следующее — S8 (патч
-Astro, тесты `.astro` по DOM, TypeScript `~6.0`).
+Этап C: S7 и S8 сделаны — pnpm 10.34.6 без corepack, настройки в `pnpm-workspace.yaml` (читают pnpm 10–12),
+строгие peer, `pnpm audit --prod` без high; `typecheck` не проходит молча; Astro 7.3.5, тесты `.astro` — разбором.
+Следующее — S9 (политика обновлений в `dependencies.md` шаблона, `pnpm audit` в `/release`).

@@ -1,5 +1,5 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
-import { expectNoA11yViolations } from '@/shared/lib/testing'
+import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import ContactForm from './contact-form.astro'
 
 const props = { locale: 'ru' as const, action: '/api/contact', policyHref: '/legal/privacy' }
@@ -12,8 +12,12 @@ const render = async (extra: Record<string, unknown> = {}) => {
 describe('ContactForm', () => {
   it('нативная форма: POST, подписанные поля, ловушка и согласие со ссылкой на политику', async () => {
     const html = await render()
-    expect(html).toContain('<form method="post" action="/api/contact"')
-    expect(html).toContain('<label class="block text-body-sm font-medium" for="contact-name"')
+    const form = parseHtml(html).querySelector('form')
+    expect([form?.getAttribute('method'), form?.getAttribute('action')]).toEqual([
+      'post',
+      '/api/contact',
+    ])
+    expect(form?.querySelector('label[for="contact-name"]')).not.toBeNull()
     expect(html).toContain('id="contact-email"')
     expect(html).toContain('id="contact-message"')
     expect(html).toContain('name="locale" value="ru"')

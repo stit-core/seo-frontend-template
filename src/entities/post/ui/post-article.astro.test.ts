@@ -1,5 +1,5 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
-import { expectNoA11yViolations } from '@/shared/lib/testing'
+import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import type { Post } from '../api/queries'
 import PostArticle from './post-article.astro'
 
@@ -31,7 +31,8 @@ describe('PostArticle', () => {
     expect(html).toContain('datetime="2026-09-08"')
     expect(html).toContain('datetime="2026-09-10"')
     expect(html).toContain('обновлено')
-    expect(html).toContain('<p>Тело записи.</p>')
+    const paragraphs = [...parseHtml(html).querySelectorAll('article p')]
+    expect(paragraphs.map((paragraph) => paragraph.textContent)).toContain('Тело записи.')
     expect(html).toContain('href="/blog/tag/deploy"')
     expect(html).not.toContain('Черновик')
   })

@@ -11,8 +11,12 @@ paths: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
   (`allowOnly: false`): тест не выпадает из гейта молча
 - **Unit** — рядом с модулем (`shared/i18n/locale.test.ts`): проект `dom` (happy-dom)
 - **Компонентные `.astro`** — `<name>.astro.test.ts` рядом с компонентом: проект `astro`
-  (node-окружение, Container API `experimental_AstroContainer`); проверка HTML-строки +
-  `expectNoA11yViolations` из `@/shared/lib/testing` (axe-core; правило `region` для
+  (node-окружение, Container API `experimental_AstroContainer`); разметка сверяется разбором —
+  элементы, атрибуты и текст через `parseHtml` из `@/shared/lib/testing` (`<head>` страницы —
+  `headTags()`, тот же парсер, что у `seo:check` и e2e), а не подстрокой тега: в dev-режиме
+  Vitest Astro добавляет к тегам `data-astro-source-*`, и патч фреймворка не должен краснить
+  гейт; подстрока годится для присутствия (`'<script'`) и отдельного атрибута. Плюс
+  `expectNoA11yViolations` оттуда же (axe-core; правило `region` для
   фрагмента выключено; в happy-dom нет CSS — контраст видит только браузерный набор
   `e2e/browser/a11y.spec.ts`). Пропсы-сущности — плоские фикстуры (`Post` не тянет `astro:content`)
 - **Запросы к контенту** (`entities/*/api/queries.test.ts`) — `astro:content` подменяется

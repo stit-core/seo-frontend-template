@@ -221,18 +221,19 @@ const { locale, class: className } = Astro.props
 export { default as <Name> } from './ui/<name>.astro'
 ```
 
-Тест рядом — Container API + `expectNoA11yViolations`:
+Тест рядом — Container API: разметка — разбором (`parseHtml`: элементы, атрибуты, текст), а не
+подстрокой тега; доступность — `expectNoA11yViolations`:
 
 ```ts
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
-import { expectNoA11yViolations } from '@/shared/lib/testing'
+import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import <Name> from './<name>.astro'
 
 describe('<Name>', () => {
   it('рендерится и проходит axe', async () => {
     const container = await AstroContainer.create()
     const html = await container.renderToString(<Name>, { props: { locale: 'ru' } })
-    expect(html).toContain('<section')
+    expect(parseHtml(html).querySelector('section')).not.toBeNull()
     await expectNoA11yViolations(html)
   })
 })
