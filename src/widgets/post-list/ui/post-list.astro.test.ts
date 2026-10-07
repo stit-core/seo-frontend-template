@@ -1,6 +1,6 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { Post } from '@/entities/post'
-import { expectNoA11yViolations } from '@/shared/lib/testing'
+import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import PostList from './post-list.astro'
 
 const post = (slug: string, title: string): Post => ({
@@ -27,9 +27,10 @@ describe('PostList', () => {
         pagination: { current: 2, last: 3, newerHref: '/blog', olderHref: '/blog/page/3' },
       },
     })
-    expect(html.match(/<article/g)).toHaveLength(2)
-    expect(html).toContain('href="/blog" rel="prev"')
-    expect(html).toContain('href="/blog/page/3" rel="next"')
+    const doc = parseHtml(html)
+    expect(doc.querySelectorAll('article')).toHaveLength(2)
+    expect(doc.querySelector('a[rel="prev"]')?.getAttribute('href')).toBe('/blog')
+    expect(doc.querySelector('a[rel="next"]')?.getAttribute('href')).toBe('/blog/page/3')
     expect(html).toContain('2 / 3')
   })
 
