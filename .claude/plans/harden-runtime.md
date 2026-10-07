@@ -155,7 +155,7 @@ blocked-by: —
   пересчёт порогов покрытия; `pnpm audit` — шаг `/release`
   - Проверка: чтение; `/release` содержит шаг · Закрывает: AC6, AC7 · Зависит от: S8
   - Сделано: `§ Обновления` — правила, ежемесячная процедура командами гейта, R-1…R-7 (R-7 — `@astrojs/node`
-    отстал или потерял `standalone`); `/smartdev` напоминает по дате `pnpm-lock.yaml`, `/release` — шаг 2
+    отстал или потерял `standalone`); `/smartdev` напоминает по последнему циклу `chore(deps)`, `/release` — шаг 2
     `pnpm audit --prod --audit-level=high`; запрет `@astrojs/sitemap` — с настоящей причиной; роутер CLAUDE.md,
     `SECURITY.md`, чек-лист `/stack-deep-dive`. `pnpm check` зелёный
 - [x] **S10** — Образ: версия Node — аргумент сборки, образ проверен на Node 24 и 26; `accept:image` проверяет
