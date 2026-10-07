@@ -29,7 +29,7 @@ status: draft
 
 | поле | значение |
 |---|---|
-| Node dev | `24 LTS` (`.nvmrc`); `engines` — `^24.16.0 \|\| >=26.3.0`, минимум зависимостей |
+| Node dev | `24 LTS` (`.nvmrc`); `engines` — `^24.16.0 \|\| >=26.3.0`: мажоры образа (24 — умолчание, 26 — `--build-arg`) от нижней границы, которую в них требуют зависимости; 22 образ и гейт не проверяют, 25 исключают сами зависимости |
 | менеджер пакетов | `pnpm` — версия `packageManager`, ставится `npm i -g` (corepack нет в Node ≥ 25); настройки — `pnpm-workspace.yaml`, в `.npmrc` — только реестр и токены |
 | модули | ESM-only (`"type": "module"`) |
 | TypeScript | `astro/tsconfigs/strictest`, `astro sync` + `astro-check` в гейте |

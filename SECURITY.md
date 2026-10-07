@@ -19,8 +19,9 @@
 репортить их мейнтейнерам; здесь — только если наш код или дефолт-конфиг делает их
 эксплуатируемыми. Известные уязвимости прод-дерева шаблон проверяет сам: `pnpm audit --prod
 --audit-level=high` — шаг `/release`, исключение — строкой `auditConfig.ignoreGhsas` в
-`pnpm-workspace.yaml` с причиной; версия моложе трёх суток не ставится (`minimumReleaseAge`).
-Правило обновлений — `docs/stack/_templates/dependencies.md § Обновления`.
+`pnpm-workspace.yaml` с причиной; версия моложе трёх суток не ставится (`minimumReleaseAge`), кроме
+исправления уязвимости — строкой `minimumReleaseAgeExclude` там же. Правило обновлений —
+`docs/stack/_templates/dependencies.md § Обновления`.
 
 ## Секреты не в репозитории
 
