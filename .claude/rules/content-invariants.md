@@ -92,7 +92,8 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
 - Скрипты читают YAML напрямую `js-yaml` и исполняют TS-модули напрямую (Node strip-types),
   поэтому импортируют только «листовые» модули без `@/`-алиасов и относительных импортов:
   `model/schema.ts`, `lib/paginate.ts`, `shared/redirects/table.ts`, `shared/i18n/locale.ts`,
-  `shared/config/runtime.ts`
+  `shared/config/runtime.ts`, `shared/config/site.ts` (его читает политика сборки; импорт там —
+  только типов)
 - Новая коллекция — запись в реестре `collections` модуля `scripts/lib/content.mjs` (каталог,
   схема, порождаемые маршруты): каталог `src/entities/*/content` вне реестра и запись реестра без
   каталога — ошибка `check:content`. Скрипты берут реестр проверяемого корня: у мини-проектов

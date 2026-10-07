@@ -149,8 +149,8 @@
 **Секции**: `Счётчики`, `Что не работает в РФ`, `Согласие`, `Бюджет`, `Generates`.
 
 **Generates**: `src/app/analytics/*`, идентификаторы в `site.ts`, баннер согласия и его
-строка бюджета, имя острова в `ISLANDS` и чужие origin в `RESOURCE_ORIGINS`
-(`scripts/lib/site-policy.mjs`, их держит `seo:check`).
+строка бюджета, остров в `ISLANDS` (имя, хеш тела и origin счётчика — их пропускает CSP) и
+чужие origin в `RESOURCE_ORIGINS` (`scripts/lib/site-policy.mjs`, их держат `seo:check` и CSP).
 
 **Cross-kind**: идентификатор счётчика — поле `site.ts`, не env (`config.md § Публичные
 идентификаторы`); баннер — остров, строка в `rendering.md` и в `.size-limit.cjs`.

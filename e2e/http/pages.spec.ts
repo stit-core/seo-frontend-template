@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { bodyOf, headTags } from '../../scripts/lib/html.mjs'
 import { SITE_ORIGIN_PLACEHOLDER } from '../../src/shared/config/runtime.ts'
-import { indexablePaths, prerenderedPaths } from '../site'
+import { cspProblems, indexablePaths, prerenderedPaths } from '../site'
 
 // Голый хост плейсхолдера: ловит и полный URL, и упоминание без схемы.
 const PLACEHOLDER = new URL(SITE_ORIGIN_PLACEHOLDER).hostname
@@ -12,7 +12,7 @@ const GOOGLEBOT = {
 }
 
 test.describe('prerendered-страницы — как их отдаёт контейнер', () => {
-  test('каждая страница сборки: 200 от статик-хендлера, origin проштампован, тело без своего origin', async ({
+  test('каждая страница сборки: 200 от статик-хендлера, CSP, origin проштампован, тело без своего origin', async ({
     request,
     baseURL,
   }) => {
@@ -27,6 +27,8 @@ test.describe('prerendered-страницы — как их отдаёт кон�
       // Прод-профиль: индексацию закрывать нечему.
       expect(response.headers()['x-robots-tag'], path).toBeUndefined()
       const html = await response.text()
+      // CSP статики — из dist/_headers.json сборки: её ставит статик-хендлер, а не приложение.
+      expect(cspProblems(html, response.headers()['content-security-policy']), path).toEqual([])
       // Клоакинга нет: бот получает ровно тот же HTML, что и человек.
       expect(await (await request.get(path, { headers: GOOGLEBOT })).text(), path).toBe(html)
       expect(Buffer.byteLength(html, 'utf8'), path).toBeLessThan(HTML_SIZE_LIMIT)

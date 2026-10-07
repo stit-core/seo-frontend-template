@@ -1,7 +1,8 @@
 import AxeBuilder from '@axe-core/playwright'
-import { expect, type Page, test } from '@playwright/test'
+import type { Page } from '@playwright/test'
 import { t } from '../../src/shared/i18n/dict.ts'
 import { prerenderedPaths } from '../site'
+import { expect, test } from './csp'
 
 // WCAG 2.2 AA целиком: без тегов axe не запускает, например, target-size (2.5.8).
 const RULES = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-practice']

@@ -123,6 +123,14 @@ origin; остаток плейсхолдера в любом файле `dist/c
 - Staging (`ROBOTS_POLICY=noindex`): `X-Robots-Tag: noindex, nofollow` на каждом ответе процесса —
   prerendered, `public/*`, ассеты и on-demand — ставит обёртка `docker/server.mjs`, последним:
   значение маршрута его не перекрывает
+- `Content-Security-Policy` — у каждой страницы: prerendered — статик-хендлер из
+  `dist/_headers.json` сборки, on-demand (404, `/now`, ответ формы) — Astro в ответе. Политика
+  одна (`contentSecurityPolicy()`, `scripts/lib/site-policy.mjs`): `default-src 'self'`,
+  `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`; скрипт —
+  только инлайн-остров по хешу тела, стиль — свой файл или инлайн по хешу; чужой origin — из
+  `RESOURCE_ORIGINS` и у острова, который его грузит (счётчик — при заданном идентификаторе). Без
+  CSP — ответы без страницы: файлы, crawler-файлы, тело 410 и отказы формы (скриптов в них нет) и
+  `500.html`, которую адаптер при сбое рендера читает с диска мимо `_headers.json`
 - Почему `no-cache`, а не `max-age`: без CDN `s-maxage` не на кого рассчитывать, а `max-age` на
   своём домене оставляет у пользователей старую страницу после релиза; `no-cache` — «спроси
   сервер», и для prerendered это дешёвый 304 по ETag

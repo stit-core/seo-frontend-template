@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import type { AstroIntegration } from 'astro'
 import { defineConfig } from 'astro/config'
 import { load } from 'js-yaml'
+import { contentSecurityPolicy } from './scripts/lib/site-policy.mjs'
 
 // Один образ на все среды: на сборке в prerendered-выход попадает плейсхолдер
 // (валидный URL — голый __SITE_ORIGIN__ Astro отвергает), при старте контейнера
@@ -48,11 +49,19 @@ export default defineConfig({
     mode: 'standalone',
     experimentalDisableStreaming: true,
     bodySizeLimit: 1024 * 1024,
+    // CSP prerendered-страницы — заголовком из dist/_headers.json (его отдаёт статик-хендлер), а не
+    // <meta>: frame-ancestors в <meta> не действует.
+    staticHeaders: true,
   }),
-  // За TLS-терминирующим прокси адаптер строит URL запроса как `http://<Host>`, и встроенная
-  // проверка отвечала бы 403 на любой POST формы из браузера. Origin заявки сверяет
-  // `features/contact-form` — с runtime `SITE_URL`, до которого прокси не дотягивается.
-  security: { checkOrigin: false },
+  security: {
+    // За TLS-терминирующим прокси адаптер строит URL запроса как `http://<Host>`, и встроенная
+    // проверка отвечала бы 403 на любой POST формы из браузера. Origin заявки сверяет
+    // `features/contact-form` — с runtime `SITE_URL`, до которого прокси не дотягивается.
+    checkOrigin: false,
+    // CSP на каждой странице: on-demand — заголовок ответа, prerendered — статик-хендлер.
+    // Директивы и хеши островов — политика сборки (scripts/lib/site-policy.mjs).
+    csp: contentSecurityPolicy(),
+  },
   trailingSlash: 'never',
   // 'file' + node-адаптер = 404 на /blog и /en (статик-хендлер видит каталог); только 'directory'.
   build: { format: 'directory' },

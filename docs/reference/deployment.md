@@ -33,7 +33,7 @@ Dockerfile монтирует его необязательно.
 В контекст сборки попадают только `package.json`, `pnpm-lock.yaml`, `.npmrc`,
 `astro.config.ts`, `tsconfig.json`, `src/` (включая контент `src/entities/*/content/**`),
 `public/`, `content/` (`redirects.yaml` разбирается на сборке, в серверный бандл попадают
-данные), `docker/`
+данные), `docker/` и политика сборки `scripts/lib/site-policy.mjs` (из неё конфиг строит CSP)
 (`.dockerignore`; его `*.md` исключает только корневые файлы).
 
 ## Запуск
@@ -154,9 +154,11 @@ prerendered-страница печатается на сборке, а обра
   остальных путей до middleware, поэтому `/old/` → `/old` → правило из `redirects.yaml`),
   `/about.html` → 404 при `build.format: 'directory'`
 - Сжатия в процессе нет — жмёт Traefik (`compress`)
-- Security-заголовки (`Strict-Transport-Security`, `X-Content-Type-Options: nosniff`,
-  `X-Frame-Options: DENY`, `Referrer-Policy`) ставит Traefik (`secure-headers@file`);
-  приложение их не дублирует
+- `Content-Security-Policy` (с `frame-ancestors 'none'`) ставит приложение у каждой страницы —
+  prerendered из `dist/_headers.json`, on-demand в ответе (`rendering.md § Заголовки`);
+  остальные security-заголовки (`Strict-Transport-Security`, `X-Content-Type-Options: nosniff`,
+  `X-Frame-Options: DENY`, `Referrer-Policy`) — Traefik (`secure-headers@file`), приложение их не
+  дублирует
 
 ## Требования к прокси (чек-лист оператора)
 

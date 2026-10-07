@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 # Приёмка собранного образа до пуша в registry: отказ без SITE_URL, штамповка origin,
-# статусы ключевых маршрутов, canonical, robots и карта, контур staging; заголовки, TTFB и
+# статусы ключевых маршрутов, canonical, CSP, robots и карта, контур staging; заголовки, TTFB и
 # дренаж — печать без порога.
 # Использование: pnpm accept:image <image> [port]
 set -u
@@ -76,6 +76,12 @@ case "$canonical" in
 *"$ORIGIN"*) ok "canonical на runtime origin: $canonical" ;;
 *) fail "canonical не на $ORIGIN: ${canonical:-нет}" ;;
 esac
+
+# CSP статики адаптер читает из dist/_headers.json по пути сборки: в образе он обязан совпасть.
+for path in / /net-takogo-puti; do
+  curl -sI "http://127.0.0.1:$PORT$path" | grep -qi "^content-security-policy: .*frame-ancestors 'none'" &&
+    ok "CSP на $path" || fail "$path без CSP"
+done
 
 scripts=$(curl -s -A Googlebot "http://127.0.0.1:$PORT/" | grep -c '<script' || true)
 echo "  тегов <script> на главной (Googlebot): $scripts"

@@ -1,5 +1,6 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { Browser } from 'happy-dom'
+import { cspHash, ISLANDS } from '../../../../scripts/lib/site-policy.mjs'
 import ThemeInit from './theme-init.astro'
 
 // Отдельного файла в dist у острова нет — он инлайнится в <head> каждой страницы. Поэтому
@@ -55,6 +56,13 @@ describe('ThemeInit', () => {
     expect(script).not.toContain('biome-ignore')
     expect(script).not.toContain('//')
     expect(Buffer.byteLength(script, 'utf8')).toBeLessThanOrEqual(INLINE_BUDGET_BYTES)
+  })
+
+  // CSP пропускает остров по хешу из политики: правка тела без новой строки политики — красный
+  // тест, а не тема, молча заблокированная браузером.
+  it('тело острова — хеш из политики', () => {
+    const body = /<script[^>]*>([\s\S]*?)<\/script>/.exec(island)?.[1] ?? ''
+    expect(cspHash(body)).toBe(ISLANDS.theme.hash)
   })
 
   it('без выбора тема системная: схемы на <html> нет, признак JS есть', () => {

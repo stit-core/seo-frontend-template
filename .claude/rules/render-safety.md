@@ -50,9 +50,11 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
 
 ## Остров (клиент)
 
-- Без островов нет ни байта JS; клиентский `<script>` — по решению: имя в `ISLANDS`
+- Без островов нет ни байта JS; клиентский `<script>` — по решению: имя и хеш тела в `ISLANDS`
   (`scripts/lib/site-policy.mjs`), `data-island` на теге и строка бюджета (rule `shared-ui`);
-  другой исполняемый скрипт валит `seo:check`; импорты острова линтит ESLint как обычный модуль
+  другой исполняемый скрипт валит `seo:check`, тело без своего хеша блокирует CSP (и краснеет
+  тест острова); импорты острова линтит ESLint как обычный модуль. Данные острову — атрибутом
+  (`data-*`), а не в коде: тело одно на любое значение, и хеш не меняется
 - Server islands (`server:defer`) — не для индексируемого контента: бот видит заглушку, а не
   данные; в reference-наборе их нет
 - Cookie темы читает только остров: `Astro.cookies` на prerendered — значение сборки, поэтому
@@ -75,6 +77,13 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "astro.config.ts"]
 картинки оптимизирует сборка, трансформации на запрос наружу нет; в `astro dev` endpoint
 штатный. Интеграций-пакетов `@astrojs/react` (фреймворк островов ради одного переключателя) и
 `@astrojs/sitemap` (строит URL от build-time origin) нет.
+
+CSP — `security.csp` из политики сборки (`contentSecurityPolicy()`, `scripts/lib/site-policy.mjs`:
+защитные директивы, чужие origin, хеши островов; хеши своих стилей Astro добавляет сам) и
+`staticHeaders: true` адаптера: prerendered-страница получает заголовок из `dist/_headers.json`
+(статик-хендлер), on-demand — от Astro в ответе. Заголовком, а не `<meta>`: `frame-ancestors`
+в `<meta>` не действует. Адаптер читает `_headers.json` по пути сборки — сборка и запуск в одном
+каталоге (`/app` образа); политика поэтому — в контексте сборки образа (`.dockerignore`).
 
 Два значения там же живут ради единственного POST-маршрута: `security.checkOrigin: false`
 (за прокси адаптер строит URL запроса как `http://<Host>` — origin сверяет `contact-form` с

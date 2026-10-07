@@ -8,14 +8,13 @@ import { METRIKA_ID } from '@/shared/config'
 // с контентом, и ровно один раз. `init` без параметров: просмотр страницы он засчитывает сам,
 // остальное настраивается в панели Метрики, а не здесь. data-island — имя в списке островов
 // политики сборки (scripts/lib/site-policy.mjs): без него seo:check счётчик не пропустит.
+// Идентификатор — атрибутом, а не в коде: тело острова одно на любой счётчик, и CSP пропускает
+// его по хешу из политики.
 ---
 
-{METRIKA_ID !== '' && <script
-  is:inline
-  data-island="metrika"
-  define:vars={{ counterId: METRIKA_ID }}
->
+{METRIKA_ID !== '' && <script is:inline data-island="metrika" data-counter={METRIKA_ID}>
   {
+    const counterId = document.currentScript.dataset.counter
     const load = () => {
       if (window.ym) return
       window.ym = (...args) => {

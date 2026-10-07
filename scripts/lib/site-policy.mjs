@@ -1,18 +1,76 @@
 // Политика сборки одним списком: что разрешено сверх строгого умолчания («индексируемая
 // страница без noindex, без скриптов и без чужих ресурсов»), типы разметки и бюджеты сниппета
-// выдачи. Держат её seo:check (каждая страница dist/client) и HTTP-набор (on-demand страницы).
-// Список расширяется решением — служебная страница, остров, сторонний сервис, тип разметки, — а
-// не по месту в скрипте.
+// выдачи. Держат её seo:check (каждая страница dist/client), HTTP-набор (on-demand страницы и
+// заголовки) и браузер — CSP строится отсюда же. Список расширяется решением — служебная
+// страница, остров, сторонний сервис, тип разметки, — а не по месту в скрипте.
+import { createHash } from 'node:crypto'
+import { METRIKA_ID } from '../../src/shared/config/site.ts'
 
 // Служебные prerendered-маршруты без префикса локали: только им положен noindex.
 export const NOINDEX_ROUTES = ['/contacts/spasibo', '/500']
 
-// Острова: исполняемый <script> страницы — только инлайн в <head> и с data-island из списка.
-export const ISLANDS = ['theme', 'metrika']
+// Острова: исполняемый <script> страницы — только инлайн в <head> и с data-island из списка. CSP
+// пропускает тело острова по хешу: правка тела — новый `hash` здесь (тест острова печатает его),
+// и изменение исполняемого кода сайта видно в диффе политики. `on` — печатает ли остров сайт
+// (по умолчанию — да), `sources` — чужие origin острова по директивам CSP.
+export const ISLANDS = {
+  theme: { hash: 'sha256-6PP0q6y6JDJx8gwgskZkXliPGb4JSQLN9q1UUOcqu6Q=' },
+  // Счётчик — только с идентификатором; tag.js, хиты и пиксель — с его origin. Вебвизору, карте
+  // кликов и региональным доменам нужно больше — список Яндекса:
+  // https://yandex.ru/support/metrica/code/install-counter-csp.html
+  metrika: {
+    hash: 'sha256-tkhj0JcGzL7QaX6wrVvp3zLdoPOwBUgKraRdnuJTdrU=',
+    on: METRIKA_ID !== '',
+    sources: {
+      'script-src': ['https://mc.yandex.ru'],
+      'connect-src': ['https://mc.yandex.ru'],
+      'img-src': ['https://mc.yandex.ru'],
+    },
+  },
+}
 
-// Чужие origin, с которых страница может грузить ресурсы (скрипты, стили, шрифты, картинки,
-// фреймы). Пусто: всё своё — и юридически (трансграничная передача), и по весу первого экрана.
+// Чужие origin, с которых страница может грузить ресурсы (стили, шрифты, картинки, фреймы;
+// скрипт — только инлайн-остров). Пусто: всё своё — и юридически (трансграничная передача), и по
+// весу первого экрана.
 export const RESOURCE_ORIGINS = []
+
+/**
+ * Хеш инлайн-скрипта или стиля в форме CSP.
+ * @param {string} body
+ */
+export const cspHash = (body) => `sha256-${createHash('sha256').update(body).digest('base64')}`
+
+/**
+ * CSP сайта — значение `security.csp` Astro: всё своё, чужой origin — из RESOURCE_ORIGINS и у
+ * острова, который его грузит, исполняемый инлайн — тела островов по хешу. Хеши стилей и файлов
+ * сборки Astro добавляет сам.
+ * @returns {Exclude<NonNullable<import('astro').AstroUserConfig['security']>['csp'], boolean | undefined>}
+ */
+export function contentSecurityPolicy() {
+  const islands = Object.values(ISLANDS).filter((island) => island.on !== false)
+  const sources = (directive) => islands.flatMap((island) => island.sources?.[directive] ?? [])
+  // Явная директива перекрывает default-src: своё и чужие origin ресурсов — в каждой.
+  const allow = (directive) => ["'self'", ...RESOURCE_ORIGINS, ...sources(directive)]
+  // script-src и style-src Astro собирает сам — из scriptDirective и styleDirective.
+  const named = new Set(islands.flatMap((island) => Object.keys(island.sources ?? {})))
+  const fetchDirectives = [...named].filter((name) => !['script-src', 'style-src'].includes(name))
+  return {
+    directives: [
+      `default-src ${allow('default-src').join(' ')}`,
+      ...fetchDirectives.map((directive) => `${directive} ${allow(directive).join(' ')}`),
+      "object-src 'none'",
+      "base-uri 'self'",
+      "form-action 'self'",
+      "frame-ancestors 'none'",
+    ],
+    // Внешних скриптов у сайта нет: чужой origin скрипта — только у острова, который его грузит.
+    scriptDirective: {
+      resources: ["'self'", ...sources('script-src')],
+      hashes: islands.map((island) => island.hash),
+    },
+    styleDirective: { resources: allow('style-src') },
+  }
+}
 
 // Типы JSON-LD, которые печатает сайт; остальные — ошибка. FAQPage, HowTo и SearchAction не
 // размечаются вовсе (rich results сняты) — ни типом блока, ни вложенно.
@@ -57,7 +115,7 @@ export function scriptViolations(html) {
     }
     const island = /\bdata-island="([^"]*)"/.exec(attrs)?.[1]
     if (/\bsrc=/.test(attrs)) problems.push(`внешний <script${attrs}>: островов из файла нет`)
-    else if (island === undefined || !ISLANDS.includes(island)) {
+    else if (island === undefined || !Object.hasOwn(ISLANDS, island)) {
       problems.push(`<script${attrs}> вне списка островов ISLANDS (scripts/lib/site-policy.mjs)`)
     } else if (seen.has(island)) problems.push(`остров ${island} дважды`)
     if (match.index > headEnd) problems.push(`<script${attrs}> в <body>: остров живёт в <head>`)

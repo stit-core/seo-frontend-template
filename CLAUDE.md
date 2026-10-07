@@ -124,7 +124,7 @@ origin штампуется при старте.
   структура
 - 0 JS на контентных страницах, кроме островов: тема (инлайн-`<script>` в `<head>`) и счётчик при
   заданном `METRIKA_ID`; острова, служебные `noindex`, чужие ресурсы и типы JSON-LD — только по
-  списку `scripts/lib/site-policy.mjs`
+  списку `scripts/lib/site-policy.mjs`; из него же CSP каждой страницы (остров — по хешу тела)
 - Контент — Markdown в `src/entities/<name>/content/<locale>/`; `draft: true` виден только в
   `astro dev`
 - Каждая страница — через `DocumentLayout`; абсолютные URL — только `absoluteUrl()` из `shared/seo`

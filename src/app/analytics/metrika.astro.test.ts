@@ -1,5 +1,7 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import { Browser } from 'happy-dom'
 import type * as SharedConfig from '@/shared/config'
+import { cspHash, ISLANDS } from '../../../scripts/lib/site-policy.mjs'
 
 // Отдельного файла у острова нет: его бюджет — байты отрендеренного <script> на каждой странице.
 const INLINE_BUDGET_BYTES = 650
@@ -40,5 +42,44 @@ describe('Metrika', () => {
     expect(html).toContain("'init'")
     const [script = ''] = html.match(/<script[^>]*>[\s\S]*?<\/script>/g) ?? []
     expect(Buffer.byteLength(script, 'utf8')).toBeLessThanOrEqual(INLINE_BUDGET_BYTES)
+  })
+
+  // CSP пропускает остров по хешу из политики: тело одно на любой идентификатор, иначе каждый
+  // счётчик требовал бы своей строки политики.
+  it('тело острова — хеш из политики, при любом идентификаторе', async () => {
+    for (const id of ['12345678', '87654321']) {
+      config.METRIKA_ID = id
+      const body = /<script[^>]*>([\s\S]*?)<\/script>/.exec(await render())?.[1] ?? ''
+      expect(cspHash(body), id).toBe(ISLANDS.metrika.hash)
+    }
+  })
+
+  it('после простоя грузит tag.js и инициализирует счётчик идентификатором из разметки', async () => {
+    config.METRIKA_ID = '12345678'
+    const browser = new Browser({
+      settings: {
+        // Исполняется только инлайн-скрипт острова из этого репозитория; tag.js не качается.
+        enableJavaScriptEvaluation: true,
+        suppressInsecureJavaScriptEnvironmentWarning: true,
+        disableJavaScriptFileLoading: true,
+        handleDisabledFileLoadingAsSuccess: true,
+        // В happy-dom нет requestIdleCallback: остров ждёт запасным таймером, здесь — без паузы.
+        timer: { maxTimeout: 0 },
+      },
+    })
+    try {
+      const page = browser.newPage()
+      page.content = `<!doctype html><html><head>${await render()}</head><body></body></html>`
+      await page.waitUntilComplete()
+      // Очередь вызовов до загрузки tag.js — её счётчик разбирает первой.
+      const calls = String(page.mainFrame.evaluate('JSON.stringify(window.ym?.a)'))
+      expect(JSON.parse(calls)).toEqual([['12345678', 'init']])
+      const loaders = page.mainFrame.document.head.querySelectorAll(
+        'script[src="https://mc.yandex.ru/metrika/tag.js"]',
+      )
+      expect(loaders).toHaveLength(1)
+    } finally {
+      await browser.close()
+    }
   })
 })

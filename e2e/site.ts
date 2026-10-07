@@ -5,6 +5,7 @@ import { load } from 'js-yaml'
 import { collections, splitFrontmatter } from '../scripts/lib/content.mjs'
 import { headTags, isNoindex } from '../scripts/lib/html.mjs'
 import { pageRoutes, walk } from '../scripts/lib/routes.mjs'
+import { cspHash } from '../scripts/lib/site-policy.mjs'
 import { type Locale, localePath } from '../src/shared/i18n/locale.ts'
 import { buildRedirectTable, type RedirectRule } from '../src/shared/redirects/table.ts'
 
@@ -110,6 +111,56 @@ export function entries(): Entry[] {
         }
       })
   })
+}
+
+// Защита CSP — литералами, а не политикой сборки: ослабленная политика краснеет здесь.
+const CSP_EXACT = [
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+]
+// Источник, который пропускает чужой код или стиль целиком: подстановка, схема, инлайн без хеша.
+const CSP_WILDCARD = /^(\*|[a-z][a-z\d+.-]*:|'unsafe-inline'|'unsafe-eval'|'unsafe-hashes')$/
+
+// CSP страницы так, как её видит браузер: заголовок есть, защитные директивы на месте, загрузка —
+// своё и перечисленные origin без подстановок, каждый инлайн-скрипт и инлайн-стиль документа
+// разрешён хешем.
+export function cspProblems(html: string, header: string | undefined): string[] {
+  if (!header) return ['нет заголовка Content-Security-Policy']
+  const directives = header
+    .split(';')
+    .map((directive) => directive.trim().split(/\s+/).join(' '))
+    .filter(Boolean)
+  const sourcesOf = (name: string) =>
+    directives
+      .find((directive) => directive.startsWith(`${name} `))
+      ?.split(' ')
+      .slice(1)
+  const problems = CSP_EXACT.filter((required) => !directives.includes(required)).map(
+    (required) => `нет «${required}»`,
+  )
+  for (const name of ['default-src', 'script-src', 'style-src']) {
+    const sources = sourcesOf(name)
+    if (!sources) problems.push(`нет ${name}`)
+    for (const source of sources?.filter((value) => CSP_WILDCARD.test(value)) ?? []) {
+      problems.push(`${name} пропускает всё: ${source}`)
+    }
+  }
+  for (const [element, name] of [
+    ['script', 'script-src'],
+    ['style', 'style-src'],
+  ] as const) {
+    const pattern = new RegExp(`<${element}\\b([^>]*)>([\\s\\S]*?)</${element}>`, 'g')
+    for (const [, attrs = '', body = ''] of html.matchAll(pattern)) {
+      // JSON-LD — данные, а не код: CSP его не исполняет и не блокирует.
+      if (attrs.includes('type="application/ld+json"')) continue
+      if (!sourcesOf(name)?.includes(`'${cspHash(body)}'`)) {
+        problems.push(`<${element}${attrs}>: ${name} не пропускает ${cspHash(body)}`)
+      }
+    }
+  }
+  return problems
 }
 
 // Правила content/redirects.yaml.

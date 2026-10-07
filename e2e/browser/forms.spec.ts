@@ -1,6 +1,7 @@
-import { type APIRequestContext, expect, test } from '@playwright/test'
+import type { APIRequestContext } from '@playwright/test'
 import { t } from '../../src/shared/i18n/dict.ts'
 import { originOf } from '../site'
+import { expect, test } from './csp'
 
 const MESSAGE = 'Нужен сайт с блогом, формой заявки и картой сайта. Бюджет обсудим.'
 
