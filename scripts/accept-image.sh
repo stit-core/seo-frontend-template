@@ -50,6 +50,8 @@ docker images "$IMAGE" --format '  размер: {{.Size}}'
 
 running() { [ "$(docker inspect -f '{{.State.Running}}' "$NAME" 2>/dev/null)" = "true" ]; }
 exit_code() { docker inspect -f '{{.State.ExitCode}}' "$NAME"; }
+# Миллисекунды — от Node: у date в macOS нет %N.
+now_ms() { node -e 'process.stdout.write(String(Date.now()))'; }
 
 echo "== старт без SITE_URL: отказ за $REFUSE_S с =="
 docker run -d --name "$NAME" "$IMAGE" >/dev/null || exit 1
@@ -138,9 +140,9 @@ curl -sI "http://127.0.0.1:$PORT/" | grep -qi '^x-robots-tag: noindex, nofollow'
 # SIGTERM доходит до node, только если entrypoint отдал ему процесс (exec): иначе PID 1 — оболочка,
 # сигнал теряется, и docker stop добивает контейнер SIGKILL (код 137) по истечении -t.
 echo "== дренаж: SIGTERM до node, выход 0 быстрее $DRAIN_MS мс =="
-start=$(date +%s%N)
+start=$(now_ms)
 docker stop -t $((DRAIN_MS / 1000 + 5)) "$NAME" >/dev/null 2>&1
-ms=$((($(date +%s%N) - start) / 1000000))
+ms=$(($(now_ms) - start))
 if ! docker logs "$NAME" 2>&1 | grep -q '\[server\] SIGTERM'; then
   fail "дренаж: SIGTERM не дошёл до node ($ms мс, код $(exit_code))"
 elif [ "$(exit_code)" != "0" ] || [ "$ms" -ge "$DRAIN_MS" ]; then
