@@ -165,8 +165,10 @@ services:
       # /_image — endpoint изображений Astro: приложение отвечает 404 (картинки готовит сборка),
       # а запрос на трансформацию не должен доходить до процесса — sharp на запрос это CPU и RAM.
       # Маршрут и его подпути, а не префикс имени: public/_images/… сайта правило не задевает.
+      # Приоритет по умолчанию у Traefik — длина правила, у site она растёт с доменом: 1000 выше её
+      # при любом домене (253 символа — длина 298).
       traefik.http.routers.site-image.rule: Host(`${DOMAIN}`) && (Path(`/_image`) || PathPrefix(`/_image/`))
-      traefik.http.routers.site-image.priority: "100"
+      traefik.http.routers.site-image.priority: "1000"
       traefik.http.routers.site-image.entrypoints: websecure
       traefik.http.routers.site-image.tls: "true"
       traefik.http.routers.site-image.tls.certresolver: letsencrypt
