@@ -1,4 +1,5 @@
 import { defineMiddleware } from 'astro:middleware'
+import { localeOf } from '@/shared/i18n'
 import { captureServerError, type LogLevel, log } from '@/shared/observability'
 import { goneResponse } from './gone'
 import { resolveRequest } from './redirects'
@@ -33,7 +34,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     // и канон по нему разошёлся бы с её ответом — петлёй редиректов.
     const { pathname, search } = new URL(context.request.url)
     const answer = resolveRequest(context.request.method, pathname + search)
-    if (answer?.status === 410) response = goneResponse()
+    if (answer?.status === 410) response = goneResponse(localeOf(pathname))
     else if (answer && 'location' in answer) {
       response = new Response(null, {
         status: answer.status,

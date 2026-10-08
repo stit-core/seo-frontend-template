@@ -98,7 +98,7 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
   отдельным файлом `dist/server/redirects.mjs`. Удалённый адрес (410) отвечает `app/middleware`
   до роутинга — `404.astro` поэтому on-demand: иначе путь без файла не дошёл бы до middleware.
   В `astro dev` обёртки нет, и на всё отвечает middleware. Адрес читают только GET и HEAD.
-  `410` — тело без стилей + `X-Robots-Tag: noindex`
+  `410` — тело без стилей на языке префикса удалённого адреса + `X-Robots-Tag: noindex`
 - `meta refresh` и `redirects` в `astro.config.ts` не используются. Ссылок на адреса из
   `redirects.yaml` в разметке нет — `check:links`
 

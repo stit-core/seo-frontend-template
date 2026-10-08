@@ -1,3 +1,4 @@
+import { localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { buildRedirectTable } from '@/shared/redirects'
 import redirects from '../../../content/redirects.yaml'
 import { goneResponse } from './gone'
@@ -33,13 +34,28 @@ describe('app/middleware/redirects', () => {
   })
 
   it('410: тело с заголовком и noindex, без Location', async () => {
-    const response = goneResponse()
+    const response = goneResponse('ru')
     expect(response.status).toBe(410)
     expect(response.headers.get('location')).toBeNull()
     expect(response.headers.get('x-robots-tag')).toBe('noindex')
     expect(response.headers.get('content-type')).toContain('text/html')
-    const html = await response.text()
-    expect(html).toContain('<meta name="robots" content="noindex">')
-    expect(html).toContain('Страница удалена')
+    expect(await response.text()).toContain('<meta name="robots" content="noindex">')
+  })
+
+  it('410 — на языке удалённого адреса: lang, текст и ссылка на главную своей локали, без второго языка', async () => {
+    for (const locale of SUPPORTED_LOCALES) {
+      const html = await goneResponse(locale).text()
+      expect(html).toContain(`<html lang="${locale}">`)
+      expect(html).toContain(`<h1>${t(locale, 'gone.title')}</h1>`)
+      expect(html).toContain(t(locale, 'gone.lead'))
+      expect(html).toContain(
+        `<a href="${localePath(locale, '/')}">${t(locale, 'notFound.home')}</a>`,
+      )
+      for (const other of SUPPORTED_LOCALES.filter((candidate) => candidate !== locale)) {
+        expect(html, other).not.toContain(t(other, 'gone.lead'))
+        expect(html, other).not.toContain(t(other, 'gone.title'))
+        expect(html, other).not.toContain(`lang="${other}"`)
+      }
+    }
   })
 })

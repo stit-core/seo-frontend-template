@@ -1,10 +1,11 @@
 ---
 // Страницу с диска отдаёт адаптер, когда рендер on-demand маршрута бросил исключение:
-// поэтому она собирается заранее и не зависит ни от запроса, ни от данных.
+// поэтому она собирается заранее и не зависит ни от запроса, ни от данных — язык у неё один,
+// дефолтный: файл запроса не знает.
 import DocumentLayout from '@/app/layouts/document.astro'
-import { type Locale, localePath, t } from '@/shared/i18n'
+import { DEFAULT_LOCALE, localePath, t } from '@/shared/i18n'
 
-const locale: Locale = 'ru'
+const locale = DEFAULT_LOCALE
 ---
 
 <DocumentLayout
@@ -15,9 +16,6 @@ const locale: Locale = 'ru'
 >
   <h1 class="text-heading-xl font-semibold tracking-tight">{t(locale, 'error.title')}</h1>
   <p class="mt-4 text-body-lg text-muted">{t(locale, 'error.lead')}</p>
-  <p class="mt-2 text-body-md text-muted" lang="en">
-    {t('en', 'error.lead')}
-  </p>
   <p class="mt-8">
     <a class="button" href={localePath(locale, '/')}>
       {t(locale, 'notFound.home')}

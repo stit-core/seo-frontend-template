@@ -1,12 +1,13 @@
 ---
-// On-demand: путь без статического файла тогда доходит до app/middleware (редиректы из
+// On-demand: путь без статического файла тогда доходит до app/middleware (удалённые адреса
 // redirects.yaml, X-Request-Id, лог); prerendered 404.html адаптер отдал бы с диска до него.
 export const prerender = false
 
 import DocumentLayout from '@/app/layouts/document.astro'
-import { t } from '@/shared/i18n'
+import { localeOf, localePath, t } from '@/shared/i18n'
 
-const locale = 'ru' as const
+// Язык страницы — по префиксу запрошенного пути: под `/en/…` человек читал английскую версию.
+const locale = localeOf(Astro.url.pathname)
 ---
 
 <DocumentLayout
@@ -17,13 +18,7 @@ const locale = 'ru' as const
 >
   <h1 class="text-heading-xl font-semibold tracking-tight">{t(locale, 'notFound.title')}</h1>
   <p class="mt-4 text-body-lg text-muted">{t(locale, 'notFound.lead')}</p>
-  <p class="mt-2 text-body-md text-muted" lang="en">
-    {t('en', 'notFound.lead')}
-  </p>
   <p class="mt-8 text-body-md">
-    <a href="/">{t(locale, 'notFound.home')}</a> ·{' '}
-    <a href="/en" hreflang="en" lang="en">
-      {t('en', 'notFound.home')}
-    </a>
+    <a href={localePath(locale, '/')}>{t(locale, 'notFound.home')}</a>
   </p>
 </DocumentLayout>

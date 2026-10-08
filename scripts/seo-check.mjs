@@ -32,7 +32,12 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import { relative, resolve, sep } from 'node:path'
 import { load } from 'js-yaml'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
-import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../src/shared/i18n/locale.ts'
+import {
+  DEFAULT_LOCALE,
+  localeOf,
+  localePath,
+  SUPPORTED_LOCALES,
+} from '../src/shared/i18n/locale.ts'
 import { collectionsOf, splitFrontmatter } from './lib/content.mjs'
 import {
   attributesOf,
@@ -82,10 +87,6 @@ const fileInDist = (path) => {
   return file.startsWith(client + sep) && existsSync(file) && statSync(file).isFile()
 }
 
-const localeOf = (path) => {
-  const [, first] = path.split('/')
-  return SUPPORTED_LOCALES.includes(first) ? first : DEFAULT_LOCALE
-}
 const isLocaleHome = (path) =>
   SUPPORTED_LOCALES.some((locale) => path === (locale === DEFAULT_LOCALE ? '/' : `/${locale}`))
 // Путь без префикса локали: `/en/blog` → `/blog`, `/en` → `/`.

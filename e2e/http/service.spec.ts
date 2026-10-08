@@ -3,7 +3,13 @@ import { bodyOf, type HeadTag, headTags, isNoindex, jsonLdBlocks } from '../../s
 import { scriptViolations } from '../../scripts/lib/site-policy.mjs'
 import { SITE_ORIGIN_PLACEHOLDER } from '../../src/shared/config/runtime.ts'
 import { OG_DEFAULT_IMAGE } from '../../src/shared/config/site.ts'
-import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
+import { t } from '../../src/shared/i18n/dict.ts'
+import {
+  DEFAULT_LOCALE,
+  localeOf,
+  localePath,
+  SUPPORTED_LOCALES,
+} from '../../src/shared/i18n/locale.ts'
 import {
   cspProblems,
   edgeHeadersIn,
@@ -88,6 +94,38 @@ test.describe('on-demand: ответы приложения', () => {
     // check:links видит только dist/client — ссылки on-demand страницы проверяются здесь.
     for (const [, href] of html.matchAll(/<a[^>]* href="(\/[^"]*)"/g)) {
       expect((await request.get(href ?? '')).status(), href).toBe(200)
+    }
+  })
+
+  // Страница ошибки — на языке адреса и только на нём.
+  test('404 — на языке префикса пути: lang, текст и ссылка на главную своей локали, без второго языка', async ({
+    request,
+  }) => {
+    for (const locale of SUPPORTED_LOCALES) {
+      const path = localePath(locale, UNKNOWN)
+      const response = await request.get(path)
+      expect(response.status(), path).toBe(404)
+      const html = await response.text()
+      expect(html, path).toContain(`<html lang="${locale}"`)
+      expectServicePage(html, path)
+      const main = html.slice(html.indexOf('<main'), html.indexOf('</main>'))
+      expect(main, path).toContain(t(locale, 'notFound.title'))
+      expect(main, path).toContain(`href="${localePath(locale, '/')}"`)
+      expect(main, path).not.toContain(' lang="')
+      for (const other of SUPPORTED_LOCALES.filter((candidate) => candidate !== locale)) {
+        expect(main, `${path}: текст локали ${other}`).not.toContain(t(other, 'notFound.lead'))
+      }
+    }
+  })
+
+  test('страница 500 — дефолтная локаль и один язык', async ({ request }) => {
+    const html = await (await request.get('/500.html')).text()
+    expect(html).toContain(`<html lang="${DEFAULT_LOCALE}"`)
+    const main = html.slice(html.indexOf('<main'), html.indexOf('</main>'))
+    expect(main).toContain(t(DEFAULT_LOCALE, 'error.lead'))
+    expect(main).not.toContain(' lang="')
+    for (const other of SUPPORTED_LOCALES.filter((locale) => locale !== DEFAULT_LOCALE)) {
+      expect(main, other).not.toContain(t(other, 'error.lead'))
     }
   })
 
@@ -301,7 +339,7 @@ test.describe('адреса как данные (content/redirects.yaml)', () =>
     }
   })
 
-  test('удалённый адрес — 410 с телом, noindex и no-cache; из другой формы — один 301 на него', async ({
+  test('удалённый адрес — 410 на языке его префикса, с noindex и no-cache; из другой формы — один 301 на него', async ({
     baseURL,
   }) => {
     test.skip(gone.length === 0, 'в redirects.yaml нет 410')
@@ -311,7 +349,15 @@ test.describe('адреса как данные (content/redirects.yaml)', () =>
       expect(response.headers['x-robots-tag'], rule.from).toContain('noindex')
       expect(response.headers['cache-control'], rule.from).toBe('no-cache')
       expect(response.headers['x-request-id'], rule.from).toBeTruthy()
-      expect(response.body, rule.from).toMatch(/<h1>[^<]+<\/h1>/)
+      const locale = localeOf(rule.path)
+      expect(response.body, rule.from).toContain(`<html lang="${locale}">`)
+      expect(response.body, rule.from).toContain(`<h1>${t(locale, 'gone.title')}</h1>`)
+      expect(response.body, rule.from).toContain(`href="${localePath(locale, '/')}"`)
+      for (const other of SUPPORTED_LOCALES.filter((candidate) => candidate !== locale)) {
+        expect(response.body, `${rule.from}: текст локали ${other}`).not.toContain(
+          t(other, 'gone.lead'),
+        )
+      }
       const slashed = await rawGet(baseURL, `${rule.path}/`)
       expect(slashed.status, `${rule.path}/`).toBe(301)
       expect(slashed.headers.location, `${rule.path}/`).toBe(rule.path)

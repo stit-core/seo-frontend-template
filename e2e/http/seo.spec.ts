@@ -1,14 +1,10 @@
 import { expect, test } from '@playwright/test'
 import { SITE_ORIGIN_PLACEHOLDER } from '../../src/shared/config/runtime.ts'
 import { AI_BOTS_POLICY } from '../../src/shared/config/site.ts'
-import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
+import { localeOf } from '../../src/shared/i18n/locale.ts'
 import { E2E_INDEXNOW_KEY, entries, feedPaths, indexablePaths } from '../site'
 
 const PLACEHOLDER = new URL(SITE_ORIGIN_PLACEHOLDER).hostname
-
-const localeOf = (path: string) =>
-  SUPPORTED_LOCALES.find((locale) => path === `/${locale}` || path.startsWith(`/${locale}/`)) ??
-  DEFAULT_LOCALE
 
 test.describe('robots.txt, sitemap.xml, фиды, IndexNow', () => {
   test('robots.txt прод-профиля: группа `*` открыта, абсолютный Sitemap, без мёртвых директив', async ({

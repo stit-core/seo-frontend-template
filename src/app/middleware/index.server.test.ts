@@ -124,6 +124,11 @@ describe('app/middleware', () => {
     expect(gone.status).toBe(410)
     expect(gone.headers.get('cache-control')).toBe('no-cache')
     expect(gone.headers.get('x-robots-tag')).toBe('noindex')
+    expect(await gone.text()).toContain('<html lang="ru">')
+    // Удалённый адрес английской версии — ответ на её языке.
+    const goneEn = await run('/en/blog/old-note', next)
+    expect(goneEn.status).toBe(410)
+    expect(await goneEn.text()).toContain('<html lang="en">')
 
     // В образе неканоническую форму раньше отдаёт обёртка процесса; в `astro dev` — middleware.
     const slashed = await run('/now/?x=1', next)

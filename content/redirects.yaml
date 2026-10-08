@@ -23,3 +23,7 @@
 - from: /blog/staraya-zametka
   status: 410
   note: демо — запись удалена навсегда
+
+- from: /en/blog/old-note
+  status: 410
+  note: демо — удалённая запись английской версии

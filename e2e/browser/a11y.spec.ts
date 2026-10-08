@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright'
 import type { Page } from '@playwright/test'
 import { t } from '../../src/shared/i18n/dict.ts'
+import { localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
 import { prerenderedPaths } from '../site'
 import { expect, test } from './csp'
 
@@ -15,8 +16,9 @@ for (const scheme of ['light', 'dark'] as const) {
   test.describe(`axe, тема ${scheme}`, () => {
     test.use({ colorScheme: scheme })
 
-    // Каждая страница сборки и служебные on-demand: 404 и /now.
-    for (const path of [...prerenderedPaths(), '/now', '/net-takogo-adresa']) {
+    // Каждая страница сборки и служебные on-demand: /now и 404 на языке каждой локали.
+    const notFound = SUPPORTED_LOCALES.map((locale) => localePath(locale, '/net-takogo-adresa'))
+    for (const path of [...prerenderedPaths(), '/now', ...notFound]) {
       test(path, async ({ page }) => {
         await page.goto(path)
         expect(await violations(page)).toEqual([])

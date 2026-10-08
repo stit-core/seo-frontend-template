@@ -3,6 +3,7 @@ import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
 import type * as AuthorSlice from '@/entities/author'
 import { SITE_NAME } from '@/shared/config'
+import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { parseHtml } from '@/shared/lib/testing'
 import { headTags, jsonLdBlocks } from '../../../scripts/lib/html.mjs'
 import NotFound from '../404.astro'
@@ -108,6 +109,7 @@ describe('служебные страницы', () => {
     ['/contacts/spasibo', Thanks],
     ['/en/contacts/spasibo', ThanksEn],
     ['/net-takoj-stranicy', NotFound],
+    ['/en/no-such-page', NotFound],
     ['/500', ServerError],
   ])('%s: только noindex — без canonical, hreflang и разметки', async (path, page) => {
     const head = await render(page, path)
@@ -117,6 +119,39 @@ describe('служебные страницы', () => {
     expect(head.hreflang).toEqual({})
     expect(head.jsonLd).toEqual([])
     expect(head.h1).toBe(1)
+  })
+
+  // Страница ошибки — на языке адреса и только на нём: второй язык в теле — шум и для человека,
+  // и для определения языка страницы.
+  it('404 — на языке префикса пути: текст и ссылка на главную своей локали, без второго языка', async () => {
+    for (const locale of SUPPORTED_LOCALES) {
+      const path = localePath(locale, '/net-takoj-stranicy')
+      const { html, lang } = await render(NotFound, path)
+      const document = parseHtml(html)
+      expect(lang, path).toBe(locale)
+      expect(document.querySelector('h1')?.textContent, path).toBe(t(locale, 'notFound.title'))
+      const main = document.querySelector('main')
+      expect(main?.textContent, path).toContain(t(locale, 'notFound.lead'))
+      for (const other of SUPPORTED_LOCALES.filter((candidate) => candidate !== locale)) {
+        expect(main?.textContent, path).not.toContain(t(other, 'notFound.lead'))
+      }
+      expect(main?.querySelector('[lang]'), path).toBeNull()
+      expect(
+        [...(main?.querySelectorAll('a') ?? [])].map((link) => link.getAttribute('href')),
+        path,
+      ).toEqual([localePath(locale, '/')])
+    }
+  })
+
+  it('500 — дефолтная локаль и один язык: файл страницы запроса не знает', async () => {
+    const { html, lang } = await render(ServerError, '/500')
+    const main = parseHtml(html).querySelector('main')
+    expect(lang).toBe(DEFAULT_LOCALE)
+    expect(main?.textContent).toContain(t(DEFAULT_LOCALE, 'error.lead'))
+    expect(main?.querySelector('[lang]')).toBeNull()
+    for (const other of SUPPORTED_LOCALES.filter((locale) => locale !== DEFAULT_LOCALE)) {
+      expect(main?.textContent, other).not.toContain(t(other, 'error.lead'))
+    }
   })
 
   it('/now: время запроса, ответ не кешируется и не индексируется', async () => {

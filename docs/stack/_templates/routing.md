@@ -47,9 +47,9 @@ status: draft
 |---|---|---|
 | переезд URL | `301` (или `308`, если метод обязан сохраниться) — один хоп с любой формы старого адреса | `content/redirects.yaml` → обёртка процесса `docker/server.mjs` |
 | неканоническая форма своего адреса (слеш, `//`, `/index.html`, точки) | `301` на канонический адрес; `%2F` в пути и заглавные — `404` | обёртка процесса, канон пути `shared/redirects` |
-| удалено навсегда | `410` + `noindex` | `content/redirects.yaml` → `app/middleware` |
-| путь без файла | `404` + `noindex` | `src/pages/404.astro` (on-demand) |
-| ошибка рендера on-demand | `500` + `noindex` | `src/pages/500.astro` |
+| удалено навсегда | `410` + `noindex`, на языке префикса пути | `content/redirects.yaml` → `app/middleware` |
+| путь без файла | `404` + `noindex`, на языке префикса пути | `src/pages/404.astro` (on-demand) |
+| ошибка рендера on-demand | `500` + `noindex`, дефолтная локаль | `src/pages/500.astro` |
 
 Редиректы — данные, один хоп, без цепочек; `meta refresh` и `redirects` в
 `astro.config.ts` не используются. `from` — адрес старого сайта как он был: заглавные, кириллица,

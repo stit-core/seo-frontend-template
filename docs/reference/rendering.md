@@ -48,9 +48,9 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 | `/sitemap.xml` | файла маршрута нет: карту пишет интеграция `sitemap-from-build` (`astro.config.ts`, `scripts/lib/sitemap.mjs`) по страницам `dist/client` | `static`, файл сборки | `public, max-age=0` + ETag | — (XML) | сам — карта |
 | `/rss.xml`, `/en/rss.xml` | `rss.xml.ts`, `en/rss.xml.ts` (prerendered-эндпоинт, общий `_blog/feed.ts`) | `static` | то же | — (XML) | нет |
 | `/<INDEXNOW_KEY>.txt` и любой другой корневой `/*.txt` | `[key].txt.ts` (endpoint; параметризованный — перехватывает весь корневой `*.txt`, кроме статического `robots.txt`) | `dynamic` | `public, max-age=300` (роут); пустой ключ или чужое имя — 404 `text/plain` с `no-cache`, не `404.astro` | — (`X-Robots-Tag: noindex` на обоих ответах) | нет |
-| любой путь без файла → 404 | `404.astro` | `dynamic` | `no-cache` (middleware) | нет — статус 404 + `noindex` | нет |
-| адреса из `content/redirects.yaml` и неканоническая форма любого адреса | таблица `app/middleware/redirects.ts`: 301/308 отдаёт обёртка процесса `docker/server.mjs` до статик-хендлера, 410 — middleware до роутинга | `dynamic` | 301/308 — без кеш-заголовка; 410 — `no-cache` | нет | нет |
-| ошибка рендера on-demand → 500 | `500.astro` — адаптер читает `dist/client/500.html` с диска; middleware пишет лог со статусом 500 и тем же `rid` | `dynamic` | нет | нет | нет |
+| любой путь без файла → 404 | `404.astro` — на языке префикса пути | `dynamic` | `no-cache` (middleware) | нет — статус 404 + `noindex` | нет |
+| адреса из `content/redirects.yaml` и неканоническая форма любого адреса | таблица `app/middleware/redirects.ts`: 301/308 отдаёт обёртка процесса `docker/server.mjs` до статик-хендлера, 410 — middleware до роутинга, телом на языке префикса пути | `dynamic` | 301/308 — без кеш-заголовка; 410 — `no-cache` | нет | нет |
+| ошибка рендера on-demand → 500 | `500.astro` — адаптер читает `dist/client/500.html` с диска (дефолтная локаль: файл запроса не знает); middleware пишет лог со статусом 500 и тем же `rid` | `dynamic` | нет | нет | нет |
 | `/_astro/*` | ассеты сборки | статика | `public, max-age=31536000, immutable` (адаптер) | — | нет |
 | `/favicon.ico`, `/icon.svg`, … | `public/` как есть | статика | `public, max-age=0` + ETag (адаптер) | — | нет |
 
