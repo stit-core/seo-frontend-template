@@ -1,10 +1,8 @@
-import { isoDate } from '@/shared/i18n'
-
 export interface SitemapEntry {
   // Абсолютный URL страницы, отвечающей 200.
   loc: string
-  // Только честная дата значимого изменения (updatedDate записи); без неё элемент не выводится.
-  lastmod?: Date | undefined
+  // Календарная дата последнего значимого изменения (`2026-09-10`); без неё элемент не выводится.
+  lastmod?: string | undefined
 }
 
 // Лимит одного файла (Google, Яндекс): дальше — sitemap index с шардами по типу и локали.
@@ -27,7 +25,7 @@ export function buildSitemap(entries: readonly SitemapEntry[]): string {
   }
   const urls = entries.map(
     ({ loc, lastmod }) =>
-      `  <url><loc>${escapeXml(loc)}</loc>${lastmod ? `<lastmod>${isoDate(lastmod)}</lastmod>` : ''}</url>`,
+      `  <url><loc>${escapeXml(loc)}</loc>${lastmod ? `<lastmod>${escapeXml(lastmod)}</lastmod>` : ''}</url>`,
   )
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',

@@ -1,6 +1,7 @@
 # Сборке нужны только package.json, pnpm-lock.yaml, pnpm-workspace.yaml, astro.config.ts,
-# tsconfig.json, src, public, content, docker и политика сборки (из неё конфиг строит CSP) с её
-# разбором HTML — остальное в контекст не попадает.
+# tsconfig.json, src, public, content, docker и модули сборки из scripts/lib: политика (из неё
+# конфиг строит CSP), карта сайта и их разбор HTML и обход каталога — остальное в контекст не
+# попадает.
 node_modules
 dist
 .astro
@@ -13,6 +14,8 @@ e2e
 scripts
 !scripts/lib/site-policy.mjs
 !scripts/lib/html.mjs
+!scripts/lib/routes.mjs
+!scripts/lib/sitemap.mjs
 playwright-report
 test-results
 .playwright

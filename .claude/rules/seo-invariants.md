@@ -1,6 +1,6 @@
 ---
-description: SEO-канон шаблона — head через DocumentLayout (title/description уникальны, self-canonical, hreflang только для реальных переводов, OG полный), JSON-LD в head только про видимое и только допустимые типы, одна организация и авторы по @id, политика ИИ-ботов из реестра базы, robots.txt/sitemap.xml/rss.xml/ключ IndexNow on-demand на runtime origin, staging в три контура, ботам тот же ответ, гейты seo:check и HTTP-набор.
-paths: ["src/shared/seo/**", "src/shared/config/site.ts", "src/app/layouts/**", "src/pages/**", "src/widgets/breadcrumbs/**", "scripts/seo-check.mjs", "scripts/lib/html.mjs", "e2e/http/**", "public/**"]
+description: SEO-канон шаблона — head через DocumentLayout (title/description уникальны, self-canonical, hreflang только для реальных переводов, OG полный), JSON-LD в head только про видимое и только допустимые типы, одна организация и авторы по @id, политика ИИ-ботов из реестра базы, robots.txt и ключ IndexNow on-demand на runtime origin, sitemap.xml и фиды — файлы сборки, staging в три контура, ботам тот же ответ, гейты seo:check и HTTP-набор.
+paths: ["src/shared/seo/**", "src/shared/config/site.ts", "src/app/layouts/**", "src/pages/**", "src/widgets/breadcrumbs/**", "scripts/seo-check.mjs", "scripts/lib/html.mjs", "scripts/lib/sitemap.mjs", "e2e/http/**", "public/**"]
 ---
 
 # SEO-инварианты
@@ -28,8 +28,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   разрешающие и запрещающие директивы не смешиваются (Яндекс выбирает разрешающую). Prerendered
   служебная страница — маршрут из `NOINDEX_ROUTES` (`scripts/lib/site-policy.mjs`), вне карты
   сайта и вне пар hreflang: `noindex` на любой другой странице (в любой форме: `robots`,
-  `googlebot`, `yandex`, `bingbot`, любым регистром) `seo:check` валит, карту против
-  сборки сверяет HTTP-набор. На prerendered мета — значение сборки, поэтому
+  `googlebot`, `yandex`, `bingbot`, любым регистром) `seo:check` валит, и он же сверяет карту со
+  сборкой. На prerendered мета — значение сборки, поэтому
   staging закрывают `ROBOTS_POLICY` (`robots.txt` + `X-Robots-Tag: noindex, nofollow`, который
   обёртка процесса ставит на каждый ответ, статику включительно) и Traefik (`basicAuth` +
   `X-Robots-Tag`) — три контура
@@ -95,7 +95,7 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   (`&nbsp;`, `&laquo;`, числовые) раскодированы, неразрывный пробел типографики («+64 %», «ООО
   «Пример»») равен обычному
 
-## robots.txt, sitemap.xml, фиды, IndexNow (on-demand)
+## robots.txt, sitemap.xml, фиды, IndexNow
 
 - `robots.txt` на проде (`ROBOTS_POLICY=index`): `User-agent: *` / `Allow: /` + абсолютная
   `Sitemap:`; отдельные `noindex`-страницы (`/now`, 404) в нём не закрываются — иначе мета не будет
@@ -113,23 +113,29 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   (`kb/site/07-seo-geo-performance-analytics/crawlers.yaml`) байт в байт — норма у владельца,
   правится заменой файла, руками список ботов не пишется. Версия копии закреплена: sha256 файла —
   `CRAWLERS_SHA256` политики сборки, правка копии без смены хеша валит `pnpm test`
-- `sitemap.xml` — свой маршрут (у `@astrojs/sitemap` `lastmod` не из `updatedDate`, отбор страниц —
-  `filter`, карта — шардами `sitemap-index.xml`): ровно
-  индексируемые prerendered-страницы сборки (главные, статические страницы из списка
-  `STATIC_ROUTES` в `pages/sitemap.xml.ts`, списки, записи без черновиков, теги) — HTTP-набор
-  гейта сверяет с `dist/client` за вычетом `noindex`; новая индексируемая страница вне коллекций —
-  строка в этом списке; on-demand маршруты вне карты; адрес из `redirects.yaml` не может
-  быть живым маршрутом — держит `check:content`, поэтому в карте его нет; `lastmod` только из
-  `updatedDate`, `changefreq`/`priority` нет; > 50 000 URL — `buildSitemap` бросает: нужен sitemap
-  index с шардами; hreflang в карте не дублируется
-- `rss.xml`, `en/rss.xml` — `@astrojs/rss` через `buildFeed`: анонс + ссылка, ≤ 20 записей,
-  `atom:link rel="self"`, `language`, абсолютные `link`/`guid`; черновиков нет
+- `sitemap.xml` — файл сборки: его пишет интеграция `sitemap-from-build` (`astro.config.ts`,
+  `scripts/lib/sitemap.mjs`) по страницам `dist/client`, когда они собраны. В карте ровно
+  индексируемые страницы — те, что без `noindex`: адрес — canonical страницы, `lastmod` — дата
+  последнего изменения записи (`updatedDate`, без правки — `pubDate`; генератор берёт её из
+  `article:*_time` страницы), у страницы вне коллекций его нет. Списка страниц нет: новая страница
+  попадает в карту сама, закрытая `noindex` — сама выпадает; адрес из `redirects.yaml` не может быть
+  живым маршрутом (держит `check:content`), поэтому в карте его нет. `changefreq`/`priority` нет;
+  > 50 000 URL — `buildSitemap` бросает, сборка падает: нужен sitemap index с шардами; hreflang в
+  карте не дублируется. `@astrojs/sitemap` не подключается: `lastmod` у него не из дат записи,
+  отбор страниц — `filter`, а не `noindex` самой страницы, карта — шардами `sitemap-index.xml`. В
+  `astro dev` карты нет
+- `rss.xml`, `en/rss.xml` — prerendered-эндпоинты: `@astrojs/rss` через `buildFeed`, анонс + ссылка,
+  ≤ 20 записей, `atom:link rel="self"`, `language`, абсолютные `link`/`guid`; черновиков нет
+- Карта и фиды несут плейсхолдер origin и штампуются при старте контейнера вместе со страницами
+  (`docker/stamp.mjs` берёт `*.xml`); отдаёт их статик-хендлер, как страницы: `public, max-age=0` +
+  ETag, без `X-Robots-Tag` в прод-профиле
 - `/<INDEXNOW_KEY>.txt` (`pages/[key].txt.ts`): тело — ключ. Параметризованный маршрут
   перехватывает весь корневой `*.txt` (кроме `robots.txt`): пустой ключ или чужое имя — 404
   `text/plain`, не `404.astro`; ключ в HTML не печатается
-- Все четыре — `prerender = false`, явный `Cache-Control` (`robots` и ключ — 300 с, `sitemap` —
-  3600 с, фиды — 600 с; 404 ключа — `no-cache`) и `X-Robots-Tag: noindex` на каждом ответе (это
-  не страницы выдачи); строки — в карте `docs/reference/rendering.md`
+- `robots.txt` и ключ — `prerender = false`: их содержимое зависит от env контейнера
+  (`ROBOTS_POLICY`, `INDEXNOW_KEY`). У обоих явный `Cache-Control` (300 с; 404 ключа — `no-cache`) и
+  `X-Robots-Tag: noindex` на каждом ответе (это не страницы выдачи); строки — в карте
+  `docs/reference/rendering.md`
 
 ## Гейты
 
@@ -141,7 +147,9 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   на отсутствующую страницу; JSON-LD (любой блок этого типа; типы, `Organization`/`WebSite` только
   на главной, форма `BreadcrumbList`, разметка = видимое без скрытых поддеревьев, одна организация —
   `@id` узлов и ссылок, типы узла — `ORG_TYPES`, одно имя, автор-человек — свой `@id`, подпись на
-  странице, одно имя на локали), микроданных нет;
+  странице, одно имя на локали), микроданных нет; карта сайта `sitemap.xml` — ровно индексируемые
+  страницы сборки своим self-canonical, `lastmod` — дата последнего изменения записи из frontmatter
+  (правка, без неё — публикация), у остальных страниц его нет;
   сниппет в бюджетах и не общий, `noindex` только у `NOINDEX_ROUTES`, canonical на плейсхолдере
   origin и ни плейсхолдера в `<body>`, исполняемый код (`<script>`, обработчики `on*=`,
   `javascript:`) — острова `ISLANDS`, ресурсов с чужих origin нет (и в `style`), og:image и
@@ -152,23 +160,25 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   гейтом: фикстура `.gate-fixtures/seo` обязана давать ровно нарушения из `expected.json`
   (`pnpm check:gate`)
 - unit `shared/seo/*.test.ts` (urls, robots, ai-bots, sitemap, rss, json-ld со схемой) и Container
-  API (`seo-head`, `json-ld.astro`, `widgets/breadcrumbs`); маршруты `robots.txt` (прод, staging,
-  политика ИИ-ботов), `sitemap.xml`, фиды и ключ — `src/pages/_tests/endpoints.server.test.ts`.
+  API (`seo-head`, `json-ld.astro`, `widgets/breadcrumbs`); генератор карты на временном каталоге
+  страниц — `shared/seo/sitemap.server.test.ts`; маршруты `robots.txt` (прод, staging, политика
+  ИИ-ботов), фиды и ключ — `src/pages/_tests/endpoints.server.test.ts`.
   `robots.test.ts` — матрица доступа «политика × бот реестра» по RFC 9309: доступ каждого бота —
   как в политике базы, а ожидания независимы от печатаемой группы — классический поиск открыт
   всегда, обучающие боты (`bots[].purpose`) закрыты во втором и третьем режимах, поисковые
   ИИ-боты — в третьем
 - HTTP-набор `e2e/http/` (`pnpm test:http`, шаг `pnpm check`) на prod-сервере из сборки: каждая
   страница — тот же HTML под `User-Agent: Googlebot`; шаблон каждой страницы, каждый on-demand
-  маршрут и адрес без страницы — под UA каждого бота реестра, который ходит в сеть (поиск,
+  маршрут, карта, фиды и адрес без страницы — под UA каждого бота реестра, который ходит в сеть (поиск,
   загрузки по запросу человека, обучение, реклама, превью), ответ тот же, что браузеру: статус, тело
   и все заголовки, кроме `Date` и `X-Request-Id` (сервер не ветвится по User-Agent: кого пускать,
   решает `robots.txt`); `/llms.txt` — 404 `text/plain`;
   canonical на runtime origin, в `<body>`
   нет своего origin, нет `X-Robots-Tag` в прод-профиле, а в staging он на каждом ответе (страницы
-  сборки, ассет, `public/*`, on-demand, 404, редиректы, отказ обёртки); HTML on-demand маршрута —
-  только с `noindex` (мета или заголовок), его скрипты — острова политики; robots (прод и
-  staging) ↔ sitemap ↔ `dist/client`, фиды, ключ IndexNow; размер HTML
+  сборки, карта и фиды, ассет, `public/*`, on-demand, 404, редиректы, отказ обёртки); HTML on-demand маршрута —
+  только с `noindex` (мета или заголовок), его скрипты — острова политики; `robots.txt` (прод и
+  staging), проштампованные карта (ровно индексируемые страницы `dist/client`, все 200, `lastmod` у
+  каждой записи) и фиды, ключ IndexNow; размер HTML
   < 300 КБ. Парсер `<head>` и `decode` сущностей один — `scripts/lib/html.mjs` (он же в
   `seo:check` и `check:links`)
 - Перед релизом вручную: Rich Results Test, validator.schema.org, валидатор Яндекса

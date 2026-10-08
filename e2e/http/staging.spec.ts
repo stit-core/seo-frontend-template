@@ -1,6 +1,12 @@
 import { expect, test } from '@playwright/test'
 import { OG_DEFAULT_IMAGE } from '../../src/shared/config/site.ts'
-import { onDemandRoutes, prerenderedPaths, redirects, THROWING_REQUESTS } from '../site'
+import {
+  crawlerFiles,
+  onDemandRoutes,
+  prerenderedPaths,
+  redirects,
+  THROWING_REQUESTS,
+} from '../site'
 
 // Контур staging (ROBOTS_POLICY=noindex): тот же образ, закрытый процессом. Заголовок ставит обёртка
 // сервера, поэтому он есть и там, куда приложение не доходит, — у статики адаптера.
@@ -11,7 +17,7 @@ test.describe('staging: ROBOTS_POLICY=noindex', () => {
     expect(await response.text()).toBe('User-agent: *\nDisallow: /\n')
   })
 
-  test('каждый ответ процесса — X-Robots-Tag: noindex, nofollow: страницы сборки, ассеты, public/*, on-demand, 404, редиректы', async ({
+  test('каждый ответ процесса — X-Robots-Tag: noindex, nofollow: страницы сборки, карта и фиды, ассеты, public/*, on-demand, 404, редиректы', async ({
     request,
   }) => {
     const home = await (await request.get('/')).text()
@@ -19,6 +25,7 @@ test.describe('staging: ROBOTS_POLICY=noindex', () => {
     expect(stylesheet, 'таблица стилей в <head> главной').toBeTruthy()
     const paths = [
       ...prerenderedPaths(),
+      ...crawlerFiles(),
       stylesheet ?? '',
       OG_DEFAULT_IMAGE.path,
       ...onDemandRoutes(),

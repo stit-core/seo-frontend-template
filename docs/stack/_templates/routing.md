@@ -67,7 +67,7 @@ status: draft
 - `src/pages/**` — файлы маршрутов и `getStaticPaths()`
 - `src/pages/_<name>/` — секции страниц
 - `content/redirects.yaml`
-- строки в `rendering.md § Карта маршрутов` и в `STATIC_ROUTES` (`src/pages/sitemap.xml.ts`)
+- строки в `rendering.md § Карта маршрутов`; карту сайта пишет сборка по страницам `dist/client`
 - `src/shared/i18n/dict.ts` — подписи навигации
 
 ## Открытые вопросы

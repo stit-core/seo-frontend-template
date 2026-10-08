@@ -19,7 +19,8 @@
 | hreflang только для реальных переводов, взаимно, + `x-default` | `shared/seo/urls.ts` (`alternates`) |
 | JSON-LD в `<head>`: `Organization`/`WebSite`, `LocalBusiness`, `BreadcrumbList`, `BlogPosting`; организация одна — её узлы и ссылки на неё с `@id` `<origin>/#org`; автор записи — `Person` из реестра авторов с видимой подписью | `shared/seo/json-ld.ts` + проп `jsonLd` layout'а, `entities/author` |
 | видимые хлебные крошки из того же массива, что разметка | `widgets/breadcrumbs` |
-| `robots.txt`, `sitemap.xml`, `rss.xml`, файл ключа IndexNow на runtime origin | `src/pages/*.ts` + `shared/seo` |
+| `robots.txt` и файл ключа IndexNow на runtime origin; фиды `rss.xml` — prerendered | `src/pages/*.ts` + `shared/seo` |
+| `sitemap.xml` — файл сборки: ровно страницы без `noindex`, адрес — canonical, `lastmod` — дата правки или публикации записи | интеграция `sitemap-from-build` (`astro.config.ts`) + `scripts/lib/sitemap.mjs` |
 | политика ИИ-ботов: три режима, именная группа `robots.txt` и мета `deny-all` — из реестра ботов базы strategy | `AI_BOTS_POLICY` (`shared/config/site.ts`) + `shared/seo/{ai-bots.ts,crawlers.yaml}` |
 | честные статусы: 404, 410, 301/308 одним хопом, 500 | `app/middleware` + `content/redirects.yaml` |
 | абсолютные URL на реальном домене в любом контуре | штамповка `SITE_URL` при старте контейнера |
@@ -31,7 +32,7 @@ OG-картинка, набор локалей, политика ИИ-ботов
 ## Чек-лист новой страницы
 
 Проходится при `/scaffold page`. Измеримое держит гейт: `seo:check` — сниппет, canonical,
-hreflang, `og:image`, JSON-LD, крошки, `h1`, размеры и LCP картинок; HTTP-набор — карта сайта,
+hreflang, `og:image`, JSON-LD, крошки, `h1`, размеры и LCP картинок, карта сайта; HTTP-набор —
 404 и кеш страниц сборки; ESLint — сырой `<img>` мимо `<Picture>` (`alt` у `<Picture>` требует
 сам Astro). Смысл текста, кеш живого ответа и приватность — на авторе.
 
@@ -51,8 +52,8 @@ hreflang, `og:image`, JSON-LD, крошки, `h1`, размеры и LCP кар�
    `shared/seo` ссылаются на неё по `@id`.
 8. **Крошки** — у вложенной страницы один массив: и в `<Breadcrumbs>`, и в
    `breadcrumbList(crumbs)`.
-9. **Карта сайта** — индексируемая страница вне коллекций ⇒ строка в `STATIC_ROUTES`
-   (`src/pages/sitemap.xml.ts`).
+9. **Карта сайта** — её пишет сборка по страницам `dist/client`: индексируемая страница в
+   ней сама, с `noindex` — нет; руками карта не правится.
 10. **404** — неизвестный параметр отдаёт 404, а не редирект на главную и не пустую
     страницу с кодом 200.
 11. **Пагинация** — у каждой страницы списка свой `title`/`description`/`h1` с суффиксом
@@ -84,13 +85,13 @@ hreflang, `og:image`, JSON-LD, крошки, `h1`, размеры и LCP кар�
 
 | уровень | что ловит |
 |---|---|
-| unit `shared/seo/*.test.ts` | `absoluteUrl`, `alternates`, `buildRobotsTxt` и матрица доступа «политика ИИ-ботов × бот реестра» по RFC 9309, `buildSitemap`, `buildFeed`, фабрики JSON-LD (их выход проходит Zod-схему) |
+| unit `shared/seo/*.test.ts` | `absoluteUrl`, `alternates`, `buildRobotsTxt` и матрица доступа «политика ИИ-ботов × бот реестра» по RFC 9309, `buildSitemap` и генератор карты по страницам каталога, `buildFeed`, фабрики JSON-LD (их выход проходит Zod-схему) |
 | Container API | `seo-head.astro`, `json-ld.astro` — разметка `<head>`; `widgets/breadcrumbs` — разметка и axe |
-| `pnpm seo:check` (в `pnpm check`) | каждая страница `dist/client`, и страница ошибки `500.html`: один `<title>` и `<h1>`, description, self-canonical, `lang`, OG с существующей картинкой, сниппет уникальный, в бюджетах и не общий, полные пары hreflang на своём origin, разметка = видимое (скрытый текст не в счёт), организация одна (`@id`, имя), автор-человек подписан на странице, блок JSON-LD читается при любых атрибутах тега, микроданных нет; `noindex` в любой форме, острова (и обработчики `on*=`), чужие ресурсы и типы JSON-LD — по списку `scripts/lib/site-policy.mjs`; картинки с размерами, LCP не lazy; страница у каждой опубликованной записи и маршрута `src/pages`, черновиков нет, hreflang только у сверенных пар |
+| `pnpm seo:check` (в `pnpm check`) | каждая страница `dist/client`, и страница ошибки `500.html`: один `<title>` и `<h1>`, description, self-canonical, `lang`, OG с существующей картинкой, сниппет уникальный, в бюджетах и не общий, полные пары hreflang на своём origin, разметка = видимое (скрытый текст не в счёт), организация одна (`@id`, имя), автор-человек подписан на странице, блок JSON-LD читается при любых атрибутах тега, микроданных нет; `noindex` в любой форме, острова (и обработчики `on*=`), чужие ресурсы и типы JSON-LD — по списку `scripts/lib/site-policy.mjs`; картинки с размерами, LCP не lazy; страница у каждой опубликованной записи и маршрута `src/pages`, черновиков нет, hreflang только у сверенных пар; карта сайта — ровно индексируемые страницы сборки, `lastmod` — дата записи из frontmatter |
 | `pnpm check:gate` | сам `seo:check`, `check:links` и `check:content` на негативных мини-проектах `.gate-fixtures/{seo,links,content}` — ровно ожидаемые нарушения |
 | `pnpm check:links` | каждый внутренний `href`/`src`/`srcset` сборки существует |
 | `pnpm check:content` | бюджеты и уникальность полей записей, ссылки в теле, `redirects.yaml` |
-| HTTP-набор `e2e/http/` (в `pnpm check`) | сырой HTML prod-сервера, в т.ч. под Googlebot; шаблоны страниц, on-demand маршруты и 404 под UA каждого бота реестра — тот же ответ: статус, тело, заголовки; `/llms.txt` — 404 `text/plain`; статусы и заголовки, штамповка origin, HTML on-demand маршрутов — только `noindex` и только острова политики, `robots.txt` (прод и staging) ↔ `sitemap.xml` ↔ `dist/client`, фиды, ключ IndexNow, вес HTML; staging — `X-Robots-Tag: noindex, nofollow` на каждом ответе, от страниц сборки и PNG до редиректов |
+| HTTP-набор `e2e/http/` (в `pnpm check`) | сырой HTML prod-сервера, в т.ч. под Googlebot; шаблоны страниц, on-demand маршруты и 404 под UA каждого бота реестра — тот же ответ: статус, тело, заголовки; `/llms.txt` — 404 `text/plain`; статусы и заголовки, штамповка origin, HTML on-demand маршрутов — только `noindex` и только острова политики, `robots.txt` (прод и staging), проштампованные карта сайта (= индексируемые страницы `dist/client`, все 200) и фиды, ключ IndexNow, вес HTML; staging — `X-Robots-Tag: noindex, nofollow` на каждом ответе, от страниц сборки и PNG до редиректов |
 | `/seo-audit` | сборка, `seo:check`, `check:links`, HTTP-набор + curl по живому домену + внешние валидаторы |
 
 Ручное — раз на релиз: Rich Results Test, validator.schema.org, валидатор микроразметки

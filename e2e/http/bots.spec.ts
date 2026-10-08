@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { botUserAgents, onDemandRoutes, pageTemplates } from '../site'
+import { botUserAgents, crawlerFiles, onDemandRoutes, pageTemplates } from '../site'
 
 const BROWSER =
   'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'
@@ -22,9 +22,10 @@ test.describe('ответ ботам реестра', () => {
   const agents = botUserAgents()
   const templates = pageTemplates()
 
-  test('матрица не пуста: шаблоны страниц, on-demand маршруты и боты всех назначений', () => {
+  test('матрица не пуста: шаблоны страниц, on-demand маршруты, файлы для краулеров и боты всех назначений', () => {
     expect(templates.length, 'шаблоны страниц сборки').toBeGreaterThan(0)
     expect(onDemandRoutes()).toContain('/robots.txt')
+    expect(crawlerFiles()).toContain('/sitemap.xml')
     expect(Object.keys(agents)).toEqual(
       expect.arrayContaining([
         'YandexBot',
@@ -44,7 +45,7 @@ test.describe('ответ ботам реестра', () => {
     )
   })
 
-  for (const path of [...templates, ...onDemandRoutes(), UNKNOWN]) {
+  for (const path of new Set([...templates, ...onDemandRoutes(), ...crawlerFiles(), UNKNOWN])) {
     test(`${path}: каждому боту — те же статус, заголовки и тело, что браузеру`, async ({
       request,
     }) => {

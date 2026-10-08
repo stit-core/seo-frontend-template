@@ -20,7 +20,7 @@ only where the runtime is genuinely needed.
 
 ## When the runtime is needed
 
-Service routes — `/healthz`, `robots.txt`, `sitemap.xml`, the form handler — know about the
+Service routes — `/healthz`, `robots.txt`, the form handler — know about the
 environment and read it from env at request time. They opt in with
 `export const prerender = false`; everything else stays static.
 

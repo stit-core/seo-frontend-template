@@ -10,8 +10,8 @@ Static-first: страница предрендерится на сборке, �
 
 | режим | что значит | `Cache-Control` | здесь |
 |---|---|---|---|
-| `static` | HTML собран на `astro build` (`dist/client/<path>/index.html`); отдаёт статик-хендлер адаптера до приложения | `public, max-age=0` + `ETag` + `Last-Modified` (адаптер) — браузер перепроверяет и получает 304 | все контентные страницы |
-| `dynamic` | рендер на каждый запрос, кеш процесса запрещён; проходит через `app/middleware` | публичный (404, 410) — `no-cache`, умолчание middleware; живой/персональный — `private, no-store`, ставит роут; crawler-файлы — короткий `public, max-age` роута | `404`, `/healthz`, `/now`, `robots.txt`, `sitemap.xml`, `rss.xml`, `/<INDEXNOW_KEY>.txt`, закрытый `/_image`; сюда же относятся обработчики форм `api/*` |
+| `static` | HTML собран на `astro build` (`dist/client/<path>/index.html`); отдаёт статик-хендлер адаптера до приложения | `public, max-age=0` + `ETag` + `Last-Modified` (адаптер) — браузер перепроверяет и получает 304 | все контентные страницы; так же, файлами сборки, отдаются фиды и карта сайта |
+| `dynamic` | рендер на каждый запрос, кеш процесса запрещён; проходит через `app/middleware` | публичный (404, 410) — `no-cache`, умолчание middleware; живой/персональный — `private, no-store`, ставит роут; crawler-файлы — короткий `public, max-age` роута | `404`, `/healthz`, `/now`, `robots.txt`, `/<INDEXNOW_KEY>.txt`, закрытый `/_image`; сюда же относятся обработчики форм `api/*` |
 | `cached` | рендер на запрос + кеш процесса (TTL + SWR) | `no-cache` | опция для контента из CMS/API — рецепт D ниже, кода в шаблоне нет |
 | `client` | каркас с сервера, данные на клиенте | `private, no-store` | нет и не планируется: приложение за логином — `spa-frontend-template` |
 
@@ -25,7 +25,8 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 `scripts/lib/routes.mjs` (`pageRoutes()`) выводит режим каждого файла `src/pages` по признаку
 `prerender = false` — им пользуются `check:content`, `check:links`, `seo:check` и HTTP-набор.
 Таблица — та же карта с решениями по кешу и индексации: у каждого on-demand файла здесь строка,
-иначе `check:content` красный; колонка «в sitemap» — намерение для генератора карты сайта.
+иначе `check:content` красный; колонка «в sitemap» — следствие колонки «индексируется»: карту
+сайта пишет сборка, и в ней ровно страницы без `noindex`.
 
 | путь | файл (`src/pages/`) | режим | `Cache-Control` | индексируется | в sitemap |
 |---|---|---|---|---|---|
@@ -44,8 +45,8 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 | `/healthz` | `healthz.ts` (endpoint) | `dynamic` | `no-store` (роут) | нет | нет |
 | `/_image` | `_image.ts` (endpoint изображений: маршрут вводит сам Astro, `image.endpoint` в `astro.config.ts` подменяет его для сборки; в `astro dev` — штатный) | `dynamic` | `no-cache` (роут) | — (404 текстом, `X-Robots-Tag: noindex`: картинки готовит сборка, трансформация на запрос наружу закрыта, на edge — тоже) | нет |
 | `/robots.txt` | `robots.txt.ts` (endpoint) | `dynamic` | `public, max-age=300` (роут) | — (текст; `X-Robots-Tag: noindex`) | нет |
-| `/sitemap.xml` | `sitemap.xml.ts` (endpoint) | `dynamic` | `public, max-age=3600` (роут) | — (`X-Robots-Tag: noindex`) | сам — карта |
-| `/rss.xml`, `/en/rss.xml` | `rss.xml.ts`, `en/rss.xml.ts` (endpoint, общий `_blog/feed.ts`) | `dynamic` | `public, max-age=600` (роут) | — (`X-Robots-Tag: noindex`) | нет |
+| `/sitemap.xml` | файла маршрута нет: карту пишет интеграция `sitemap-from-build` (`astro.config.ts`, `scripts/lib/sitemap.mjs`) по страницам `dist/client` | `static`, файл сборки | `public, max-age=0` + ETag | — (XML) | сам — карта |
+| `/rss.xml`, `/en/rss.xml` | `rss.xml.ts`, `en/rss.xml.ts` (prerendered-эндпоинт, общий `_blog/feed.ts`) | `static` | то же | — (XML) | нет |
 | `/<INDEXNOW_KEY>.txt` и любой другой корневой `/*.txt` | `[key].txt.ts` (endpoint; параметризованный — перехватывает весь корневой `*.txt`, кроме статического `robots.txt`) | `dynamic` | `public, max-age=300` (роут); пустой ключ или чужое имя — 404 `text/plain` с `no-cache`, не `404.astro` | — (`X-Robots-Tag: noindex` на обоих ответах) | нет |
 | любой путь без файла → 404 | `404.astro` | `dynamic` | `no-cache` (middleware) | нет — статус 404 + `noindex` | нет |
 | адреса из `content/redirects.yaml` | `app/middleware/redirects.ts`, до роутинга | `dynamic` | 301/308 — без кеш-заголовка; 410 — `no-cache` | нет | нет |
@@ -66,11 +67,13 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 лестницы — `.claude/rules/forms-antispam.md`, требования к прокси (rate-limit) —
 `deployment.md`.
 
-`robots.txt`, `sitemap.xml`, фиды и файл ключа IndexNow — on-demand, потому что их содержимое
-зависит от runtime env: `SITE_URL` (абсолютные URL), `ROBOTS_POLICY` (staging — `Disallow: /`),
-`INDEXNOW_KEY`. Источник карты сайта — те же запросы к контенту, что и
-`getStaticPaths` страниц, поэтому карта совпадает с prerendered-выходом один в один (HTTP-набор
-гейта сверяет с `dist/client`); правила — `.claude/rules/seo-invariants.md`.
+`robots.txt` и файл ключа IndexNow — on-demand, потому что их содержимое зависит от env контейнера:
+`ROBOTS_POLICY` (staging — `Disallow: /`), `INDEXNOW_KEY`. Карта сайта и фиды от среды зависят
+только origin'ом, поэтому они — файлы сборки с плейсхолдером, как страницы: фиды — prerendered-
+эндпоинты, а карту пишет интеграция сборки по страницам `dist/client` — в ней ровно страницы без
+`noindex`, адресом canonical и с датой последнего изменения записи. Списка страниц нет: карта равна
+сборке по построению, а `seo:check` сверяет её со страницами и с датами записей из frontmatter;
+правила — `.claude/rules/seo-invariants.md`. В `astro dev` карты нет.
 
 ## Абсолютные URL: один образ на все среды
 
@@ -92,9 +95,9 @@ Prerender происходит на сборке, а канонический or
   переезд домена не трогает контент;
 - HTML на сборке не предсжимается — иначе плейсхолдер уедет внутрь `.br`/`.gz`.
 
-Гейт: HTTP-набор (`e2e/http/pages.spec.ts`, `service.spec.ts`) обходит страницы `dist/client`
-(`<путь>/index.html`) и on-demand маршруты — плейсхолдера нет нигде, в `<body>` нет URL своего
-origin; остаток плейсхолдера в любом файле `dist/client` не даёт стартовать `entrypoint.sh`;
+Гейт: HTTP-набор (`e2e/http/pages.spec.ts`, `service.spec.ts`, `seo.spec.ts`) обходит страницы
+`dist/client` (`<путь>/index.html`), карту, фиды и on-demand маршруты — плейсхолдера нет нигде, в
+`<body>` нет URL своего origin; остаток плейсхолдера в любом файле `dist/client` не даёт стартовать `entrypoint.sh`;
 `check:content` не пропускает литерал плейсхолдера в тексты записей;
 `shared/config/runtime.server.test.ts` держит литерал согласованным в файлах, которые не
 импортируют `shared/config` (конфиг сборки, `docker/*`, приёмка образа).
@@ -112,15 +115,15 @@ origin; остаток плейсхолдера в любом файле `dist/c
 
 ## Заголовки
 
-- Prerendered и `public/*` отдаёт статик-хендлер адаптера (`send`): `Cache-Control: public,
-  max-age=0` + `ETag` + `Last-Modified` от mtime файла (штамповка возвращает файлу mtime
+- Prerendered (страницы, фиды, карта сайта) и `public/*` отдаёт статик-хендлер адаптера (`send`):
+  `Cache-Control: public, max-age=0` + `ETag` + `Last-Modified` от mtime файла (штамповка возвращает файлу mtime
   сборки, рестарт их не меняет) — условный запрос, 304 при совпадении; `/_astro/*` —
   `public, max-age=31536000, immutable`. Приложение (middleware, JSON-лог) их не видит
 - On-demand проходит через `app/middleware`: `X-Request-Id`, JSON-лог, `Cache-Control: no-cache`
   для HTML без явного заголовка (404/410 включительно). Роут задаёт заголовок сам, когда ответ
   живой или персональный: `now` — `private, no-store`, `healthz` — `no-store`; middleware его
-  не перебивает. Crawler-файлы
-  (`robots.txt`, `sitemap.xml`, фиды, ключ IndexNow) ставят короткий `public, max-age` и
+  не перебивает. Crawler-файлы приложения
+  (`robots.txt`, ключ IndexNow) ставят короткий `public, max-age` и
   `X-Robots-Tag: noindex` сами: это не страницы выдачи, а обход их не блокирует
 - Staging (`ROBOTS_POLICY=noindex`): `X-Robots-Tag: noindex, nofollow` на каждом ответе процесса —
   prerendered, `public/*`, ассеты и on-demand — ставит обёртка `docker/server.mjs`, последним:
@@ -179,9 +182,11 @@ git-контента D не нужен: публикация = релиз.
 - публичный `Cache-Control: no-cache` на кешированный HTML — провайдер его не ставит;
 - `X-Cache: HIT | STALE | MISS | BYPASS` наружу (провайдер даёт `X-Astro-Cache`);
 - список индексируемых `cached`-маршрутов в политике сборки `scripts/lib/site-policy.mjs` (рядом
-  с `NOINDEX_ROUTES`) и его чтение в двух проверках HTTP-набора: «HTML on-demand маршрута — только
-  с `noindex`» (`e2e/http/service.spec.ts`) и «карта сайта = индексируемые страницы `dist/client`»
-  (`e2e/http/seo.spec.ts`). Индексируемую on-demand страницу без строки в этом списке гейт роняет.
+  с `NOINDEX_ROUTES`): страниц этих маршрутов в `dist/client` нет, поэтому их адреса из списка
+  дописывает в карту генератор (`scripts/lib/sitemap.mjs`), а читают его сверка карты в `seo:check`
+  и две проверки HTTP-набора — «HTML on-demand маршрута — только с `noindex`»
+  (`e2e/http/service.spec.ts`) и «карта сайта = индексируемые страницы» (`e2e/http/seo.spec.ts`).
+  Индексируемую on-demand страницу без строки в этом списке гейт роняет.
 
 **Ограничения** (цифры — spike, `docs/research/ssr/round2/08-spike-astro.md` §5, §7.5–7.6):
 

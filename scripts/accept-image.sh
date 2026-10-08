@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Приёмка собранного образа до пуша в registry: отказ без SITE_URL за конечное время, штамповка
-# origin, статусы ключевых маршрутов, canonical, CSP, robots и карта, отказ 400 без падения на
-# TRACE, контур staging, дренаж по SIGTERM; заголовки и TTFB — печать без порога.
+# origin (страницы, карта, фиды), статусы ключевых маршрутов, canonical, CSP, robots, отказ 400 без
+# падения на TRACE, контур staging, дренаж по SIGTERM; заголовки и TTFB — печать без порога.
 # Использование: pnpm accept:image <image> [port]
 set -u
 
@@ -111,8 +111,19 @@ case "$robots" in
 Allow: /"*) ok "robots.txt открыт, Sitemap: $(printf '%s' "$robots" | grep -i '^Sitemap:' | head -1)" ;;
 *) fail "robots.txt в прод-профиле закрывает сайт" ;;
 esac
-locs=$(curl -s "http://127.0.0.1:$PORT/sitemap.xml" | grep -c '<loc>' || true)
-[ "$locs" -gt 0 ] && ok "sitemap.xml: $locs URL" || fail "sitemap.xml пуст"
+# Карта и фиды — файлы сборки с плейсхолдером: в образе их штампует entrypoint, как страницы.
+sitemap=$(curl -s "http://127.0.0.1:$PORT/sitemap.xml")
+locs=$(printf '%s\n' "$sitemap" | grep -c '<loc>' || true)
+foreign=$(printf '%s\n' "$sitemap" | grep '<loc>' | grep -vc "<loc>$ORIGIN/" || true)
+if [ "$locs" -gt 0 ] && [ "$foreign" = "0" ]; then
+  ok "sitemap.xml: $locs URL, все на $ORIGIN"
+else
+  fail "sitemap.xml: $locs URL, не на $ORIGIN — $foreign"
+fi
+for feed in $(docker exec "$NAME" sh -c 'cd /app/dist/client && find . -name rss.xml' | sed 's/^\.//'); do
+  curl -s "http://127.0.0.1:$PORT$feed" | grep -q "<link>$ORIGIN" &&
+    ok "$feed: канал на $ORIGIN" || fail "$feed: канал не на $ORIGIN"
+done
 
 echo "== заголовки =="
 curl -sI "http://127.0.0.1:$PORT/" | grep -iE '^(cache-control|etag|content-type)' | sed 's/^/  /'

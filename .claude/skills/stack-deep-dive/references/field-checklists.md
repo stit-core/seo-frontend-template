@@ -46,7 +46,7 @@
 
 **Generates**: слайс коллекции (`content/`, `model/{schema,collection}.ts`, `api/queries.ts`,
 `ui/`), регистрация в `src/content.config.ts` и в реестре `scripts/lib/content.mjs`,
-страницы списка и записи, источник sitemap/фидов/hreflang, `content/redirects.yaml`.
+страницы списка и записи, источник фидов, hreflang и дат карты сайта, `content/redirects.yaml`.
 
 **Cross-kind (блокирующий)**: `Кто редактирует` = «редактор без git» при источнике `git` —
 `**blocker**`: публикация записи означает релиз образа. Либо редактор идёт через PR, либо
@@ -65,8 +65,8 @@
 нештатные коды`, `Навигация`, `Generates`.
 
 **Generates**: файлы `src/pages/**` и `getStaticPaths()`, секции `src/pages/_<name>/`,
-`content/redirects.yaml`, строки в `STATIC_ROUTES` (`src/pages/sitemap.xml.ts`), подписи
-навигации в `src/shared/i18n/dict.ts`.
+`content/redirects.yaml`, подписи навигации в `src/shared/i18n/dict.ts`; карту сайта пишет сборка
+по страницам `dist/client`.
 
 **Cross-kind**: каждая строка `pages.md` FSD-карты — строка здесь; каждая строка отсюда —
 режим в `rendering.md`.
@@ -98,8 +98,8 @@
 **Секции**: `Идентичность сайта`, `Социальные карточки`, `Структурированные данные`,
 `Локали и hreflang`, `robots-политика`, `Sitemap и фиды`, `Верификация`, `Generates`.
 
-**Generates**: `src/shared/config/site.ts`, `src/shared/seo/*`, маршруты
-`robots.txt`/`sitemap.xml`/фидов/ключа IndexNow, `STATIC_ROUTES`, `e2e/http/seo.spec.ts`.
+**Generates**: `src/shared/config/site.ts`, `src/shared/seo/*`, маршруты `robots.txt`, фидов и
+ключа IndexNow, карта сайта из сборки (`scripts/lib/sitemap.mjs`), `e2e/http/seo.spec.ts`.
 
 **Cross-kind**: канонический хост ↔ `service.md § Домены` ↔ `SITE_URL` в `config.md`;
 `ROBOTS_POLICY`, `INDEXNOW_KEY` — в `config.md`; политика ИИ-ботов — поле `AI_BOTS_POLICY` в

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 import { SITE_ORIGIN_PLACEHOLDER } from '../../src/shared/config/runtime.ts'
 import { AI_BOTS_POLICY } from '../../src/shared/config/site.ts'
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
-import { E2E_INDEXNOW_KEY, entries, indexablePaths, onDemandRoutes } from '../site'
+import { E2E_INDEXNOW_KEY, entries, feedPaths, indexablePaths } from '../site'
 
 const PLACEHOLDER = new URL(SITE_ORIGIN_PLACEHOLDER).hostname
 
@@ -27,17 +27,22 @@ test.describe('robots.txt, sitemap.xml, фиды, IndexNow', () => {
     expect(body).not.toMatch(/Host:|Crawl-delay:/)
   })
 
-  test('sitemap.xml: ровно индексируемые страницы сборки, все 200, lastmod только у правленых записей', async ({
+  // Карта и фиды — файлы сборки с плейсхолдером origin: сервер отдаёт их проштампованными, как
+  // страницы, — со своим Cache-Control, ETag и без X-Robots-Tag.
+  test('sitemap.xml: проштампованный файл сборки — ровно индексируемые страницы, все 200, lastmod — дата последнего изменения записи', async ({
     request,
     baseURL,
   }) => {
     const response = await request.get('/sitemap.xml')
     expect(response.status()).toBe(200)
     expect(response.headers()['content-type']).toContain('application/xml')
-    expect(response.headers()['x-robots-tag']).toBe('noindex')
+    expect(response.headers()['cache-control']).toBe('public, max-age=0')
+    expect(response.headers().etag).toBeTruthy()
+    expect(response.headers()['x-robots-tag']).toBeUndefined()
     const xml = await response.text()
     expect(xml).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
     expect(xml).not.toMatch(/changefreq|priority/)
+    expect(xml).not.toContain(PLACEHOLDER)
 
     const urls = [
       ...xml.matchAll(/<url><loc>([^<]+)<\/loc>(?:<lastmod>([^<]+)<\/lastmod>)?<\/url>/g),
@@ -45,11 +50,11 @@ test.describe('robots.txt, sitemap.xml, фиды, IndexNow', () => {
     for (const { loc } of urls) expect(loc.startsWith(`${baseURL}/`), loc).toBe(true)
     const paths = urls.map(({ loc }) => new URL(loc).pathname)
     expect([...paths].sort()).toEqual(indexablePaths())
-    // lastmod — только честная дата правки записи (updatedDate), у остальных его нет.
+    // lastmod — у каждой записи: дата правки, без правки — публикации; у остальных страниц его нет.
     const lastmod = Object.fromEntries(
       entries()
-        .filter((entry) => !entry.draft && entry.updated !== undefined)
-        .map((entry) => [entry.path, entry.updated]),
+        .filter((entry) => !entry.draft)
+        .map((entry) => [entry.path, entry.updated ?? entry.published]),
     )
     expect(
       Object.fromEntries(
@@ -59,15 +64,17 @@ test.describe('robots.txt, sitemap.xml, фиды, IndexNow', () => {
     for (const path of paths) expect((await request.get(path)).status(), path).toBe(200)
   })
 
-  for (const path of onDemandRoutes().filter((route) => route.endsWith('/rss.xml'))) {
-    test(`${path}: RSS 2.0 с self-ссылкой, языком и живыми абсолютными ссылками`, async ({
+  for (const path of feedPaths()) {
+    test(`${path}: проштампованный файл сборки — RSS 2.0 с self-ссылкой, языком и живыми абсолютными ссылками`, async ({
       request,
       baseURL,
     }) => {
       const response = await request.get(path)
       expect(response.status()).toBe(200)
-      expect(response.headers()['content-type']).toContain('application/rss+xml')
-      expect(response.headers()['cache-control']).toBe('public, max-age=600')
+      expect(response.headers()['content-type']).toContain('xml')
+      expect(response.headers()['cache-control']).toBe('public, max-age=0')
+      expect(response.headers().etag).toBeTruthy()
+      expect(response.headers()['x-robots-tag']).toBeUndefined()
       const xml = await response.text()
       expect(xml).toContain('<rss version="2.0"')
       expect(xml).toContain(

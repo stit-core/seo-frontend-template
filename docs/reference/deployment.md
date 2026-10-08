@@ -152,7 +152,7 @@ prerendered-страница печатается на сборке, а обра
 
 ## Что отдаёт процесс
 
-- **Prerendered** страницы, `public/*` и `/_astro/*` отдаёт статик-хендлер адаптера **до**
+- **Prerendered** страницы, карту сайта, фиды, `public/*` и `/_astro/*` отдаёт статик-хендлер адаптера **до**
   приложения со своими заголовками (`Cache-Control: public, max-age=0` + `ETag` +
   `Last-Modified`; ассеты — `immutable`): middleware и JSON-лог их не видят, `X-Robots-Tag`
   staging ставит обёртка процесса. Каждая страница отвечает и по `<путь>/index.html`
@@ -162,7 +162,7 @@ prerendered-страница печатается на сборке, а обра
   200 со страницей; на `TRACE` обёртка отвечает 400): лишние методы режет edge. По симлинку
   внутри `dist/client` он отдаёт файл, на который тот указывает, — в `public/` симлинков нет
 - **On-demand** (`prerender = false`: `/healthz`, `/now`, `/api/contact`, `robots.txt`,
-  `sitemap.xml`, фиды `rss.xml` и `en/rss.xml`, `/<INDEXNOW_KEY>.txt`, `404.astro` — то есть
+  `/<INDEXNOW_KEY>.txt`, `404.astro` — то есть
   любой путь без статического файла, и закрытый `/_image` — 404 текстом; список держит карта
   `rendering.md`)
   проходит через `app/middleware`: редиректы из

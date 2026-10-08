@@ -5,6 +5,7 @@ import type { AstroIntegration } from 'astro'
 import { defineConfig } from 'astro/config'
 import { load } from 'js-yaml'
 import { contentSecurityPolicy } from './scripts/lib/site-policy.mjs'
+import { writeSitemap } from './scripts/lib/sitemap.mjs'
 
 // Один образ на все среды: на сборке в prerendered-выход попадает плейсхолдер
 // (валидный URL — голый __SITE_ORIGIN__ Astro отвергает), при старте контейнера
@@ -39,9 +40,19 @@ const closedImageEndpoint: AstroIntegration = {
   },
 }
 
+// Карта сайта — файл сборки: пишется по страницам dist/client, когда они собраны (кто в карте и с
+// какой датой — scripts/lib/sitemap.mjs). Страница попадает в карту и выпадает из неё сама; в
+// `astro dev` карты нет.
+const sitemapFromBuild: AstroIntegration = {
+  name: 'sitemap-from-build',
+  hooks: {
+    'astro:build:done': ({ dir }) => writeSitemap(fileURLToPath(dir)),
+  },
+}
+
 export default defineConfig({
   site: process.env.SITE_URL,
-  integrations: [closedImageEndpoint],
+  integrations: [closedImageEndpoint, sitemapFromBuild],
   output: 'static',
   // Дефолтный лимит тела у адаптера — 1 ГиБ, а разбор формы буферизует тело в heap процесса
   // (`--max-old-space-size=384`): предел на порядок ниже потолка памяти. Свой, куда более

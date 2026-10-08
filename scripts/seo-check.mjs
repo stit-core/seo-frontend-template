@@ -21,9 +21,12 @@
 //   с fetchpriority; ресурсов с чужих origin нет (и в style=""), @font-face — с font-display
 //   swap/fallback/optional (и в CSS сборки);
 // - сборка против источника: страница у каждой опубликованной записи и prerendered-маршрута,
-//   страниц черновиков нет.
-// On-demand ответы (robots.txt, sitemap.xml, фиды, /now, 404) и карту сайта против сборки
-// проверяет HTTP-набор (`pnpm test:http`) — им нужен сервер.
+//   страниц черновиков нет;
+// - карта сайта sitemap.xml: ровно индексируемые страницы сборки своим self-canonical, lastmod —
+//   дата последнего изменения записи из frontmatter (правка, без неё — публикация), у остальных
+//   страниц его нет.
+// On-demand ответы (robots.txt, /now, 404) и проштампованные карту и фиды проверяет HTTP-набор
+// (`pnpm test:http`) — им нужен сервер.
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { relative, resolve, sep } from 'node:path'
 import { load } from 'js-yaml'
@@ -640,6 +643,9 @@ const pair = (key, locale, path) => {
 }
 const entryPaths = new Set()
 const draftPaths = new Set()
+// Дата последнего изменения записи — правка, без неё публикация: ею карта сайта датирует страницу.
+const entryDates = new Map()
+const day = (date) => new Date(date).toISOString().slice(0, 10)
 for (const collection of collections) {
   const dir = resolve(root, collection.dir)
   if (!existsSync(dir)) {
@@ -655,6 +661,8 @@ for (const collection of collections) {
       continue
     }
     entryPaths.add(path)
+    const changed = data.updatedDate ?? data.pubDate
+    if (changed !== undefined) entryDates.set(path, day(changed))
     pair(`${collection.name}:${data.translationKey}`, locale, path)
   }
 }
@@ -678,6 +686,42 @@ for (const { route, prerender, parametrized } of pageRoutes(resolve(root, 'src/p
   // файлом, остальные — каталогом с index.html.
   const built = pages.has(route) || fileInDist(`${route}.html`) || fileInDist(route)
   if (!built) fail(`dist/client${route}`, 'страницы нет в сборке, хотя маршрут есть в src/pages')
+}
+
+// ---------- карта сайта ----------
+// Карта — файл сборки (scripts/lib/sitemap.mjs): в ней ровно индексируемые страницы — те, что без
+// noindex, — своим адресом на плейсхолдере origin; lastmod — дата последнего изменения записи из
+// источника, у страницы вне коллекций его нет. Адрес считается от пути страницы, а не от её
+// canonical: генератор и проверка сходятся только на self-canonical.
+const sitemap = 'dist/client/sitemap.xml'
+if (!fileInDist('/sitemap.xml')) fail(sitemap, 'карты сайта нет в сборке')
+else {
+  const listed = new Map()
+  for (const [, loc = '', lastmod] of readFileSync(resolve(client, 'sitemap.xml'), 'utf8').matchAll(
+    /<url><loc>([^<]*)<\/loc>(?:<lastmod>([^<]*)<\/lastmod>)?<\/url>/g,
+  )) {
+    const url = decode(loc)
+    if (listed.has(url)) fail(sitemap, `${url} — в карте дважды`)
+    listed.set(url, lastmod)
+  }
+  const own = new Set()
+  for (const [path, page] of pages) {
+    const url = `${OWN_ORIGIN}${path}`
+    own.add(url)
+    if (page.noindex) {
+      if (listed.has(url)) fail(page.where, 'noindex-страница в карте сайта')
+    } else if (!listed.has(url)) {
+      fail(page.where, 'индексируемой страницы нет в карте сайта: адрес карты — её self-canonical')
+    } else if (listed.get(url) !== entryDates.get(path)) {
+      fail(
+        sitemap,
+        `${url}: lastmod ${listed.get(url) ?? 'нет'}, а дата последнего изменения по источнику — ${entryDates.get(path) ?? 'нет: страница не запись коллекции'}`,
+      )
+    }
+  }
+  for (const url of listed.keys()) {
+    if (!own.has(url)) fail(sitemap, `${url} — в карте адрес без страницы сборки`)
+  }
 }
 
 let pairs = 0

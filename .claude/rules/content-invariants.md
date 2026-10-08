@@ -17,7 +17,8 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
   `<locale>/<slug>`, URL — `/blog/<slug>` (`/en/blog/<slug>`)
 - Frontmatter — строгая мапа (неизвестное поле, в т.ч. опечатка, — ошибка):
   `title` (25–65 символов), `description` (70–170), `pubDate`, `updatedDate?` (не раньше
-  `pubDate`; единственный источник `lastmod` в sitemap и `dateModified` в JSON-LD), `cover?` +
+  `pubDate`; источник `dateModified` в JSON-LD и `lastmod` в sitemap — у записи без правки
+  `lastmod` — её `pubDate`), `cover?` +
   `coverAlt?` (только вместе; обложка — и `og:image` записи), `tags` (slug'и, без дублей),
   `draft` (по умолчанию `false`), `translationKey` (slug, общий для переводов), `author?` (id
   реестра `src/entities/author/model/authors.ts`; id вне реестра — ошибка схемы)
@@ -99,8 +100,8 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
   поэтому импортируют только «листовые» модули без `@/`-алиасов и относительных импортов:
   `model/schema.ts`, `lib/paginate.ts`, `entities/author/model/authors.ts`,
   `shared/redirects/table.ts`, `shared/i18n/locale.ts`, `shared/config/runtime.ts`,
-  `shared/config/site.ts` (его читает политика сборки); импорт в `authors.ts` и `site.ts` —
-  только типов
+  `shared/config/site.ts` (его читает политика сборки), `shared/seo/sitemap.ts` (формат карты —
+  генератору `scripts/lib/sitemap.mjs`); импорт в `authors.ts` и `site.ts` — только типов
 - Новая коллекция — запись в реестре `collections` модуля `scripts/lib/content.mjs` (каталог,
   схема, порождаемые маршруты): каталог `src/entities/*/content` вне реестра и запись реестра без
   каталога — ошибка `check:content`. Скрипты берут реестр проверяемого корня: у мини-проектов

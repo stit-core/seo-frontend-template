@@ -73,10 +73,10 @@ hreflang выводится только для реально существу�
 
 | артефакт | что внутри | `lastmod` |
 |---|---|---|
-| `/sitemap.xml` | ровно индексируемые prerendered-страницы сборки | только `updatedDate` записи |
+| `/sitemap.xml` | файл сборки: ровно страницы `dist/client` без `noindex` | у записи — `updatedDate`, без правки — `pubDate` |
 | `/rss.xml`, `/en/rss.xml` | последние 20 записей своей локали | — |
 
-Индексируемая страница вне коллекций — строка в `STATIC_ROUTES` (`src/pages/sitemap.xml.ts`).
+Списка страниц нет: карту пишет сборка, страница попадает в неё и выпадает из неё сама.
 `changefreq`/`priority` не выводятся. Больше 50 000 URL — нужен sitemap index с шардами.
 
 ## Верификация и уведомление поисковиков
@@ -93,7 +93,7 @@ hreflang выводится только для реально существу�
 
 - `src/shared/config/site.ts` — идентичность, OG, verification, политика ИИ-ботов
 - `src/shared/seo/*` — canonical, hreflang, OG, JSON-LD, robots, sitemap, фиды
-- `src/pages/{robots.txt,sitemap.xml,rss.xml,[key].txt}.ts` и `STATIC_ROUTES`
+- `src/pages/{robots.txt,rss.xml,[key].txt}.ts`, карта сайта из сборки (`scripts/lib/sitemap.mjs`)
 - `e2e/http/seo.spec.ts` + `pnpm seo:check` — гейты head'а и карты сайта
 - `config.md` — env `SITE_URL`, `ROBOTS_POLICY`, `INDEXNOW_KEY`
 - чек-лист `/release` и прогон `/seo-audit`

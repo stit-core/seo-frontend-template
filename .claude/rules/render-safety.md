@@ -12,7 +12,8 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 
 ## Сборка (prerender)
 
-- Frontmatter prerender-страницы исполняется один раз на `astro build`: `new Date()`,
+- Frontmatter prerender-страницы (и обработчик prerendered-эндпоинта — фида) исполняется один раз
+  на `astro build`: `new Date()`,
   `getRuntimeConfig()`, `process.env` дают значения **сборки** (origin — плейсхолдер, который
   штампует entrypoint). Год в подвале — год релиза, это честно; «текущее время» — нет.
   `<meta name="robots">` prerendered-страницы — тоже значение сборки: staging закрывают
@@ -36,7 +37,7 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 ## Запрос (on-demand)
 
 - `export const prerender = false` — только для служебных маршрутов (`404`, `healthz`, `now`,
-  `robots.txt`/`sitemap.xml`/`rss.xml`, `[key].txt`, `api/*`) и только со строкой в карте маршрутов
+  `robots.txt`, `[key].txt`, `api/*`) и только со строкой в карте маршрутов
   `docs/reference/rendering.md` (файл маршрута без неё валит `check:content`) и явным решением о
   `Cache-Control`: публичный HTML —
   `no-cache` (умолчание `app/middleware`, 404/410 включительно), живой или персональный —
@@ -78,9 +79,11 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 `image.endpoint` для `astro build` — `src/pages/_image.ts` (404): его ставит локальная
 интеграция `closed-image-endpoint` в самом конфиге — часть канона, а не подключаемый пакет;
 картинки оптимизирует сборка, трансформации на запрос наружу нет; в `astro dev` endpoint
-штатный. Интеграций-пакетов `@astrojs/react` (фреймворк островов ради одного переключателя) и
-`@astrojs/sitemap` (`lastmod` не из `updatedDate`, страницы — `filter`, а не список индексируемых,
-шарды вместо одного файла) нет.
+штатный. Вторая локальная интеграция — `sitemap-from-build`: хук `astro:build:done` пишет
+`dist/client/sitemap.xml` по собранным страницам (`scripts/lib/sitemap.mjs`: страницы без
+`noindex`, адрес — canonical); в `astro dev` карты нет. Интеграций-пакетов `@astrojs/react`
+(фреймворк островов ради одного переключателя) и `@astrojs/sitemap` (`lastmod` не из дат записи,
+отбор страниц — `filter`, а не `noindex` самой страницы, шарды вместо одного файла) нет.
 
 CSP — `security.csp` из политики сборки (`contentSecurityPolicy()`, `scripts/lib/site-policy.mjs`:
 защитные директивы, чужие origin, хеши островов; хеши своих стилей Astro добавляет сам) и
@@ -90,8 +93,8 @@ CSP — `security.csp` из политики сборки (`contentSecurityPolic
 `sources` острова сливаются с директивой, а в защитных (`object-src`, `base-uri`, `form-action`,
 `frame-ancestors`) они — ошибка сборки. Адаптер читает `_headers.json` по абсолютному пути сборки
 из `entry.mjs`: в образе сборка и запуск — один каталог `/app`, копия HTTP-набора переписывает путь
-на свой. Политика и её разбор HTML (`scripts/lib/html.mjs`) — в контексте сборки образа
-(`.dockerignore`): их импортирует этот конфиг.
+на свой. Модули `scripts/lib`, которые импортирует этот конфиг, — политика, генератор карты
+сайта, разбор HTML и обход каталога — в контексте сборки образа (`.dockerignore`).
 
 CSP у prerendered-страниц одна на все: запись `_headers.json` статик-хендлер берёт первую, чей путь
 *содержит* путь запроса (`/` получает запись `/500`, `/blog` — `/blog/page/2`). Свой инлайн-стиль

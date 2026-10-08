@@ -72,14 +72,6 @@ const locale = 'ru' as const
 
 `src/pages/en/<path>.astro` — то же с `locale = 'en'` и путём `../_<name>/<name>-page.astro`.
 
-## page — строка в карте сайта
-
-`src/pages/sitemap.xml.ts`, если страница индексируемая и вне коллекций:
-
-```ts
-{ route: '/<path>', locales: SUPPORTED_LOCALES },   // или [DEFAULT_LOCALE]
-```
-
 ## page — тест
 
 `src/pages/_tests/pages.astro.test.ts`: импорт обёрток и строка на локаль в таблице

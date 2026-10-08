@@ -20,9 +20,9 @@
   `:latest`/`:edge` не выпускаются.
 - **Static-first**: HTML контентных страниц собран на сборке и лежит в `/app/dist/client`;
   его отдаёт статик-хендлер Node-адаптера со своими заголовками (`public, max-age=0` +
-  `ETag`), **не доходя до кода приложения**. Рендер на запрос — только у служебных
-  маршрутов: `404`, `/healthz`, `/now`, `/robots.txt`, `/sitemap.xml`, `/rss.xml`,
-  `/en/rss.xml`, `/<INDEXNOW_KEY>.txt`, `POST /api/contact`. Endpoint изображений Astro
+  `ETag`), **не доходя до кода приложения**; так же, файлами сборки, отдаются `/sitemap.xml` и
+  фиды `/rss.xml`, `/en/rss.xml`. Рендер на запрос — только у служебных маршрутов: `404`,
+  `/healthz`, `/now`, `/robots.txt`, `/<INDEXNOW_KEY>.txt`, `POST /api/contact`. Endpoint изображений Astro
   `/_image` не обслуживается (404): картинки оптимизирует сборка.
 - **Один образ на все среды.** Сборка печёт в абсолютные URL плейсхолдер
   `https://__site_origin__`; при старте контейнера entrypoint заменяет его на `SITE_URL`

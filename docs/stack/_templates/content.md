@@ -104,7 +104,7 @@ allowlist против SSRF через эндпоинт ресайза.
 - `src/content.config.ts` — регистрация коллекции
 - `scripts/lib/content.mjs` — запись в реестре коллекций (гейты `check:content`, `seo:check`)
 - `src/pages/<path>/**` — списки, страница записи, теги
-- источник данных для `sitemap.xml`, `rss.xml` и hreflang
+- источник данных для `rss.xml`, hreflang и дат `lastmod` карты сайта
 - `content/redirects.yaml`
 - `config.md` — env источника контента, если режим не `git`
 

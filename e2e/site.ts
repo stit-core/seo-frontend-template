@@ -52,8 +52,7 @@ export function prerenderedPaths(): string[] {
     .sort()
 }
 
-// Индексируемые страницы сборки: prerendered минус служебные, закрытые noindex. Это и есть
-// содержимое карты сайта.
+// Индексируемые страницы сборки: prerendered минус закрытые noindex. Ровно их называет карта сайта.
 export function indexablePaths(): string[] {
   return prerenderedPaths().filter((path) => {
     const file = resolve(clientDir, `.${path === '/' ? '' : path}/index.html`)
@@ -112,6 +111,17 @@ export function onDemandRoutes(): string[] {
     .filter((page) => page.mode === 'dynamic' && !page.parametrized)
     .map((page) => page.route)
 }
+
+// Фиды блога — по одному на локаль: маршруты `rss.xml` в src/pages. Режим не спрашивается: фид
+// обязан быть файлом сборки, и это проверяет спек, а не отбор целей.
+export const feedPaths = (): string[] =>
+  pageRoutes(resolve(root, 'src/pages'))
+    .map((page) => page.route)
+    .filter((route) => route.endsWith('/rss.xml'))
+
+// Файлы сборки для краулеров и читалок: карта сайта, которую пишет интеграция сборки, и фиды. Их,
+// как и страницы, отдаёт статик-хендлер.
+export const crawlerFiles = (): string[] => ['/sitemap.xml', ...feedPaths()]
 
 export interface Entry {
   locale: Locale

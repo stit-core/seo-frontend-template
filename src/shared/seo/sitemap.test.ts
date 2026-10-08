@@ -4,7 +4,7 @@ describe('seo/sitemap', () => {
   it('urlset с loc и lastmod только там, где есть дата; без changefreq/priority', () => {
     const xml = buildSitemap([
       { loc: 'https://demo.example/' },
-      { loc: 'https://demo.example/blog/x', lastmod: new Date('2026-09-10') },
+      { loc: 'https://demo.example/blog/x', lastmod: '2026-09-10' },
     ])
     expect(xml).toBe(
       [

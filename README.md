@@ -24,7 +24,7 @@ Astro 7.3 + `@astrojs/node` (`output: 'static'`, standalone) · TypeScript 6
 (`astro/tsconfigs/strictest`) · Tailwind v4 на собственном токен-слое · контент — Markdown
 в git внутри слайса (Content Layer + Zod 4) · i18n `ru` (без префикса) + `en` (`/en`) ·
 редиректы как данные (`content/redirects.yaml`) · SEO-слой `shared/seo` (canonical, hreflang,
-OG, JSON-LD; `robots.txt`/`sitemap.xml`/`rss.xml` on-demand на runtime origin) · Biome 2 +
+OG, JSON-LD; `robots.txt` on-demand на runtime origin, `sitemap.xml` и `rss.xml` — файлы сборки) · Biome 2 +
 Prettier (только `*.astro`) ·
 ESLint 10 (`eslint-plugin-astro`, `boundaries`) + Steiger · Vitest 5 (Container API) +
 Playwright · size-limit · pnpm 10 · lefthook + commitlint.
@@ -87,8 +87,8 @@ content/redirects.yaml   редиректы как данные: 301/308/410 о�
 public/           иконки, manifest, og-default.png (социальная карточка 1200×630)
 src/app/          layouts/document.astro (<head> из props: SeoHead + JSON-LD), middleware, styles/index.css
 src/pages/        роутинг Astro = слой pages: index, about, contacts/{index,spasibo},
-                  legal/privacy, blog/{index,[slug],page/[page],tag/[tag]}, en/… , 500 (prerender);
-                  404, healthz, now, robots.txt, sitemap.xml, rss.xml, en/rss.xml, [key].txt,
+                  legal/privacy, blog/{index,[slug],page/[page],tag/[tag]}, en/… , 500,
+                  rss.xml, en/rss.xml (prerender); 404, healthz, now, robots.txt, [key].txt,
                   api/contact (on-demand); секции страниц — _blog/, _about/, _contacts/;
                   тесты маршрутов и страниц — _tests/
 src/widgets/      site-header, site-footer, post-list, breadcrumbs (видимые крошки)
@@ -121,7 +121,7 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 
 Всё prerender по умолчанию; on-demand (`export const prerender = false`) — только служебное:
 `404`, `/healthz`, `/now` (время сервера, `noindex`, `private, no-store`), `robots.txt`,
-`sitemap.xml`, `rss.xml`, файл ключа IndexNow и обработчик формы `/api/contact`. Кеш-заголовки,
+файл ключа IndexNow и обработчик формы `/api/contact`; фиды и карта сайта — файлы сборки. Кеш-заголовки,
 карта маршрутов и рецепт кеша процесса для контента из CMS —
 [`docs/reference/rendering.md`](docs/reference/rendering.md).
 
@@ -147,9 +147,11 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 и записи; `BreadcrumbList` на вложенных (из того же массива, что видимые крошки
 `widgets/breadcrumbs`), `BlogPosting` у записи — с автором `Person`, когда у записи есть автор
 из реестра и подпись; в `<body>` ни одного `<script>`. `robots.txt` (`ROBOTS_POLICY`; политика
-ИИ-ботов — поле сборки `AI_BOTS_POLICY`, группы — из реестра ботов базы strategy), `sitemap.xml`
-(ровно prerendered-страницы, `lastmod` из `updatedDate`), `rss.xml`/`en/rss.xml` и
-`/<INDEXNOW_KEY>.txt` — on-demand на runtime `SITE_URL`. Гейты: `pnpm seo:check` и HTTP-набор
+ИИ-ботов — поле сборки `AI_BOTS_POLICY`, группы — из реестра ботов базы strategy) и
+`/<INDEXNOW_KEY>.txt` — on-demand на runtime `SITE_URL`; `sitemap.xml` (сборка пишет его по
+страницам `dist/client`: ровно страницы без `noindex`, `lastmod` — дата правки или публикации
+записи) и фиды `rss.xml`/`en/rss.xml` — файлы сборки, origin в них штампуется при старте
+контейнера. Гейты: `pnpm seo:check` и HTTP-набор
 (`e2e/http/`: сырой HTML, тот же ответ каждому боту реестра, robots, карта, фиды) в `pnpm check`;
 правило — `.claude/rules/seo-invariants.md`.
 

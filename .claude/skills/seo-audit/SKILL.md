@@ -30,7 +30,7 @@ description: Прогнать SEO-аудит сайта существующим
 ```bash
 pnpm build          # плейсхолдер origin, как в образе
 pnpm check:links    # каждый внутренний href/src в dist/client существует
-pnpm seo:check      # head каждой страницы: title/description, canonical, lang, h1, OG, hreflang, JSON-LD
+pnpm seo:check      # head каждой страницы: title/description, canonical, lang, h1, OG, hreflang, JSON-LD; карта = страницы
 pnpm size           # бюджеты HTML и CSS
 ```
 
@@ -46,8 +46,8 @@ pnpm test:http      # после pnpm build: HTTP-набор, профили п�
 свободных портах и проверяет сырой HTML (в том числе под `User-Agent: Googlebot`, а шаблоны
 страниц и on-demand маршруты — под UA каждого бота реестра: ответ тот же до заголовка): статусы и
 заголовки, штамповку origin, `noindex` и острова на on-demand страницах (prerendered держит
-`seo:check`), `robots.txt` (прод и staging) ↔ `sitemap.xml` ↔ `dist/client`, фиды, ключ
-IndexNow, вес HTML.
+`seo:check`, карту сайта против сборки — тоже), `robots.txt` (прод и staging), проштампованные
+карту и фиды, ключ IndexNow, вес HTML.
 
 ### 3. Живой домен (или запущенный контейнер)
 

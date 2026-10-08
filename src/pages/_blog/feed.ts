@@ -4,7 +4,7 @@ import { type Locale, localePath, t } from '@/shared/i18n'
 import { buildFeed } from '@/shared/seo'
 
 // Один фид на локаль (/rss.xml, /en/rss.xml): анонсы последних записей блога, тело — по ссылке.
-// On-demand: абсолютные URL известны только контейнеру (runtime SITE_URL).
+// Файл сборки: абсолютные URL в нём — на плейсхолдере origin, его штампует entrypoint контейнера.
 export async function blogFeed(locale: Locale): Promise<Response> {
   const posts = await listPosts(locale)
   const xml = await buildFeed({
@@ -21,13 +21,6 @@ export async function blogFeed(locale: Locale): Promise<Response> {
       tags: post.data.tags,
     })),
   })
-  return new Response(xml, {
-    headers: {
-      'content-type': 'application/rss+xml; charset=utf-8',
-      // Читалки и агрегаторы; после релиза с новой записью 10 минут задержки — норма.
-      'cache-control': 'public, max-age=600',
-      // Фид — не страница выдачи.
-      'x-robots-tag': 'noindex',
-    },
-  })
+  // Заголовок видит только `astro dev`: файл сборки отдаёт статик-хендлер со своими.
+  return new Response(xml, { headers: { 'content-type': 'application/rss+xml; charset=utf-8' } })
 }

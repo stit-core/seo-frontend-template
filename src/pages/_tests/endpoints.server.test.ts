@@ -6,7 +6,6 @@ import { GET as feedEn } from '../en/rss.xml.ts'
 import { GET as healthz } from '../healthz.ts'
 import { GET as robotsTxt } from '../robots.txt.ts'
 import { GET as feedRu } from '../rss.xml.ts'
-import { GET as sitemapXml } from '../sitemap.xml.ts'
 
 vi.mock('astro:content', () => import('./fixtures').then((fixtures) => fixtures.astroContent))
 
@@ -79,43 +78,6 @@ describe('robots.txt', () => {
   })
 })
 
-describe('sitemap.xml', () => {
-  // URL карты; у записи с правкой — через пробел её lastmod.
-  const urls = (xml: string) =>
-    [...xml.matchAll(/<loc>([^<]+)<\/loc>(?:<lastmod>([^<]+)<\/lastmod>)?/g)].map(
-      ([, loc, lastmod]) => (lastmod === undefined ? loc : `${loc} ${lastmod}`),
-    )
-
-  it('индексируемые страницы: статические, списки, теги и записи без черновика; lastmod — только правка', async () => {
-    const response = await get(sitemapXml)
-    expect(urls(await response.text())).toEqual([
-      `${ORIGIN}/`,
-      `${ORIGIN}/en`,
-      `${ORIGIN}/about`,
-      `${ORIGIN}/en/about`,
-      `${ORIGIN}/contacts`,
-      `${ORIGIN}/en/contacts`,
-      `${ORIGIN}/legal/privacy`,
-      `${ORIGIN}/blog`,
-      `${ORIGIN}/blog/page/2`,
-      `${ORIGIN}/blog/tag/astro`,
-      `${ORIGIN}/blog/tag/seo`,
-      `${ORIGIN}/blog/para`,
-      `${ORIGIN}/blog/odna 2026-02-10`,
-      `${ORIGIN}/blog/zametka-4`,
-      `${ORIGIN}/blog/zametka-3`,
-      `${ORIGIN}/blog/zametka-2`,
-      `${ORIGIN}/blog/zametka-1`,
-      `${ORIGIN}/en/blog`,
-      `${ORIGIN}/en/blog/tag/seo`,
-      `${ORIGIN}/en/blog/pair`,
-    ])
-    expect(response.headers.get('content-type')).toBe('application/xml; charset=utf-8')
-    expect(response.headers.get('cache-control')).toBe('public, max-age=3600')
-    expect(response.headers.get('x-robots-tag')).toBe('noindex')
-  })
-})
-
 describe('фиды', () => {
   const links = (xml: string) =>
     [...xml.matchAll(/<item>[\s\S]*?<link>([^<]+)<\/link>/g)].map(([, link]) => link)
@@ -140,8 +102,6 @@ describe('фиды', () => {
     expect(enXml).toContain(`<atom:link href="${ORIGIN}/en/rss.xml" rel="self"`)
 
     expect(ru.headers.get('content-type')).toBe('application/rss+xml; charset=utf-8')
-    expect(ru.headers.get('cache-control')).toBe('public, max-age=600')
-    expect(ru.headers.get('x-robots-tag')).toBe('noindex')
   })
 })
 

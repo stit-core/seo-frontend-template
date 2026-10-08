@@ -20,7 +20,7 @@ translationKey: prerender-by-default
 
 ## Когда нужен рантайм
 
-Служебные маршруты — `/healthz`, `robots.txt`, `sitemap.xml`, обработчик формы — знают про
+Служебные маршруты — `/healthz`, `robots.txt`, обработчик формы — знают про
 среду и читают её из env при запросе. Для них ставится `export const prerender = false`;
 всё остальное остаётся статикой. Как при этом один и тот же образ едет на staging и в прод —
 в заметке [про один образ на все среды](/blog/odin-obraz-na-vse-sredy).
