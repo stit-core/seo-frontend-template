@@ -23,7 +23,6 @@ prerendered-выхода, `absoluteUrl()` на on-demand); публичные и
 | `PORT` / `HOST` | слушатель адаптера | `3000` / `0.0.0.0` | нет | нет |
 | `NODE_OPTIONS` | например `--max-old-space-size=384` | — | нет | нет |
 | `ROBOTS_POLICY` | `index \| noindex` — весь контур | `index` | нет | нет |
-| `AI_TRAINING` | `allow \| deny` — обучающие AI-краулеры в `robots.txt` | `allow` | нет | нет |
 | `INDEXNOW_KEY` | ключ IndexNow; файл `/<ключ>.txt` | `''` | нет | нет |
 | `RELEASE` | версия для логов и Sentry | `unknown` | нет | нет |
 | `LOG_LEVEL` | порог JSON-лога | `info` | нет | нет |
@@ -49,6 +48,7 @@ prerendered-выхода, `absoluteUrl()` на on-demand); публичные и
 |---|---|---|
 | `SITE_NAME`, `SITE_DESCRIPTION`, `SITE_SAME_AS`, `SITE_LOGO_PATH` | идентичность и JSON-LD | — |
 | `OG_DEFAULT_IMAGE` | социальная карточка по умолчанию | — |
+| `AI_BOTS_POLICY` | политика ИИ-ботов: именная группа `robots.txt` и мета `deny-all` | — (умолчание `allow-all`) |
 | `METRIKA_ID` | счётчик | сторонних скриптов нет |
 | `SITE_VERIFICATION.google` / `.yandex` | подтверждение домена | тега нет |
 | `PRIVACY_POLICY_VERSION` | редакция политики ПДн, уезжает с заявкой | — |

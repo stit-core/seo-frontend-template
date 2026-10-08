@@ -97,7 +97,6 @@ describe('docker/server.mjs: env целиком проверяется до за
       INDEXNOW_KEY: 'short',
       FORM_DELIVERY: 'email',
       ROBOTS_POLICY: 'Noindex',
-      AI_TRAINING: 'blocked',
       SHUTDOWN_TIMEOUT_MS: '15s',
     }
     const result = run({ SITE_URL: 'https://demo.example', ...typos })

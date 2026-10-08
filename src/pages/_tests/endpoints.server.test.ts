@@ -1,4 +1,5 @@
 import type { APIContext, APIRoute } from 'astro'
+import type * as SharedConfig from '@/shared/config'
 import { ALL as imageEndpoint } from '../_image.ts'
 import { GET as indexNowKey } from '../[key].txt.ts'
 import { GET as feedEn } from '../en/rss.xml.ts'
@@ -8,6 +9,16 @@ import { GET as feedRu } from '../rss.xml.ts'
 import { GET as sitemapXml } from '../sitemap.xml.ts'
 
 vi.mock('astro:content', () => import('./fixtures').then((fixtures) => fixtures.astroContent))
+
+// Политика ИИ-ботов — поле сборки, а не env: кейс задаёт её здесь.
+const { site } = vi.hoisted(() => ({ site: { aiBots: 'allow-all' } }))
+
+vi.mock('@/shared/config', async (importOriginal) => ({
+  ...(await importOriginal<typeof SharedConfig>()),
+  get AI_BOTS_POLICY() {
+    return site.aiBots
+  },
+}))
 
 const ORIGIN = 'https://demo.example'
 
@@ -19,14 +30,22 @@ beforeEach(() => {
   vi.stubEnv('SITE_URL', ORIGIN)
   // Профиль — прод-умолчания, а не окружение оболочки: staging и ключ задают сами кейсы.
   vi.stubEnv('ROBOTS_POLICY', 'index')
-  vi.stubEnv('AI_TRAINING', 'allow')
   vi.stubEnv('INDEXNOW_KEY', '')
   // Vitest работает в dev-режиме Vite; режим сборки, где черновиков нет, задаётся явно.
   vi.stubEnv('DEV', false)
 })
-afterEach(() => vi.unstubAllEnvs())
+afterEach(() => {
+  vi.unstubAllEnvs()
+  site.aiBots = 'allow-all'
+})
 
 describe('robots.txt', () => {
+  // /de-template ставит политику проекта в site.ts: маршрут с ней проходит typecheck, только если
+  // поле — объединение политик, а не литерал умолчания.
+  it('политика ИИ-ботов — одна из трёх, а не литерал умолчания', () => {
+    expectTypeOf<typeof SharedConfig.AI_BOTS_POLICY>().toEqualTypeOf<SharedConfig.AiBotsPolicy>()
+  })
+
   it('прод: сайт открыт, абсолютная строка Sitemap; сам файл — не страница выдачи', async () => {
     const response = await get(robotsTxt)
     expect(await response.text()).toBe(
@@ -41,12 +60,22 @@ describe('robots.txt', () => {
     expect(await (await get(robotsTxt)).text()).toBe('User-agent: *\nDisallow: /\n')
   })
 
-  it('AI_TRAINING=deny: обучающие боты закрыты, остальные — нет', async () => {
-    vi.stubEnv('AI_TRAINING', 'deny')
+  it('политика ИИ-ботов из site.ts: её боты закрыты именной группой, `*` открыта', async () => {
+    site.aiBots = 'allow-search-deny-training'
     const groups = (await (await get(robotsTxt)).text()).trim().split('\n\n')
     expect(groups[0]).toBe('User-agent: *\nAllow: /')
     expect(groups[1]).toMatch(/^User-agent: GPTBot\n(User-agent: \S+\n)+Disallow: \/$/)
+    expect(groups[1]).not.toContain('OAI-SearchBot')
     expect(groups[2]).toBe(`Sitemap: ${ORIGIN}/sitemap.xml`)
+
+    site.aiBots = 'deny-all'
+    expect(await (await get(robotsTxt)).text()).toContain('User-agent: OAI-SearchBot\n')
+  })
+
+  it('staging закрыт целиком и при политике с запретом: именных групп нет', async () => {
+    vi.stubEnv('ROBOTS_POLICY', 'noindex')
+    site.aiBots = 'deny-all'
+    expect(await (await get(robotsTxt)).text()).toBe('User-agent: *\nDisallow: /\n')
   })
 })
 

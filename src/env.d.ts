@@ -15,8 +15,9 @@ declare namespace App {
   }
 }
 
-// Данные репозитория (content/*.yaml) как модули: разобраны на сборке плагином yaml-modules
-// из astro.config.ts; форму проверяет Zod в месте импорта (shared/redirects).
+// Данные репозитория (content/*.yaml, shared/seo/crawlers.yaml) как модули: разобраны на сборке
+// плагином yaml-modules из astro.config.ts; форму проверяет Zod в месте импорта (shared/redirects,
+// shared/seo).
 declare module '*.yaml' {
   const data: unknown
   export default data

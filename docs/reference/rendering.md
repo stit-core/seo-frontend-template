@@ -68,7 +68,7 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 
 `robots.txt`, `sitemap.xml`, фиды и файл ключа IndexNow — on-demand, потому что их содержимое
 зависит от runtime env: `SITE_URL` (абсолютные URL), `ROBOTS_POLICY` (staging — `Disallow: /`),
-`AI_TRAINING`, `INDEXNOW_KEY`. Источник карты сайта — те же запросы к контенту, что и
+`INDEXNOW_KEY`. Источник карты сайта — те же запросы к контенту, что и
 `getStaticPaths` страниц, поэтому карта совпадает с prerendered-выходом один в один (HTTP-набор
 гейта сверяет с `dist/client`); правила — `.claude/rules/seo-invariants.md`.
 

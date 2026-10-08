@@ -1,16 +1,16 @@
 export const prerender = false
 
 import type { APIRoute } from 'astro'
-import { getRuntimeConfig } from '@/shared/config'
+import { AI_BOTS_POLICY, getRuntimeConfig } from '@/shared/config'
 import { absoluteUrl, buildRobotsTxt } from '@/shared/seo'
 
-// On-demand: политика и origin — runtime env контейнера (staging закрыт `Disallow: /`,
-// прод отдаёт абсолютную строку Sitemap).
+// On-demand: контур и origin — runtime env контейнера (staging закрыт `Disallow: /`, прод отдаёт
+// абсолютную строку Sitemap); политика ИИ-ботов — поле сборки, одна на все среды.
 export const GET: APIRoute = () => {
-  const { ROBOTS_POLICY, AI_TRAINING } = getRuntimeConfig()
+  const { ROBOTS_POLICY } = getRuntimeConfig()
   const body = buildRobotsTxt({
     policy: ROBOTS_POLICY,
-    aiTraining: AI_TRAINING,
+    aiBots: AI_BOTS_POLICY,
     sitemapUrl: absoluteUrl('/sitemap.xml'),
   })
   return new Response(body, {

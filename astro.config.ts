@@ -13,9 +13,10 @@ import { contentSecurityPolicy } from './scripts/lib/site-policy.mjs'
 const PLACEHOLDER = 'https://__site_origin__'
 process.env.SITE_URL ||= PLACEHOLDER
 
-// `content/*.yaml` импортируются как модули: YAML разбирается здесь, на сборке, и в серверный
-// бандл попадают данные, а не парсер (js-yaml — им же Astro читает frontmatter). Пустой
-// файл — `null`; форму данных проверяет Zod в месте импорта.
+// YAML репозитория (`content/*.yaml`, реестр ботов `shared/seo/crawlers.yaml`) импортируется как
+// модуль: разбирается здесь, на сборке, и в серверный бандл попадают данные, а не парсер
+// (js-yaml — им же Astro читает frontmatter). Пустой файл — `null`; форму данных проверяет Zod в
+// месте импорта.
 const yamlModules = {
   name: 'yaml-modules',
   transform(code: string, id: string) {

@@ -80,9 +80,9 @@ Frontmatter `.astro` и модули `.ts` исполняются на серв�
 | что | где |
 |---|---|
 | документ-шелл, middleware (лог, редиректы), токены | `app/layouts/document.astro`, `app/middleware`, `app/styles/index.css` |
-| runtime-конфиг, идентичность сайта (`SITE_NAME`, `sameAs`, `OG_DEFAULT_IMAGE`) | `shared/config` |
+| runtime-конфиг, идентичность сайта (`SITE_NAME`, `sameAs`, `OG_DEFAULT_IMAGE`), политика ИИ-ботов | `shared/config` |
 | локали, пути с префиксом, даты | `shared/i18n` |
-| SEO: `absoluteUrl`/hreflang, `SeoHead`, фабрики JSON-LD + `JsonLdScript`, генераторы robots/sitemap/rss | `shared/seo` |
+| SEO: `absoluteUrl`/hreflang, `SeoHead`, фабрики JSON-LD + `JsonLdScript`, генераторы robots/sitemap/rss, реестр ботов `crawlers.yaml` | `shared/seo` |
 | тест-хелперы | `shared/lib/testing` |
 | таблица редиректов (данные → Map) | `shared/redirects` |
 | проектные UI-примитивы | `shared/ui/<name>/` |

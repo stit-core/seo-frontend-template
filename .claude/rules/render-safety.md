@@ -70,7 +70,7 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 отдаёт 404 на `/blog` и `/en`), `trailingSlash: 'never'`, `session: false` (fs-драйвер сессий
 пишет в cacheDir), `prefetch: false` и без `<ClientRouter/>` (без островов — ни байта JS),
 `experimentalDisableStreaming: true`, `markdown.syntaxHighlight: false` (Shiki инлайнит сырые
-цвета мимо токен-слоя), Vite-плагины `yaml-modules` (`content/*.yaml` → данные на сборке) и
+цвета мимо токен-слоя), Vite-плагины `yaml-modules` (`content/*.yaml` и реестр ботов `shared/seo/crawlers.yaml` → данные на сборке) и
 `runtime-config-entry` (схема env `shared/config/runtime.ts` отдельным файлом
 `dist/server/runtime-config.mjs`: его импортируют `docker/server.mjs` и `docker/stamp.mjs` до
 старта приложения — без него контейнер не стартует); `cache`/`routeRules` не задаются — рецепт D

@@ -118,8 +118,8 @@ description: Выпустить новую версию сайта — собр�
 После деплоя (curl по прод-домену):
 
 5. `curl -sI https://<domain>/` → 200, нет `X-Robots-Tag: noindex`
-6. `curl -s https://<domain>/robots.txt` → ожидаемая политика, абсолютный `Sitemap:`,
-   **нет** `Disallow: /`
+6. `curl -s https://<domain>/robots.txt` → группа `*` — `Allow: /`, **не** `Disallow: /`; именная
+   группа ИИ-ботов — по политике сайта (`AI_BOTS_POLICY`), абсолютный `Sitemap:`
 7. `curl -s https://<domain>/sitemap.xml | grep -c '<loc>'` → ожидаемое число, все URL на
    прод-домене и по https
 8. `curl -sI https://<domain>/net-takogo` → **404**, не 200 и не редирект на главную

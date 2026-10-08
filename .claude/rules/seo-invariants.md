@@ -43,7 +43,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
 - Публичные идентификаторы сайта — поля `shared/config/site.ts`, не env: prerendered печатается
   на сборке, а образ собирается без env. `SITE_VERIFICATION.google`/`.yandex` — токены Search
   Console и Вебмастера (пусто — тега нет; альтернатива — HTML-файл в `public/` или DNS TXT),
-  `METRIKA_ID` — счётчик (пусто — ни одного стороннего скрипта)
+  `METRIKA_ID` — счётчик (пусто — ни одного стороннего скрипта), `AI_BOTS_POLICY` — политика
+  ИИ-ботов (§ robots.txt)
 - `<meta name="keywords">` — никогда; RSS autodiscovery `<link rel="alternate"
   type="application/rss+xml">` — на каждой странице, фид своей локали
 
@@ -93,10 +94,17 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   `Sitemap:`; отдельные `noindex`-страницы (`/now`, 404) в нём не закрываются — иначе мета не будет
   прочитана. `ROBOTS_POLICY=noindex` — контур staging целиком: `User-agent: *` / `Disallow: /` без
   Sitemap; реальный замок staging — Traefik `basicAuth`, `Disallow: /` и `X-Robots-Tag` — второй и
-  третий контуры. `AI_TRAINING=deny` — одна группа обучающих ботов (`AI_TRAINING_BOTS`),
-  поисково-ответные не трогаются; `Host`/`Crawl-delay` не выводятся; `Clean-param` — строкой в
-  `buildRobotsTxt`, когда появятся проектные трекинг-параметры (`utm_*`, `ysclid`, `yrclid` Яндекс
-  срезает сам)
+  третий контуры. `Host`/`Crawl-delay` не выводятся; `Clean-param` — строкой в `buildRobotsTxt`,
+  когда появятся проектные трекинг-параметры (`utm_*`, `ysclid`, `yrclid` Яндекс срезает сам)
+- Политика ИИ-ботов — поле сборки `AI_BOTS_POLICY` (`shared/config/site.ts`), не env: решение
+  ревьюится в git, одно на все среды и доходит до `<head>` prerendered-страниц. `allow-all`
+  (умолчание) — именных групп нет; `allow-search-deny-training` и `deny-all` — одна именная группа
+  с `Disallow: /` между `*` и `Sitemap:`; у `deny-all` — ещё мета `bingbot noarchive` и `applebot
+  nosnippet` в `<head>` индексируемых страниц. Группа `*` открыта при любой политике: классический
+  поиск не закрывает ни одна. Токены группы и мета — из `policies` реестра
+  `shared/seo/crawlers.yaml`: это копия файла базы strategy
+  (`kb/site/07-seo-geo-performance-analytics/crawlers.yaml`) байт в байт — норма у владельца,
+  правится заменой файла, руками список ботов не пишется
 - `sitemap.xml` — свой маршрут (у `@astrojs/sitemap` `lastmod` не из `updatedDate`, отбор страниц —
   `filter`, карта — шардами `sitemap-index.xml`): ровно
   индексируемые prerendered-страницы сборки (главные, статические страницы из списка
@@ -134,9 +142,13 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   prerendered-маршрута `src/pages`, hreflang только у страниц сверенных пар. Сам скрипт под
   гейтом: фикстура `.gate-fixtures/seo` обязана давать ровно нарушения из `expected.json`
   (`pnpm check:gate`)
-- unit `shared/seo/*.test.ts` (urls, robots, sitemap, rss, json-ld со схемой) и Container API
-  (`seo-head`, `json-ld.astro`, `widgets/breadcrumbs`); маршруты `robots.txt` (прод, staging,
-  `AI_TRAINING=deny`), `sitemap.xml`, фиды и ключ — `src/pages/_tests/endpoints.server.test.ts`
+- unit `shared/seo/*.test.ts` (urls, robots, ai-bots, sitemap, rss, json-ld со схемой) и Container
+  API (`seo-head`, `json-ld.astro`, `widgets/breadcrumbs`); маршруты `robots.txt` (прод, staging,
+  политика ИИ-ботов), `sitemap.xml`, фиды и ключ — `src/pages/_tests/endpoints.server.test.ts`.
+  `robots.test.ts` — матрица доступа «политика × бот реестра» по RFC 9309: доступ каждого бота —
+  как в политике базы, а ожидания независимы от печатаемой группы — классический поиск открыт
+  всегда, обучающие боты (`bots[].purpose`) закрыты во втором и третьем режимах, поисковые
+  ИИ-боты — в третьем
 - HTTP-набор `e2e/http/` (`pnpm test:http`, шаг `pnpm check`) на prod-сервере из сборки: каждая
   страница — тот же HTML под `User-Agent: Googlebot`, canonical на runtime origin, в `<body>`
   нет своего origin, нет `X-Robots-Tag` в прод-профиле, а в staging он на каждом ответе (страницы

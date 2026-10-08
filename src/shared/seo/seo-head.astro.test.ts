@@ -1,9 +1,20 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import type * as SharedConfig from '@/shared/config'
 import type { SITE_VERIFICATION } from '@/shared/config'
 import { parseHtml } from '@/shared/lib/testing'
 import SeoHead from './seo-head.astro'
 
 const ORIGIN = 'https://demo.example'
+
+// Политика ИИ-ботов — поле сборки: значение проекта подставляет /de-template, тест — здесь.
+const { site } = vi.hoisted(() => ({ site: { aiBots: 'allow-all' } }))
+
+vi.mock('@/shared/config', async (importOriginal) => ({
+  ...(await importOriginal<typeof SharedConfig>()),
+  get AI_BOTS_POLICY() {
+    return site.aiBots
+  },
+}))
 
 async function render(path: string, props: Record<string, unknown>) {
   vi.stubEnv('SITE_URL', ORIGIN)
@@ -35,7 +46,10 @@ const hreflang = (doc: Doc) =>
 const base = { title: 'Запись', description: 'Описание записи для сниппета.', locale: 'ru' }
 
 describe('SeoHead', () => {
-  afterEach(() => vi.unstubAllEnvs())
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    site.aiBots = 'allow-all'
+  })
 
   // /de-template ставит токены в site.ts: теги с ними проходят typecheck, только если поля — string.
   it('токены подтверждения домена — строки, а не литералы умолчания', () => {
@@ -110,6 +124,28 @@ describe('SeoHead', () => {
     })
     expect(content(doc, 'property="article:published_time"')).toBe('2026-09-08')
     expect(content(doc, 'property="article:modified_time"')).toBe('2026-09-10')
+  })
+
+  // Мета политики — про индексируемую страницу: служебную целиком закрывает noindex.
+  it('политика ИИ-ботов deny-all: мета bingbot и applebot — только на индексируемой странице', async () => {
+    const aiMeta = (doc: Doc) =>
+      [...doc.querySelectorAll('meta[name="bingbot"], meta[name="applebot"]')].map((meta) => [
+        meta.getAttribute('name'),
+        meta.getAttribute('content'),
+      ])
+    site.aiBots = 'deny-all'
+    const doc = await render('/blog/x', base)
+    expect(aiMeta(doc)).toEqual([
+      ['bingbot', 'noarchive'],
+      ['applebot', 'nosnippet'],
+    ])
+    expect(doc.querySelector('meta[name="robots"]')).toBeNull()
+    expect(aiMeta(await render('/xx', { ...base, noindex: true }))).toEqual([])
+
+    for (const policy of ['allow-all', 'allow-search-deny-training']) {
+      site.aiBots = policy
+      expect(aiMeta(await render('/blog/x', base)), policy).toEqual([])
+    }
   })
 
   it('служебная страница: только noindex — без canonical, OG и hreflang', async () => {

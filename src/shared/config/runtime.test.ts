@@ -7,7 +7,6 @@ describe('runtime config', () => {
     RELEASE: 'unknown',
     LOG_LEVEL: 'info',
     INDEXNOW_KEY: '',
-    AI_TRAINING: 'allow',
     SENTRY_DSN: '',
     SENTRY_ENVIRONMENT: 'production',
     FORM_DELIVERY: 'smtp',
@@ -33,7 +32,6 @@ describe('runtime config', () => {
     expect(getRuntimeConfig({ ROBOTS_POLICY: '' }).ROBOTS_POLICY).toBe('index')
     expect(getRuntimeConfig({ RELEASE: '' }).RELEASE).toBe('unknown')
     expect(getRuntimeConfig({ LOG_LEVEL: '' }).LOG_LEVEL).toBe('info')
-    expect(getRuntimeConfig({ AI_TRAINING: '' }).AI_TRAINING).toBe('allow')
     expect(getRuntimeConfig({ FORM_DELIVERY: '' }).FORM_DELIVERY).toBe('smtp')
     expect(getRuntimeConfig({ CAPTCHA_FAIL_MODE: '' }).CAPTCHA_FAIL_MODE).toBe('open')
   })
@@ -107,11 +105,8 @@ describe('runtime config', () => {
     }
   })
 
-  it('принимает ключ IndexNow и политику AI-краулеров как есть', () => {
-    expect(getRuntimeConfig({ INDEXNOW_KEY: 'a1b2c3d4-e5f6', AI_TRAINING: 'deny' })).toMatchObject({
-      INDEXNOW_KEY: 'a1b2c3d4-e5f6',
-      AI_TRAINING: 'deny',
-    })
+  it('принимает ключ IndexNow как есть', () => {
+    expect(getRuntimeConfig({ INDEXNOW_KEY: 'a1b2c3d4-e5f6' }).INDEXNOW_KEY).toBe('a1b2c3d4-e5f6')
   })
 
   it('таймауты обёртки сервера — целые миллисекунды больше нуля', () => {
@@ -129,7 +124,6 @@ describe('runtime config', () => {
     expect(() => getRuntimeConfig({ SITE_URL: 'demo.example' })).toThrow()
     expect(() => getRuntimeConfig({ ROBOTS_POLICY: 'maybe' })).toThrow()
     expect(() => getRuntimeConfig({ LOG_LEVEL: 'trace' })).toThrow()
-    expect(() => getRuntimeConfig({ AI_TRAINING: 'block' })).toThrow()
     for (const INDEXNOW_KEY of ['short', 'с-кириллицей', 'has space', 'x'.repeat(129)]) {
       expect(() => getRuntimeConfig({ INDEXNOW_KEY }), INDEXNOW_KEY).toThrow()
     }

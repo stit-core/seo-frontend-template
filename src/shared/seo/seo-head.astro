@@ -1,6 +1,7 @@
 ---
-import { SITE_NAME, SITE_VERIFICATION } from '@/shared/config'
+import { AI_BOTS_POLICY, SITE_NAME, SITE_VERIFICATION } from '@/shared/config'
 import { isoDate, type Locale, localePath, t } from '@/shared/i18n'
+import { aiBotsMeta } from './ai-bots'
 import { defaultOgImage, OG_LOCALE, type OgImage, pageTitle } from './meta'
 import { absoluteUrl, alternates } from './urls'
 
@@ -71,6 +72,9 @@ const feedTitle = `${t(locale, 'blog.title')} — ${SITE_NAME}`
     {SITE_VERIFICATION.yandex !== '' && (
       <meta name="yandex-verification" content={SITE_VERIFICATION.yandex} />
     )}
+    {aiBotsMeta(AI_BOTS_POLICY).map((meta) => (
+      <meta name={meta.name} content={meta.content} />
+    ))}
   </Fragment>
 )}
 <link

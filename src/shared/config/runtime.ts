@@ -39,7 +39,6 @@ const RuntimeConfigSchema = z.object({
     .string()
     .regex(INDEXNOW_KEY_RE, '8-128 characters a-z, A-Z, 0-9 and hyphen')
     .default(''),
-  AI_TRAINING: z.enum(['allow', 'deny']).default('allow'),
   SENTRY_DSN: z.string().default(''),
   SENTRY_ENVIRONMENT: z.string().min(1).default('production'),
   // Доставка заявки: один канал. Адрес и учётные данные канала проверяются при отправке —

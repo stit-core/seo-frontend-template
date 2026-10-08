@@ -104,10 +104,12 @@ done
 
 scripts=$(curl -s -A Googlebot "http://127.0.0.1:$PORT/" | grep -c '<script' || true)
 echo "  тегов <script> на главной (Googlebot): $scripts"
+# Группа `*` открыта при любой политике ИИ-ботов: её запрет — отдельная именная группа ниже.
 robots=$(curl -s "http://127.0.0.1:$PORT/robots.txt")
 case "$robots" in
-*"Disallow: /"*) fail "robots.txt в прод-профиле закрывает сайт" ;;
-*) ok "robots.txt открыт, Sitemap: $(printf '%s' "$robots" | grep -i '^Sitemap:' | head -1)" ;;
+"User-agent: *
+Allow: /"*) ok "robots.txt открыт, Sitemap: $(printf '%s' "$robots" | grep -i '^Sitemap:' | head -1)" ;;
+*) fail "robots.txt в прод-профиле закрывает сайт" ;;
 esac
 locs=$(curl -s "http://127.0.0.1:$PORT/sitemap.xml" | grep -c '<loc>' || true)
 [ "$locs" -gt 0 ] && ok "sitemap.xml: $locs URL" || fail "sitemap.xml пуст"

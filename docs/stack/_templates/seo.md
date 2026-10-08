@@ -63,7 +63,7 @@ hreflang выводится только для реально существу�
 |---|---|
 | `*` | `Allow: /` + абсолютная `Sitemap:` (`ROBOTS_POLICY=index`) |
 | весь сайт на staging | `ROBOTS_POLICY=noindex`: `Disallow: /` и `X-Robots-Tag` на каждом ответе процесса — плюс `basicAuth` и `X-Robots-Tag` на Traefik |
-| обучающие AI-краулеры | `AI_TRAINING=allow \| deny` — _решение владельца сайта_ |
+| ИИ-боты | `AI_BOTS_POLICY` (`site.ts`): `allow-all` (умолчание) \| `allow-search-deny-training` \| `deny-all` — _решение владельца сайта: показывать ли сайт в ИИ-ответах и учить ли на его текстах модели; бриф strategy — `search.ai_bots_policy`, `ask` или молчание — `allow-all`_ |
 | `Clean-param` | _проектные трекинг-параметры; `utm_*`, `ysclid`, `yrclid` Яндекс срезает сам_ |
 
 Отдельные `noindex`-страницы в `robots.txt` не закрываются: закрытый обходом `noindex`
@@ -91,11 +91,11 @@ hreflang выводится только для реально существу�
 
 ## Generates
 
-- `src/shared/config/site.ts` — идентичность, OG, verification
+- `src/shared/config/site.ts` — идентичность, OG, verification, политика ИИ-ботов
 - `src/shared/seo/*` — canonical, hreflang, OG, JSON-LD, robots, sitemap, фиды
 - `src/pages/{robots.txt,sitemap.xml,rss.xml,[key].txt}.ts` и `STATIC_ROUTES`
 - `e2e/http/seo.spec.ts` + `pnpm seo:check` — гейты head'а и карты сайта
-- `config.md` — env `SITE_URL`, `ROBOTS_POLICY`, `AI_TRAINING`, `INDEXNOW_KEY`
+- `config.md` — env `SITE_URL`, `ROBOTS_POLICY`, `INDEXNOW_KEY`
 - чек-лист `/release` и прогон `/seo-audit`
 
 ## Открытые вопросы

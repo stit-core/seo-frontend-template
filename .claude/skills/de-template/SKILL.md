@@ -86,7 +86,7 @@ git grep -lF '@stit/ssr-frontend-template' -- ':!.claude' ':!docs/research' \
 
 ### A.2 Идентичность сайта → `src/shared/config/site.ts`
 
-Источник: `seo.md § Идентичность сайта`, `§ Верификация`, `service.md`.
+Источник: `seo.md § Идентичность сайта`, `§ robots-политика`, `§ Верификация`, `service.md`.
 
 | поле | чем заменить |
 |---|---|
@@ -97,6 +97,7 @@ git grep -lF '@stit/ssr-frontend-template' -- ':!.claude' ':!docs/research' \
 | `PRIVACY_POLICY_VERSION` | дата редакции своей политики, `YYYY-MM-DD` |
 | `METRIKA_ID` | id счётчика из `analytics.md`; нет счётчика — пустая строка |
 | `SITE_VERIFICATION` | токены Search Console и Вебмастера; нет — пустые строки |
+| `AI_BOTS_POLICY` | политика ИИ-ботов из `seo.md § robots-политика`; решения нет — остаётся `allow-all` |
 | `OG_DEFAULT_IMAGE.alt` | описание своей социальной карточки на обеих локалях |
 
 ### A.3 Политика ПДн → `src/pages/legal/privacy.astro`

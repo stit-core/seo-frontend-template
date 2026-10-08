@@ -147,7 +147,7 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 и записи; `BreadcrumbList` на вложенных (из того же массива, что видимые крошки
 `widgets/breadcrumbs`), `BlogPosting` у записи — с автором `Person`, когда у записи есть автор
 из реестра и подпись; в `<body>` ни одного `<script>`. `robots.txt`
-(`ROBOTS_POLICY`, `AI_TRAINING`), `sitemap.xml` (ровно prerendered-страницы, `lastmod` из
+(`ROBOTS_POLICY`; политика ИИ-ботов — поле сборки `AI_BOTS_POLICY`), `sitemap.xml` (ровно prerendered-страницы, `lastmod` из
 `updatedDate`), `rss.xml`/`en/rss.xml` и `/<INDEXNOW_KEY>.txt` — on-demand на runtime
 `SITE_URL`. Гейты: `pnpm seo:check` и HTTP-набор (`e2e/http/seo.spec.ts`) в `pnpm check`; правило —
 `.claude/rules/seo-invariants.md`.

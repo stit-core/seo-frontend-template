@@ -33,6 +33,14 @@ export const SITE_VERIFICATION: { readonly google: string; readonly yandex: stri
   yandex: '',
 }
 
+// Политика ИИ-ботов — решение владельца сайта (бриф strategy, `search.ai_bots_policy`): пускать
+// всех; пускать поиск и ИИ-ответы, но не обучение; закрыть ИИ всё, кроме классического поиска.
+// Поле сборки, а не env: решение ревьюится в git, одно на все среды и доходит до <head>
+// prerendered-страниц. Кого закрывает robots.txt и какие мета ставит <head> — реестр ботов
+// shared/seo/crawlers.yaml.
+export type AiBotsPolicy = 'allow-all' | 'allow-search-deny-training' | 'deny-all'
+export const AI_BOTS_POLICY: AiBotsPolicy = 'allow-all'
+
 // Социальная карточка по умолчанию, 1200×630 (public/og-default.png); у записи с обложкой —
 // её обложка.
 export const OG_DEFAULT_IMAGE = {

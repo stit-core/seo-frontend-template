@@ -18,11 +18,12 @@
 | JSON-LD в `<head>`: `Organization`/`WebSite`, `LocalBusiness`, `BreadcrumbList`, `BlogPosting`; организация одна — её узлы и ссылки на неё с `@id` `<origin>/#org`; автор записи — `Person` из реестра авторов с видимой подписью | `shared/seo/json-ld.ts` + проп `jsonLd` layout'а, `entities/author` |
 | видимые хлебные крошки из того же массива, что разметка | `widgets/breadcrumbs` |
 | `robots.txt`, `sitemap.xml`, `rss.xml`, файл ключа IndexNow на runtime origin | `src/pages/*.ts` + `shared/seo` |
+| политика ИИ-ботов: три режима, именная группа `robots.txt` и мета `deny-all` — из реестра ботов базы strategy | `AI_BOTS_POLICY` (`shared/config/site.ts`) + `shared/seo/{ai-bots.ts,crawlers.yaml}` |
 | честные статусы: 404, 410, 301/308 одним хопом, 500 | `app/middleware` + `content/redirects.yaml` |
 | абсолютные URL на реальном домене в любом контуре | штамповка `SITE_URL` при старте контейнера |
 
 Решение проекта (шаблон не угадывает): бренд и описание, канонический хост, дефолтная
-OG-картинка, набор локалей, политика AI-краулеров, токены верификации, ключ IndexNow.
+OG-картинка, набор локалей, политика ИИ-ботов, токены верификации, ключ IndexNow.
 Все они — в `docs/stack/seo.md` и подставляются `/de-template`.
 
 ## Чек-лист новой страницы
@@ -81,7 +82,7 @@ hreflang, `og:image`, JSON-LD, крошки, `h1`, размеры и LCP кар�
 
 | уровень | что ловит |
 |---|---|
-| unit `shared/seo/*.test.ts` | `absoluteUrl`, `alternates`, `buildRobotsTxt`, `buildSitemap`, `buildFeed`, фабрики JSON-LD (их выход проходит Zod-схему) |
+| unit `shared/seo/*.test.ts` | `absoluteUrl`, `alternates`, `buildRobotsTxt` и матрица доступа «политика ИИ-ботов × бот реестра» по RFC 9309, `buildSitemap`, `buildFeed`, фабрики JSON-LD (их выход проходит Zod-схему) |
 | Container API | `seo-head.astro`, `json-ld.astro` — разметка `<head>`; `widgets/breadcrumbs` — разметка и axe |
 | `pnpm seo:check` (в `pnpm check`) | каждая страница `dist/client`, и страница ошибки `500.html`: один `<title>` и `<h1>`, description, self-canonical, `lang`, OG с существующей картинкой, сниппет уникальный, в бюджетах и не общий, полные пары hreflang на своём origin, разметка = видимое, организация одна (`@id`, имя), автор-человек подписан на странице; `noindex` в любой форме, острова (и обработчики `on*=`), чужие ресурсы и типы JSON-LD — по списку `scripts/lib/site-policy.mjs`; картинки с размерами, LCP не lazy; страница у каждой опубликованной записи и маршрута `src/pages`, черновиков нет, hreflang только у сверенных пар |
 | `pnpm check:gate` | сам `seo:check`, `check:links` и `check:content` на негативных мини-проектах `.gate-fixtures/{seo,links,content}` — ровно ожидаемые нарушения |

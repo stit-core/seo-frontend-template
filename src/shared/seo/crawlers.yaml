@@ -1,0 +1,1109 @@
+# crawlers.yaml — поисковые и ИИ-боты: назначение, управление через robots.txt и meta, проверка подлинности.
+# Владелец: site (07-seo-geo-performance-analytics). Только первоисточники платформ; у каждой записи — дата проверки.
+# Читают: geo_probe.py (оценка robots.txt по ботам), head-kit.yaml, плейбуки (10-playbooks-contracts) и чек-лист
+# (09-ai-generation-evaluation).
+# Бриф: поле search.ai_bots_policy (../10-playbooks-contracts/schemas/site-brief.schema.json) → раздел policies ниже.
+
+version: 1.0
+checked: 2026-09-24
+status: released            # перепроверка — раз в квартал
+owner: site
+network_note: >-
+  Страницы документации зарубежных платформ сняты через выход в ЕС (VPN, Литва), Яндекса — с российского адреса,
+  2026-09-24; записи с более поздней датой checked сняты в день проверки. Списки ботов меняются без анонсов:
+  перепроверять раз в квартал и перед запуском сайта (doc_url + дата checked).
+
+vocab:
+  purpose:
+    training: сбор контента для обучения моделей (или токен, которым владелец это разрешает или запрещает)
+    search: построение поискового индекса, из которого ИИ-ответы берут и цитируют страницы
+    user_fetch: разовая загрузка страницы по запросу человека (чат, агент, «прочитай ссылку»)
+    ads: реклама — проверка посадочных страниц объявлений и улучшение рекламных продуктов платформы
+    other: превью ссылок, рендеринг, служебные и исследовательские обходы
+  kind:
+    crawler: обходит сайт сам
+    fetcher: загружает URL по действию пользователя
+    control-token: токен только для robots.txt; своих запросов не делает, управляет использованием контента другого бота
+  respects_robots:
+    "yes": платформа пишет, что соблюдает robots.txt
+    partial: соблюдает с оговорками (игнорирует группу *, «may not apply», «generally ignores»)
+    "no": платформа пишет, что robots.txt не использует
+    not-stated: в документации не сказано
+  star_group_applies: "применяются ли правила группы «User-agent: *», если своей группы у бота нет (RFC 9309 §2.2.1 — да)"
+
+bots:
+
+  # ---------- Яндекс (приоритет 1) ----------
+  - id: yandex-yandexbot
+    owner: Яндекс
+    user_agent_token: YandexBot
+    ua_substring: "YandexBot/3.0"
+    purpose: search
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_fallback: [Yandex]
+    robots_control: "User-agent: YandexBot | Yandex | *  (Яндекс ищет подстроку «Yandex»; группа Yandex отменяет *)"
+    on_disallow: страницы не индексируются основным роботом → нет в поиске Яндекса и в ответах Алисы (Алиса AI строит ответ из индекса)
+    feeds: [yandex-alice]
+    priority: 1
+    ip_list_url: null
+    verify: rdns
+    rdns_suffix: [yandex.ru, yandex.net, yandex.com]
+    doc_url: https://yandex.ru/support/webmaster/ru/robot-workings/check-yandex-robots
+    checked: 2026-09-24
+    notes: >-
+      AS13238, AS208722, AS212066; «IP-адреса, которые часто меняются, поэтому их список не разглашается» — проверять
+      обратным и прямым DNS или инструментом Вебмастера «Проверка IP-адреса». JS рендерится по бета-опции Вебмастера
+      («Рендеринг страниц JavaScript β», по умолчанию «на усмотрение робота»); ресурсы для рендера грузит
+      YandexRenderResourcesBot.
+
+  - id: yandex-additional
+    owner: Яндекс
+    user_agent_token: YandexAdditional
+    ua_substring: "YandexAdditional"
+    purpose: search
+    kind: control-token
+    respects_robots: "yes"
+    star_group_applies: false
+    robots_fallback: []
+    robots_control: "User-agent: YandexAdditional\nDisallow: /   (на странице также указан токен YandexAdditionalBot)"
+    on_disallow: >-
+      контент страницы не показывается в быстрых ответах с YandexGPT и в ответах «Поиска с Алисой»; страница остаётся в
+      обычном поиске Яндекса
+    feeds: [yandex-alice]
+    priority: 1
+    ip_list_url: null
+    verify: none
+    doc_url: https://yandex.ru/support/webmaster/ru/robot-workings/check-yandex-robots
+    checked: 2026-09-24
+    notes: >-
+      Дословно: «Учитывается при обработке robots.txt для ограничения отображения контента страницы в быстрых ответах с
+      YandexGPT и в ответах Поиска с Алисой. Применяется к страницам, проиндексированным основным индексирующим роботом
+      для поиска. Не совершает запросов для индексирования». Столбец «Учитывает общие правила robots.txt» — «Нет»: запрет для
+      * или Yandex Алису не выключает, нужен поимённый токен. Отдельного токена «не обучать модели» Яндекс не публикует.
+
+  - id: yandex-direct-fetcher
+    owner: Яндекс
+    user_agent_token: YaDirectFetcher
+    ua_substring: "YaDirectFetcher/1.0"
+    purpose: ads
+    kind: crawler
+    respects_robots: "no"
+    star_group_applies: false
+    robots_control: "не управляется: «Робот не использует файл robots.txt»"
+    on_disallow: нет эффекта
+    feeds: []
+    priority: 1
+    ip_list_url: null
+    verify: rdns
+    rdns_suffix: [yandex.ru, yandex.net, yandex.com]
+    doc_url: https://yandex.ru/support/webmaster/ru/robot-workings/check-yandex-robots
+    checked: 2026-09-24
+    notes: >-
+      Скачивает целевые страницы объявлений Директа «для проверки их доступности и уточнения тематики». Посадочная для
+      Директа должна отдавать 200 и смысловой HTML без входа и без блокировки по UA/IP. Посадочные Директа проверяет и
+      YandexMetrika/2.0 (… yabs01) — тоже без robots.txt.
+
+  - id: yandex-render-resources
+    owner: Яндекс
+    user_agent_token: YandexRenderResourcesBot
+    ua_substring: "YandexRenderResourcesBot/1.0"
+    purpose: other
+    kind: crawler
+    respects_robots: partial
+    star_group_applies: false
+    robots_control: "игнорирует robots.txt для ресурсов, если HTML-страница доступна роботу; не ходит за ресурсами запрещённых страниц"
+    on_disallow: —
+    feeds: [yandex-alice]
+    priority: 2
+    ip_list_url: null
+    verify: rdns
+    rdns_suffix: [yandex.ru, yandex.net, yandex.com]
+    doc_url: https://yandex.ru/support/webmaster/ru/robot-workings/check-yandex-robots
+    checked: 2026-09-24
+    notes: Загружает CSS и JS для рендеринга страниц с JavaScript (бета-рендеринг Вебмастера).
+
+  - id: yandex-spravbot
+    owner: Яндекс
+    user_agent_token: YandexSpravBot
+    ua_substring: "YandexSpravBot/1.0"
+    purpose: other
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: YandexSpravBot"
+    on_disallow: Яндекс Бизнес не сможет сверить сайт организации
+    feeds: [yandex-alice]
+    priority: 2
+    ip_list_url: null
+    verify: rdns
+    rdns_suffix: [yandex.ru, yandex.net, yandex.com]
+    doc_url: https://yandex.ru/support/webmaster/ru/robot-workings/check-yandex-robots
+    checked: 2026-09-24
+    notes: Робот Яндекс Бизнеса (карточка организации — сущность для карт и ответов).
+
+  # ---------- Google (приоритет 1) ----------
+  - id: google-googlebot
+    owner: Google
+    user_agent_token: Googlebot
+    ua_substring: "Googlebot/2.1"
+    purpose: search
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: Googlebot (Smartphone и Desktop — один токен)"
+    on_disallow: >-
+      страница не обходится → нет в Поиске и, как следствие, в AI Overviews и AI Mode (условие — «indexed and eligible to
+      be shown in Google Search with a snippet»); URL без обхода может показаться в выдаче без сниппета
+    other_controls:
+      - "Search Console → Настройки → Search generative AI: Include (по умолчанию) | Exclude | Inherit — исключает сайт из AI Overviews, AI Mode и генеративных функций Discover, не влияет на обучение (для всех сайтов с 2026-08-31)"
+      - "meta robots nosnippet, max-snippet, data-nosnippet, noindex — ограничивают и ИИ-функции, и обычный сниппет"
+    feeds: [google-ai]
+    priority: 1
+    ip_list_url: https://developers.google.com/static/crawling/ipranges/common-crawlers.json
+    verify: ip-list+rdns
+    rdns_suffix: [googlebot.com, google.com, googleusercontent.com]
+    doc_url: https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers
+    checked: 2026-09-24
+    notes: >-
+      Googlebot читает первые 2 МБ несжатого HTML (и каждого ресурса отдельно), PDF — 64 МБ (страница Googlebot, обн.
+      2026-02-03); «the majority of Googlebot crawl requests will be made using the mobile crawler». JS рендерит в
+      отдельной очереди (headless Chromium). crawl-delay не поддерживает. Документация краулеров переехала в
+      developers.google.com/crawling/ (301 со старых адресов).
+
+  - id: google-extended
+    owner: Google
+    user_agent_token: Google-Extended
+    ua_substring: null
+    purpose: training
+    kind: control-token
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: Google-Extended\nDisallow: /"
+    on_disallow: >-
+      контент не используется для обучения будущих моделей Gemini и для заземления (grounding) в приложениях Gemini и в
+      Grounding with Google Search на Vertex AI; «does not impact a site's inclusion in Google Search nor is it used as a
+      ranking signal»
+    feeds: []
+    priority: 1
+    ip_list_url: null
+    verify: none
+    doc_url: https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers#google-extended
+    checked: 2026-09-24
+    notes: >-
+      Своего UA нет («used in a control capacity»). Запрет обучения у Google одновременно выключает заземление в
+      приложениях Gemini — компромисс для политики allow-search-deny-training. На AI Overviews и AI Mode не влияет
+      (для них — Search generative AI control в Search Console).
+
+  - id: google-adsbot
+    owner: Google
+    user_agent_token: AdsBot-Google
+    ua_substring: "AdsBot-Google"
+    purpose: ads
+    kind: crawler
+    respects_robots: partial
+    star_group_applies: false
+    robots_control: "User-agent: AdsBot-Google и AdsBot-Google-Mobile — только поимённо; «The global user agent (*) is ignored»"
+    on_disallow: Google Ads не сможет проверить качество посадочной (landing page experience)
+    feeds: []
+    priority: 1
+    ip_list_url: https://developers.google.com/static/crawling/ipranges/special-crawlers.json
+    verify: ip-list+rdns
+    rdns_suffix: [google.com]
+    doc_url: https://developers.google.com/crawling/docs/crawlers-fetchers/google-special-case-crawlers
+    checked: 2026-09-24
+    notes: >-
+      Посадочная под контекстную рекламу не должна запрещать AdsBot поимённо. Disallow для * его не касается. Мобильный
+      вариант — токен AdsBot-Google-Mobile.
+
+  - id: google-agent
+    owner: Google
+    user_agent_token: Google-Agent
+    ua_substring: "Google-Agent"
+    purpose: user_fetch
+    kind: fetcher
+    respects_robots: partial
+    star_group_applies: false
+    robots_control: "user-triggered fetchers «generally ignore robots.txt rules»"
+    on_disallow: нет гарантированного эффекта
+    feeds: [google-ai]
+    priority: 2
+    ip_list_url: https://developers.google.com/static/crawling/ipranges/user-triggered-agents.json
+    verify: ip-list
+    doc_url: https://developers.google.com/crawling/docs/crawlers-fetchers/google-user-triggered-fetchers
+    checked: 2026-10-06
+    notes: >-
+      «Used by agents hosted on Google infrastructure to navigate the web and perform actions upon user request».
+      Агенты читают скриншоты, DOM и дерево доступности (ai-optimization-guide 2026-07-10) — формы и CTA должны работать
+      семантически. Часть запросов подписана Web Bot Auth (emerging web-bot-auth).
+
+  - id: google-geminianotebook
+    owner: Google
+    user_agent_token: Google-GeminiNotebook
+    ua_substring: "Google-GeminiNotebook"
+    purpose: user_fetch
+    kind: fetcher
+    respects_robots: partial
+    star_group_applies: false
+    robots_control: "user-triggered fetchers «generally ignore robots.txt rules»"
+    on_disallow: нет гарантированного эффекта
+    feeds: []
+    priority: 3
+    ip_list_url: https://developers.google.com/static/crawling/ipranges/user-triggered-fetchers-google.json
+    verify: ip-list+rdns
+    rdns_suffix: [google.com, googleusercontent.com]
+    doc_url: https://developers.google.com/crawling/docs/crawlers-fetchers/google-user-triggered-fetchers
+    checked: 2026-10-06
+    notes: >-
+      «Requests individual URLs that Gemini Notebook users have provided as sources for their projects»: страница —
+      источник заметок пользователя, а не ИИ-ответов поиска. Токен в UA мобильной и десктопной версий —
+      «compatible; Google-GeminiNotebook». IP — в файлах user-triggered-fetchers-google.json (rDNS google-proxy-…google.com)
+      и user-triggered-fetchers.json (rDNS …gae.googleusercontent.com): какой из них у этого fetcher'а, Google не уточняет.
+      В политиках robots.txt не перечисляется: правила robots.txt он, как правило, не исполняет (policies.deny-all.tradeoffs).
+
+  - id: google-googleother
+    owner: Google
+    user_agent_token: GoogleOther
+    ua_substring: "GoogleOther"
+    purpose: other
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: GoogleOther"
+    on_disallow: «don't affect any specific product»
+    feeds: []
+    priority: 3
+    ip_list_url: https://developers.google.com/static/crawling/ipranges/common-crawlers.json
+    verify: ip-list+rdns
+    rdns_suffix: [googlebot.com, google.com]
+    doc_url: https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers
+    checked: 2026-09-24
+    notes: Общий краулер для разовых обходов, исследований и разработки Google. Есть GoogleOther-Image и GoogleOther-Video.
+
+  - id: google-cloudvertexbot
+    owner: Google
+    user_agent_token: Google-CloudVertexBot
+    ua_substring: "Google-CloudVertexBot"
+    purpose: other
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: Google-CloudVertexBot"
+    on_disallow: не строит агентов Vertex AI по запросу владельца сайта; «no effect on Google Search»
+    feeds: []
+    priority: 3
+    ip_list_url: https://developers.google.com/static/crawling/ipranges/common-crawlers.json
+    verify: ip-list+rdns
+    rdns_suffix: [googlebot.com, google.com]
+    doc_url: https://developers.google.com/crawling/docs/crawlers-fetchers/google-common-crawlers
+    checked: 2026-09-24
+    notes: Обходит сайт только по заказу его владельца (Vertex AI Agents).
+
+  # ---------- OpenAI (приоритет 2) ----------
+  - id: openai-oai-searchbot
+    owner: OpenAI
+    user_agent_token: OAI-SearchBot
+    ua_substring: "OAI-SearchBot/"
+    purpose: search
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: OAI-SearchBot"
+    on_disallow: >-
+      «Sites that are opted out of OAI-SearchBot will not be shown in ChatGPT search answers, though can still appear as
+      navigational links»
+    feeds: [chatgpt-search]
+    priority: 2
+    ip_list_url: https://openai.com/searchbot.json
+    verify: ip-list
+    doc_url: https://developers.openai.com/api/docs/bots
+    checked: 2026-09-24
+    notes: >-
+      Изменение robots.txt доходит до поиска примерно за 24 ч. При запросе robots.txt добавляет в UA маркер «robots.txt;».
+      Если разрешены и OAI-SearchBot, и GPTBot, OpenAI может использовать один обход для обеих целей.
+
+  - id: openai-gptbot
+    owner: OpenAI
+    user_agent_token: GPTBot
+    ua_substring: "GPTBot/"
+    purpose: training
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: GPTBot"
+    on_disallow: «indicates a site's content should not be used in training generative AI foundation models»
+    feeds: []
+    priority: 2
+    ip_list_url: https://openai.com/gptbot.json
+    verify: ip-list
+    doc_url: https://developers.openai.com/api/docs/bots
+    checked: 2026-09-24
+    notes: Настройка независима от OAI-SearchBot («Each setting is independent of the others»).
+
+  - id: openai-chatgpt-user
+    owner: OpenAI
+    user_agent_token: ChatGPT-User
+    ua_substring: "ChatGPT-User/"
+    purpose: user_fetch
+    kind: fetcher
+    respects_robots: partial
+    star_group_applies: true
+    robots_control: "«Because these actions are initiated by a user, robots.txt rules may not apply»"
+    on_disallow: >-
+      не гарантирован; «ChatGPT-User is not used to determine whether content may appear in Search» — выход из поиска
+      ChatGPT делается через OAI-SearchBot
+    feeds: [chatgpt-search]
+    priority: 2
+    ip_list_url: https://openai.com/chatgpt-user.json
+    verify: ip-list
+    doc_url: https://developers.openai.com/api/docs/bots
+    checked: 2026-09-24
+    notes: Загрузки по действиям пользователя в ChatGPT и Custom GPTs (включая GPT Actions); автоматически веб не обходит.
+
+  - id: openai-oai-adsbot
+    owner: OpenAI
+    user_agent_token: OAI-AdsBot
+    ua_substring: "OAI-AdsBot/"
+    purpose: ads
+    kind: crawler
+    respects_robots: not-stated
+    star_group_applies: true
+    robots_control: "в документации не описано"
+    on_disallow: неизвестно; рекламу в ChatGPT без проверки посадочной, вероятно, не пропустят (не проверено)
+    feeds: []
+    priority: 3
+    ip_list_url: https://openai.com/adsbot.json
+    verify: ip-list
+    doc_url: https://developers.openai.com/api/docs/bots
+    checked: 2026-09-24
+    notes: >-
+      Проверяет безопасность посадочных страниц объявлений в ChatGPT и может брать с них контент для подбора показа;
+      «only visits pages submitted as ads»; данные не идут в обучение.
+
+  # ---------- Perplexity (приоритет 2) ----------
+  - id: perplexity-perplexitybot
+    owner: Perplexity
+    user_agent_token: PerplexityBot
+    ua_substring: "PerplexityBot/"
+    purpose: search
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: PerplexityBot"
+    on_disallow: сайт не индексируется для поисковых ответов Perplexity
+    feeds: [perplexity]
+    priority: 2
+    ip_list_url: https://www.perplexity.com/perplexitybot.json
+    verify: ip-list
+    doc_url: https://docs.perplexity.ai/guides/bots
+    checked: 2026-09-24
+    notes: >-
+      «Not used to crawl content for AI foundation models». IP-список отдаётся редиректом на perplexity.ai. Для WAF
+      Perplexity советует правило «UA содержит PerplexityBot И IP из списка → Allow».
+
+  - id: perplexity-perplexity-user
+    owner: Perplexity
+    user_agent_token: Perplexity-User
+    ua_substring: "Perplexity-User/"
+    purpose: user_fetch
+    kind: fetcher
+    respects_robots: partial
+    star_group_applies: true
+    robots_control: "«Since a user requested the fetch, this fetcher generally ignores robots.txt rules»"
+    on_disallow: не гарантирован; закрыть можно только на уровне WAF по IP-списку
+    feeds: [perplexity]
+    priority: 2
+    ip_list_url: https://www.perplexity.com/perplexity-user.json
+    verify: ip-list
+    doc_url: https://docs.perplexity.ai/guides/bots
+    checked: 2026-09-24
+    notes: Загружает страницу, когда пользователь спрашивает Perplexity, и может дать на неё ссылку в ответе; не для обучения.
+
+  # ---------- Anthropic (приоритет 3; в брифе — ai_answers: claude) ----------
+  - id: anthropic-claude-searchbot
+    owner: Anthropic
+    user_agent_token: Claude-SearchBot
+    ua_substring: "Claude-SearchBot"
+    purpose: search
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: Claude-SearchBot"
+    on_disallow: «prevents our system from indexing your content for search optimization, which may reduce your site's visibility and accuracy in user search results»
+    feeds: [claude]
+    priority: 3
+    ip_list_url: https://claude.com/crawling/bots.json
+    verify: ip-list
+    doc_url: https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler
+    checked: 2026-09-24
+    notes: Один IP-список на всех ботов Anthropic. UA-строк на странице нет. Поддержан Crawl-delay; CAPTCHA не обходят.
+
+  - id: anthropic-claudebot
+    owner: Anthropic
+    user_agent_token: ClaudeBot
+    ua_substring: "ClaudeBot"
+    purpose: training
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: ClaudeBot"
+    on_disallow: «signals that the site's future materials should be excluded from our AI model training datasets»
+    feeds: []
+    priority: 3
+    ip_list_url: https://claude.com/crawling/bots.json
+    verify: ip-list
+    doc_url: https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler
+    checked: 2026-09-24
+    notes: >-
+      Anthropic: запрет прописывать для каждого поддомена; блок по IP «may not work… impedes our ability to read your
+      robots.txt file».
+
+  - id: anthropic-claude-user
+    owner: Anthropic
+    user_agent_token: Claude-User
+    ua_substring: "Claude-User"
+    purpose: user_fetch
+    kind: fetcher
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: Claude-User"
+    on_disallow: «prevents our system from retrieving your content in response to a user query, which may reduce your site's visibility for user-directed web search»
+    feeds: [claude]
+    priority: 3
+    ip_list_url: https://claude.com/crawling/bots.json
+    verify: ip-list
+    doc_url: https://support.claude.com/en/articles/8896518-does-anthropic-crawl-data-from-the-web-and-how-can-site-owners-block-the-crawler
+    checked: 2026-09-24
+    notes: В отличие от ChatGPT-User и Perplexity-User, Anthropic пишет, что все три бота соблюдают robots.txt.
+
+  # ---------- Microsoft (Bing, Copilot) ----------
+  - id: microsoft-bingbot
+    owner: Microsoft
+    user_agent_token: bingbot
+    ua_substring: "bingbot/2.0"
+    purpose: search
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: bingbot"
+    on_disallow: нет в Bing и, значит, в Copilot и ИИ-сводках Bing (они строятся на индексе Bing)
+    other_controls:
+      - "meta noarchive — вне ответов Copilot и grounding API, не для обучения; в выдаче Bing остаётся"
+      - "meta nocache — в ответах Copilot только URL, title и сниппет"
+      - "nosnippet, data-nosnippet — «may limit Copilot citation quality»; noindex — вне Bing, Copilot и grounding API"
+    feeds: [chatgpt-search, other]
+    priority: 3
+    ip_list_url: https://www.bing.com/toolbox/bingbot.json
+    verify: ip-list
+    doc_url: https://www.bing.com/webmasters/help/webmaster-guidelines-30fba23a
+    checked: 2026-09-24
+    notes: >-
+      Отдельного токена «не обучать» у Microsoft нет: noarchive выключает и ответы Copilot, и обучение (блог Bing
+      2023-09). Bing Webmaster Tools — отчёт AI Performance (цитирования, grounding queries; превью с 02.2026).
+      Посадочные Bing Ads проверяет adidxbot. ChatGPT search ходит и к сторонним провайдерам, среди них Microsoft
+      (справка OpenAI 9237897) — поэтому feeds включает chatgpt-search.
+
+  # ---------- Apple ----------
+  - id: apple-applebot
+    owner: Apple
+    user_agent_token: Applebot
+    ua_substring: "Applebot/"
+    purpose: search
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_fallback: [Googlebot]
+    robots_control: "User-agent: Applebot; «If robots instructions don't mention Applebot but mention Googlebot, the Apple robot will follow Googlebot instructions»"
+    on_disallow: нет в поиске Spotlight, Siri, Safari
+    other_controls:
+      - "meta nosnippet (или <meta name=\"applebot\" content=\"nosnippet\">, X-Robots-Tag: applebot: nosnippet) — не используется как контекст для ответов ИИ в Siri и Search"
+      - "schema.org isAccessibleForFree: false — страница в поиске, но не в контексте ИИ-ответов"
+    feeds: [other]
+    priority: 3
+    ip_list_url: https://search.developer.apple.com/applebot.json
+    verify: ip-list+rdns
+    rdns_suffix: [applebot.apple.com]
+    doc_url: https://support.apple.com/en-us/119829
+    checked: 2026-09-24
+    notes: Может также идти в обучение моделей Apple — управляется токеном Applebot-Extended. crawl-delay не поддерживает; рендерит JS.
+
+  - id: apple-applebot-extended
+    owner: Apple
+    user_agent_token: Applebot-Extended
+    ua_substring: null
+    purpose: training
+    kind: control-token
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: Applebot-Extended\nDisallow: /"
+    on_disallow: контент не используется для обучения базовых моделей Apple; в поиске остаётся, на ранжирование не влияет
+    feeds: []
+    priority: 3
+    ip_list_url: null
+    verify: none
+    doc_url: https://support.apple.com/en-us/119829
+    checked: 2026-09-24
+    notes: «Applebot-Extended does not crawl webpages… only used to determine how to use the data crawled by the Applebot user agent».
+
+  # ---------- Meta ----------
+  - id: meta-externalagent
+    owner: Meta
+    user_agent_token: meta-externalagent
+    ua_substring: "meta-externalagent/"
+    purpose: training
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: meta-externalagent"
+    on_disallow: не используется для «training foundation AI models or improving products by indexing content directly»
+    feeds: []
+    priority: 3
+    ip_list_url: null
+    verify: none
+    doc_url: https://developers.facebook.com/docs/sharing/webmasters/web-crawlers
+    checked: 2026-09-24
+    notes: Документация Meta обновлена 2026-05-21; изменения robots.txt — до 24 ч.
+
+  - id: meta-webindexer
+    owner: Meta
+    user_agent_token: meta-webindexer
+    ua_substring: "meta-webindexer/"
+    purpose: search
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: meta-webindexer"
+    on_disallow: Meta AI не сможет цитировать сайт и ссылаться на него («helps us cite and link to your content in Meta AI's responses»)
+    feeds: [other]
+    priority: 3
+    ip_list_url: null
+    verify: none
+    doc_url: https://developers.facebook.com/docs/sharing/webmasters/web-crawlers
+    checked: 2026-09-24
+    notes: Индекс для поиска Meta AI.
+
+  - id: meta-externalfetcher
+    owner: Meta
+    user_agent_token: meta-externalfetcher
+    ua_substring: "meta-externalfetcher/"
+    purpose: user_fetch
+    kind: fetcher
+    respects_robots: partial
+    star_group_applies: true
+    robots_control: "«may bypass robots.txt rules» (запрос пользователя, агентные функции)"
+    on_disallow: не гарантирован
+    feeds: [other]
+    priority: 3
+    ip_list_url: null
+    verify: none
+    doc_url: https://developers.facebook.com/docs/sharing/webmasters/web-crawlers
+    checked: 2026-09-24
+    notes: Загружает ссылки по запросу пользователя, в том числе для ИИ-агентов, выполняющих задачи на сайтах.
+
+  - id: meta-externalads
+    owner: Meta
+    user_agent_token: meta-externalads
+    ua_substring: "meta-externalads/"
+    purpose: ads
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: meta-externalads"
+    on_disallow: контент сайта не используется для улучшения рекламы и других бизнес-продуктов и сервисов Meta
+    feeds: []
+    priority: 3
+    ip_list_url: null
+    verify: none
+    doc_url: https://developers.facebook.com/docs/sharing/webmasters/web-crawlers
+    checked: 2026-10-06
+    notes: >-
+      «Crawls the web for use cases such as improving advertising and other business-related products and services»;
+      UA — «meta-externalads/1.1». Запрет — поимённой группой: «add a disallow for the relevant crawler to robots.txt». В
+      политики ИИ-ботов не входит: по документации это не обучение моделей и не ИИ-ответы; закрывать — решением
+      заказчика, отдельно от search.ai_bots_policy. Посадочные объявлений Meta этот бот не проверяет (rt-ads его не
+      касается).
+
+  - id: meta-facebookexternalhit
+    owner: Meta
+    user_agent_token: facebookexternalhit
+    ua_substring: "facebookexternalhit/1.1"
+    purpose: other
+    kind: fetcher
+    respects_robots: partial
+    star_group_applies: true
+    robots_control: "User-agent: facebookexternalhit (может обходить robots.txt при проверках безопасности)"
+    on_disallow: нет превью ссылки (title, description, картинка) при шеринге в Facebook, Instagram, Messenger
+    feeds: []
+    priority: 2
+    ip_list_url: null
+    verify: none
+    doc_url: https://developers.facebook.com/docs/sharing/webmasters/web-crawlers
+    checked: 2026-09-24
+    notes: >-
+      Требования: Open Graph — в первых 1 МБ документа; gzip или deflate; ответ за несколько секунд; корректная работа с
+      заголовком Range (симуляция — curl с Range: bytes=0-524288). Техническая опора правила «OG в начале head».
+
+  # ---------- Amazon ----------
+  - id: amazon-amazonbot
+    owner: Amazon
+    user_agent_token: Amazonbot
+    ua_substring: "Amazonbot/"
+    purpose: training
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: Amazonbot"
+    on_disallow: не используется для улучшения продуктов Amazon и обучения моделей Amazon
+    feeds: []
+    priority: 3
+    ip_list_url: https://developer.amazon.com/amazonbot/ip-addresses/
+    verify: ip-list
+    doc_url: https://developer.amazon.com/amazonbot
+    checked: 2026-09-24
+    notes: >-
+      Кэширует robots.txt до 30 дней; недоступный файл = нет ограничений; соблюдает rel=nofollow и meta noarchive («do not
+      use the page for model training»), noindex, none; crawl-delay нет.
+
+  - id: amazon-amzn-searchbot
+    owner: Amazon
+    user_agent_token: Amzn-SearchBot
+    ua_substring: "Amzn-SearchBot/"
+    purpose: search
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_fallback: ["(другие поисковые боты)"]
+    robots_control: "User-agent: Amzn-SearchBot; без своей группы следует правилам, данным «other search bots»"
+    on_disallow: нет в поисковых функциях Amazon (Alexa и др.)
+    feeds: [other]
+    priority: 3
+    ip_list_url: https://developer.amazon.com/amazonbot/searchbot-ip-addresses/
+    verify: ip-list
+    doc_url: https://developer.amazon.com/amazonbot
+    checked: 2026-09-24
+    notes: «Does not crawl content for generative AI model training». Какие именно «другие поисковые боты» — не уточнено.
+
+  - id: amazon-amzn-user
+    owner: Amazon
+    user_agent_token: Amzn-User
+    ua_substring: "Amzn-User/"
+    purpose: user_fetch
+    kind: fetcher
+    respects_robots: partial
+    star_group_applies: true
+    robots_control: "«may not follow all robots.txt directives»"
+    on_disallow: не гарантирован
+    feeds: [other]
+    priority: 3
+    ip_list_url: https://developer.amazon.com/amazonbot/live-ip-addresses/
+    verify: ip-list
+    doc_url: https://developer.amazon.com/amazonbot
+    checked: 2026-09-24
+    notes: Живые загрузки для ответов Alexa; не для обучения.
+
+  # ---------- DuckDuckGo, Mistral, Common Crawl ----------
+  - id: duckduckgo-duckassistbot
+    owner: DuckDuckGo
+    user_agent_token: DuckAssistBot
+    ua_substring: "DuckAssistBot/"
+    purpose: search
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: DuckAssistBot (вступает через 72 ч)"
+    on_disallow: сайт не источник ИИ-ответов DuckDuckGo; органическое ранжирование не меняется
+    feeds: [other]
+    priority: 3
+    ip_list_url: https://duckduckgo.com/duckassistbot.json
+    verify: ip-list
+    doc_url: https://duckduckgo.com/duckduckgo-help-pages/results/duckassistbot
+    checked: 2026-09-24
+    notes: «Crawls pages in real-time for our AI-assisted answers… not used in any way to train AI models».
+
+  - id: mistral-mistralai-index
+    owner: Mistral AI
+    user_agent_token: MistralAI-Index
+    ua_substring: "MistralAI-Index/"
+    purpose: search
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: MistralAI-Index"
+    on_disallow: нет в поиске Mistral для ответов Vibe
+    feeds: [other]
+    priority: 3
+    ip_list_url: https://mistral.ai/mistralai-index-ips.json
+    verify: ip-list
+    doc_url: https://docs.mistral.ai/robots
+    checked: 2026-09-24
+    notes: «Not used for generative AI training of any kind».
+
+  - id: mistral-mistralai-user
+    owner: Mistral AI
+    user_agent_token: MistralAI-User
+    ua_substring: "MistralAI-User/"
+    purpose: user_fetch
+    kind: fetcher
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: MistralAI-User («governs which sites these user requests can be made to»)"
+    on_disallow: Vibe не загрузит страницу по запросу пользователя
+    feeds: [other]
+    priority: 3
+    ip_list_url: https://mistral.ai/mistralai-user-ips.json
+    verify: ip-list
+    doc_url: https://docs.mistral.ai/robots
+    checked: 2026-09-24
+    notes: Не обходит веб автоматически и не собирает данные для обучения.
+
+  - id: mistral-mistralai-training
+    owner: Mistral AI
+    user_agent_token: MistralAI-Training
+    ua_substring: "MistralAI-Training/"
+    purpose: training
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: MistralAI-Training"
+    on_disallow: контент не собирается в обучающие наборы Mistral
+    feeds: []
+    priority: 3
+    ip_list_url: null
+    verify: none
+    doc_url: https://docs.mistral.ai/robots
+    checked: 2026-09-24
+    notes: «Not used for search indexing or to answer live user queries».
+
+  - id: commoncrawl-ccbot
+    owner: Common Crawl Foundation
+    user_agent_token: CCBot
+    ua_substring: "CCBot/2.0"
+    purpose: training
+    kind: crawler
+    respects_robots: "yes"
+    star_group_applies: true
+    robots_control: "User-agent: CCBot\nDisallow: /"
+    on_disallow: страницы не попадают в открытый архив Common Crawl
+    feeds: []
+    priority: 3
+    ip_list_url: https://index.commoncrawl.org/ccbot.json
+    verify: ip-list+rdns
+    rdns_suffix: [crawl.commoncrawl.org]
+    doc_url: https://commoncrawl.org/ccbot
+    checked: 2026-09-24
+    notes: >-
+      Некоммерческий открытый архив веба; purpose training — по последствиям (архив — массовый источник обучающих
+      корпусов), сам CCBot модели не обучает. Встречаются поддельные CCBot.
+
+not_included:
+  - {what: "Сбер GigaChat", why: "первоисточник о краулере не найден 2026-09-24 (вторичка: «нет публично документированного краулера»)"}
+  - {what: "ByteDance Bytespider, xAI", why: "нет официальной документации владельца; Bytespider есть в managed robots.txt Cloudflare как бот обучения"}
+  - {what: "Яндекс: прочие роботы (Images, Video, Metrika, ScreenshotBot, MobileBot…)", why: "не влияют на ИИ-ответы; полный список — doc_url yandex-yandexbot"}
+
+policies:
+  # Значения поля брифа search.ai_bots_policy (../10-playbooks-contracts/schemas/site-brief.schema.json). Правила сборки robots.txt — ниже.
+  allow-all:
+    name: Пускать всех — поиск, ИИ-ответы и обучение
+    robots_txt: |
+      User-agent: *
+      Disallow: /admin/          # пример: служебные пути сайта, если есть
+      Sitemap: https://example.ru/sitemap.xml
+    other_controls:
+      - "Search Console → Search generative AI: Include (по умолчанию)"
+      - "не ставить noarchive, nocache, nosnippet без причины"
+    effect: сайт может попадать во все ИИ-ответы; контент может идти в обучение моделей
+    tradeoffs: >-
+      Вклад в обучение не отзывается задним числом. Для маркетинговых страниц риск мал: их содержание публично и само
+      предназначено к распространению.
+  allow-search-deny-training:
+    name: Пускать поиск и ИИ-ответы, запретить обучение
+    robots_txt: |
+      User-agent: *
+      Disallow: /admin/
+
+      User-agent: GPTBot
+      User-agent: ClaudeBot
+      User-agent: Google-Extended
+      User-agent: Applebot-Extended
+      User-agent: meta-externalagent
+      User-agent: Amazonbot
+      User-agent: MistralAI-Training
+      User-agent: CCBot
+      Disallow: /
+
+      Sitemap: https://example.ru/sitemap.xml
+    other_controls:
+      - "Search Console: Include (AI Overviews и AI Mode на обучение не влияют)"
+    effect: >-
+      Поисковые и ИИ-ответные боты (YandexBot, YandexAdditional, Googlebot, OAI-SearchBot, PerplexityBot,
+      Claude-SearchBot, bingbot, Applebot, meta-webindexer, Amzn-SearchBot, DuckAssistBot, MistralAI-Index) и загрузки по
+      запросу пользователей разрешены
+    tradeoffs: >-
+      Google-Extended выключает и заземление в приложениях Gemini (не в Поиске); у Microsoft отдельного запрета обучения нет
+      (noarchive убирает и из Copilot); у Яндекса токена обучения нет; CCBot — открытый архив, которым пользуются и
+      исследователи. Если заказчику важны ответы приложения Gemini — Google-Extended не запрещать.
+  deny-all:
+    name: Запретить ИИ всё, кроме классического поиска
+    robots_txt: |
+      User-agent: *
+      Disallow: /admin/
+
+      User-agent: GPTBot
+      User-agent: OAI-SearchBot
+      User-agent: ChatGPT-User
+      User-agent: ClaudeBot
+      User-agent: Claude-SearchBot
+      User-agent: Claude-User
+      User-agent: PerplexityBot
+      User-agent: Perplexity-User
+      User-agent: Google-Extended
+      User-agent: Applebot-Extended
+      User-agent: meta-externalagent
+      User-agent: meta-webindexer
+      User-agent: Amazonbot
+      User-agent: Amzn-SearchBot
+      User-agent: DuckAssistBot
+      User-agent: MistralAI-Index
+      User-agent: MistralAI-User
+      User-agent: MistralAI-Training
+      User-agent: CCBot
+      User-agent: YandexAdditional
+      Disallow: /
+
+      Sitemap: https://example.ru/sitemap.xml
+    other_controls:
+      - "Search Console → Search generative AI: Exclude (AI Overviews, AI Mode, ИИ-функции Discover)"
+      - "<meta name=\"bingbot\" content=\"noarchive\"> — вне ответов Copilot (в выдаче Bing остаётся)"
+      - "<meta name=\"applebot\" content=\"nosnippet\"> — вне ИИ-ответов Siri и Search Apple"
+    effect: страница остаётся в поиске Яндекса, Google, Bing, Apple; из ИИ-ответов и обучения — выход там, где платформа это позволяет
+    tradeoffs: >-
+      Загрузки по запросу пользователя (ChatGPT-User, Perplexity-User, Google-Agent, Google-GeminiNotebook,
+      meta-externalfetcher) robots.txt соблюдают не всегда — закрыть только WAF по IP-спискам, и это отрежет агентов,
+      которые ведут к заявке.
+      Для лидогенерации противоречит цели «чтобы нейронки показывали в ответах» — только по явному решению заказчика.
+  ask:
+    name: Спросить заказчика
+    question: >-
+      Разрешать ли нейросетям (1) показывать и цитировать сайт в ответах — Алиса, Google, ChatGPT, Perplexity и (2) учить
+      на текстах сайта свои модели? Варианты: всё можно; ответы да, обучение нет; ничего.
+    default_if_no_answer: allow-all
+    default_rationale: >-
+      [практика] Цель системы — видимость в ответах нейросетей; маркетинговые тексты публичны по назначению; модели часто
+      отвечают без поиска, из собственных знаний (в аудите Schulte 2026 — 57,8 % повторов ChatGPT без веб-поиска, через
+      обзор Martinez 2026), а доля знаний о бренде растёт только через обучение. Исключение — сайты, где текст и есть
+      продукт (курсы, платные исследования, авторские базы): там по умолчанию allow-search-deny-training. [спорно]:
+      данных о том, что разрешение обучения повышает упоминания бренда, нет.
+
+robots_txt_rules:
+  # Техника сборки файла (RFC 9309; Google robots.txt spec 2026-08-31; Яндекс Вебмастер; видео [V:0yedoWKPgo4] и
+  # [V:cfIQ_ksB61U]). → 01-seo-google-yandex.md §2.1; 02-geo-ai-search.md §2
+  - id: rt-one-file-per-host
+    rule: robots.txt — в корне каждого хоста и протокола (https://example.ru/robots.txt), UTF-8, text/plain, код 200; для поддоменов — свой файл
+  - id: rt-5xx
+    rule: >-
+      5xx и сетевые ошибки на robots.txt = «полный запрет» (RFC 9309 §2.3.1.4); Google первые 12 ч не обходит сайт, до 30 дней
+      берёт старую копию. 404 = ограничений нет. Проверять код ответа robots.txt при каждом деплое. Страницам (в том числе
+      поиску по сайту) ботам тоже не отдавать 5xx и таймауты «чтобы закрыть»: Google решит, что перегрузил сервер, и снизит
+      обход всего сайта [V:cfIQ_ksB61U 12:36]
+  - id: rt-specific-group-overrides-star
+    rule: >-
+      Своя группа бота полностью заменяет группу *: служебные Disallow из * повторить в каждой именной группе, иначе
+      именной группой с «Allow: /» случайно открываются закрытые пути
+  - id: rt-no-css-js-block
+    rule: "не запрещать CSS, JS и изображения, нужные для отрисовки — Google и Apple рендерят страницу; Google не рендерит JS из заблокированных файлов; API и XHR — rt-no-api-block"
+  - id: rt-no-api-block
+    rule: >-
+      не закрывать в robots.txt API и XHR, от которых зависит контент (H1, текст, цены): «Do not block any critical resources
+      and that includes API calls that are necessary to load content» — иначе Googlebot получает пустую страницу
+      [V:0yedoWKPgo4 07:18]; проверка — каждый запрос из сетевого журнала рендера, строящий контент, проходит правила для
+      Googlebot и YandexBot. Для SSR и SSG вопрос почти снимается: контент уже в HTML
+  - id: rt-disallow-is-not-noindex
+    rule: >-
+      Disallow не убирает URL из выдачи (показ без сниппета); убрать — meta robots noindex или X-Robots-Tag при открытом
+      обходе. На одном URL вместе не работают: за Disallow Google не прочтёт noindex [V:cfIQ_ksB61U 13:18]. Порядок: URL уже в
+      индексе → сначала noindex при открытом обходе, после выпадения — Disallow (если нужна экономия обхода); новый шаблон,
+      которого нет в индексе, — сразу Disallow
+  - id: rt-size
+    rule: >-
+      до 500 KiB (лимит Google; RFC — не меньше 500 KiB); crawl-delay Google, Apple и Amazon не поддерживают, Яндекс не
+      учитывает с 2018-02-22 (скорость — «Скорость обхода сайта» в Вебмастере), Anthropic — поддерживает
+  - id: rt-sitemap
+    rule: строка Sitemap с абсолютным URL; не рвёт группы
+  - id: rt-ads
+    rule: AdsBot-Google, AdsBot-Google-Mobile, YaDirectFetcher проверяют посадочные рекламы — не закрывать их поимённо; Disallow для * на них не действует
+  - id: rt-cdn-waf
+    rule: >-
+      Проверить, что CDN и WAF не режут ботов: у Cloudflare «Block AI bots», managed robots.txt и новые умолчания с
+      2026-09-15 (многоцелевые Googlebot, Applebot, bingbot блокируются у тех, кто запретил Training); проверка — Search
+      Console «Проверка URL» и Вебмастер «Проверка ответа сервера»; geo_probe видит только признаки
+  - id: rt-signals-optional
+    rule: >-
+      Content-Signal (Cloudflare) и Content-Usage (IETF draft-ietf-aipref-attach-05) — необязательны, поддержка ботами не
+      подтверждена; Search Console может помечать их «Syntax not understood»
+  - id: rt-infinite-spaces
+    rule: >-
+      Поиск по сайту, календари, аддитивные фильтры и сортировки — бесконечные пространства: Google «will try to crawl all of
+      those pages», страницы поиска нагружают базу. Новый сайт — одно широкое Disallow на шаблон (Disallow: /search? ; у
+      WordPress — /?s=) в группе * и в каждой именной группе; категории и метки — отдельный открытый шаблон; на странице
+      результатов нет ссылок на другие запросы вне закрытого шаблона; не 5xx и не 404 на весь поиск; инструмент удаления
+      Search Console — не решение (скрывает около 6 месяцев, обход остаётся) [V:cfIQ_ksB61U 04:16–16:59]. Пустая комбинация
+      фильтров — 404 (другой случай). Проверка: /search?q=<случайная строка> закрыт robots.txt или несёт noindex
+  - id: rt-cdn-directives-stable
+    rule: >-
+      Ответ за CDN, кэшем и WAF стабилен: 10–20 запросов подряд → одинаковые код, X-Robots-Tag, meta robots, canonical (в
+      разобранном случае ложный noindex приходил примерно на каждый 10-й запрос, и одного плохого ответа хватает, чтобы
+      страница выпала из индекса); после смены директив индексации — очистить кэш CDN; при расхождении сравнить заголовки
+      хорошего и плохого ответа (Age, X-Cache, Via, CF-Ray) [V:0yedoWKPgo4 13:29–17:33]
+  - id: rt-yandex-clean-param
+    rule: >-
+      Clean-param — только Яндекс (Google не исполняет): Clean-param: p0[&p1&…] [префикс пути]; межсекционная (в любом месте
+      файла), регистр учитывается, правило до 500 символов; Disallow того же адреса имеет приоритет — не сочетать, если нужно
+      только склеить параметры. utm_*, ysclid, yrclid Яндекс, как правило, удаляет сам (справка приводит их примерами);
+      yclid, gclid, openstat, параметры сессий и ref — указывать (Яндекс Вебмастер «Директива Clean-param», 2026-09-24).
+      Google — canonical без параметров
+
+brief_mapping:
+  # search.ai_answers → что должно быть разрешено, чтобы поверхность могла показать сайт
+  yandex-alice: [yandex-yandexbot, yandex-additional]
+  google-ai: [google-googlebot, "Search Console: Search generative AI = Include"]
+  chatgpt-search: [openai-oai-searchbot, microsoft-bingbot]   # ChatGPT search ходит и к провайдеру Microsoft (OpenAI 9237897)
+  perplexity: [perplexity-perplexitybot]
+  claude: [anthropic-claude-searchbot, anthropic-claude-user]   # веб-поиск Claude — через Brave Search (субпроцессоры Anthropic); бот Brave не документирован
+  other: [microsoft-bingbot, apple-applebot, meta-webindexer, duckduckgo-duckassistbot]
+
+google_unsupported_rules:
+  # Поля robots.txt, которые Google распознаёт, но не исполняет: для Googlebot такие строки пусты. → 01-seo-google-yandex.md §2.1
+  source: https://github.com/google/robotstxt/blob/master/reporting_robots.cc
+  list_name: kUnsupportedTags
+  commit: 4af32e5
+  commit_date: 2026-02-19
+  commit_author: Gary Illyes (Google)
+  checked: 2026-09-24
+  quote: >-
+    «The kUnsupportedTags tags are popular tags in robots.txt files, but Google doesn't use them for anything. Other search
+    engines may, however»; список пополняется по данным HTTP Archive (custom_metrics.robots_txt, самые частые поля)
+  history: >-
+    Коммит 4af32e5 добавил content-signal, content-usage, domain, request-rate, revisit-after, visit-time («identified as
+    frequently used… via HTTP Archive»); clean-param, crawl-delay, host, noarchive, nofollow, noindex были в списке раньше.
+    [V:DchuJS7JWvk 03:20]
+  fields:
+    - {field: clean-param, others: "Яндекс — склейка GET-параметров (rt-yandex-clean-param)", decision: "писать для Яндекса; Google — canonical без параметров"}
+    - {field: content-signal, others: "Cloudflare Content Signals; поддержка ИИ-ботами не подтверждена", decision: "сами не пишем (emerging)"}
+    - {field: content-usage, others: "IETF draft-ietf-aipref-attach-05 — черновик; поддержка не подтверждена", decision: "опционально, [не проверено]"}
+    - {field: crawl-delay, others: "Anthropic — поддерживает; Яндекс — не учитывает с 2018-02-22; Apple, Amazon — нет", decision: "нагрузку ограничивать сервером и настройками кабинетов"}
+    - {field: domain, others: "у платформ из bots не документировано", decision: "не писать"}
+    - {field: host, others: "у платформ из bots не документировано (страницы …/robot-workings/host у Яндекса нет — 404, 2026-09-24)", decision: "не писать; главное зеркало — 301"}
+    - {field: noarchive, others: "как строка robots.txt — не документировано; как meta robots — Bing (вне ответов Copilot), Amazon (не для обучения)", decision: "только meta robots, по политике"}
+    - {field: nofollow, others: "как строка robots.txt — не документировано", decision: "meta robots или rel у ссылки"}
+    - {field: noindex, others: "как строка robots.txt — не документировано", decision: "только meta robots или X-Robots-Tag при открытом обходе (rt-disallow-is-not-noindex)"}
+    - {field: request-rate, others: "у платформ из bots не документировано", decision: "не писать"}
+    - {field: revisit-after, others: "у платформ из bots не документировано", decision: "не писать"}
+    - {field: visit-time, others: "у платформ из bots не документировано", decision: "не писать"}
+  supported_by_google: [user-agent, allow, disallow, sitemap]
+
+emerging:
+  # Файлы и протоколы «для ИИ» вне robots.txt и meta — статус на дату checked записи. Решения базы — 02-geo-ai-search.md
+  # §5, §8.4.
+  - id: llms-txt
+    what: "/llms.txt — Markdown: H1 (обязателен), цитата-резюме, разделы H2 со списками ссылок, раздел Optional; в корне или в подпапке"
+    spec: "llmstxt.org, версия 2 (J. Howard) — предложение, не стандарт"
+    readers: >-
+      Google Поиск не использует: «won't negatively or positively impact your visibility or rankings» (журнал Search Central,
+      2026-06-15), в списке «можно игнорировать» (ai-optimization-guide, 2026-07-10); в документации ботов OpenAI, Anthropic,
+      Perplexity, Яндекса, Bing не упомянут (сырые копии 00-sources, 2026-09-24); по словам автора — читают агенты-программисты
+      в документации ПО
+    lighthouse: "аудит «llms.txt» (Agentic browsing, обн. 2026-05-05): ошибка сервера — флаг; 404 — N/A («providing the file is optional at the moment»)"
+    adoption: "Web Almanac 2025 — валиден у 2,13 % сайтов (десктоп), 39,6 % файлов создал плагин All in One SEO; замер корпуса text — ≈ 25 из 97 хостов; замер посадочных — 20 из 69 страниц (RU 3 из 33)"
+    evidence_of_benefit: "нет; цифры логов из вторичных пересказов не подтверждены первоисточником — [вендор-GEO]"
+    decision: "маркетинговый сайт — по умолчанию нет; по просьбе заказчика — собирать из карты сайта и facts; документация и API — да"
+    check: "geo_probe.py: llms.valid, llms.is_html, llms.redirected_away; 200 text/plain или 404 — не 5xx и не HTML-заглушка"
+    doc_url: https://llmstxt.org/
+    checked: 2026-09-24
+  - id: llms-full-txt
+    what: "/llms-full.txt — весь текст сайта или документации одним файлом"
+    spec: "в тексте llmstxt.org v2 не определён; практика генераторов документации"
+    decision: "только для документации; маркетинговому сайту — нет"
+    check: "geo_probe.py: llms_full.valid"
+    checked: 2026-09-24
+  - id: markdown-alternates
+    what: "Markdown-версия страницы по тому же адресу + .md (page.html.md или page.md); <link rel=\"alternate\" type=\"text/markdown\">; rel=\"describedby\" → llms.txt; или заголовок Link"
+    spec: "llmstxt.org v2"
+    readers: "платформами не документировано; Google — «Rewriting content just for AI systems» и «special markup» можно игнорировать"
+    adoption: "замер корпуса text — 0 из 112 страниц"
+    decision: "только документация разработчиков; маркетинговым страницам — нет: две версии расходятся [V:Vkn3R6DUJ34 14:19–15:07], «developer bias» [V:Vkn3R6DUJ34 21:08–22:28]"
+    checked: 2026-09-24
+  - id: webmcp
+    what: "инструменты сайта для браузерного агента: декларативные в HTML и императивные в JS"
+    spec: "предложение веб-стандарта; в Chrome — эксперимент с origin trial (web.dev, обн. 2026-04-01); ранний показ — блог Chrome for Developers 2026-02-10"
+    readers: "браузерные агенты Chrome; Lighthouse проверяет через CDP-домен WebMCP (Agentic browsing, 2026-05-05)"
+    decision: "по умолчанию нет; кандидаты — запись, калькулятор, подбор тарифа после выхода из эксперимента"
+    doc_url: https://web.dev/articles/ai-agent-site-ux
+    checked: 2026-09-24
+  - id: content-signal
+    what: "строка robots.txt Content-signal: search=yes|no, ai-input=yes|no, ai-train=yes|no; тест use=immediate|reference|full"
+    spec: "Cloudflare (managed robots.txt, обн. 2026-08-03); заявлена как оговорка прав по ст. 4 Директивы ЕС 2019/790"
+    readers: "Google не исполняет (kUnsupportedTags, 2026-02-19); поддержка ИИ-ботами не подтверждена; Search Console может показать «Syntax not understood»"
+    adoption: "замер корпуса text — 3 хоста (intercom, zapier, megaplan), замер посадочных — 2 страницы; все ai-train=yes"
+    decision: "сами не пишем; сайт за Cloudflare — сверить managed-блок с search.ai_bots_policy"
+    doc_url: https://developers.cloudflare.com/bots/additional-configurations/managed-robots-txt/
+    checked: 2026-09-24
+  - id: content-usage
+    what: "HTTP-заголовок Content-Usage: train-ai=n и строка robots.txt Content-Usage: [путь] train-ai=n внутри группы"
+    spec: "IETF AIPREF: draft-ietf-aipref-vocab-08 (2026-09-13), draft-ietf-aipref-attach-05 (G. Illyes, M. Thomson; 2026-08-19; «Updates: 9309 (if approved)») — черновики"
+    readers: "поддержка краулерами не подтверждена; Google строку пока не исполняет (kUnsupportedTags)"
+    decision: "опционально, [не проверено]; для ЕС-профиля — вопрос site 08"
+    doc_url: https://datatracker.ietf.org/doc/draft-ietf-aipref-attach/
+    checked: 2026-09-24
+  - id: ucp
+    what: "UCP (ucp.dev) — протокол агентов для покупок"
+    readers: "упомянут Google в ai-optimization-guide (2026-07-10)"
+    decision: "вне рамок базы (магазины)"
+    checked: 2026-09-24
+  - id: markdown-for-agents
+    what: >-
+      Cloudflare «Markdown for Agents»: на запрос с Accept: text/markdown edge сам переводит HTML страницы в Markdown;
+      в ответе content-type: text/markdown, x-markdown-tokens, vary: accept и content-signal — если сервер не ставит
+      свой, Cloudflare пишет ai-train=yes, search=yes, ai-input=yes
+    spec: >-
+      функция Cloudflare (changelog 2026-02-12, документация обн. 2026-07-13): тарифы Pro, Business, Enterprise и SSL for
+      SaaS; включается в AI Crawl Control, по умолчанию выключена; переводит только HTML, ответ сервера — до 2 МБ
+    readers: >-
+      ИИ-системы и агенты, которые просят text/markdown в заголовке Accept (описание Cloudflare); документированных
+      читателей среди ботов раздела bots база не знает
+    decision: >-
+      маркетинговому сайту — не включать, как и markdown-alternates: читатели не документированы, у страницы одна версия
+      для людей и машин (02-geo-ai-search.md §5.4). Сайт за Cloudflare с включённой функцией ставит свой заголовок
+      content-signal по search.ai_bots_policy: умолчание Cloudflare разрешает обучение и расходится с политиками
+      allow-search-deny-training и deny-all
+    doc_url: https://developers.cloudflare.com/fundamentals/reference/markdown-for-agents/
+    checked: 2026-10-06
+  - id: web-bot-auth
+    what: >-
+      подпись запросов бота: HTTP Message Signatures (RFC 9421) — заголовки Signature, Signature-Input и Signature-Agent;
+      открытые ключи — в каталоге /.well-known/http-message-signatures-directory владельца бота
+    spec: >-
+      черновик IETF; Google — эксперимент (документация 2026-05-04): подписана часть запросов Google-Agent, заголовок
+      Signature-Agent: g="https://agent.bot.goog", ключи — https://agent.bot.goog/.well-known/http-message-signatures-directory
+    readers: "проверяет сервер, CDN или WAF сайта"
+    decision: >-
+      сайту делать ничего не нужно: подлинность ботов проверяется по verify записей bots (IP-списки, обратный DNS), подпись —
+      дополнительный признак у WAF, который её умеет; Google советует проверку по IP, DNS и UA не снимать, пока подписан не
+      весь трафик
+    doc_url: https://developers.google.com/crawling/docs/crawlers-fetchers/web-bot-auth
+    checked: 2026-10-06
+
+observed:
+  # Сверка с geo_probe.py и Web Almanac — фон, не норма.
+  web_almanac_2025:
+    unit: "% сайтов (десктоп), где бот назван в robots.txt (не обязательно запрещён); обход июля 2025, главные страницы CrUX"
+    values: {gptbot: 4.5, petalbot: 4.0, claudebot: 3.6, ccbot: 3.5, google-extended: 3.4, amazonbot: 3.3, facebookbot: 2.9, perplexitybot: 2.8, chatgpt-user: 2.8, meta-externalagent: 2.8}
+  h01_corpus_d: >-
+    97 хостов с разобранным robots.txt (корпус text, 2026-09-24): поисковые и ИИ-ответные боты (Googlebot, YandexBot,
+    YandexAdditional, OAI-SearchBot, PerplexityBot, Claude-SearchBot, bingbot, Applebot, AdsBot) не запрещены ни разу;
+    обучение закрыто у 2 хостов (GPTBot — figma, loom; ClaudeBot, Google-Extended, CCBot — figma); Content-Signal — 3 хоста;
+    managed-блок Cloudflare — 0
+  h02_sample_m: "51 хост посадочных из замера живых страниц (69 страниц итоговой выборки): поисковые и ИИ-ответные боты и AdsBot не запрещены ни разу, обучение закрыто у 1 хоста (GPTBot — loom); Content-Signal — 2 страницы"
+  conclusion: >-
+    На посадочных robots.txt ИИ не мешает; мешают антибот-заглушки, сертификат НУЦ без общепризнанного, CSR-оболочки и
+    HTML > 2 МБ (02-geo-ai-search.md §3.2; head-kit.yaml access_gates)

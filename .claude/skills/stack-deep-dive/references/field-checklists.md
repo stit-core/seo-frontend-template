@@ -102,11 +102,13 @@
 `robots.txt`/`sitemap.xml`/фидов/ключа IndexNow, `STATIC_ROUTES`, `e2e/http/seo.spec.ts`.
 
 **Cross-kind**: канонический хост ↔ `service.md § Домены` ↔ `SITE_URL` в `config.md`;
-`ROBOTS_POLICY`, `AI_TRAINING`, `INDEXNOW_KEY` — в `config.md`; набор локалей ↔ `content.md`.
+`ROBOTS_POLICY`, `INDEXNOW_KEY` — в `config.md`; политика ИИ-ботов — поле `AI_BOTS_POLICY` в
+`site.ts`, не env; набор локалей ↔ `content.md`.
 
 **Anti-patterns**: `<meta name="keywords">`; canonical на другой домен; `FAQPage`/`HowTo`/
 `SearchAction` «ради rich results»; hreflang на несуществующий перевод; verification-токен
-в env (prerendered его не увидит — он в `site.ts`).
+или политика ИИ-ботов в env (prerendered их не увидит — они в `site.ts`); свой список ботов в
+`robots.txt` мимо реестра `shared/seo/crawlers.yaml`.
 
 ---
 

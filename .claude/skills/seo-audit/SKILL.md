@@ -55,7 +55,7 @@ IndexNow, вес HTML.
 
 ```bash
 curl -sI  $ORIGIN/                        # 200, нет X-Robots-Tag: noindex
-curl -s   $ORIGIN/robots.txt              # политика, абсолютный Sitemap:, нет Disallow: / на проде
+curl -s   $ORIGIN/robots.txt              # на проде группа * — Allow: /, абсолютный Sitemap:
 curl -s   $ORIGIN/sitemap.xml | grep -c '<loc>'   # ожидаемое число, все URL на своём домене по https
 curl -sI  $ORIGIN/net-takogo-puti         # 404 — не 200 и не редирект на главную
 curl -sI  $ORIGIN/about/                  # один 301 на /about (хвостовой слеш)

@@ -120,7 +120,6 @@ services:
       LOG_LEVEL: ${SITE_LOG_LEVEL:-info}
       NODE_OPTIONS: --max-old-space-size=384
       INDEXNOW_KEY: ${SITE_INDEXNOW_KEY:-}
-      AI_TRAINING: ${SITE_AI_TRAINING:-allow}
       FORM_DELIVERY: ${SITE_FORM_DELIVERY:-smtp}
       SMTP_URL: ${SITE_SMTP_URL:-}
       FORM_TO: ${SITE_FORM_TO:-}
@@ -206,7 +205,6 @@ services:
 | `SITE_SENTRY_DSN` | `SENTRY_DSN` | пусто — SDK не грузится вовсе; DSN public by design | нет |
 | `ENV` | `SENTRY_ENVIRONMENT` | слаг среды | нет |
 | `SITE_INDEXNOW_KEY` | `INDEXNOW_KEY` | 8–128 символов `a-zA-Z0-9-`; подтверждается файлом `/<ключ>.txt` | нет |
-| `SITE_AI_TRAINING` | `AI_TRAINING` | `allow \| deny` — обучающие AI-краулеры в `robots.txt` | нет |
 | `SITE_FORM_DELIVERY` | `FORM_DELIVERY` | `smtp \| backend` — один канал доставки заявки | нет |
 | `SITE_SMTP_URL` | `SMTP_URL` | `smtps://user:pass@host` — **секрет** | при `smtp` |
 | `SITE_FORM_TO` / `SITE_FORM_FROM` | `FORM_TO` / `FORM_FROM` | адреса письма с заявкой | при `smtp` |
@@ -400,19 +398,19 @@ accessLog:
   forward-confirmed rDNS (`.googlebot.com.`, `.google.com.`, `.yandex.ru.`,
   `.yandex.net.`, `.yandex.com.`, `.search.msn.com.`). **Whitelist по User-Agent не
   делать** — UA подделывается.
-- **AI-краулеры — продуктовое решение, а не гигиена.** `ClaudeBot`, `GPTBot`, `CCBot`,
-  `meta-externalagent` — источник трафика из ответов LLM; на индексируемом сайте они
-  управляются `AI_TRAINING` в `robots.txt` сервиса, а не баном на edge.
+- **ИИ-боты — продуктовое решение, а не гигиена.** На индексируемом сайте ими управляет
+  политика сайта — поле сборки `AI_BOTS_POLICY`, именная группа в `robots.txt` сервиса, — а не
+  бан на edge.
 
 ### 1.6 Остальные файлы репозитория
 
 | файл | что сделать |
 |---|---|
-| `.env.example` | секция `# ───── profile site (индексируемый сайт) ─────`: `SITE_TAG`, `ROBOTS_POLICY`, `SITE_LOG_LEVEL`, `SITE_SENTRY_DSN`, `SITE_INDEXNOW_KEY`, `SITE_AI_TRAINING`, `SITE_FORM_DELIVERY`, `SITE_SMTP_URL`, `SITE_FORM_TO`, `SITE_FORM_FROM`, `SITE_FORM_BACKEND_URL`, `SITE_EDGE_EXTRA_MW`, `STAGING_BASIC_AUTH_USERS` — у каждой комментарий «как получить», иначе `make validate` красный; в подсказке `COMPOSE_PROFILES` появляется `site` |
+| `.env.example` | секция `# ───── profile site (индексируемый сайт) ─────`: `SITE_TAG`, `ROBOTS_POLICY`, `SITE_LOG_LEVEL`, `SITE_SENTRY_DSN`, `SITE_INDEXNOW_KEY`, `SITE_FORM_DELIVERY`, `SITE_SMTP_URL`, `SITE_FORM_TO`, `SITE_FORM_FROM`, `SITE_FORM_BACKEND_URL`, `SITE_EDGE_EXTRA_MW`, `STAGING_BASIC_AUTH_USERS` — у каждой комментарий «как получить», иначе `make validate` красный; в подсказке `COMPOSE_PROFILES` появляется `site` |
 | `Makefile` → `bump` | `up -d --no-deps --force-recreate` получает `--wait --wait-timeout 90`: без него верб «успешен» и на битом образе |
 | `scripts/deploy.sh` → `ROLE_FILES[edge]` | дописать `compose/site.yml` (список ролей перечислен явно, glob только у `all`) |
 | `scripts/preflight-dns.sh` | при активном профиле `site` добавить в `hosts` `www.$DOMAIN` — иначе LE-сертификат на www молча не выпустится, а роутер `site-www` есть |
-| `scripts/tools/smoke.d/90-site.sh` | **новый** drop-in (контракт — в шапке `scripts/tools/smoke-run.sh`): блок `-- site --`, read-only, self `exit 0`, проблема — строкой `ATTENTION:` в колонке 0. Проверяет: liveness `docker exec site wget -qO- http://127.0.0.1:3000/healthz`; `/` — 200 и TTFB (на не-прод ожидается 401 — замок стоит); `/robots.txt` — на проде без `Disallow: /` и с абсолютным `Sitemap:`, на не-прод `Disallow: /`; `/sitemap.xml` — непустой список `<loc>`, все URL на своём домене и по https; `X-Robots-Tag: noindex` — на не-прод есть, на проде нет |
+| `scripts/tools/smoke.d/90-site.sh` | **новый** drop-in (контракт — в шапке `scripts/tools/smoke-run.sh`): блок `-- site --`, read-only, self `exit 0`, проблема — строкой `ATTENTION:` в колонке 0. Проверяет: liveness `docker exec site wget -qO- http://127.0.0.1:3000/healthz`; `/` — 200 и TTFB (на не-прод ожидается 401 — замок стоит); `/robots.txt` — на проде группа `*` с `Allow: /` и абсолютный `Sitemap:`, на не-прод `Disallow: /`; `/sitemap.xml` — непустой список `<loc>`, все URL на своём домене и по https; `X-Robots-Tag: noindex` — на не-прод есть, на проде нет |
 | `compose/landing.yml` | заглушка на корне остаётся до первого разворота сайта: она держит выпуск LE-сертификата на `${DOMAIN}`. После разворота `compose/landing.yml` + `configs/landing/` удаляются (сам роутер сайта её и так перебивает приоритетом) |
 | `.claude/rules/traefik-routing.md` | раздел «Корневой домен и www»: корень — задокументированное исключение из сабдоменного канона; www — отдельный роутер с `redirectRegex`; `${1}` переживает envsubst; в цепочке публичного сайта, в отличие от API, есть `compress`; в таблице chain'ов `secure-headers@file` — HSTS, nosniff, `Referrer-Policy`, `Permissions-Policy` (камера, микрофон и геолокация закрыты), без XSS-filter: состав из 1.3, он общий для всех публичных роутеров |
 | `.claude/rules/compose-and-services.md` | абзац «Node-сервисы с рендером»: `init: true`; `read_only` **несовместим** со штамповкой origin; `stop_grace_period` ↔ `SHUTDOWN_TIMEOUT_MS`; `mem_limit` ↔ `NODE_OPTIONS --max-old-space-size` (≈ 75 %); `deploy.resources` не использовать; `replicas` несовместимы с `container_name` |
@@ -435,7 +433,7 @@ accessLog:
 
 ```bash
 curl -sI  https://<domain>/                    # 200, без X-Robots-Tag: noindex
-curl -s   https://<domain>/robots.txt          # ожидаемая политика, абсолютный Sitemap:, без Disallow: /
+curl -s   https://<domain>/robots.txt          # группа * — Allow: /, абсолютный Sitemap:; именная группа — по политике ИИ-ботов сайта
 curl -s   https://<domain>/sitemap.xml | grep -c '<loc>'   # ожидаемое число, все URL — https и свой домен
 curl -sI  https://<domain>/net-takogo          # 404 (не 200 и не редирект на главную)
 curl -sI  http://<domain>/                     # ровно один 301/308 на https

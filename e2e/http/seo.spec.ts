@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { SITE_ORIGIN_PLACEHOLDER } from '../../src/shared/config/runtime.ts'
+import { AI_BOTS_POLICY } from '../../src/shared/config/site.ts'
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
 import { E2E_INDEXNOW_KEY, entries, indexablePaths, onDemandRoutes } from '../site'
 
@@ -10,7 +11,7 @@ const localeOf = (path: string) =>
   DEFAULT_LOCALE
 
 test.describe('robots.txt, sitemap.xml, фиды, IndexNow', () => {
-  test('robots.txt прод-профиля: всё разрешено, абсолютный Sitemap, без мёртвых директив', async ({
+  test('robots.txt прод-профиля: группа `*` открыта, абсолютный Sitemap, без мёртвых директив', async ({
     request,
     baseURL,
   }) => {
@@ -19,10 +20,11 @@ test.describe('robots.txt, sitemap.xml, фиды, IndexNow', () => {
     expect(response.headers()['content-type']).toContain('text/plain')
     expect(response.headers()['cache-control']).toBe('public, max-age=300')
     const body = await response.text()
-    expect(body).toContain('User-agent: *\nAllow: /')
-    expect(body).toContain(`Sitemap: ${baseURL}/sitemap.xml`)
-    expect(body).not.toContain('Disallow: /')
-    expect(body).not.toMatch(/Host:|Crawl-delay:|GPTBot|ClaudeBot/)
+    // Политика ИИ-ботов сайта закрывает только свою именную группу — между `*` и картой.
+    expect(body.startsWith('User-agent: *\nAllow: /\n\n'), body).toBe(true)
+    expect(body.endsWith(`\nSitemap: ${baseURL}/sitemap.xml\n`), body).toBe(true)
+    if (AI_BOTS_POLICY === 'allow-all') expect(body).not.toContain('Disallow')
+    expect(body).not.toMatch(/Host:|Crawl-delay:/)
   })
 
   test('sitemap.xml: ровно индексируемые страницы сборки, все 200, lastmod только у правленых записей', async ({

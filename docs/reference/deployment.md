@@ -123,7 +123,6 @@ origin из runtime `SITE_URL` (`Astro.site` для URL не используе�
 | `LOG_LEVEL` | `debug` \| `info` \| `warn` \| `error` — JSON-лог запросов | `info` | нет |
 | `KEEP_ALIVE_TIMEOUT_MS` / `SHUTDOWN_TIMEOUT_MS` | обёртка сервера | `65000` / `15000` | нет |
 | `INDEXNOW_KEY` | ключ IndexNow (8–128 символов `a-zA-Z0-9-`), подтверждается файлом `/<ключ>.txt` | `''` — файла нет | нет (файл `.txt`) |
-| `AI_TRAINING` | `allow` \| `deny` — запрет обучающих AI-краулеров в `robots.txt` | `allow` | нет (`robots.txt`) |
 | `FORM_DELIVERY` | канал доставки заявки: `smtp` \| `backend` | `smtp` | нет |
 | `SMTP_URL` | строка подключения SMTP (`smtps://user:pass@host`) — канал `smtp` | `''` | нет (секрет) |
 | `FORM_TO` / `FORM_FROM` | получатель и отправитель письма с заявкой — канал `smtp` | `''` | нет |
@@ -145,7 +144,9 @@ origin `SITE_URL` через `absoluteUrl()`. Шаблон локального 
 домена (`SITE_VERIFICATION`) — живут не в env, а полями `src/shared/config/site.ts`:
 prerendered-страница печатается на сборке, а образ собирается без env, и runtime-значение до
 неё не доходит. `/de-template` подставляет проектные; пустое значение означает «ничего не
-печатать» — ни счётчика, ни тега. Альтернатива для подтверждения домена — HTML-файл в
+печатать» — ни счётчика, ни тега. Там же — политика ИИ-ботов `AI_BOTS_POLICY` (`allow-all` |
+`allow-search-deny-training` | `deny-all`): она одна на все среды, поэтому её значение — в
+образе, а не в env контейнера. Альтернатива для подтверждения домена — HTML-файл в
 `public/` (`google<token>.html`, `yandex_<token>.html`) или запись DNS TXT.
 
 ## Что отдаёт процесс
