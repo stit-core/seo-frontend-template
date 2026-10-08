@@ -13,12 +13,12 @@ strategy: слоя страницы, пакета дизайна и `ready.yaml`
 
 ## Контекст
 - **Аудит** (HEAD `0c5869c`, 2026-10-06): отчёт — https://claude.ai/artifact/PpN1W64Arfq9rRf3BUUZUM (Artifact
-  `action: read`), локальная копия — `~/.cache/stit-ssr-audit/audit-report.html`. Отчёты углов с `file:line`,
-  экспериментами и рекомендациями — `~/.cache/stit-ssr-audit/reports/<угол>.md`: `harness`, `code`, `tests`,
-  `enforcement`, `seo`, `geo`, `security`, `perf`, `contract`, `stack`, `dogfood-diary`, `dogfood-mutations`.
-  ID находок — `<угол>-NN` (`HAR`, `LIF`, `COD`, `TST`, `ENF`, `SEO`, `GEO`, `SEC`, `PRF`, `CON`, `STK`, `DOG`);
-  решения — `R01…R28`.
-- **Материалы** (`M` = `~/.cache/stit-ssr-audit/`):
+  `action: read`), локальная копия — `~/git/stit-core/stit-ssr-audit/audit-report.html`. Отчёты углов с
+  `file:line`, экспериментами и рекомендациями — `~/git/stit-core/stit-ssr-audit/reports/<угол>.md`: `harness`,
+  `code`, `tests`, `enforcement`, `seo`, `geo`, `security`, `perf`, `contract`, `stack`, `dogfood-diary`,
+  `dogfood-mutations`. ID находок — `<угол>-NN` (`HAR`, `LIF`, `COD`, `TST`, `ENF`, `SEO`, `GEO`, `SEC`, `PRF`,
+  `CON`, `STK`, `DOG`); решения — `R01…R28`.
+- **Материалы** (`M` = `~/git/stit-core/stit-ssr-audit/`):
   - `BRIEF.md` — рубрика и правила экспериментов; семафоры `heavy.sh` (два тяжёлых прогона на машину) и
     `exclusive.sh` (порты и Docker — по одному);
   - `prompts.md` — промпты исполнителя, валидатора, фикса и перепроверки;
@@ -72,7 +72,7 @@ strategy: слоя страницы, пакета дизайна и `ready.yaml`
 | Фаза | Репо | Результат | Приёмка фазы | План | Статус |
 |---|---|---|---|---|---|
 | P1 | site | Страховочная сетка: покрытие и тесты страниц, HTTP-e2e в гейте, гейт на гейт, зеркала e2e в `seo:check`, FSD-линт, периметр хуков, правда прозы | ≥ 42/45 мутаций, ≥ 24/27 нарушений, покрытие ≥ 90 % | `harden-gate.md` | done |
-| P2 | site | Прод и стек: пакет `docker/*`, CSP, `/_image`, pnpm без corepack, `pnpm audit`, политика обновлений | атаки и опечатки env аудита — красные; `accept:image` зелёный | `harden-runtime.md` | in-progress |
+| P2 | site | Прод и стек: пакет `docker/*`, CSP, `/_image`, pnpm без corepack, `pnpm audit`, политика обновлений | атаки и опечатки env аудита — красные; `accept:image` зелёный | `harden-runtime.md` | done |
 | P3 | site | SEO и GEO: сущность с `@id`, авторы, политика ИИ-ботов, карта и фиды из сборки, теги, Яндекс, редиректы миграции, `geo_probe` в `/seo-audit` | SEO- и GEO-мутации аудита ловит гейт | `seo-geo-layer.md` | todo |
 | P4 | site | Облик под ДС: оболочка и секции, токены и тема ДС, остров предпочтений и бюджеты островов, Fonts API, медиа по манифесту, доступность | тема ДС переключается; ворота strategy без B на reference-страницах | `adopt-design-system.md` | todo |
 | P5 | site | Модель страницы: блоки каталога, тексты-данные, форма-движок, согласие и цели, JSON-LD по head-kit, i18n на 1…N локалях, коллекции модулем | reference-страницы собраны из блоков и текстов-данных | `blocks-content-model.md` | todo |
@@ -98,8 +98,15 @@ strategy: слоя страницы, пакета дизайна и `ready.yaml`
   - Сделано: этапы A–C — PASS валидаторов (`M/validation-harden-gate-{A,B,C}.md`); приёмка S13 на итоговом коде —
     45 / 45 мутаций, 25 / 27 типовых нарушений, 6 / 6 SEO-нарушений, 10 / 10 мутаций скриптов гейта, покрытие
     99,66 / 96,83 / 100 / 99,63 %; `pnpm check` — зелёный за 35,2 с в свежем worktree; план закрыт
-- [ ] **S3** — P2 `harden-runtime`: план, этапы, push
+- [x] **S3** — P2 `harden-runtime`: план, этапы, push
   - Проверка: валидатор → PASS; критерии плана подтверждены · Закрывает: AC6 · Зависит от: S2
+  - Сделано: этапы A–C — PASS валидаторов (`M/validation-harden-runtime-{A,B,C}.md`); приёмка S11 — сценарии
+    аудита на образе: 19 значений env вне формата и 22 инъекции в `SITE_URL` — отказ старта, `/_image` — 404 под
+    потоком при живом `/healthz`, `X-Robots-Tag` staging — у каждого ответа слушателей, `Last-Modified` и ETag
+    равны на 4 стартах; 9 / 9 своих поломок красные; блокер B1 (`TRACE` и userinfo в `Host` завершали процесс:
+    6 из 28 враждебных запросов) закрыт перехватом в обёртке — 486 запросов и поток на сервере гейта и образах
+    Node 24 и 26 без единого падения, без перехвата `test:http` и `accept:image` красные; `pnpm check` — зелёный
+    за 36,8 с в свежем worktree, `pnpm test:e2e` — 79 / 79; план закрыт (`M/acceptance-harden-runtime.md`)
 - [ ] **S4** — P3 `seo-geo-layer`: план, этапы, push
   - Проверка: валидатор → PASS; критерии плана подтверждены · Закрывает: AC6 · Зависит от: S3
 - [ ] **S5** — P4 `adopt-design-system`: план, этапы, push
@@ -148,16 +155,24 @@ strategy: слоя страницы, пакета дизайна и `ready.yaml`
   факты, машинный `after_build`, снимок, шрифты файлами), а сервис `site` без infra-шаблона не разворачивается
   (LIF-10, GEO-01).
 - Ветка догфудера `worktree-agent-a406185c2ed2ca966` — образец второй коллекции до P9, затем удаляется (R28).
-- Хвосты P1 — работа следующих фаз: P2 — дренаж SIGTERM в `accept:image` (TST-11) и таймаут его шага «старт без
-  `SITE_URL`»; P4 — бюджет HTML самой тяжёлой страницы (PRF-09) и мобильный профиль с зумом в браузерном наборе
-  (PRF-07).
+- Хвосты P1 — работа следующих фаз: P4 — бюджет HTML самой тяжёлой страницы (PRF-09) и мобильный профиль с зумом
+  в браузерном наборе (PRF-07).
+- Хвосты P2 — работа следующих фаз: P3 — инлайн-`style` в теле Markdown ловит только браузерный набор (CSP его
+  блокирует): `check:content` отклоняет `style=` в теле записи — шаг S11 плана `seo-geo-layer`; P4 — HTTP-набор
+  сверяет CSP ответа с записью `_headers.json` своей страницы: адаптер подбирает запись по вхождению пути, и свой
+  стиль секции дал бы странице чужую CSP (ловушка — в rule `render-safety`).
 
 ## Handoff
 - `spa-frontend-template`: нейминг токенов ДС strategy (`data-theme`, DTCG, `@theme inline`), чтение `design/` и
   `ready.yaml`; общая обвязка (plan, validate-plan, guard) — каналом `/upgrade` каждого шаблона после P9 (R04,
   R22).
+- upstream `@astrojs/node` (владелец): при `staticHeaders` статик-хендлер строит `Request` на каждый запрос вне
+  try/catch — на методе `TRACE` и userinfo в `Host` слушатель бросает, и без перехвата процесс завершается;
+  сообщить в withastro/astro. Перехват в `docker/server.mjs` и его снятие — бэклог `adapter-request-throw`.
 
 ## Где мы сейчас
-P1 `harden-gate` закрыта: гейт ловит мутации и нарушения аудита, покрытие в гейте, периметр хуков. Идёт S3: план
-P2 `harden-runtime` написан (11 шагов, этапы A–C), следующий шаг — его этап A (исполнитель), затем валидатор.
-Параллельно P6 в strategy: этап A принят, этап B — фиксы по FAIL валидатора (план и ход — `M/plans/`).
+P1 `harden-gate` и P2 `harden-runtime` закрыты: гейт ловит мутации и нарушения аудита; образ отказывает на env вне
+формата и не падает от враждебного запроса, CSP ставит приложение, стек обновляется по политике. Следующий шаг —
+S4: план P3 `seo-geo-layer` (готовая к коммиту копия — `M/plans/seo-geo-layer.final.md`, покрытие находок —
+`M/plans/seo-geo-layer.coverage.md`), затем его этап A. Параллельно P6 в strategy: фиксы и перепроверка этапа C,
+затем этап D (план и ход — `M/plans/fix-strategy-contract.md`).
