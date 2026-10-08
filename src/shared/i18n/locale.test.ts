@@ -1,13 +1,14 @@
 import { localeOf, localePath } from './locale'
 
 describe('i18n/locale', () => {
-  it('локаль адреса — по префиксу пути; имя, которое только начинается с кода локали, — не префикс', () => {
+  it('локаль адреса — по префиксу пути; код локали в середине пути и имя, которое с него начинается, — не префикс', () => {
     expect(localeOf('/')).toBe('ru')
     expect(localeOf('/blog/zapis')).toBe('ru')
     expect(localeOf('/en')).toBe('en')
     expect(localeOf('/en/blog/post')).toBe('en')
     expect(localeOf('/english')).toBe('ru')
     expect(localeOf('/blog/en')).toBe('ru')
+    expect(localeOf('/blog/en/zapis')).toBe('ru')
   })
 
   it('дефолтная локаль без префикса, остальные — с префиксом', () => {

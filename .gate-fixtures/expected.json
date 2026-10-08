@@ -213,6 +213,8 @@
     "src/pages/status.ts: on-demand маршрут без строки в карте docs/reference/rendering.md",
     "content/redirects.yaml: from / совпадает с существующим маршрутом",
     "content/redirects.yaml: to /net не существует",
+    "content/redirects.yaml: from /blog/ совпадает с существующим маршрутом",
+    "content/redirects.yaml: from /sitemap.xml совпадает с существующим маршрутом",
     "content/redirects.yaml: from /?p=7: 410 на пути существующего маршрута — ответит страница"
   ],
   "plans": [

@@ -20,6 +20,7 @@ describe('canonicalPath', () => {
       ['/index.html', '/'],
       ['/about/index.html', '/about'],
       ['/about/index.html/', '/about'],
+      ['/about/index.html/index.html', '/about'],
       ['/blog/page/2', '/blog/page/2'],
       ['/_astro/site.B1x_2.css', '/_astro/site.B1x_2.css'],
       ['/.well-known/security.txt', '/.well-known/security.txt'],
@@ -182,6 +183,13 @@ describe('buildRedirectTable', () => {
         { from: '/b', to: '/a', status: 308 },
       ]),
     ).toThrow(/цепочка/)
+    // Цепочка считается по адресу, а не по записи: `/b/` старого сайта — тот же адрес, что цель `/b`.
+    expect(() =>
+      buildRedirectTable([
+        { from: '/a', to: '/b', status: 301 },
+        { from: '/b/', to: '/c', status: 301 },
+      ]),
+    ).toThrow(/цепочка \/a → \/b/)
     // Цель с правилом только на ?query — не цепочка: голый адрес цели оно не трогает.
     expect(
       buildRedirectTable([
@@ -313,6 +321,10 @@ describe('resolveRedirect', () => {
 
   it('каноническая форма без правила — адресу отвечает страница', () => {
     for (const url of ['/', '/blog', '/blog?x=1', '/blog?', '/?p=124', '/OLD', '/BLOG', '/a#b']) {
+      expect(resolve(url), url).toBeUndefined()
+    }
+    // Разделитель, записанный процентами в query, — данные параметра, а не путь.
+    for (const url of ['/blog?next=%2Fabout', '/?utm_content=a%2Fb', '/blog?path=a%5Cb']) {
       expect(resolve(url), url).toBeUndefined()
     }
   })

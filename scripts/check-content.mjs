@@ -222,6 +222,8 @@ const publicDir = resolve(root, 'public')
 for (const file of existsSync(publicDir) ? walk(publicDir) : []) {
   routes.add(`/${relative(publicDir, file).split(sep).join('/')}`)
 }
+// Карту сайта пишет сборка: файла маршрута у неё нет, а адрес занят.
+routes.add('/sitemap.xml')
 const draftRoutes = new Set()
 for (const collection of collections) {
   for (const locale of SUPPORTED_LOCALES) {

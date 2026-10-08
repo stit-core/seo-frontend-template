@@ -110,7 +110,7 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
 
 - `pnpm check:content` (до `build`): схема каждого `.md`, тело, литерал плейсхолдера,
   уникальность `title`/`description`/`translationKey` в коллекции и локали, ссылки по списку маршрутов
-  (`src/pages` + контент + `public/`), `redirects.yaml`
+  (`src/pages` + контент + `public/` + карта сайта — файл сборки), `redirects.yaml`
 - `pnpm check:links` (после `build`): каждый внутренний `href`/`src`/`srcset` в
   `dist/client` существует (файл, `<path>/index.html` или on-demand маршрут)
 - Скрипты читают YAML напрямую `js-yaml` и исполняют TS-модули напрямую (Node strip-types),

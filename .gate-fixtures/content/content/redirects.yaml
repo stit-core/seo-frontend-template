@@ -12,3 +12,9 @@
 - from: /partner
   to: https://пример.рф/новый-раздел
   status: 301
+- from: /blog/
+  to: /now
+  status: 301
+- from: /sitemap.xml
+  to: /now
+  status: 301
