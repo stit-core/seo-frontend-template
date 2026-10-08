@@ -22,7 +22,10 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
 - Индексируемая (prerendered) страница: self-canonical абсолютным URL без query и хвостового
   слеша (`absoluteUrl()` нормализует путь сам), `<meta name="robots">` не печатается; полный OG
   (`type/title/description/url/site_name/locale` + `image` с `width/height/alt`), `twitter:card`.
-  Регистр пути не нормализуется; cross-domain canonical запрещён
+  Регистр пути не нормализуется; cross-domain canonical запрещён. Canonical — единственная форма
+  адреса, по которой сервер отдаёт страницу: с любой другой (хвостовой и двойной слеш,
+  `/index.html`, точки, другая запись процентов) обёртка процесса отвечает одним 301 на неё, со
+  спрятанным разделителем (`%2F`) — 404 (`docs/reference/rendering.md § Нормализация URL`)
 - Служебная страница (404, `/now`, подтверждение заявки, ответ обработчика формы, `500`) — проп
   `noindex` layout'а: только `<meta name="robots" content="noindex">`, без canonical/OG/hreflang;
   разрешающие и запрещающие директивы не смешиваются (Яндекс выбирает разрешающую). Prerendered
@@ -179,8 +182,11 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   решает `robots.txt`); `/llms.txt` — 404 `text/plain`;
   canonical на runtime origin, в `<body>`
   нет своего origin, нет `X-Robots-Tag` в прод-профиле, а в staging он на каждом ответе (страницы
-  сборки, карта и фиды, ассет, `public/*`, on-demand, 404, редиректы, отказ обёртки); HTML on-demand маршрута —
-  только с `noindex` (мета или заголовок), его скрипты — острова политики; `robots.txt` (прод и
+  сборки, карта и фиды, ассет, `public/*`, on-demand, 404, адреса `redirects.yaml`, ответы обёртки
+  на форму адреса и её отказ); HTML on-demand маршрута —
+  только с `noindex` (мета или заголовок), его скрипты — острова политики; у адреса одна форма —
+  неканоническая (слеш, `//`, `/index.html`, точки, проценты) и адрес `redirects.yaml` в любой
+  форме отвечают одним 301 сразу на конечный адрес, `%2F` и заглавные своего адреса — 404; `robots.txt` (прод и
   staging), проштампованные карта (ровно индексируемые страницы `dist/client`, все 200, `lastmod` у
   каждой записи) и фиды, ключ IndexNow; размер HTML
   < 300 КБ. Парсер `<head>` и `decode` сущностей один — `scripts/lib/html.mjs` (он же в

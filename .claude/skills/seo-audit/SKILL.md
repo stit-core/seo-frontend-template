@@ -60,10 +60,11 @@ curl -s   $ORIGIN/robots.txt              # на проде группа * — A
 curl -s   $ORIGIN/sitemap.xml | grep -c '<loc>'   # ожидаемое число, все URL на своём домене по https
 curl -sI  $ORIGIN/net-takogo-puti         # 404 — не 200 и не редирект на главную
 curl -sI  $ORIGIN/about/                  # один 301 на /about (хвостовой слеш)
+curl -sI  $ORIGIN/about/index.html        # один 301 на /about — дубля страницы по другой форме адреса нет
 curl -s   $ORIGIN/ | grep -oE '<link rel="canonical"[^>]*>|<html[^>]*>|<h1'   # canonical, lang, один h1
 ```
 
-Признак беды, который эти шесть строк ловят чаще всего: `noindex` уехал в прод
+Признак беды, который эти строки ловят чаще всего: `noindex` уехал в прод
 (`ROBOTS_POLICY` не переключён после staging), canonical на плейсхолдере или на чужом
 домене (штамповка не отработала), 404 отвечает 200 (soft-404), sitemap пуст.
 

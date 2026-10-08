@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs'
+import { request as httpRequest, type IncomingHttpHeaders } from 'node:http'
 import { createServer } from 'node:net'
 import { relative, resolve, sep } from 'node:path'
 import { load } from 'js-yaml'
@@ -271,7 +272,40 @@ export const THROWING_REQUESTS: {
 ]
 
 // Правила content/redirects.yaml.
-export function redirects(): RedirectRule[] {
+export function redirects(): readonly RedirectRule[] {
   const data = load(readFileSync(resolve(root, 'content/redirects.yaml'), 'utf8'))
-  return [...buildRedirectTable(data).values()]
+  return buildRedirectTable(data).rules
+}
+
+// Адрес правила, каким его пришлёт клиент: буквы вне ASCII — процентами, уже закодированное и
+// форма пути (слеши, регистр) — как в файле.
+export const requestTarget = (rule: RedirectRule): string =>
+  rule.from.replace(/[^ -~]+/g, encodeURIComponent)
+
+export interface RawResponse {
+  status: number
+  headers: IncomingHttpHeaders
+  body: string
+}
+
+// Запрос с адресом как есть, без перехода по редиректу: клиенты HTTP сами приводят путь к
+// каноническому виду (`//`, точки), а проверяется ответ сервера именно на неканоническую форму.
+// origin — `baseURL` проекта Playwright.
+export function rawGet(origin: string | undefined, target: string): Promise<RawResponse> {
+  const { hostname, port } = new URL(origin ?? '')
+  return new Promise((done, fail) => {
+    httpRequest({ hostname, port, path: target }, (response) => {
+      const chunks: Buffer[] = []
+      response.on('data', (chunk: Buffer) => chunks.push(chunk))
+      response.on('end', () =>
+        done({
+          status: response.statusCode ?? 0,
+          headers: response.headers,
+          body: Buffer.concat(chunks).toString('utf8'),
+        }),
+      )
+    })
+      .on('error', fail)
+      .end()
+  })
 }

@@ -83,7 +83,7 @@ entities → shared`); между слайсами одного слоя — з�
 с заведомыми нарушениями входит в gate, чтобы линтеры не деградировали молча.
 
 ```
-content/redirects.yaml   редиректы как данные: 301/308/410 одним хопом (обслуживает middleware)
+content/redirects.yaml   адреса как данные: переезды старого сайта и 410, один хоп с любой формы адреса
 public/           иконки, manifest, og-default.png (социальная карточка 1200×630)
 src/app/          layouts/document.astro (<head> из props: SeoHead + JSON-LD), middleware, styles/index.css
 src/pages/        роутинг Astro = слой pages: index, about, contacts/{index,spasibo},

@@ -255,9 +255,15 @@ try {
   if (err instanceof z.ZodError) fail(redirectsFile, z.prettifyError(err))
   else yamlFailure(redirectsFile, err, 0)
 }
-for (const rule of table?.values() ?? []) {
-  if (routes.has(rule.from))
+for (const rule of table?.rules ?? []) {
+  // Переезд обёртка процесса отдаёт раньше страницы, поэтому правило с `?query` на пути живого
+  // маршрута законно (`/?p=123` старого сайта). Без query оно закрыло бы саму страницу, а 410
+  // отвечает приложение — после статик-хендлера, который отдаст страницу.
+  if (routes.has(rule.path) && rule.query.length === 0) {
     fail(redirectsFile, `from ${rule.from} совпадает с существующим маршрутом`)
+  } else if (routes.has(rule.path) && rule.status === 410) {
+    fail(redirectsFile, `from ${rule.from}: 410 на пути существующего маршрута — ответит страница`)
+  }
   if ('to' in rule && !isExternalTarget(rule.to) && !routes.has(rule.to)) {
     fail(redirectsFile, `to ${rule.to} не существует`)
   }
@@ -273,5 +279,5 @@ const byLocale = SUPPORTED_LOCALES.map(
 ).join(', ')
 const drafts = docs.filter((doc) => doc.data?.draft).length
 console.info(
-  `check:content: ${docs.length} записей (${byLocale}; черновиков ${drafts}), ${table?.size ?? 0} редиректов, ${internalLinks.length} внутренних ссылок — ok`,
+  `check:content: ${docs.length} записей (${byLocale}; черновиков ${drafts}), ${table?.rules.length ?? 0} редиректов, ${internalLinks.length} внутренних ссылок — ok`,
 )

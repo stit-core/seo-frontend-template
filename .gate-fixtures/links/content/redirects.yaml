@@ -1,3 +1,6 @@
 - from: /old
   to: /about
   status: 301
+- from: /about?old=1
+  to: /about
+  status: 301

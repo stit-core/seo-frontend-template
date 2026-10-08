@@ -18,6 +18,8 @@ try {
 process.env.ASTRO_NODE_AUTOSTART = 'disabled'
 
 const { startServer } = await import('../dist/server/entry.mjs')
+// Таблица адресов — тот же модуль серверной сборки, что читает middleware приложения.
+const { resolveRequest } = await import('../dist/server/redirects.mjs')
 const { server, done } = startServer()
 const http = server.server
 
@@ -28,6 +30,20 @@ done.catch((err) => {
   process.exit(1)
 })
 
+// Один адрес — одна форма, и отвечает на неё обёртка — раньше статик-хендлера: тот отдаёт страницу
+// и по `<путь>/index.html`, `//путь` и пути с точками (дубли с ответом 200), а хвостовой слеш
+// срезает своим 301 — лишним хопом перед правилом redirects.yaml. Переезд по таблице и
+// неканоническая форма — один 301 сразу на конечный адрес, путь со спрятанным разделителем
+// (`%2F`) — 404. Остальное, включая удалённый адрес (410 — страница приложения), идёт адаптеру.
+function answered(request, response) {
+  const answer = resolveRequest(request.method, request.url ?? '')
+  if (answer === undefined || answer.status === 410) return false
+  if (answer.status === 404) {
+    response.writeHead(404, { 'content-type': 'text/plain; charset=utf-8' }).end('Not found')
+  } else response.writeHead(answer.status, { location: answer.location }).end()
+  return true
+}
+
 // Статик-хендлер адаптера при staticHeaders строит Request на каждый запрос вне try/catch, а его
 // конструктор бросает на методе TRACE и на userinfo в Host: без перехвата один анонимный запрос —
 // uncaught exception и выход процесса. Без строки лога, как у 400 парсера Node: причина — в самом
@@ -36,7 +52,7 @@ const [handle] = http.listeners('request')
 http.off('request', handle)
 http.on('request', (request, response) => {
   try {
-    handle(request, response)
+    if (!answered(request, response)) handle(request, response)
   } catch {
     // Заголовки уже ушли — ответ не исправить, а writeHead бросил бы сам: соединение рвётся.
     if (response.headersSent) response.destroy()

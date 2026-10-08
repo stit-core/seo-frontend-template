@@ -1,6 +1,6 @@
 ---
-description: Контент в git — frontmatter и бюджеты, один h1, alt, переводы и черновики, реестр авторов, редиректы как данные (YAML → данные на сборке), контентные гейты check:content / check:links.
-paths: ["src/entities/*/content/**", "src/entities/*/model/schema.ts", "src/entities/*/api/**", "src/entities/author/**", "src/shared/redirects/**", "src/app/middleware/redirects.ts", "astro.config.ts", "content/**", "scripts/check-content.mjs", "scripts/check-links.mjs", "scripts/lib/content.mjs"]
+description: Контент в git — frontmatter и бюджеты, один h1, alt, переводы и черновики, реестр авторов, редиректы как данные (YAML → данные на сборке; адреса миграции, один хоп), контентные гейты check:content / check:links.
+paths: ["src/entities/*/content/**", "src/entities/*/model/schema.ts", "src/entities/*/api/**", "src/entities/author/**", "src/shared/redirects/**", "src/app/middleware/redirects.ts", "content/redirects.yaml", "astro.config.ts", "content/**", "scripts/check-content.mjs", "scripts/check-links.mjs", "scripts/lib/content.mjs"]
 ---
 
 # Контент-инварианты
@@ -73,22 +73,32 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
 ## Редиректы — данные
 
 - `content/redirects.yaml`: список `{ from, to?, status, note? }`; `status` ∈ `301 | 308 |
-  410`; у `410` нет `to`; `to` — корневой путь **или** абсолютный `http(s)` URL; `from` —
-  корневой путь в нижнем регистре, без query и хвостового слеша. Пустой файл (или только
+  410`; у `410` нет `to`; `to` — свой корневой путь в канонической форме (нижний регистр, без
+  query и хвостового слеша) **или** абсолютный `http(s)` URL. Пустой файл (или только
   комментарии) — пустая таблица
-- Один хоп: `to` не совпадает ни с чьим `from` (нет цепочек и циклов), `from` — не
-  существующий маршрут, внутренний `to` существует, дублей `from` нет
-  (`shared/redirects` + `check:content`)
+- `from` — адрес старого сайта как он был: заглавные, кириллица (буквами или процентами),
+  хвостовой слеш, `index.php`, `?query`. К таблице он приводится тем же каноном пути, что и адрес
+  запроса (`canonicalPath`, `shared/redirects`): `/Услуги/`, `/%D0%A3…` и `/%d0%a3…/` — одно
+  правило. Регистр — часть адреса: `/Old-Page` не срабатывает на `/old-page`. Правило с `?query`
+  срабатывает, когда в запросе есть все его пары (из подходящих — самое точное); эти пары в
+  `Location` не переезжают, остальные параметры запроса — переезжают. Спрятанный разделитель
+  (`%2F`, `%5C`), пробел и `#` в `from` — ошибка схемы
+- Один хоп: `to` не совпадает ни с чьим `from` (нет цепочек и циклов), внутренний `to`
+  существует, дублей `from` нет — и две записи одного адреса (`/a/` и `/a/index.html`) тоже дубль
+  (`shared/redirects` + `check:content`). `from` на пути существующего маршрута — только переезд с
+  `?query` (`/?p=123` старого сайта): без query он закрыл бы страницу, а 410 там перекрыла бы
+  сама страница
 - YAML разбирается на сборке (плагин `yaml-modules` в `astro.config.ts`, `js-yaml`;
   тип `*.yaml` — `src/env.d.ts`): в серверный бандл попадают данные, а не парсер; Zod
   проверяет их при загрузке модуля, файл в контейнере не нужен
-- Обслуживает `app/middleware` до роутинга, по точному `pathname`; `404.astro` поэтому
-  on-demand — иначе путь без файла не дошёл бы до middleware. Query переезжает в
-  `Location` (`/old?x=1` → `/blog?x=1`; у внешней цели — после её собственной). Хвостовой
-  слеш срезает сам Astro 301-м ещё до middleware (`trailingSlash: 'never'`), поэтому
-  `/old/` — два хопа: `/old`, затем цель; в данных это не цепочка, `from` пишется без слеша.
-  Регистр не нормализуется: URL к нему чувствительны, как и везде на сайте. `410` — тело
-  без стилей + `X-Robots-Tag: noindex`
+- Обслуживает одна таблица (`app/middleware/redirects.ts` → `resolveRequest`) в двух местах.
+  Переезд (301/308) и неканоническую форму любого адреса отдаёт обёртка процесса
+  `docker/server.mjs` — раньше статик-хендлера, поэтому `/old/`, `//old` и `/old/index.html` ведут
+  сразу на цель, а правило на пути живой страницы срабатывает; модуль таблицы сборка кладёт ей
+  отдельным файлом `dist/server/redirects.mjs`. Удалённый адрес (410) отвечает `app/middleware`
+  до роутинга — `404.astro` поэтому on-demand: иначе путь без файла не дошёл бы до middleware.
+  В `astro dev` обёртки нет, и на всё отвечает middleware. Адрес читают только GET и HEAD.
+  `410` — тело без стилей + `X-Robots-Tag: noindex`
 - `meta refresh` и `redirects` в `astro.config.ts` не используются. Ссылок на адреса из
   `redirects.yaml` в разметке нет — `check:links`
 

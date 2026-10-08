@@ -1,37 +1,39 @@
 import { buildRedirectTable } from '@/shared/redirects'
 import redirects from '../../../content/redirects.yaml'
-import { matchRedirect, redirectResponse } from './redirects'
+import { goneResponse } from './gone'
+import { resolveRequest } from './redirects'
 
 describe('app/middleware/redirects', () => {
-  it('каждое from из content/redirects.yaml находится по точному пути', () => {
-    const table = buildRedirectTable(redirects)
-    expect(table.size).toBeGreaterThan(0)
-    for (const rule of table.values()) {
-      expect(matchRedirect(rule.from)).toEqual(rule)
-      // Слеш-вариант до middleware не доходит (Astro нормализует раньше), регистр не сводится.
-      expect(matchRedirect(`${rule.from}/`)).toBeUndefined()
-      expect(matchRedirect(rule.from.toUpperCase())).toBeUndefined()
+  const { rules } = buildRedirectTable(redirects)
+  // Адрес правила, каким его пришлёт клиент: буквы вне ASCII — процентами, уже закодированное и
+  // пары query — как в файле.
+  const requestOf = (from: string) => from.replace(/[^ -~]+/g, encodeURIComponent)
+
+  it('каждое from из content/redirects.yaml отвечает своим правилом — и в форме с хвостовым слешем', () => {
+    expect(rules.length).toBeGreaterThan(0)
+    for (const rule of rules) {
+      const expected =
+        'to' in rule ? { status: rule.status, location: rule.to } : { status: rule.status }
+      expect(resolveRequest('GET', requestOf(rule.from)), rule.from).toEqual(expected)
+      expect(resolveRequest('HEAD', requestOf(rule.from)), rule.from).toEqual(expected)
+      // Переезд из неканонической формы — тем же одним хопом, без остановки на канонической.
+      const slashed = `${rule.path}/${rule.from.includes('?') ? rule.from.slice(rule.from.indexOf('?')) : ''}`
+      if ('to' in rule) expect(resolveRequest('GET', slashed), slashed).toEqual(expected)
     }
-    expect(matchRedirect('/')).toBeUndefined()
-    expect(matchRedirect('/net-takogo')).toBeUndefined()
+    expect(resolveRequest('GET', '/')).toBeUndefined()
+    expect(resolveRequest('GET', '/net-takogo')).toBeUndefined()
   })
 
-  it('301/308: Location — цель плюс query запроса', () => {
-    const rule = { from: '/a', to: '/b', status: 301 } as const
-    const plain = redirectResponse(rule)
-    expect(plain.status).toBe(301)
-    expect(plain.headers.get('location')).toBe('/b')
-    expect(redirectResponse(rule, '?x=1&y=2').headers.get('location')).toBe('/b?x=1&y=2')
-    const external = redirectResponse(
-      { from: '/a', to: 'https://x.example/p?k=v', status: 308 },
-      '?x=1',
-    )
-    expect(external.status).toBe(308)
-    expect(external.headers.get('location')).toBe('https://x.example/p?k=v&x=1')
+  it('адрес читает только чтение страницы: остальные методы идут в приложение как есть', () => {
+    const [rule] = rules
+    for (const method of ['POST', 'PUT', 'DELETE', 'OPTIONS', undefined]) {
+      expect(resolveRequest(method, requestOf(rule?.from ?? '')), method).toBeUndefined()
+      expect(resolveRequest(method, '/blog/'), method).toBeUndefined()
+    }
   })
 
   it('410: тело с заголовком и noindex, без Location', async () => {
-    const response = redirectResponse({ from: '/gone', status: 410 }, '?x=1')
+    const response = goneResponse()
     expect(response.status).toBe(410)
     expect(response.headers.get('location')).toBeNull()
     expect(response.headers.get('x-robots-tag')).toBe('noindex')

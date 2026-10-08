@@ -79,12 +79,12 @@ Frontmatter `.astro` и модули `.ts` исполняются на серв�
 
 | что | где |
 |---|---|
-| документ-шелл, middleware (лог, редиректы), токены | `app/layouts/document.astro`, `app/middleware`, `app/styles/index.css` |
+| документ-шелл, middleware (лог, адреса `redirects.yaml`, 410), токены | `app/layouts/document.astro`, `app/middleware`, `app/styles/index.css` |
 | runtime-конфиг, идентичность сайта (`SITE_NAME`, `sameAs`, `OG_DEFAULT_IMAGE`), политика ИИ-ботов | `shared/config` |
 | локали, пути с префиксом, даты | `shared/i18n` |
 | SEO: `absoluteUrl`/hreflang, `SeoHead`, фабрики JSON-LD + `JsonLdScript`, генераторы robots/sitemap/rss, реестр ботов `crawlers.yaml` | `shared/seo` |
 | тест-хелперы | `shared/lib/testing` |
-| таблица редиректов (данные → Map) | `shared/redirects` |
+| канон пути и таблица адресов (данные → правила, ответ на адрес запроса) | `shared/redirects` |
 | проектные UI-примитивы | `shared/ui/<name>/` |
 | каркас сайта, список записей, хлебные крошки (видимые; `BreadcrumbList` из того же массива печатает layout в `<head>`) | `widgets/site-header`, `widgets/site-footer`, `widgets/post-list`, `widgets/breadcrumbs` |
 | коллекция контента: `.md`, схема, запросы, карточка/статья | `entities/post/{content,model,api,lib,ui}` |

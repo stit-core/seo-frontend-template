@@ -15,7 +15,7 @@ status: draft
 | параметрические | `[slug].astro` + `getStaticPaths()` из контента |
 | секции страниц | `src/pages/_<name>/` — префикс `_` вне роутинга |
 | формат сборки | `build.format: 'directory'` → `/about/index.html`, адрес без `.html` |
-| хвостовой слеш | `trailingSlash: 'never'`: `/blog/` → 301 `/blog` |
+| хвостовой слеш | без слеша (`TRAILING_SLASH`, `shared/redirects/table.ts` — его же получает `trailingSlash` Astro): `/blog/` → 301 `/blog` |
 | регистр | не нормализуется — URL к нему чувствительны, canonical = реальный адрес |
 
 ## Локали в URL
@@ -45,14 +45,16 @@ status: draft
 
 | ситуация | ответ | где |
 |---|---|---|
-| переезд URL | `301` (или `308`, если метод обязан сохраниться) | `content/redirects.yaml` → `app/middleware` |
-| удалено навсегда | `410` + `noindex` | там же |
+| переезд URL | `301` (или `308`, если метод обязан сохраниться) — один хоп с любой формы старого адреса | `content/redirects.yaml` → обёртка процесса `docker/server.mjs` |
+| неканоническая форма своего адреса (слеш, `//`, `/index.html`, точки) | `301` на канонический адрес; `%2F` в пути и заглавные — `404` | обёртка процесса, канон пути `shared/redirects` |
+| удалено навсегда | `410` + `noindex` | `content/redirects.yaml` → `app/middleware` |
 | путь без файла | `404` + `noindex` | `src/pages/404.astro` (on-demand) |
 | ошибка рендера on-demand | `500` + `noindex` | `src/pages/500.astro` |
 
 Редиректы — данные, один хоп, без цепочек; `meta refresh` и `redirects` в
-`astro.config.ts` не используются. Дубль каждой страницы по `<путь>/index.html` (200 без CSP)
-закрывает Traefik — 301 на путь без `/index.html`.
+`astro.config.ts` не используются. `from` — адрес старого сайта как он был: заглавные, кириллица,
+хвостовой слеш, `?query` (`/?p=123`, `/index.php?id=5`). Дубля страницы по другой форме адреса
+нет: с неё процесс отвечает одним 301, edge путь не переписывает.
 
 ## Навигация
 

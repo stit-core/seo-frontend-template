@@ -1,7 +1,8 @@
 #!/usr/bin/env sh
 # Приёмка собранного образа до пуша в registry: отказ без SITE_URL за конечное время, штамповка
-# origin (страницы, карта, фиды), статусы ключевых маршрутов, canonical, CSP, robots, отказ 400 без
-# падения на TRACE, контур staging, дренаж по SIGTERM; заголовки и TTFB — печать без порога.
+# origin (страницы, карта, фиды), статусы ключевых маршрутов, canonical, CSP, robots, одна форма
+# адреса (301 с неканонической, 404 на %2F), отказ 400 без падения на TRACE, контур staging, дренаж
+# по SIGTERM; заголовки и TTFB — печать без порога.
 # Использование: pnpm accept:image <image> [port]
 set -u
 
@@ -124,6 +125,19 @@ for feed in $(docker exec "$NAME" sh -c 'cd /app/dist/client && find . -name rss
   curl -s "http://127.0.0.1:$PORT$feed" | grep -q "<link>$ORIGIN" &&
     ok "$feed: канал на $ORIGIN" || fail "$feed: канал не на $ORIGIN"
 done
+
+# У адреса одна форма: неканоническую обёртка закрывает одним 301 раньше статик-хендлера, путь
+# со спрятанным разделителем — 404. --path-as-is: curl сам не приводит путь.
+echo "== один адрес — одна форма =="
+hop() { curl -s -o /dev/null --path-as-is -w '%{http_code} %{redirect_url}' "http://127.0.0.1:$PORT$1"; }
+for pair in "/about/ /about" "//about /about" "/about/index.html /about" "/index.html /" "/en/./about/ /en/about"; do
+  form=${pair% *}
+  want="301 http://127.0.0.1:$PORT${pair#* }"
+  got=$(hop "$form")
+  [ "$got" = "$want" ] && ok "$form → 301 ${pair#* }" || fail "$form → $got (ждали $want)"
+done
+got=$(hop "/en%2Fabout")
+[ "$got" = "404 " ] && ok "/en%2Fabout → 404" || fail "/en%2Fabout → $got (ждали 404)"
 
 echo "== заголовки =="
 curl -sI "http://127.0.0.1:$PORT/" | grep -iE '^(cache-control|etag|content-type)' | sed 's/^/  /'

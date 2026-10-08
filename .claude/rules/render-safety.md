@@ -51,6 +51,9 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
   ESLint `no-console`
 - 404/410 — честный статус, не soft-404, с `noindex`; `X-Robots-Tag` staging ставит обёртка
   процесса (`docker/server.mjs`) на каждый ответ, prerendered включительно, — не middleware
+- У адреса одна форма: неканоническую (слеш, `//`, `/index.html`, точки) и переезд из
+  `redirects.yaml` обёртка процесса закрывает одним 301 раньше статик-хендлера — той же таблицей,
+  что читает middleware (`resolveRequest`); маршрут этим не занимается
 
 ## Остров (клиент)
 
@@ -68,13 +71,16 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 ## Конфиг
 
 `astro.config.ts`: `output: 'static'`, `build.format: 'directory'` (`'file'` с node-адаптером
-отдаёт 404 на `/blog` и `/en`), `trailingSlash: 'never'`, `session: false` (fs-драйвер сессий
+отдаёт 404 на `/blog` и `/en`), `trailingSlash` — из `TRAILING_SLASH` (`shared/redirects/table.ts`:
+форма адреса — одна настройка и для Astro, и для канона пути обёртки), `session: false` (fs-драйвер сессий
 пишет в cacheDir), `prefetch: false` и без `<ClientRouter/>` (без островов — ни байта JS),
 `experimentalDisableStreaming: true`, `markdown.syntaxHighlight: false` (Shiki инлайнит сырые
 цвета мимо токен-слоя), Vite-плагины `yaml-modules` (`content/*.yaml` и реестр ботов `shared/seo/crawlers.yaml` → данные на сборке) и
-`runtime-config-entry` (схема env `shared/config/runtime.ts` отдельным файлом
-`dist/server/runtime-config.mjs`: его импортируют `docker/server.mjs` и `docker/stamp.mjs` до
-старта приложения — без него контейнер не стартует); `cache`/`routeRules` не задаются — рецепт D
+`wrapper-entries` (модули приложения, которые `docker/*` берут по имени файла: схема env
+`shared/config/runtime.ts` — `dist/server/runtime-config.mjs`, её импортируют `docker/server.mjs` и
+`docker/stamp.mjs` до старта приложения; таблица адресов `app/middleware/redirects.ts` —
+`dist/server/redirects.mjs`, по ней обёртка отвечает на адрес раньше статик-хендлера; без этих
+файлов контейнер не стартует); `cache`/`routeRules` не задаются — рецепт D
 (`cached`) описан в `docs/reference/rendering.md` и включается решением проекта, не шаблона.
 `image.endpoint` для `astro build` — `src/pages/_image.ts` (404): его ставит локальная
 интеграция `closed-image-endpoint` в самом конфиге — часть канона, а не подключаемый пакет;

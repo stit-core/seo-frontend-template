@@ -111,7 +111,7 @@ describe('docker/server.mjs: env целиком проверяется до за
 
 // Заглушка адаптера: слушатель бросает до отправки заголовков и после неё. У настоящего адаптера
 // есть только первый путь (его держит HTTP-набор), перехват обязан пережить оба.
-const THROWING_ADAPTER = `import { createServer } from 'node:http'
+const STUB_ADAPTER = `import { createServer } from 'node:http'
 export function startServer() {
   const server = createServer((request, response) => {
     if (request.url === '/before') throw new TypeError('до заголовков')
@@ -119,40 +119,70 @@ export function startServer() {
       response.writeHead(200).write('начало')
       throw new TypeError('после заголовков')
     }
-    response.end('ok')
+    response.end('adapter ' + request.method + ' ' + request.url)
   })
   server.listen(0, '127.0.0.1', () => console.log('port=' + server.address().port))
   return { server: { server }, done: new Promise(() => {}) }
 }
 `
 
+// Заглушка таблицы адресов (dist/server/redirects.mjs): по ответу каждого вида. Сама таблица и
+// канон пути — юниты shared/redirects, их связка с обёрткой на настоящей сборке — HTTP-набор.
+const STUB_REDIRECTS = `const answers = {
+  '/moved/?x=1': { status: 301, location: '/new?x=1' },
+  '/permanent': { status: 308, location: 'https://example.com/' },
+  '/hidden%2Fslash': { status: 404 },
+  '/gone': { status: 410 },
+  '/broken': { status: 301, location: 'bad\\nheader' },
+}
+export const resolveRequest = (method, url) =>
+  method === 'GET' || method === 'HEAD' ? answers[url] : undefined
+`
+
+// Обёртка на заглушках в раскладке образа. Срок на подъём и на каждый запрос: зависший процесс или
+// повисший ответ — красный тест, а не подвешенный гейт.
+async function withWrapper(
+  env: Record<string, string>,
+  fn: (get: (path: string, init?: RequestInit) => Promise<Response>) => Promise<void>,
+) {
+  const app = mkdtempSync(join(tmpdir(), 'server-wrapper-'))
+  mkdirSync(join(app, 'docker'))
+  cpSync(repoFile('docker/server.mjs'), join(app, 'docker/server.mjs'))
+  writeConfigModule(join(app, 'dist'))
+  writeFileSync(join(app, 'dist/server/entry.mjs'), STUB_ADAPTER)
+  writeFileSync(join(app, 'dist/server/redirects.mjs'), STUB_REDIRECTS)
+  const server = spawnProcess(process.execPath, [join(app, 'docker/server.mjs')], {
+    env: { PATH: process.env.PATH ?? '', SITE_URL: 'https://demo.example', ...env },
+    stdio: ['ignore', 'pipe', 'inherit'],
+  })
+  try {
+    const origin = await new Promise<string>((done, fail) => {
+      const late = setTimeout(() => fail(new Error('обёртка не поднялась за 4 с')), 4_000)
+      server.stdout.on('data', (chunk: Buffer) => {
+        const port = /port=(\d+)/.exec(String(chunk))?.[1]
+        if (port) {
+          clearTimeout(late)
+          done(`http://127.0.0.1:${port}`)
+        }
+      })
+      server.once('exit', (code) => fail(new Error(`обёртка вышла с кодом ${String(code)}`)))
+    })
+    await fn((path, init) =>
+      fetch(`${origin}${path}`, {
+        redirect: 'manual',
+        signal: AbortSignal.timeout(2_000),
+        ...init,
+      }),
+    )
+  } finally {
+    server.kill()
+    rmSync(app, { recursive: true, force: true })
+  }
+}
+
 describe('docker/server.mjs: исключение слушателя адаптера не завершает процесс', () => {
   it('до заголовков — 400, после — разрыв соединения, следующий запрос отвечает', async () => {
-    const app = mkdtempSync(join(tmpdir(), 'server-guard-'))
-    mkdirSync(join(app, 'docker'))
-    cpSync(repoFile('docker/server.mjs'), join(app, 'docker/server.mjs'))
-    writeConfigModule(join(app, 'dist'))
-    writeFileSync(join(app, 'dist/server/entry.mjs'), THROWING_ADAPTER)
-    const server = spawnProcess(process.execPath, [join(app, 'docker/server.mjs')], {
-      env: { PATH: process.env.PATH ?? '', SITE_URL: 'https://demo.example' },
-      stdio: ['ignore', 'pipe', 'inherit'],
-    })
-    try {
-      // Срок на подъём и на каждый запрос: зависший процесс или повисший ответ — красный тест, а
-      // не подвешенный гейт.
-      const origin = await new Promise<string>((done, fail) => {
-        const late = setTimeout(() => fail(new Error('обёртка не поднялась за 4 с')), 4_000)
-        server.stdout.on('data', (chunk: Buffer) => {
-          const port = /port=(\d+)/.exec(String(chunk))?.[1]
-          if (port) {
-            clearTimeout(late)
-            done(`http://127.0.0.1:${port}`)
-          }
-        })
-        server.once('exit', (code) => fail(new Error(`обёртка вышла с кодом ${String(code)}`)))
-      })
-      const get = (path: string) =>
-        fetch(`${origin}${path}`, { signal: AbortSignal.timeout(2_000) })
+    await withWrapper({}, async (get) => {
       const refused = await get('/before')
       expect(refused.status).toBe(400)
       expect(await refused.text()).toBe('Bad request')
@@ -162,12 +192,57 @@ describe('docker/server.mjs: исключение слушателя адапт�
       // Соединение разорвано, а не оставлено висеть до срока запроса.
       expect(broken).toBeInstanceOf(Error)
       expect(broken).not.toHaveProperty('name', 'TimeoutError')
-      expect(await (await get('/ok')).text()).toBe('ok')
-    } finally {
-      server.kill()
-      rmSync(app, { recursive: true, force: true })
-    }
+      expect(await (await get('/ok')).text()).toBe('adapter GET /ok')
+    })
   }, 15_000)
+})
+
+describe('docker/server.mjs: на адрес отвечает обёртка — раньше адаптера', () => {
+  it('переезд — статус и Location таблицы, спрятанный разделитель — 404 текстом; адаптер не вызывается', async () => {
+    await withWrapper({}, async (get) => {
+      const moved = await get('/moved/?x=1')
+      expect([moved.status, moved.headers.get('location')]).toEqual([301, '/new?x=1'])
+      expect(await moved.text()).toBe('')
+      const permanent = await get('/permanent', { method: 'HEAD' })
+      expect([permanent.status, permanent.headers.get('location')]).toEqual([
+        308,
+        'https://example.com/',
+      ])
+      const hidden = await get('/hidden%2Fslash')
+      expect(hidden.status).toBe(404)
+      expect(hidden.headers.get('content-type')).toBe('text/plain; charset=utf-8')
+      expect(await hidden.text()).toBe('Not found')
+    })
+  }, 15_000)
+
+  it('удалённый адрес, адрес без ответа таблицы и не-GET идут адаптеру как есть', async () => {
+    await withWrapper({}, async (get) => {
+      // 410 — страница приложения: обёртка её не подменяет.
+      expect(await (await get('/gone')).text()).toBe('adapter GET /gone')
+      expect(await (await get('/page?x=1')).text()).toBe('adapter GET /page?x=1')
+      expect(await (await get('/permanent', { method: 'POST' })).text()).toBe(
+        'adapter POST /permanent',
+      )
+    })
+  }, 15_000)
+
+  it('ответ, который не записать (недопустимый Location), — 400, процесс жив', async () => {
+    await withWrapper({}, async (get) => {
+      expect((await get('/broken')).status).toBe(400)
+      expect(await (await get('/ok')).text()).toBe('adapter GET /ok')
+    })
+  }, 15_000)
+
+  it('staging: ответы самой обёртки несут X-Robots-Tag процесса', async () => {
+    await withWrapper({ ROBOTS_POLICY: 'noindex' }, async (get) => {
+      for (const path of ['/moved/?x=1', '/hidden%2Fslash', '/before', '/ok']) {
+        expect((await get(path)).headers.get('x-robots-tag'), path).toBe('noindex, nofollow')
+      }
+    })
+    await withWrapper({}, async (get) => {
+      expect((await get('/moved/?x=1')).headers.get('x-robots-tag')).toBeNull()
+    })
+  }, 20_000)
 })
 
 describe('docker/entrypoint.sh: SITE_URL по схеме, штамповка dist/client', () => {

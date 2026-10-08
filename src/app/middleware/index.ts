@@ -1,12 +1,13 @@
 import { defineMiddleware } from 'astro:middleware'
 import { captureServerError, type LogLevel, log } from '@/shared/observability'
-import { matchRedirect, redirectResponse } from './redirects'
+import { goneResponse } from './gone'
+import { resolveRequest } from './redirects'
 
 // Всё ниже действует только на on-demand маршрутах: prerendered-страницы отдаёт
 // статик-хендлер адаптера раньше приложения (со своими `Cache-Control: public, max-age=0`
 // и ETag), и middleware их не видит — поэтому `X-Robots-Tag` staging ставит обёртка процесса
-// (docker/server.mjs) на каждый ответ. Путь без файла (в т.ч. любой из redirects.yaml) до
-// приложения доходит — 404-страница on-demand.
+// (docker/server.mjs) на каждый ответ. Путь без файла до приложения доходит — 404-страница
+// on-demand.
 export const onRequest = defineMiddleware(async (context, next) => {
   if (context.isPrerendered) return next()
 
@@ -25,9 +26,20 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   let response: Response
   try {
-    // Редиректы — данные (content/redirects.yaml): один хоп, до роутинга.
-    const redirect = matchRedirect(context.url.pathname)
-    response = redirect ? redirectResponse(redirect, context.url.search) : await next()
+    // Адреса — данные (content/redirects.yaml) и канон пути, до роутинга. В образе переезд и
+    // неканоническую форму обёртка процесса отдаёт той же таблицей раньше статик-хендлера, сюда
+    // доходит удалённый адрес; в `astro dev` обёртки нет, и на всё отвечает middleware. Адрес — из
+    // запроса, как его видела обёртка: `context.url` Astro нормализует по-своему (раскодирует путь),
+    // и канон по нему разошёлся бы с её ответом — петлёй редиректов.
+    const { pathname, search } = new URL(context.request.url)
+    const answer = resolveRequest(context.request.method, pathname + search)
+    if (answer?.status === 410) response = goneResponse()
+    else if (answer && 'location' in answer) {
+      response = new Response(null, {
+        status: answer.status,
+        headers: { location: answer.location },
+      })
+    } else response = await next()
   } catch (err) {
     // Ответ 500 строит Astro сам и сюда не возвращает: фиксируем rid для корреляции с трассой.
     logRequest(500)

@@ -6,6 +6,7 @@ import { defineConfig } from 'astro/config'
 import { load } from 'js-yaml'
 import { contentSecurityPolicy } from './scripts/lib/site-policy.mjs'
 import { writeSitemap } from './scripts/lib/sitemap.mjs'
+import { TRAILING_SLASH } from './src/shared/redirects/table.ts'
 
 // Один образ на все среды: на сборке в prerendered-выход попадает плейсхолдер
 // (валидный URL — голый __SITE_ORIGIN__ Astro отвергает), при старте контейнера
@@ -38,6 +39,12 @@ const closedImageEndpoint: AstroIntegration = {
       }
     },
   },
+}
+
+// Модули приложения, которые docker/server.mjs и docker/stamp.mjs импортируют из dist/server.
+const WRAPPER_ENTRIES = {
+  'runtime-config.mjs': 'src/shared/config/runtime.ts',
+  'redirects.mjs': 'src/app/middleware/redirects.ts',
 }
 
 // Карта сайта — файл сборки: пишется по страницам dist/client, когда они собраны (кто в карте и с
@@ -75,7 +82,8 @@ export default defineConfig({
     // Директивы и хеши островов — политика сборки (scripts/lib/site-policy.mjs).
     csp: contentSecurityPolicy(),
   },
-  trailingSlash: 'never',
+  // Форма адреса — одна настройка: по ней же обёртка процесса отвечает на неканоническую форму.
+  trailingSlash: TRAILING_SLASH,
   // 'file' + node-адаптер = 404 на /blog и /en (статик-хендлер видит каталог); только 'directory'.
   build: { format: 'directory' },
   i18n: { defaultLocale: 'ru', locales: ['ru', 'en'], routing: { prefixDefaultLocale: false } },
@@ -92,19 +100,22 @@ export default defineConfig({
     plugins: [
       tailwindcss(),
       yamlModules,
-      // docker/* проверяют env до старта приложения той же схемой, что его читает: модуль
-      // конфига — отдельный файл серверной сборки со стабильным именем, а экземпляр модуля у
-      // обёртки и приложения общий (разбор при старте и есть тот, что читают запросы).
+      // docker/* работают раньше приложения и берут его модули по имени файла: схему env (env
+      // проверяется до старта той же схемой, что его читает) и таблицу адресов (обёртка отвечает
+      // на адрес раньше статик-хендлера). Каждый — отдельный файл серверной сборки со стабильным
+      // именем, а экземпляр модуля у обёртки и приложения общий.
       {
-        name: 'runtime-config-entry',
+        name: 'wrapper-entries',
         apply: 'build',
         applyToEnvironment: (environment) => environment.name === 'ssr',
         buildStart() {
-          this.emitFile({
-            type: 'chunk',
-            id: fileURLToPath(new URL('src/shared/config/runtime.ts', import.meta.url)),
-            fileName: 'runtime-config.mjs',
-          })
+          for (const [fileName, source] of Object.entries(WRAPPER_ENTRIES)) {
+            this.emitFile({
+              type: 'chunk',
+              id: fileURLToPath(new URL(source, import.meta.url)),
+              fileName,
+            })
+          }
         },
       },
     ],

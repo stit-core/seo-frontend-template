@@ -1,3 +1,11 @@
 - from: /
   to: /net
   status: 301
+- from: /?p=5
+  to: /now
+  status: 301
+- from: /?p=7
+  status: 410
+- from: /Старый-Раздел/
+  to: /now
+  status: 301

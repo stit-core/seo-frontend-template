@@ -180,6 +180,7 @@
     "dist/client/index.html: /about/ — хвостовой слеш (лишний редирект)",
     "dist/client/index.html: /about.html — .html (дубль маршрута)",
     "dist/client/index.html: /old — адрес из redirects.yaml, ведите на конечный",
+    "dist/client/index.html: /about?old=1&utm=x — адрес из redirects.yaml, ведите на конечный",
     "dist/client/index.html: about — относительная ссылка, нужен корневой путь",
     "dist/client/index.html: /net.png — не существует"
   ],
@@ -211,7 +212,8 @@
     "src/entities/post/content/ru/telo.md:28: /blog.html: .html — дубль маршрута",
     "src/pages/status.ts: on-demand маршрут без строки в карте docs/reference/rendering.md",
     "content/redirects.yaml: from / совпадает с существующим маршрутом",
-    "content/redirects.yaml: to /net не существует"
+    "content/redirects.yaml: to /net не существует",
+    "content/redirects.yaml: from /?p=7: 410 на пути существующего маршрута — ответит страница"
   ],
   "plans": [
     "E .claude/plans/sub: вне модели планов — план живёт в .claude/plans/<slug>.md, бэклог в .claude/plans/backlog.md (skill /plan)",

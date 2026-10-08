@@ -10,7 +10,9 @@ import {
   entries,
   onDemandRoutes,
   prerenderedPaths,
+  rawGet,
   redirects,
+  requestTarget,
   THROWING_REQUESTS,
 } from '../site'
 
@@ -116,13 +118,6 @@ test.describe('on-demand: ответы приложения', () => {
     }
   })
 
-  test('хвостовой слеш — один 301 на адрес без слеша', async ({ request }) => {
-    const path = prerenderedPaths().find((candidate) => candidate !== '/') ?? '/'
-    const response = await request.get(`${path}/`, { maxRedirects: 0 })
-    expect(response.status()).toBe(301)
-    expect(response.headers().location).toBe(path)
-  })
-
   test('/healthz — 200 ok, no-store, X-Request-Id из запроса', async ({ request }) => {
     const response = await request.get('/healthz', { headers: { 'x-request-id': 'e2e-rid' } })
     expect(response.status()).toBe(200)
@@ -160,34 +155,166 @@ test.describe('запрос, на котором адаптер бросает �
   })
 })
 
-test.describe('редиректы как данные (content/redirects.yaml)', () => {
-  const moved = redirects().find((rule) => rule.status !== 410 && rule.to.startsWith('/'))
-  const gone = redirects().find((rule) => rule.status === 410)
+// У адреса одна форма: любую другую обёртка процесса закрывает одним 301 раньше статик-хендлера,
+// который отдал бы по ней ту же страницу (дубль) или второй хоп.
+test.describe('один адрес — одна форма', () => {
+  const pages = prerenderedPaths().filter((path) => path !== '/')
+  // Страница верхнего уровня и вложенная: у второй есть сегмент, который можно обойти точками.
+  const flat = pages.find((path) => path.lastIndexOf('/') === 0) ?? ''
+  const nested = pages.find((path) => path.lastIndexOf('/') > 0) ?? ''
+  const parent = nested.slice(0, nested.lastIndexOf('/'))
+  const leaf = nested.slice(nested.lastIndexOf('/') + 1)
 
-  test('переезд: один хоп на конечный адрес, query переезжает в Location', async ({ request }) => {
-    test.skip(!moved || moved.status === 410, 'в redirects.yaml нет внутреннего переезда')
-    if (!moved || moved.status === 410) return
-    const response = await request.get(moved.from, { maxRedirects: 0 })
-    expect(response.status()).toBe(moved.status)
-    expect(response.headers().location).toBe(moved.to)
-    expect((await request.get(moved.to, { maxRedirects: 0 })).status()).toBe(200)
-
-    const query = await request.get(`${moved.from}?x=1&y=2`, { maxRedirects: 0 })
-    expect(query.headers().location).toBe(`${moved.to}?x=1&y=2`)
-
-    // Хвостовой слеш срезает Astro до middleware, правило срабатывает вторым хопом.
-    const slash = await request.get(`${moved.from}/?x=1`, { maxRedirects: 0 })
-    expect(slash.status()).toBe(301)
-    expect(slash.headers().location).toBe(`${moved.from}?x=1`)
+  test('неканоническая форма страницы — один 301 сразу на её адрес: слеш, //, index.html, точки, проценты', async ({
+    baseURL,
+  }) => {
+    expect(flat, 'страница верхнего уровня в сборке').not.toBe('')
+    expect(nested, 'вложенная страница в сборке').not.toBe('')
+    const forms: [form: string, canonical: string][] = [
+      [`${flat}/`, flat],
+      [`/${flat}`, flat],
+      [`${flat}/index.html`, flat],
+      [`/.${flat}`, flat],
+      [`${flat}/?x=1&y=2`, `${flat}?x=1&y=2`],
+      ['/index.html', '/'],
+      ['//', '/'],
+      [`${nested}/`, nested],
+      [`${parent}//${leaf}`, nested],
+      [`${parent}/./${leaf}/index.html`, nested],
+      [`${parent}/x/../${leaf}`, nested],
+      // Буква, записанная процентами, — тот же адрес в другой записи.
+      [`/%${flat.charCodeAt(1).toString(16)}${flat.slice(2)}`, flat],
+    ]
+    for (const [form, canonical] of forms) {
+      const response = await rawGet(baseURL, form)
+      expect(response.status, form).toBe(301)
+      expect(response.headers.location, form).toBe(canonical)
+      expect((await rawGet(baseURL, canonical)).status, `${form} → ${canonical}`).toBe(200)
+    }
   })
 
-  test('удалённый адрес — 410 с телом, noindex и no-cache', async ({ request }) => {
-    test.skip(!gone, 'в redirects.yaml нет 410')
-    const response = await request.get(gone?.from ?? '', { maxRedirects: 0 })
-    expect(response.status()).toBe(410)
-    expect(response.headers()['x-robots-tag']).toContain('noindex')
-    expect(response.headers()['cache-control']).toBe('no-cache')
-    expect(response.headers()['x-request-id']).toBeTruthy()
-    expect(await response.text()).toMatch(/<h1>[^<]+<\/h1>/)
+  // Обёртка и приложение читают один и тот же адрес: редирект на форму, которую вторая сторона
+  // сочла бы неканонической, — петля.
+  test('любая запись пути — не больше одного редиректа, дальше ответ', async ({ baseURL }) => {
+    const exotic = [
+      '/a%5Bb%5D',
+      '/a[b]',
+      '/a%7Cb',
+      '/a|b',
+      '/100%25',
+      '/%2561bout',
+      '/a%2Bb',
+      '/a%3Fb%23c',
+      '/~a/(b)',
+      '/a%20b/',
+      '/%C3%A9t%c3%a9/',
+      `/%25${flat.charCodeAt(1).toString(16)}${flat.slice(2)}/index.html`,
+    ]
+    for (const form of exotic) {
+      const first = await rawGet(baseURL, form)
+      const last =
+        first.status === 301 ? await rawGet(baseURL, String(first.headers.location)) : first
+      expect([200, 404], `${form} → ${String(first.headers.location ?? '')}`).toContain(last.status)
+    }
+  })
+
+  test('спрятанный разделитель в пути (%2F, %5C) — 404 текстом, а не страница и не редирект', async ({
+    baseURL,
+  }) => {
+    for (const form of [`${parent}%2F${leaf}`, `${parent}%2f${leaf}/`, `${parent}%5C${leaf}`]) {
+      const response = await rawGet(baseURL, form)
+      expect(response.status, form).toBe(404)
+      expect(response.headers.location, form).toBeUndefined()
+      expect(response.headers['content-type'], form).toContain('text/plain')
+    }
+  })
+
+  test('заглавные в своём адресе — другой адрес: 404, а не редирект на строчные', async ({
+    baseURL,
+  }) => {
+    for (const form of [flat.toUpperCase(), nested.toUpperCase()]) {
+      const response = await rawGet(baseURL, form)
+      expect(response.status, form).toBe(404)
+      expect(response.headers.location, form).toBeUndefined()
+    }
+  })
+})
+
+test.describe('адреса как данные (content/redirects.yaml)', () => {
+  const moves = redirects().filter((rule) => 'to' in rule)
+  const gone = redirects().filter((rule) => rule.status === 410)
+  // Канонический путь правила с его парами query — и с добавкой к пути перед ними.
+  const withPath = (rule: (typeof moves)[number], path: string) =>
+    `${path}${rule.from.includes('?') ? rule.from.slice(rule.from.indexOf('?')) : ''}`
+
+  test('переезд: адрес правила в любой форме — один хоп на конечный адрес', async ({ baseURL }) => {
+    test.skip(moves.length === 0, 'в redirects.yaml нет переездов')
+    for (const rule of moves) {
+      if (!('to' in rule)) continue
+      const forms = [
+        requestTarget(rule),
+        withPath(rule, rule.path),
+        withPath(rule, `${rule.path === '/' ? '' : rule.path}/`),
+        withPath(rule, `/${rule.path}`),
+        withPath(
+          rule,
+          rule.path.toLowerCase() === rule.path
+            ? rule.path
+            : rule.path.replace(/%[0-9A-F]{2}/g, (hex) => hex.toLowerCase()),
+        ),
+      ]
+      for (const form of forms) {
+        const response = await rawGet(baseURL, form)
+        expect(response.status, form).toBe(rule.status)
+        expect(response.headers.location, form).toBe(rule.to)
+      }
+      // Конечный адрес отвечает сам: ни цепочки, ни второго хопа.
+      if (rule.to.startsWith('/'))
+        expect((await rawGet(baseURL, rule.to)).status, rule.to).toBe(200)
+    }
+  })
+
+  test('переезд: параметры запроса переезжают в Location, пары самого правила — нет', async ({
+    baseURL,
+  }) => {
+    test.skip(moves.length === 0, 'в redirects.yaml нет переездов')
+    for (const rule of moves) {
+      if (!('to' in rule) || !rule.to.startsWith('/')) continue
+      const target = requestTarget(rule)
+      const response = await rawGet(baseURL, `${target}${target.includes('?') ? '&' : '?'}x=1&y=2`)
+      expect(response.status, target).toBe(rule.status)
+      expect(response.headers.location, target).toBe(`${rule.to}?x=1&y=2`)
+    }
+  })
+
+  test('правило с ?query не срабатывает на голый путь и на другое значение параметра', async ({
+    baseURL,
+  }) => {
+    const rule = moves.find((candidate) => candidate.query.length > 0)
+    test.skip(!rule, 'в redirects.yaml нет правила с query')
+    if (!rule) return
+    const [[key, value] = ['', '']] = rule.query
+    for (const form of [rule.path, `${rule.path}?${key}=${value}0`]) {
+      const response = await rawGet(baseURL, form)
+      expect(response.headers.location, form).toBeUndefined()
+      expect([200, 404], form).toContain(response.status)
+    }
+  })
+
+  test('удалённый адрес — 410 с телом, noindex и no-cache; из другой формы — один 301 на него', async ({
+    baseURL,
+  }) => {
+    test.skip(gone.length === 0, 'в redirects.yaml нет 410')
+    for (const rule of gone) {
+      const response = await rawGet(baseURL, requestTarget(rule))
+      expect(response.status, rule.from).toBe(410)
+      expect(response.headers['x-robots-tag'], rule.from).toContain('noindex')
+      expect(response.headers['cache-control'], rule.from).toBe('no-cache')
+      expect(response.headers['x-request-id'], rule.from).toBeTruthy()
+      expect(response.body, rule.from).toMatch(/<h1>[^<]+<\/h1>/)
+      const slashed = await rawGet(baseURL, `${rule.path}/`)
+      expect(slashed.status, `${rule.path}/`).toBe(301)
+      expect(slashed.headers.location, `${rule.path}/`).toBe(rule.path)
+    }
   })
 })

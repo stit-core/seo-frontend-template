@@ -111,7 +111,7 @@ describe('app/middleware', () => {
     expect(response.headers.get('x-request-id')).toBeTruthy()
   })
 
-  it('редиректы из content/redirects.yaml — до роутинга, next не вызывается', async () => {
+  it('адреса из content/redirects.yaml и неканоническая форма — до роутинга, next не вызывается', async () => {
     const next = vi.fn(page)
     const moved = await run('/old?x=1', next)
     expect(next).not.toHaveBeenCalled()
@@ -124,6 +124,40 @@ describe('app/middleware', () => {
     expect(gone.status).toBe(410)
     expect(gone.headers.get('cache-control')).toBe('no-cache')
     expect(gone.headers.get('x-robots-tag')).toBe('noindex')
+
+    // В образе неканоническую форму раньше отдаёт обёртка процесса; в `astro dev` — middleware.
+    const slashed = await run('/now/?x=1', next)
+    expect(slashed.status).toBe(301)
+    expect(slashed.headers.get('location')).toBe('/now?x=1')
+    expect(next).not.toHaveBeenCalled()
+  })
+
+  // Astro раскодирует путь в `context.url`; канон считается по адресу запроса, иначе путь, который
+  // обёртка сочла каноническим, middleware вернул бы редиректом на него же.
+  it('адрес берётся из запроса, а не из нормализованного context.url', async () => {
+    const next = vi.fn(page)
+    const context = {
+      isPrerendered: false,
+      request: new Request(new URL('/a%5Bb%5D', env.SITE_URL)),
+      url: new URL('/a[b]', env.SITE_URL),
+      locals: {} as App.Locals,
+    } as unknown as APIContext
+    const response = (await onRequest(context, next)) as Response
+    expect(response.status).toBe(200)
+    expect(next).toHaveBeenCalledOnce()
+  })
+
+  it('не GET и не HEAD адресом не занимается: запрос идёт маршруту', async () => {
+    const next = vi.fn(page)
+    const url = new URL('/old', env.SITE_URL)
+    const context = {
+      isPrerendered: false,
+      request: new Request(url, { method: 'POST' }),
+      url,
+      locals: {} as App.Locals,
+    } as unknown as APIContext
+    await onRequest(context, next)
+    expect(next).toHaveBeenCalledOnce()
   })
 
   it('ошибка рендера: лог 500 с тем же rid, ошибка пробрасывается дальше', async () => {

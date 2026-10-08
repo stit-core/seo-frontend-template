@@ -78,7 +78,8 @@ description: Выпустить новую версию сайта — собр�
    Скрипт проверяет: отказ без `SITE_URL` за 20 с (код ≠ 0, лог называет ключ), штамповку origin
    (в `dist/client` не осталось плейсхолдера), статусы ключевых маршрутов и 404, canonical на
    runtime origin, CSP, открытый `robots.txt`, проштампованные `sitemap.xml` (все адреса на
-   runtime origin) и фиды, отказ вместо падения
+   runtime origin) и фиды, одну форму адреса (301 со слеша, `//` и `/index.html`, 404 на `%2F`),
+   отказ вместо падения
    (`TRACE` — 400, `/healthz` после него — 200), контур staging (`ROBOTS_POLICY=noindex`:
    `Disallow: /` и `X-Robots-Tag`), дренаж: `SIGTERM` доходит до node, выход 0 быстрее
    `SHUTDOWN_TIMEOUT_MS`. Красный — релиз не едет. Для глаз печатает заголовки и медиану TTFB —
@@ -129,7 +130,8 @@ description: Выпустить новую версию сайта — собр�
    прод-домене и по https
 8. `curl -sI https://<domain>/net-takogo` → **404**, не 200 и не редирект на главную
 9. `curl -sI http://<domain>/` и `https://www.<domain>/` и `https://<domain>/about/` →
-   ровно один 301/308 на канонический вид
+   ровно один 301/308 на канонический вид; `https://<domain>/about/index.html` — тоже один 301,
+   а старый адрес из `redirects.yaml` со слешем ведёт сразу на цель
 10. Исходник главной и одной контентной страницы глазами: `<title>`, `description`,
     `canonical`, hreflang (взаимный), `og:*`, JSON-LD, `<html lang>`, ровно один `<h1>`
 11. Rich Results Test (`search.google.com/test/rich-results`) — без ошибок

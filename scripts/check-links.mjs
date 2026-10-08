@@ -7,7 +7,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import { relative, resolve, sep } from 'node:path'
 import { load } from 'js-yaml'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
-import { buildRedirectTable } from '../src/shared/redirects/table.ts'
+import { buildRedirectTable, canonicalPath } from '../src/shared/redirects/table.ts'
 import { decode } from './lib/html.mjs'
 import { pageRoutes, walk } from './lib/routes.mjs'
 
@@ -73,10 +73,11 @@ for (const file of pages) {
       continue
     }
     const path = url.replace(/[?#].*$/, '')
+    const search = /\?[^#]*/.exec(url)?.[0] ?? ''
     if (path !== '/' && path.endsWith('/'))
       errors.push(`${where}: ${url} — хвостовой слеш (лишний редирект)`)
     else if (path.endsWith('.html')) errors.push(`${where}: ${url} — .html (дубль маршрута)`)
-    else if (redirects.has(path))
+    else if (redirects.find(canonicalPath(path) ?? path, search))
       errors.push(`${where}: ${url} — адрес из redirects.yaml, ведите на конечный`)
     else if (!onDemand.has(path) && !existsAsFileOrPage(path))
       errors.push(`${where}: ${url} — не существует`)

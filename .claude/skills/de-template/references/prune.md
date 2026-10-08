@@ -74,7 +74,7 @@ src/shared/seo/rss.ts  src/shared/seo/rss.test.ts
 | `.size-limit.cjs` | убрать бюджет «HTML поста» и вычисление самой тяжёлой записи |
 | `content/redirects.yaml` | демо-записи (их цель `/blog` уходит вместе с блогом — `check:content` это поймает) |
 | `src/app/middleware/redirects.test.ts` | если таблица пустая — условие «непуста» меняется на «строится» |
-| `src/app/middleware/index.server.test.ts` | кейс «редиректы до роутинга» ходит по демо-адресам `/old` и `/blog/staraya-zametka` — заменить своими из `redirects.yaml` (нет `410` — убрать его половину кейса) |
+| `src/app/middleware/index.server.test.ts` | кейс «адреса … до роутинга» ходит по демо-адресам `/old` и `/blog/staraya-zametka` — заменить своими из `redirects.yaml` (нет `410` — убрать его половину кейса) |
 | `src/pages/_tests/fixtures.ts`, `src/pages/_tests/post-body.astro` | удалить вместе с `vi.mock('astro:content')` и `vi.mock('@/entities/author')` в тестах маршрутов: коллекции нет |
 | `src/pages/_tests/endpoints.server.test.ts` | describe фидов и их импорты убрать вместе с `vi.mock('astro:content')` |
 | `src/pages/_tests/pages.astro.test.ts` | убрать строки `/blog`, `/en/blog` и таблицу маршрутов с параметрами |

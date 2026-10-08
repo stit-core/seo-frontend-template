@@ -42,6 +42,9 @@
   и ИИ-бот получают те же 200 и тот же HTML. Кого пускать, решает `robots.txt` — политика
   ИИ-ботов сайта, поле сборки (`allow-all` | `allow-search-deny-training` | `deny-all`); её
   значение печатает handoff релиза. Edge этот ответ не портит: требования — 1.4 и 1.5.
+- **У адреса одна форма.** Хвостовой и двойной слеш, `/index.html`, точки в пути и адреса старого
+  сайта из таблицы переездов процесс сам закрывает одним 301 на конечный адрес — раньше, чем
+  отдаст файл; заглавные в своём адресе и закодированный слеш — 404. Путь edge не переписывает.
 - **Публичный `POST /api/contact`**: форма обратной связи работает без JavaScript, одна
   принятая заявка = одно письмо (или один запрос во внутренний сервис). Ограничителя
   частоты в приложении нет by design — счётчик в процессе не переживает рестарт и не
@@ -155,7 +158,7 @@ services:
       traefik.http.routers.site.entrypoints: websecure
       traefik.http.routers.site.tls: "true"
       traefik.http.routers.site.tls.certresolver: letsencrypt
-      traefik.http.routers.site.middlewares: crowdsec@file,rate-limit@file,secure-headers@file,strip-index-html@file,compress@file,retry@file${SITE_EDGE_EXTRA_MW:-}
+      traefik.http.routers.site.middlewares: crowdsec@file,rate-limit@file,secure-headers@file,compress@file,retry@file${SITE_EDGE_EXTRA_MW:-}
 
       # Публичный POST формы: свой лимит частоты и лимит тела.
       traefik.http.routers.site-form.rule: Host(`${DOMAIN}`) && Path(`/api/contact`) && Method(`POST`)
@@ -278,13 +281,6 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
         replacement: "https://${DOMAIN}/${1}"
         permanent: true
 
-    # Дубль каждой страницы: <путь>/index.html отдаётся 200 тем же HTML, но без CSP приложения.
-    strip-index-html:
-      redirectRegex:
-        regex: "^https?://([^/]+)(/.*)?/index\\.html$"
-        replacement: "https://${1}${2}"
-        permanent: true
-
     # Публичный POST формы: одна заявка = одно письмо.
     form-rate-limit:
       rateLimit:
@@ -343,8 +339,12 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
   выпадение из индекса, для ИИ-бота, который строит ответы или идёт за страницей по запросу
   человека, — из ответов нейросети; поэтому ни те ни другие не должны доходить до WAF-решения
   (см. 1.5).
-- **Порядок цепочки**: `crowdsec` (дешёвый отказ) → лимит → `secure-headers` →
-  `strip-index-html` (редирект не нужно сжимать) → `compress` → `retry`.
+- **Порядок цепочки**: `crowdsec` (дешёвый отказ) → лимит → `secure-headers` → `compress` →
+  `retry`.
+- **Форму пути edge не трогает.** Хвостовой и двойной слеш, `/index.html`, точки и запись процентов
+  приложение приводит само — один 301 сразу на конечный адрес, с учётом таблицы переездов сайта;
+  `redirectRegex` на путь в Traefik дал бы второй хоп перед ней. Путь с закодированным слешем
+  (`%2F`) приложение отдаёт 404 — на edge он не раскодируется.
 - **`retry` — только на `site`, не на `site-form`**: он добивает единичные гонки при
   force-recreate, но повтор уже отправленного POST — это вторая заявка.
 - **`compress` — не для POST формы**: в цепочке `site-form` его нет, он там бесполезен.
@@ -482,8 +482,8 @@ curl -s   https://<domain>/sitemap.xml | grep -c '<loc>'   # ожидаемое 
 curl -sI  https://<domain>/net-takogo          # 404 (не 200 и не редирект на главную)
 curl -sI  http://<domain>/                     # ровно один 301/308 на https
 curl -sI  https://www.<domain>/                # ровно один 301 на apex
-curl -sI  https://<domain>/index.html          # 301 на /
-curl -sI  https://<domain>/about/index.html    # 301 на /about — дубль любой страницы, без CSP
+curl -sI  https://<domain>/index.html          # 301 на / — форму адреса приводит приложение
+curl -sI  https://<domain>/about/index.html    # 301 на /about, одним хопом
 curl -sI  https://<domain>/<любая-страница>/   # 301 без слеша (хвостовой слеш срезается)
 curl -sI  https://<domain>/healthz             # 200, Cache-Control: no-store
 curl -sI 'https://<domain>/_image?href=/og-default.png&f=webp'   # 403 на edge (без него — 404 приложения)

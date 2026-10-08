@@ -23,7 +23,7 @@
 | `sitemap.xml` — файл сборки: ровно страницы без `noindex`, адрес — canonical, `lastmod` — дата правки или публикации записи | интеграция `sitemap-from-build` (`astro.config.ts`) + `scripts/lib/sitemap.mjs` |
 | политика ИИ-ботов: три режима, именная группа `robots.txt` и мета `deny-all` — из реестра ботов базы strategy | `AI_BOTS_POLICY` (`shared/config/site.ts`) + `shared/seo/{ai-bots.ts,crawlers.yaml}` |
 | теги без тонких страниц в индексе: страница тега индексируется от трёх записей локали, ниже — `noindex`, вне карты и hreflang | `entities/post/lib/tags.ts` + порог `TAG_INDEX_MIN_POSTS` политики сборки |
-| честные статусы: 404, 410, 301/308 одним хопом, 500 | `app/middleware` + `content/redirects.yaml` |
+| честные статусы: 404, 410, 500; у адреса одна форма — любая другая и адрес старого сайта (заглавные, кириллица, `?query`, слеш) отвечают одним 301 сразу на конечный адрес | `shared/redirects` + `content/redirects.yaml`, обёртка `docker/server.mjs` и `app/middleware` |
 | абсолютные URL на реальном домене в любом контуре | штамповка `SITE_URL` при старте контейнера |
 
 Решение проекта (шаблон не угадывает): бренд и описание, канонический хост, дефолтная
