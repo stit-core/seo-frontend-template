@@ -281,8 +281,8 @@ test.describe('один адрес — одна форма', () => {
 test.describe('адреса как данные (content/redirects.yaml)', () => {
   const moves = redirects().filter((rule) => 'to' in rule)
   const gone = redirects().filter((rule) => rule.status === 410)
-  // Канонический путь правила с его парами query — и с добавкой к пути перед ними.
-  const withPath = (rule: (typeof moves)[number], path: string) =>
+  // Путь с парами query правила: канонический адрес правила — `withPath(rule, rule.path)`.
+  const withPath = (rule: { from: string }, path: string) =>
     `${path}${rule.from.includes('?') ? rule.from.slice(rule.from.indexOf('?')) : ''}`
 
   test('переезд: адрес правила в любой форме — один хоп на конечный адрес', async ({ baseURL }) => {
@@ -344,7 +344,9 @@ test.describe('адреса как данные (content/redirects.yaml)', () =>
   }) => {
     test.skip(gone.length === 0, 'в redirects.yaml нет 410')
     for (const rule of gone) {
-      const response = await rawGet(baseURL, requestTarget(rule))
+      // 410 отвечает одна форма удалённого адреса — каноническая.
+      const address = withPath(rule, rule.path)
+      const response = await rawGet(baseURL, address)
       expect(response.status, rule.from).toBe(410)
       expect(response.headers['x-robots-tag'], rule.from).toContain('noindex')
       expect(response.headers['cache-control'], rule.from).toBe('no-cache')
@@ -358,9 +360,18 @@ test.describe('адреса как данные (content/redirects.yaml)', () =>
           t(other, 'gone.lead'),
         )
       }
-      const slashed = await rawGet(baseURL, `${rule.path}/`)
-      expect(slashed.status, `${rule.path}/`).toBe(301)
-      expect(slashed.headers.location, `${rule.path}/`).toBe(rule.path)
+      // Запись `from` со слешем старого сайта — такая же другая форма, как любая.
+      const forms = [
+        requestTarget(rule),
+        withPath(rule, `${rule.path}/`),
+        withPath(rule, `/${rule.path}`),
+        withPath(rule, `${rule.path}/index.html`),
+      ]
+      for (const form of forms.filter((candidate) => candidate !== address)) {
+        const moved = await rawGet(baseURL, form)
+        expect(moved.status, form).toBe(301)
+        expect(moved.headers.location, form).toBe(address)
+      }
     }
   })
 })

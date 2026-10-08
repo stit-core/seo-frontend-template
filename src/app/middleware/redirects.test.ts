@@ -13,13 +13,26 @@ describe('app/middleware/redirects', () => {
   it('каждое from из content/redirects.yaml отвечает своим правилом — и в форме с хвостовым слешем', () => {
     expect(rules.length).toBeGreaterThan(0)
     for (const rule of rules) {
-      const expected =
-        'to' in rule ? { status: rule.status, location: rule.to } : { status: rule.status }
-      expect(resolveRequest('GET', requestOf(rule.from)), rule.from).toEqual(expected)
-      expect(resolveRequest('HEAD', requestOf(rule.from)), rule.from).toEqual(expected)
-      // Переезд из неканонической формы — тем же одним хопом, без остановки на канонической.
-      const slashed = `${rule.path}/${rule.from.includes('?') ? rule.from.slice(rule.from.indexOf('?')) : ''}`
-      if ('to' in rule) expect(resolveRequest('GET', slashed), slashed).toEqual(expected)
+      const written = requestOf(rule.from)
+      const search = written.includes('?') ? written.slice(written.indexOf('?')) : ''
+      const address = `${rule.path}${search}`
+      const slashed = `${rule.path}/${search}`
+      if ('to' in rule) {
+        // Переезд из любой формы — тем же одним хопом, без остановки на канонической.
+        const expected = { status: rule.status, location: rule.to }
+        for (const form of [written, address, slashed]) {
+          expect(resolveRequest('GET', form), form).toEqual(expected)
+          expect(resolveRequest('HEAD', form), form).toEqual(expected)
+        }
+      } else {
+        // 410 отвечает одна форма удалённого адреса — каноническая; с любой другой, и с записи
+        // `from` со слешем старого сайта, — один 301 на неё.
+        expect(resolveRequest('GET', address), address).toEqual({ status: 410 })
+        expect(resolveRequest('HEAD', address), address).toEqual({ status: 410 })
+        for (const form of [written, slashed].filter((candidate) => candidate !== address)) {
+          expect(resolveRequest('GET', form), form).toEqual({ status: 301, location: address })
+        }
+      }
     }
     expect(resolveRequest('GET', '/')).toBeUndefined()
     expect(resolveRequest('GET', '/net-takogo')).toBeUndefined()
