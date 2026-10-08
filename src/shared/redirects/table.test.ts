@@ -208,6 +208,31 @@ describe('buildRedirectTable', () => {
     for (const to of ['/A', '/a/', '/a?x=1', 'b', 'ftp://x.example']) {
       expect(() => buildRedirectTable([{ from: '/a', to, status: 301 }]), to).toThrow()
     }
+    // Чужой адрес, который не разбирается, — отказ с причиной, а не 400 на запросе.
+    for (const to of ['https://exa mple.com/x', 'https://', 'http:example.com']) {
+      expect(() => buildRedirectTable([{ from: '/a', to, status: 301 }]), to).toThrow(
+        /http\(s\) URL, который разбирается/,
+      )
+    }
+  })
+
+  // Заголовок Location не-ASCII не принимает: цель записана так, как её шлёт браузер.
+  it('внешняя цель — в одной записи: хост в punycode, путь в процентах — с перенесённым query и без него', () => {
+    const table = buildRedirectTable([
+      { from: '/partner', to: 'https://пример.рф/новый-раздел', status: 301 },
+      { from: '/docs', to: 'HTTPS://Example.com', status: 308 },
+    ])
+    const location =
+      'https://xn--e1afmkfd.xn--p1ai/%D0%BD%D0%BE%D0%B2%D1%8B%D0%B9-%D1%80%D0%B0%D0%B7%D0%B4%D0%B5%D0%BB'
+    expect(resolveRedirect(table, '/partner')).toEqual({ status: 301, location })
+    expect(resolveRedirect(table, '/partner?utm=1')).toEqual({
+      status: 301,
+      location: `${location}?utm=1`,
+    })
+    expect(resolveRedirect(table, '/docs')).toEqual({
+      status: 308,
+      location: 'https://example.com/',
+    })
   })
 
   it('различает внутренние и внешние цели', () => {

@@ -44,7 +44,7 @@ const internalPath = z
 
 const target = z.union(
   [internalPath, z.url({ protocol: /^https?$/ })],
-  'корневой путь или абсолютный http(s) URL',
+  'свой корневой путь или абсолютный http(s) URL, который разбирается (с хостом, без пробелов)',
 )
 
 // Адрес старого сайта — как он был: с заглавными, кириллицей или процентами, хвостовым слешем,
@@ -111,9 +111,11 @@ const RedirectRuleSchema = z
       query,
       ...(rule.note === undefined ? {} : { note: rule.note }),
     }
-    return rule.status === 410
-      ? { ...address, status: 410 }
-      : { ...address, to: rule.to as string, status: rule.status }
+    if (rule.status === 410) return { ...address, status: 410 }
+    const to = rule.to as string
+    // Чужой адрес — в одной записи, как его шлёт браузер: хост в punycode, путь и query в процентах.
+    // Кириллицу (`https://пример.рф/раздел`) заголовок Location не принимает — ответ вышел бы 400.
+    return { ...address, to: isExternalTarget(to) ? new URL(to).href : to, status: rule.status }
   })
 
 export const RedirectsSchema = z.array(RedirectRuleSchema)

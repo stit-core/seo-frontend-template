@@ -9,3 +9,6 @@
 - from: /Старый-Раздел/
   to: /now
   status: 301
+- from: /partner
+  to: https://пример.рф/новый-раздел
+  status: 301
