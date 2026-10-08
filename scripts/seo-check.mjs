@@ -8,12 +8,14 @@
 // - hreflang — полный взаимный набор (self + x-default) у каждой пары переводов из источника
 //   (главные, списки и теги под обоими префиксами локалей; записи — twin по translationKey) и
 //   только у них;
-// - JSON-LD: типы из списка политики, Organization/WebSite только на главной, правильный
-//   BreadcrumbList, разметка = видимое (headline = h1, даты = <time>, image = og:image,
-//   mainEntityOfPage = canonical, крошки = BreadcrumbList, имена и контакты организации — на
-//   странице); организация одна — один @id у её узлов и ссылок на неё и одно имя на всю сборку,
-//   издатель сайта и записи — она; автор-человек — со своим @id, подписан на странице, и имя у
-//   него на локали одно;
+// - JSON-LD (любой <script> этого типа, какие бы ещё атрибуты ни стояли у тега): типы из списка
+//   политики, Organization/WebSite только на главной, правильный BreadcrumbList, разметка = видимое
+//   (headline = h1, даты = <time>, image = og:image, mainEntityOfPage = canonical, крошки =
+//   BreadcrumbList, имена и контакты организации — на странице; видимое — без поддеревьев под
+//   hidden и aria-hidden); организация одна — один @id у её узлов и ссылок на неё, узел с этим @id —
+//   только типов ORG_TYPES, одно имя на всю сборку, издатель сайта и записи — она; автор-человек —
+//   со своим @id, подписан на странице, и имя у него на локали одно; микроданных (itemscope,
+//   itemprop) нет — сущности размечает только JSON-LD;
 // - тело: ни плейсхолдера origin, ни HTML-комментариев; исполняемый код (<script>, on*=,
 //   javascript:) — только острова из списка; у картинок размеры, картинка над h1 (LCP) — не lazy и
 //   с fetchpriority; ресурсов с чужих origin нет (и в style=""), @font-face — с font-display
@@ -28,7 +30,16 @@ import { load } from 'js-yaml'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
 import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../src/shared/i18n/locale.ts'
 import { collectionsOf, splitFrontmatter } from './lib/content.mjs'
-import { bodyOf, decode, headTags, isNoindex, normalizeSpace, textOf } from './lib/html.mjs'
+import {
+  attributesOf,
+  bodyOf,
+  decode,
+  headTags,
+  isNoindex,
+  jsonLdBlocks,
+  normalizeSpace,
+  textOf,
+} from './lib/html.mjs'
 import { pageRoutes, walk } from './lib/routes.mjs'
 import {
   DESCRIPTION_BUDGET,
@@ -36,6 +47,7 @@ import {
   JSON_LD_FORBIDDEN,
   JSON_LD_TYPES,
   NOINDEX_ROUTES,
+  ORG_TYPES,
   RESOURCE_ORIGINS,
   scriptViolations,
   TITLE_BUDGET,
@@ -208,6 +220,24 @@ function checkMedia(where, body) {
     fail(where, `fetchpriority="high" у ${priority.length} картинок, больше двух`)
 }
 
+// Сущности размечает только JSON-LD в <head>: микроданные в теле — вторая разметка мимо правил
+// сущности. Смотрятся имена атрибутов: слово в тексте или в значении атрибута — не разметка.
+const MICRODATA = ['itemscope', 'itemtype', 'itemprop']
+function checkMicrodata(where, html) {
+  const found = new Set()
+  for (const [, attrs = ''] of html
+    .replace(/<script\b[\s\S]*?<\/script>/gi, '')
+    .matchAll(/<[a-z][\w:-]*\b([^>]*)>/gi)) {
+    for (const name of attributesOf(attrs).keys()) if (MICRODATA.includes(name)) found.add(name)
+  }
+  if (found.size > 0) {
+    fail(
+      where,
+      `микроданные в разметке (${[...found].join(', ')}): сущности размечает только JSON-LD в <head>`,
+    )
+  }
+}
+
 // Видимые крошки — паттерн WAI-ARIA Breadcrumb: <nav> с упорядоченным списком, последний пункт —
 // текущая страница с aria-current="page" без ссылки. Оглавление (текущего пункта нет) и
 // нумерованная пагинация (в пунктах ни слова — номера, «…», стрелки) в <nav><ol> — не крошки.
@@ -229,11 +259,10 @@ function visibleCrumbs(body) {
   })
 }
 
-// Сущности разметки — одни на сайт, где бы в блоке ни стоял узел или ссылка. Организация
-// (Organization, LocalBusiness) — с одним @id, сайт и запись называют её издателем; имена
-// собираются со всей сборки: второе имя — вторая сущность для поисковика. Автор-человек — со своим
-// @id; его имя и роль видны на странице (подпись), и у одного @id на одной локали имя одно.
-const ORG_TYPES = ['Organization', 'LocalBusiness']
+// Сущности разметки — одни на сайт, где бы в блоке ни стоял узел или ссылка. Организация (типы
+// ORG_TYPES политики) — с одним @id, сайт и запись называют её издателем; имена собираются со всей
+// сборки: второе имя — вторая сущность для поисковика. Автор-человек — со своим @id; его имя и
+// роль видны на странице (подпись), и у одного @id на одной локали имя одно.
 const ORG_ID = `${OWN_ORIGIN}/#org`
 const WEBSITE_ID = `${OWN_ORIGIN}/#website`
 const orgNames = new Map()
@@ -277,6 +306,12 @@ function checkEntities(where, blocks, page) {
           )
         }
         if (node.name && !orgNames.has(node.name)) orgNames.set(node.name, where)
+      } else if (node['@id'] === ORG_ID) {
+        // Подтип (Dentist) с @id организации мимо списка типов выпал бы из всех правил сущности.
+        fail(
+          where,
+          `${label}: узел с @id организации типа «${node['@type']}» вне ORG_TYPES (scripts/lib/site-policy.mjs)`,
+        )
       }
       if (node['@type'] === 'Person') checkPerson(where, label, node, page)
       for (const [key, value] of Object.entries(node)) visit(value, `${label}.${key}`)
@@ -415,6 +450,7 @@ for (const file of walk(client)) {
   for (const message of scriptViolations(html)) fail(where, message)
   checkResources(where, html)
   checkMedia(where, body)
+  checkMicrodata(where, html)
 
   // Служебная prerendered-страница (подтверждение заявки, 500) закрыта одним noindex и не
   // печатает ни canonical, ни OG, ни hreflang: разрешающие и запрещающие директивы не
@@ -517,9 +553,7 @@ for (const file of walk(client)) {
   }
 
   const blocks = []
-  for (const [, json] of html.matchAll(
-    /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g,
-  )) {
+  for (const json of jsonLdBlocks(html)) {
     let data
     try {
       // Строки разметки — в нормализации видимого текста: «разметка = видимое» не краснеет на

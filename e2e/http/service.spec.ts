@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { bodyOf, type HeadTag, headTags, isNoindex } from '../../scripts/lib/html.mjs'
+import { bodyOf, type HeadTag, headTags, isNoindex, jsonLdBlocks } from '../../scripts/lib/html.mjs'
 import { scriptViolations } from '../../scripts/lib/site-policy.mjs'
 import { SITE_ORIGIN_PLACEHOLDER } from '../../src/shared/config/runtime.ts'
 import { OG_DEFAULT_IMAGE } from '../../src/shared/config/site.ts'
@@ -17,7 +17,6 @@ import {
 const PLACEHOLDER = new URL(SITE_ORIGIN_PLACEHOLDER).hostname
 const UNKNOWN = '/net-takogo-adresa'
 
-const jsonLd = (html: string) => html.match(/<script type="application\/ld\+json">/g) ?? []
 const serverTime = (html: string) => /<time datetime="([^"]+)"/.exec(html)?.[1]
 
 // Служебная страница: только noindex, без canonical, OG, hreflang и разметки.
@@ -37,7 +36,7 @@ function expectServicePage(html: string, path: string) {
     has((tag) => tag.property?.startsWith('og:') === true),
     path,
   ).toBe(false)
-  expect(jsonLd(html), path).toEqual([])
+  expect(jsonLdBlocks(html), path).toEqual([])
   expect(html.match(/<h1[\s>]/g), path).toHaveLength(1)
 }
 

@@ -3,7 +3,7 @@ import { createServer } from 'node:net'
 import { relative, resolve, sep } from 'node:path'
 import { load } from 'js-yaml'
 import { collections, splitFrontmatter } from '../scripts/lib/content.mjs'
-import { headTags, isNoindex } from '../scripts/lib/html.mjs'
+import { headTags, isJsonLd, isNoindex } from '../scripts/lib/html.mjs'
 import { pageRoutes, walk } from '../scripts/lib/routes.mjs'
 import { cspHash, ISLANDS, RESOURCE_ORIGINS } from '../scripts/lib/site-policy.mjs'
 import { type Locale, localePath } from '../src/shared/i18n/locale.ts'
@@ -222,7 +222,7 @@ export function cspProblems(html: string, header: string | undefined): string[] 
     const pattern = new RegExp(`<${element}\\b([^>]*)>([\\s\\S]*?)</${element}>`, 'g')
     for (const [, attrs = '', body = ''] of html.matchAll(pattern)) {
       // JSON-LD — данные, а не код: CSP его не исполняет и не блокирует.
-      if (attrs.includes('type="application/ld+json"')) continue
+      if (isJsonLd(attrs)) continue
       if (!directives.get(name)?.includes(`'${cspHash(body)}'`)) {
         problems.push(`<${element}${attrs}>: ${name} не пропускает ${cspHash(body)}`)
       }

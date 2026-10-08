@@ -37,8 +37,9 @@ Dockerfile монтирует его необязательно. Мажор Node
 В контекст сборки попадают только `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`,
 `astro.config.ts`, `tsconfig.json`, `src/` (включая контент `src/entities/*/content/**`),
 `public/`, `content/` (`redirects.yaml` разбирается на сборке, в серверный бандл попадают
-данные), `docker/` и политика сборки `scripts/lib/site-policy.mjs` (из неё конфиг строит CSP)
-(`.dockerignore`; его `*.md` исключает только корневые файлы).
+данные), `docker/` и политика сборки `scripts/lib/site-policy.mjs` (из неё конфиг строит CSP) с
+её разбором HTML `scripts/lib/html.mjs` (`.dockerignore`; его `*.md` исключает только корневые
+файлы).
 
 ## Запуск
 

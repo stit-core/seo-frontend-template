@@ -5,6 +5,7 @@
 // страница, остров, сторонний сервис, тип разметки, — а не по месту в скрипте.
 import { createHash } from 'node:crypto'
 import { METRIKA_ID } from '../../src/shared/config/site.ts'
+import { isJsonLd } from './html.mjs'
 
 // Служебные prerendered-маршруты без префикса локали: только им положен noindex.
 export const NOINDEX_ROUTES = ['/contacts/spasibo', '/500']
@@ -101,6 +102,10 @@ export const JSON_LD_TYPES = [
 ]
 export const JSON_LD_FORBIDDEN = ['FAQPage', 'HowTo', 'SearchAction']
 
+// Типы узла организации сайта: у него сверяются @id, имя и видимые факты. Подтип LocalBusiness
+// (Dentist, AutoRepair) — строкой и здесь, и в JSON_LD_TYPES: иначе правила сущности его не видят.
+export const ORG_TYPES = ['Organization', 'LocalBusiness']
+
 // Сниппет выдачи индексируемой страницы: title без суффикса сайта — не меньше трёх слов и не
 // длиннее ширины строки выдачи, description — от «не из нескольких слов» до границы обрезки.
 export const TITLE_BUDGET = { minWords: 3, maxChars: 65 }
@@ -127,7 +132,7 @@ export function scriptViolations(html) {
   const seen = new Set()
   for (const match of html.matchAll(/<script\b([^>]*)>/g)) {
     const attrs = match[1] ?? ''
-    if (/type="application\/ld\+json"/.test(attrs)) {
+    if (isJsonLd(attrs)) {
       if (match.index > headEnd) problems.push('JSON-LD в <body>: разметка — только в <head>')
       continue
     }

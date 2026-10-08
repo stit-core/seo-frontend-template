@@ -4,7 +4,7 @@ import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
 import type * as AuthorSlice from '@/entities/author'
 import { SITE_NAME } from '@/shared/config'
 import { parseHtml } from '@/shared/lib/testing'
-import { headTags } from '../../../scripts/lib/html.mjs'
+import { headTags, jsonLdBlocks } from '../../../scripts/lib/html.mjs'
 import NotFound from '../404.astro'
 import ServerError from '../500.astro'
 import About from '../about.astro'
@@ -56,9 +56,7 @@ async function render(
     partial: false,
   })
   const tags = headTags(html)
-  const blocks = [...html.matchAll(/<script type="application\/ld\+json">([^<]*)<\/script>/g)].map(
-    ([, json]) => JSON.parse(json ?? '') as Record<string, unknown>,
-  )
+  const blocks = jsonLdBlocks(html).map((json) => JSON.parse(json) as Record<string, unknown>)
   return {
     html,
     lang: /<html lang="([^"]+)"/.exec(html)?.[1],
