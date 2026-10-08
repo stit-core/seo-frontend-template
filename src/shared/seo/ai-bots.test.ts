@@ -1,8 +1,19 @@
+import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { CRAWLERS_SHA256 } from '../../../scripts/lib/site-policy.mjs'
 import { aiBotsMeta, deniedBots } from './ai-bots'
 
 // Кого именно закрывает каждая политика, держит матрица доступа в robots.test.ts; здесь — то, что
 // сайт вычитывает из реестра: закрытые токены и мета.
 describe('seo/ai-bots', () => {
+  // Реестр — копия файла базы: правка руками разошлась бы с нормой молча, а матрица сверяет сайт с
+  // самой копией. Новая версия базы — замена файла и sha256 в политике сборки одним диффом.
+  it('копия реестра — версия, закреплённая в политике сборки', () => {
+    const registry = readFileSync(join(import.meta.dirname, 'crawlers.yaml'))
+    expect(createHash('sha256').update(registry).digest('hex')).toBe(CRAWLERS_SHA256)
+  })
+
   it('allow-all никого не закрывает', () => {
     expect(deniedBots('allow-all')).toEqual([])
   })

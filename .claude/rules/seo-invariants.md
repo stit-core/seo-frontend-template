@@ -111,7 +111,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   поиск не закрывает ни одна. Токены группы и мета — из `policies` реестра
   `shared/seo/crawlers.yaml`: это копия файла базы strategy
   (`kb/site/07-seo-geo-performance-analytics/crawlers.yaml`) байт в байт — норма у владельца,
-  правится заменой файла, руками список ботов не пишется
+  правится заменой файла, руками список ботов не пишется. Версия копии закреплена: sha256 файла —
+  `CRAWLERS_SHA256` политики сборки, правка копии без смены хеша валит `pnpm test`
 - `sitemap.xml` — свой маршрут (у `@astrojs/sitemap` `lastmod` не из `updatedDate`, отбор страниц —
   `filter`, карта — шардами `sitemap-index.xml`): ровно
   индексируемые prerendered-страницы сборки (главные, статические страницы из списка
