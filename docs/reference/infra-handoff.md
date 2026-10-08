@@ -417,23 +417,34 @@ accessLog:
 - **Allowlist ИИ-ботов — по спискам вендоров.** `seo-bots-whitelist` знает rDNS классических
   поисковиков, ИИ-ботов в нём нет: бот, который обходит карту сайта, упирается в сценарии
   `http-crawl-non_statics` и `http-probing`, получает бан и 403 — сайт выпадает из ответов этой
-  системы. Поэтому сети поисковых и user-fetch ботов вносятся в allowlist CrowdSec
+  системы. Поэтому сети ботов, которых пускает политика сайта, вносятся в allowlist CrowdSec
   (`cscli allowlists`, CrowdSec ≥ 1.6.8) и обновляются по расписанию, раз в неделю: вендоры
   меняют адреса. Источник — реестр ботов сайта `src/shared/seo/crawlers.yaml` (копия
-  `crawlers.yaml` базы strategy): у записей `bots[]` с `purpose: search` и `user_fetch` поле
-  `ip_list_url` — JSON с сетями вендора, `rdns_suffix` — суффиксы обратного DNS (Яндекс, Google,
-  Apple). Печать списков в `<org>/site`:
+  `crawlers.yaml` базы strategy): у записи `bots[]` поле `ip_list_url` — список сетей вендора,
+  `rdns_suffix` — суффиксы обратного DNS. Печать источников в `<org>/site` на теге релиза —
+  поисковые, user-fetch и обучающие боты, у каждого назначение, токен и оба поля:
 
   ```bash
-  node -e "const {load}=require('js-yaml');const {bots}=load(require('fs').readFileSync('src/shared/seo/crawlers.yaml','utf8'));for(const b of bots)if(['search','user_fetch'].includes(b.purpose))console.log(b.user_agent_token,b.ip_list_url??'—',(b.rdns_suffix??[]).join(','))"
+  node -e "const {load}=require('js-yaml');const {bots}=load(require('fs').readFileSync('src/shared/seo/crawlers.yaml','utf8'));for(const b of bots)if(b.kind!=='control-token'&&['search','user_fetch','training'].includes(b.purpose))console.log(b.purpose,b.user_agent_token,b.ip_list_url??'—',(b.rdns_suffix??[]).join(',')||'—')"
   ```
 
-  По User-Agent allowlist не строится — как и whitelist поисковиков: UA подделывается.
+  Строка с `ip_list_url` — сети в `cscli allowlists`. Строка только с `rdns_suffix` (Яндекс) —
+  суффиксы в rDNS-whitelist (`seo-bots-whitelist` и локальная страховка выше): `cscli allowlists`
+  принимает адреса и сети, а не имена. Строка без обоих полей — вендор списка не публикует: в
+  allowlist ей нечем попасть, такого бота бережёт только «429, а не 403» (1.3). По User-Agent
+  allowlist не строится — как и whitelist поисковиков: UA подделывается.
 - **Edge согласован с `robots.txt`: кого политика сайта пускает — в allowlist, кого закрывает —
-  нет.** При `allow-all` туда идут и сети обучающих ботов (`purpose: training`): `CCBot` числится
-  в списке `http-bad-user-agent` хаба CrowdSec, и без allowlist edge забанит бота, которого
-  `robots.txt` пускает. При `allow-search-deny-training` обучающих в allowlist нет; при `deny-all`
-  из него уходят и ИИ-боты — остаются классические поисковики.
+  нет.** Политику инфра у себя не хранит, а читает с сайта: бот, которого называет именная группа с
+  `Disallow: /` живого `https://<domain>/robots.txt`, в allowlist не идёт. При `allow-all` именной
+  группы нет — идут все строки печати, и обучающие (`training`): `CCBot` числится в списке
+  `http-bad-user-agent` хаба CrowdSec, и без allowlist edge забанит бота, которого `robots.txt`
+  пускает. При `allow-search-deny-training` группа называет обучающих, при `deny-all` — ещё и
+  ИИ-поиск с загрузками по запросу человека: остаются классические поисковики.
+- **Где живёт список.** Строки печати — файл репо инфры (`configs/crowdsec/ai-bots.sources`, первой
+  строкой — версия реестра), а не данные VPS: репо сайта на VPS нет, а в образе реестр — часть
+  серверной сборки. Файл обновляет сессия в `<org>/infra`, когда строка `AI-BOTS` handoff релиза
+  называет другую политику или другую версию реестра; еженедельное задание на VPS читает из него
+  `ip_list_url`, сверяет токены с именной группой живого `robots.txt` и обновляет `cscli allowlists`.
 
 ### 1.6 Остальные файлы репозитория
 

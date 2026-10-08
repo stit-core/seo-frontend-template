@@ -1,8 +1,9 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import type { Locale } from '@/shared/i18n'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import AuthorByline from './author-byline.astro'
 
-const render = async (props: { locale: 'ru' | 'en'; name: string; jobTitle?: string }) => {
+const render = async (props: { locale: Locale; name: string; jobTitle?: string }) => {
   const container = await AstroContainer.create()
   return container.renderToString(AuthorByline, { props })
 }

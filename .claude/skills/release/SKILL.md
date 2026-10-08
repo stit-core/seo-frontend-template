@@ -94,7 +94,7 @@ description: Выпустить новую версию сайта — собр�
    WHAT:   новый образ <registry>/<org>/site:vX.Y.Z
    ACTION: в <org>/infra: make bump SVC=site TAG=vX.Y.Z
    ENV:    <новые ключи из docs/stack/config.md; иначе "—">
-   AI-BOTS: <AI_BOTS_POLICY из src/shared/config/site.ts> — allowlist CrowdSec по этой политике
+   AI-BOTS: <AI_BOTS_POLICY из src/shared/config/site.ts>, реестр <первые 12 знаков CRAWLERS_SHA256 из scripts/lib/site-policy.mjs>
    PROXY:  <новые требования к Traefik: rate-limit, редиректы; иначе "—">
    RISK:   <риски отката и совместимости; иначе "—">
    ===
@@ -102,8 +102,9 @@ description: Выпустить новую версию сайта — собр�
 
    Новые env-ключи инфра-админ дописывает в `.env` VPS **до** бампа, иначе контейнер
    поднимется с дефолтами или не поднимется вовсе (`SITE_URL` обязателен). Политика ИИ-ботов —
-   поле сборки, она уже в образе: строка `AI-BOTS` говорит инфре, кого держать в allowlist
-   CrowdSec (`docs/reference/infra-handoff.md § 1.5`).
+   поле сборки, она уже в образе: строка `AI-BOTS` говорит инфре, что политика или версия реестра
+   ботов сменилась и список источников allowlist CrowdSec пора обновить
+   (`docs/reference/infra-handoff.md § 1.5`).
 
 8. **После выката** — прогнать `/seo-audit` по прод-домену и пройти пункты «после
    деплоя» чек-листа ниже.
