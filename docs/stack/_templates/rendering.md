@@ -30,7 +30,7 @@ single-flight, прогрев, инвалидация) — `docs/reference/rende
 |---|---|---|---|---|
 | контентные страницы и списки | `static` | `public, max-age=0` + ETag | да | да |
 | `/contacts/spasibo` | `static` | то же | нет — `noindex` | нет |
-| `/404`, `/500` | `dynamic` / `static` | `no-cache` | нет | нет |
+| страницы ошибок `404`, `500` | `dynamic` / `static` | `no-cache` | нет | нет |
 | `/healthz`, `/now` | `dynamic` | `no-store` / `private, no-store` | нет | нет |
 | `robots.txt`, `sitemap.xml`, фиды, `/<ключ>.txt` | `dynamic` | короткий `public, max-age` | — | нет |
 | `/api/*` (обработчики форм) | `dynamic` | `private, no-store` | нет | нет |

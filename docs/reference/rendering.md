@@ -39,7 +39,7 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 | `/contacts/spasibo`, `/en/contacts/spasibo` | `contacts/spasibo.astro`, `en/contacts/spasibo.astro` | `static` | то же | нет — `noindex` | нет |
 | `/legal/privacy` | `legal/privacy.astro` | `static` | то же | да | да |
 | `/api/contact` | `api/contact.astro` (страница: без JS ответ на POST — разметка) | `dynamic` | `private, no-store` (роут) | нет — `noindex` | нет |
-| `/500` | `500.astro` (адаптер читает файл с диска при исключении в on-demand) | `static` | `public, max-age=0` + ETag | нет — `noindex` | нет |
+| `/500.html` | `500.astro` (адаптер читает файл с диска при исключении в on-demand; по `/500` — 404) | `static` | `public, max-age=0` + ETag | нет — `noindex` | нет |
 | `/now` | `now.astro` | `dynamic` | `private, no-store` (роут) | нет — `noindex` | нет |
 | `/healthz` | `healthz.ts` (endpoint) | `dynamic` | `no-store` (роут) | нет | нет |
 | `/_image` | `_image.ts` (endpoint изображений: маршрут вводит сам Astro, `image.endpoint` в `astro.config.ts` подменяет его для сборки; в `astro dev` — штатный) | `dynamic` | `no-cache` (роут) | — (404 текстом, `X-Robots-Tag: noindex`: картинки готовит сборка, трансформация на запрос наружу закрыта, на edge — тоже) | нет |
@@ -124,7 +124,8 @@ origin; остаток плейсхолдера в любом файле `dist/c
   `X-Robots-Tag: noindex` сами: это не страницы выдачи, а обход их не блокирует
 - Staging (`ROBOTS_POLICY=noindex`): `X-Robots-Tag: noindex, nofollow` на каждом ответе процесса —
   prerendered, `public/*`, ассеты и on-demand — ставит обёртка `docker/server.mjs`, последним:
-  значение маршрута его не перекрывает
+  значение маршрута его не перекрывает. Исключение — отказ самого Node на запрос, не дошедший до
+  слушателей (`deployment.md § Обёртка сервера`)
 - `Content-Security-Policy` — у каждой страницы: prerendered — статик-хендлер из
   `dist/_headers.json` сборки, on-demand (404, `/now`, ответ формы) — Astro в ответе. Политика
   одна (`contentSecurityPolicy()`, `scripts/lib/site-policy.mjs`): `default-src 'self'`,

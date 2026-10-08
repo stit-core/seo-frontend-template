@@ -97,8 +97,8 @@ pnpm check            # полный гейт
 /release              # аудит зависимостей, образ, приёмка (pnpm accept:image), тег, пуш, handoff в <org>/infra
 ```
 
-Сайт живёт за Traefik в `<org>/infra`; что ему нужно от прокси (rate-limit на форму,
-`X-Forwarded-Proto`, закрытый staging) — `docs/reference/deployment.md`.
+Сайт живёт за Traefik в `<org>/infra`; что ему нужно от прокси (rate-limit на форму, строгий
+`Host` и методы, закрытый staging) — `docs/reference/deployment.md`.
 
 ## Гейт перед push
 
