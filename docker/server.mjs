@@ -28,6 +28,20 @@ done.catch((err) => {
   process.exit(1)
 })
 
+// Статик-хендлер адаптера при staticHeaders строит Request на каждый запрос вне try/catch, а его
+// конструктор бросает на методе TRACE и на userinfo в Host: без перехвата один анонимный запрос —
+// uncaught exception и выход процесса. Без строки лога, как у 400 парсера Node: причина — в самом
+// запросе, а текст ошибки несёт его URL.
+const [handle] = http.listeners('request')
+http.off('request', handle)
+http.on('request', (request, response) => {
+  try {
+    handle(request, response)
+  } catch {
+    response.writeHead(400, { 'content-type': 'text/plain; charset=utf-8' }).end('Bad request')
+  }
+})
+
 // Traefik/nginx держат idle-соединение дольше, чем дефолтные 5 с Node.
 http.keepAliveTimeout = config.KEEP_ALIVE_TIMEOUT_MS
 http.headersTimeout = config.KEEP_ALIVE_TIMEOUT_MS + 5_000

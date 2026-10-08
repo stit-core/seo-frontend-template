@@ -77,10 +77,11 @@ description: Выпустить новую версию сайта — собр�
 
    Скрипт проверяет: отказ без `SITE_URL` за 20 с (код ≠ 0, лог называет ключ), штамповку origin
    (в `dist/client` не осталось плейсхолдера), статусы ключевых маршрутов и 404, canonical на
-   runtime origin, CSP, открытый `robots.txt` и непустой `sitemap.xml`, контур staging
-   (`ROBOTS_POLICY=noindex`: `Disallow: /` и `X-Robots-Tag`), дренаж: `SIGTERM` доходит до node,
-   выход 0 быстрее `SHUTDOWN_TIMEOUT_MS`. Красный — релиз не едет. Для глаз печатает заголовки и
-   медиану TTFB — их порогов в скрипте нет.
+   runtime origin, CSP, открытый `robots.txt` и непустой `sitemap.xml`, отказ вместо падения
+   (`TRACE` — 400, `/healthz` после него — 200), контур staging (`ROBOTS_POLICY=noindex`:
+   `Disallow: /` и `X-Robots-Tag`), дренаж: `SIGTERM` доходит до node, выход 0 быстрее
+   `SHUTDOWN_TIMEOUT_MS`. Красный — релиз не едет. Для глаз печатает заголовки и медиану TTFB —
+   их порогов в скрипте нет.
 
 5. **Тег**: `git tag vX.Y.Z && git push origin vX.Y.Z` (по явному OK).
 

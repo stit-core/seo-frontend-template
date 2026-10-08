@@ -127,9 +127,9 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
 - HTTP-набор `e2e/http/` (`pnpm test:http`, шаг `pnpm check`) на prod-сервере из сборки: каждая
   страница — тот же HTML под `User-Agent: Googlebot`, canonical на runtime origin, в `<body>`
   нет своего origin, нет `X-Robots-Tag` в прод-профиле, а в staging он на каждом ответе (страницы
-  сборки, ассет, `public/*`, on-demand, 404, редиректы); HTML on-demand маршрута — только с
-  `noindex` (мета или заголовок), его скрипты — острова политики; robots (прод и staging) ↔
-  sitemap ↔ `dist/client`, фиды, ключ IndexNow; размер HTML
+  сборки, ассет, `public/*`, on-demand, 404, редиректы, отказ обёртки); HTML on-demand маршрута —
+  только с `noindex` (мета или заголовок), его скрипты — острова политики; robots (прод и
+  staging) ↔ sitemap ↔ `dist/client`, фиды, ключ IndexNow; размер HTML
   < 300 КБ. Парсер `<head>` и `decode` сущностей один — `scripts/lib/html.mjs` (он же в
   `seo:check` и `check:links`)
 - Перед релизом вручную: Rich Results Test, validator.schema.org, валидатор Яндекса

@@ -200,6 +200,21 @@ const EDGE_HEADERS = [
 export const edgeHeadersIn = (headers: Record<string, string>): string[] =>
   EDGE_HEADERS.filter((name) => name in headers)
 
+// Запросы, на которых слушатель адаптера бросает исключение: статик-хендлер строит Request на
+// каждый запрос, а его конструктор не принимает метод TRACE и userinfo в Host. Цели — все пути
+// слушателя: страница сборки, on-demand маршрут, закрытый /_image.
+export const THROWING_REQUESTS: {
+  name: string
+  path: string
+  method?: string
+  headers?: Record<string, string>
+}[] = [
+  { name: 'TRACE страницы сборки', path: '/', method: 'TRACE' },
+  { name: 'TRACE on-demand маршрута', path: '/healthz', method: 'TRACE' },
+  { name: 'TRACE /_image', path: '/_image', method: 'TRACE' },
+  { name: 'userinfo в Host', path: '/', headers: { host: 'user@site.example' } },
+]
+
 // Правила content/redirects.yaml.
 export function redirects(): RedirectRule[] {
   const data = load(readFileSync(resolve(root, 'content/redirects.yaml'), 'utf8'))

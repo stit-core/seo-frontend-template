@@ -32,8 +32,9 @@ JSON-строка на on-demand запрос, `X-Request-Id` для сшивк�
 Prerendered-страницы, `public/*` и `/_astro/*` отдаёт статик-хендлер адаптера **до**
 приложения — middleware их не видит, и в логе процесса их нет. Видны только on-demand
 ответы: 404, `/now`, `/healthz`, `robots.txt`, `sitemap.xml`, фиды, файл ключа IndexNow,
-обработчик формы и редиректы из `content/redirects.yaml`. Полная картина трафика — в
-access-log Traefik.
+обработчик формы и редиректы из `content/redirects.yaml`. Отказ `400` на запрос, который до
+приложения не дошёл, — самого Node (битый запрос) или обёртки процесса (`TRACE`, userinfo в
+`Host`; `deployment.md`) — строки не оставляет. Полная картина трафика — в access-log Traefik.
 
 ## `X-Request-Id`
 

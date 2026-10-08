@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # Приёмка собранного образа до пуша в registry: отказ без SITE_URL за конечное время, штамповка
-# origin, статусы ключевых маршрутов, canonical, CSP, robots и карта, контур staging, дренаж по
-# SIGTERM; заголовки и TTFB — печать без порога.
+# origin, статусы ключевых маршрутов, canonical, CSP, robots и карта, отказ 400 без падения на
+# TRACE, контур staging, дренаж по SIGTERM; заголовки и TTFB — печать без порога.
 # Использование: pnpm accept:image <image> [port]
 set -u
 
@@ -122,6 +122,17 @@ while [ "$i" -lt 20 ]; do
   curl -s -o /dev/null -w '%{time_starttransfer}\n' "http://127.0.0.1:$PORT/"
   i=$((i + 1))
 done | sort -n | sed -n '10p' | sed 's/^/  медиана: /'
+
+# На TRACE слушатель адаптера бросает исключение: без перехвата в обёртке контейнер после такого
+# запроса мёртв — поэтому проверка в профиле последняя.
+echo "== запрос, на котором адаптер бросает исключение: 400, процесс жив =="
+code=$(curl -s -o /dev/null -w '%{http_code}' -X TRACE "http://127.0.0.1:$PORT/")
+alive=$(status /healthz)
+if [ "$code" = "400" ] && [ "$alive" = "200" ]; then
+  ok "TRACE / → 400, /healthz после него → 200"
+else
+  fail "TRACE / → $code, /healthz после него → $alive (ждали 400 и 200)"
+fi
 
 echo "== контур staging (ROBOTS_POLICY=noindex) =="
 cleanup

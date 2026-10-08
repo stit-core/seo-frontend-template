@@ -11,6 +11,7 @@ import {
   onDemandRoutes,
   prerenderedPaths,
   redirects,
+  THROWING_REQUESTS,
 } from '../site'
 
 const PLACEHOLDER = new URL(SITE_ORIGIN_PLACEHOLDER).hostname
@@ -146,6 +147,17 @@ test.describe('on-demand: ответы приложения', () => {
     // Разрешение метки — миллисекунда: пауза гарантирует разное время у двух рендеров.
     await new Promise((done) => setTimeout(done, 10))
     expect(serverTime(await (await request.get('/now')).text())).not.toBe(serverTime(html))
+  })
+})
+
+// Исключение слушателя адаптера не доходит до процесса: без перехвата в обёртке (docker/server.mjs)
+// один анонимный запрос завершал бы сервер.
+test.describe('запрос, на котором адаптер бросает исключение', () => {
+  test('400 от обёртки процесса, следом /healthz — 200: процесс жив', async ({ request }) => {
+    for (const { name, path, ...options } of THROWING_REQUESTS) {
+      expect((await request.fetch(path, options)).status(), name).toBe(400)
+      expect((await request.get('/healthz')).status(), `/healthz после: ${name}`).toBe(200)
+    }
   })
 })
 

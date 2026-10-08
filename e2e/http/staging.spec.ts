@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { OG_DEFAULT_IMAGE } from '../../src/shared/config/site.ts'
-import { onDemandRoutes, prerenderedPaths, redirects } from '../site'
+import { onDemandRoutes, prerenderedPaths, redirects, THROWING_REQUESTS } from '../site'
 
 // Контур staging (ROBOTS_POLICY=noindex): тот же образ, закрытый процессом. Заголовок ставит обёртка
 // сервера, поэтому он есть и там, куда приложение не доходит, — у статики адаптера.
@@ -28,6 +28,17 @@ test.describe('staging: ROBOTS_POLICY=noindex', () => {
     for (const path of paths) {
       const response = await request.get(path, { maxRedirects: 0 })
       expect(response.headers()['x-robots-tag'], path).toBe('noindex, nofollow')
+    }
+  })
+
+  test('отказ обёртки на запрос, на котором адаптер бросает исключение, — 400 с тем же X-Robots-Tag, процесс жив', async ({
+    request,
+  }) => {
+    for (const { name, path, ...options } of THROWING_REQUESTS) {
+      const response = await request.fetch(path, options)
+      expect(response.status(), name).toBe(400)
+      expect(response.headers()['x-robots-tag'], name).toBe('noindex, nofollow')
+      expect((await request.get('/healthz')).status(), `/healthz после: ${name}`).toBe(200)
     }
   })
 })
