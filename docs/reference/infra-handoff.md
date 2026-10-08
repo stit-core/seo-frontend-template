@@ -38,6 +38,10 @@
   и prerendered-страниц со статикой, которые отдаёт статик-хендлер до middleware, — ставит
   обёртка процесса; без него уходит только отказ самого Node на битый запрос (400, 408, 413,
   417, 431). Замок staging (`basicAuth`) — только на Traefik.
+- **Ботам — тот же ответ, что человеку.** Приложение не ветвится по `User-Agent`: поисковый робот
+  и ИИ-бот получают те же 200 и тот же HTML. Кого пускать, решает `robots.txt` — политика
+  ИИ-ботов сайта, поле сборки (`allow-all` | `allow-search-deny-training` | `deny-all`); её
+  значение печатает handoff релиза. Edge этот ответ не портит: требования — 1.4 и 1.5.
 - **Публичный `POST /api/contact`**: форма обратной связи работает без JavaScript, одна
   принятая заявка = одно письмо (или один запрос во внутренний сервис). Ограничителя
   частоты в приложении нет by design — счётчик в процессе не переживает рестарт и не
@@ -336,7 +340,8 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
   отдаёт файл на любой метод (`POST /` — 200 со страницей), на `TRACE` процесс отвечает 400.
 - **429, а не 403, для избыточного трафика.** Лимит частоты Traefik отдаёт 429 — это
   сигнал «замедлись», который краулер понимает. Бан (403) для поискового робота —
-  выпадение из индекса, поэтому верифицированные боты не должны доходить до WAF-решения
+  выпадение из индекса, для ИИ-бота, который строит ответы или идёт за страницей по запросу
+  человека, — из ответов нейросети; поэтому ни те ни другие не должны доходить до WAF-решения
   (см. 1.5).
 - **Порядок цепочки**: `crowdsec` (дешёвый отказ) → лимит → `secure-headers` →
   `strip-index-html` (редирект не нужно сжимать) → `compress` → `retry`.
@@ -367,6 +372,7 @@ accessLog:
     headers:
       names:
         X-Request-Id: keep
+        User-Agent: keep
   filters:
     # Фильтр по статусам снимается целиком: 2xx нужны и аналитике краулеров,
     # и сценариям CrowdSec (http-crawl-non_statics).
@@ -375,7 +381,11 @@ accessLog:
 
 Почему это важно именно для сайта: prerendered-страницы отдаёт статик-хендлер адаптера, и
 в логе приложения их нет вовсе. Полная картина трафика — только в access-log Traefik.
-`X-Request-Id: keep` сшивает его со строкой лога приложения.
+`X-Request-Id: keep` сшивает его со строкой лога приложения. `User-Agent: keep` — без него
+боты не видны ни в одном логе: заголовки запроса Traefik по умолчанию в лог не пишет
+(`fields.headers.defaultMode: drop`), и отчёту «какой бот приходил и что получил»
+(`docs/reference/observability.md § Боты в access-log`), как и сценарию CrowdSec по User-Agent,
+работать не на чем.
 
 ### 1.5 CrowdSec
 
@@ -400,7 +410,30 @@ accessLog:
   делать** — UA подделывается.
 - **ИИ-боты — продуктовое решение, а не гигиена.** На индексируемом сайте ими управляет
   политика сайта — поле сборки `AI_BOTS_POLICY`, именная группа в `robots.txt` сервиса, — а не
-  бан на edge.
+  бан на edge. Трафик из ответов нейросетей приносят поисковые ИИ-боты (`OAI-SearchBot`,
+  `PerplexityBot`, `Claude-SearchBot`) и загрузки по запросу человека (`ChatGPT-User`,
+  `Perplexity-User`, `Claude-User`); обучающие (`GPTBot`, `ClaudeBot`, `CCBot`) трафика не несут —
+  их пускают или нет по политике.
+- **Allowlist ИИ-ботов — по спискам вендоров.** `seo-bots-whitelist` знает rDNS классических
+  поисковиков, ИИ-ботов в нём нет: бот, который обходит карту сайта, упирается в сценарии
+  `http-crawl-non_statics` и `http-probing`, получает бан и 403 — сайт выпадает из ответов этой
+  системы. Поэтому сети поисковых и user-fetch ботов вносятся в allowlist CrowdSec
+  (`cscli allowlists`, CrowdSec ≥ 1.6.8) и обновляются по расписанию, раз в неделю: вендоры
+  меняют адреса. Источник — реестр ботов сайта `src/shared/seo/crawlers.yaml` (копия
+  `crawlers.yaml` базы strategy): у записей `bots[]` с `purpose: search` и `user_fetch` поле
+  `ip_list_url` — JSON с сетями вендора, `rdns_suffix` — суффиксы обратного DNS (Яндекс, Google,
+  Apple). Печать списков в `<org>/site`:
+
+  ```bash
+  node -e "const {load}=require('js-yaml');const {bots}=load(require('fs').readFileSync('src/shared/seo/crawlers.yaml','utf8'));for(const b of bots)if(['search','user_fetch'].includes(b.purpose))console.log(b.user_agent_token,b.ip_list_url??'—',(b.rdns_suffix??[]).join(','))"
+  ```
+
+  По User-Agent allowlist не строится — как и whitelist поисковиков: UA подделывается.
+- **Edge согласован с `robots.txt`: кого политика сайта пускает — в allowlist, кого закрывает —
+  нет.** При `allow-all` туда идут и сети обучающих ботов (`purpose: training`): `CCBot` числится
+  в списке `http-bad-user-agent` хаба CrowdSec, и без allowlist edge забанит бота, которого
+  `robots.txt` пускает. При `allow-search-deny-training` обучающих в allowlist нет; при `deny-all`
+  из него уходят и ИИ-боты — остаются классические поисковики.
 
 ### 1.6 Остальные файлы репозитория
 
@@ -444,14 +477,21 @@ curl -sI  https://<domain>/<любая-страница>/   # 301 без сле�
 curl -sI  https://<domain>/healthz             # 200, Cache-Control: no-store
 curl -sI 'https://<domain>/_image?href=/og-default.png&f=webp'   # 403 на edge (без него — 404 приложения)
 curl -s   https://<domain>/ | grep -c __site_origin__      # 0 — плейсхолдер проштампован
+curl -sI  https://<domain>/llms.txt            # 404 text/plain: файла нет, заглушки тоже
+# UA-проба: edge не режет ботов по User-Agent — каждому 200
+for ua in OAI-SearchBot PerplexityBot Claude-SearchBot ChatGPT-User; do
+  curl -s -o /dev/null -w "$ua %{http_code}\n" -A "Mozilla/5.0 (compatible; $ua/1.0)" https://<domain>/
+done
 ```
 
 5. Заголовки — по списку 1.3: от edge `Strict-Transport-Security`, `X-Content-Type-Options:
    nosniff`, `Referrer-Policy`, `Permissions-Policy`; от приложения `Content-Security-Policy` с
    `frame-ancestors 'none'`; `X-Frame-Options` и `X-XSS-Protection` нет; `Content-Encoding: br`
    на HTML; `curl -X POST https://<domain>/` и `curl -X TRACE https://<domain>/` — не 200.
-6. CrowdSec: `cscli decisions list` — верифицированные боты не забанены;
-   `cscli metrics` показывает непустой источник acquisition.
+6. CrowdSec: `cscli decisions list` — ни верифицированных поисковых ботов, ни адресов из
+   списков вендоров ИИ-ботов среди забаненных нет; `cscli allowlists list` — списки вендоров на
+   месте (при политике сайта `allow-all` — с сетями обучающих ботов); `cscli metrics` показывает
+   непустой источник acquisition; в записи access-log есть `request_User-Agent`.
 7. Лимит формы: серия POST на `/api/contact` упирается в **429**, а не в 403 и не в
    принятую заявку.
 8. На не-прод VPS: `/` отвечает 401 (basicAuth), в ответе `X-Robots-Tag: noindex,

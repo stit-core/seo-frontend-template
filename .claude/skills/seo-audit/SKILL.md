@@ -43,7 +43,8 @@ pnpm test:http      # после pnpm build: HTTP-набор, профили п�
 ```
 
 Набор поднимает копию сборки как контейнер (`docker/entrypoint.sh` + `docker/server.mjs`) на
-свободных портах и проверяет сырой HTML (в том числе под `User-Agent: Googlebot`): статусы и
+свободных портах и проверяет сырой HTML (в том числе под `User-Agent: Googlebot`, а шаблоны
+страниц, `robots.txt` и карту — под UA каждого поискового и user-fetch бота реестра): статусы и
 заголовки, штамповку origin, `noindex` и острова на on-demand страницах (prerendered держит
 `seo:check`), `robots.txt` (прод и staging) ↔ `sitemap.xml` ↔ `dist/client`, фиды, ключ
 IndexNow, вес HTML.

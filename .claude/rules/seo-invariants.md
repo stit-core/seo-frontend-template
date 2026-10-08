@@ -1,5 +1,5 @@
 ---
-description: SEO-канон шаблона — head через DocumentLayout (title/description уникальны, self-canonical, hreflang только для реальных переводов, OG полный), JSON-LD в head только про видимое и только допустимые типы, robots.txt/sitemap.xml/rss.xml/ключ IndexNow on-demand на runtime origin, staging в три контура, гейты seo:check и HTTP-набор.
+description: SEO-канон шаблона — head через DocumentLayout (title/description уникальны, self-canonical, hreflang только для реальных переводов, OG полный), JSON-LD в head только про видимое и только допустимые типы, одна организация и авторы по @id, политика ИИ-ботов из реестра базы, robots.txt/sitemap.xml/rss.xml/ключ IndexNow on-demand на runtime origin, staging в три контура, ботам тот же ответ, гейты seo:check и HTTP-набор.
 paths: ["src/shared/seo/**", "src/shared/config/site.ts", "src/app/layouts/**", "src/pages/**", "src/widgets/breadcrumbs/**", "scripts/seo-check.mjs", "scripts/lib/html.mjs", "e2e/http/**", "public/**"]
 ---
 
@@ -150,7 +150,10 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   всегда, обучающие боты (`bots[].purpose`) закрыты во втором и третьем режимах, поисковые
   ИИ-боты — в третьем
 - HTTP-набор `e2e/http/` (`pnpm test:http`, шаг `pnpm check`) на prod-сервере из сборки: каждая
-  страница — тот же HTML под `User-Agent: Googlebot`, canonical на runtime origin, в `<body>`
+  страница — тот же HTML под `User-Agent: Googlebot`; шаблоны страниц, `robots.txt` и карта — 200,
+  то же тело и тот же `X-Robots-Tag` под UA каждого поискового и user-fetch бота реестра (сервер
+  не ветвится по User-Agent: кого пускать, решает `robots.txt`); `/llms.txt` — 404 `text/plain`;
+  canonical на runtime origin, в `<body>`
   нет своего origin, нет `X-Robots-Tag` в прод-профиле, а в staging он на каждом ответе (страницы
   сборки, ассет, `public/*`, on-demand, 404, редиректы, отказ обёртки); HTML on-demand маршрута —
   только с `noindex` (мета или заголовок), его скрипты — острова политики; robots (прод и

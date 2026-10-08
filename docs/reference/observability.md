@@ -32,9 +32,30 @@ JSON-строка на on-demand запрос, `X-Request-Id` для сшивк�
 Prerendered-страницы, `public/*` и `/_astro/*` отдаёт статик-хендлер адаптера **до**
 приложения — middleware их не видит, и в логе процесса их нет. Видны только on-demand
 ответы: 404, `/now`, `/healthz`, `robots.txt`, `sitemap.xml`, фиды, файл ключа IndexNow,
-обработчик формы и редиректы из `content/redirects.yaml`. Отказ `400` на запрос, который до
-приложения не дошёл, — самого Node (битый запрос) или обёртки процесса (`TRACE`, userinfo в
-`Host`; `deployment.md`) — строки не оставляет. Полная картина трафика — в access-log Traefik.
+обработчик формы и редиректы из `content/redirects.yaml` — без `User-Agent`: строка лога его не
+несёт. Отказ `400` на запрос, который до приложения не дошёл, — самого Node (битый запрос) или
+обёртки процесса (`TRACE`, userinfo в `Host`; `deployment.md`) — строки не оставляет. Полная
+картина трафика — в access-log Traefik.
+
+### Боты в access-log
+
+Страницы боту отдаёт статик-хендлер, поэтому в логе процесса визита нет — он виден только в
+access-log Traefik, и только когда в нём есть `User-Agent`
+(`infra-handoff.md § 1.4`: `fields.headers.names.User-Agent: keep`). Раз в неделю — отчёт «бот ×
+статус»: кто приходил и что получил.
+
+```bash
+# В <org>/site: токены ботов реестра одной строкой через «|»
+BOTS=$(node -e "const {load}=require('js-yaml');console.log(load(require('fs').readFileSync('src/shared/seo/crawlers.yaml','utf8')).bots.filter(b=>b.ua_substring).map(b=>b.user_agent_token).join('|'))")
+# На хосте с логом: число ответов по боту и статусу
+jq -r --arg bots "$BOTS" '(."request_User-Agent" // "" | capture("(?<bot>" + $bots + ")").bot) as $bot
+  | [$bot, .DownstreamStatus] | @tsv' /var/log/traefik/access.log | sort | uniq -c | sort -rn
+```
+
+Читать так: `403` у поискового или user-fetch бота — edge режет того, кто приносит трафик из
+ответов (allowlist — `infra-handoff.md § 1.5`); `429` и `5xx` сериями — бот видит сайт
+недоступным и снижает обход. User-Agent подделывают: подозрительную строку сверяют по списку
+сетей вендора (`ip_list_url`, `rdns_suffix` записи реестра) до того, как делать выводы.
 
 ## `X-Request-Id`
 

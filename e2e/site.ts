@@ -61,6 +61,52 @@ export function indexablePaths(): string[] {
   })
 }
 
+// Шаблоны страниц — по одной странице сборки на prerendered-маршрут src/pages: у маршрута с
+// параметром (`/blog/[slug]`) — первый собранный адрес. Ответ боту зависит от сервера и шаблона, а
+// не от записи, поэтому матрица ботов ходит по шаблонам, а не по всей сборке.
+export function pageTemplates(): string[] {
+  const built = prerenderedPaths()
+  const matches = (route: string, path: string) => {
+    const pattern = route.split('/')
+    const segments = path.split('/')
+    return (
+      pattern.length === segments.length &&
+      pattern.every((segment, index) => segment.startsWith('[') || segment === segments[index])
+    )
+  }
+  return pageRoutes(resolve(root, 'src/pages'))
+    .filter((page) => page.prerender)
+    .flatMap((page) => built.filter((path) => matches(page.route, path)).slice(0, 1))
+}
+
+interface Crawler {
+  user_agent_token: string
+  ua_substring: string | null
+  purpose: string
+  kind: string
+}
+
+// Боты, которые приходят за страницей, — поисковые и загрузки по запросу человека из реестра
+// (src/shared/seo/crawlers.yaml); токен без своих запросов (control-token) в сеть не ходит. Строка
+// User-Agent — как у бота: «compatible; <токен/версия>».
+export function botUserAgents(): Record<string, string> {
+  const registry = readFileSync(resolve(root, 'src/shared/seo/crawlers.yaml'), 'utf8')
+  const { bots } = load(registry) as { bots: Crawler[] }
+  return Object.fromEntries(
+    bots
+      .filter((bot) => ['search', 'user_fetch'].includes(bot.purpose))
+      .filter((bot) => bot.kind !== 'control-token')
+      .map((bot) => {
+        const product = bot.ua_substring ?? bot.user_agent_token
+        const version = product.endsWith('/') ? '1.0' : ''
+        return [
+          bot.user_agent_token,
+          `Mozilla/5.0 (compatible; ${product}${version}; +https://example.com/bot)`,
+        ]
+      }),
+  )
+}
+
 // On-demand маршруты без параметров (src/pages с `prerender = false`): их отдаёт приложение.
 export function onDemandRoutes(): string[] {
   return pageRoutes(resolve(root, 'src/pages'))

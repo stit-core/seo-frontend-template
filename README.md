@@ -112,10 +112,10 @@ docs/stack/       формы платформенных артефактов (12
 
 Записи — Markdown в `src/entities/post/content/<locale>/<slug>.md` с frontmatter под
 Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `translationKey`,
-`draft`, обложка с `alt`, `author` — id из реестра авторов). Язык задаёт каталог; переводы связаны `translationKey`,
-непереведённое под `/en/` — 404, черновики видны только в `astro dev`. Списки — `/blog`,
-`/blog/page/N`, `/blog/tag/<tag>`; всё prerender, 0 JS. Инварианты и гейты — rule
-`.claude/rules/content-invariants.md`.
+`draft`, обложка с `alt`, `author` — id из реестра авторов). Язык задаёт каталог; переводы
+связаны `translationKey`, непереведённое под `/en/` — 404, черновики видны только в
+`astro dev`. Списки — `/blog`, `/blog/page/N`, `/blog/tag/<tag>`; всё prerender, 0 JS.
+Инварианты и гейты — rule `.claude/rules/content-invariants.md`.
 
 ## Режимы рендера
 
@@ -146,11 +146,12 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 `LocalBusiness` на «О компании» — одна организация с `@id` `<origin>/#org`, на неё ссылаются сайт
 и записи; `BreadcrumbList` на вложенных (из того же массива, что видимые крошки
 `widgets/breadcrumbs`), `BlogPosting` у записи — с автором `Person`, когда у записи есть автор
-из реестра и подпись; в `<body>` ни одного `<script>`. `robots.txt`
-(`ROBOTS_POLICY`; политика ИИ-ботов — поле сборки `AI_BOTS_POLICY`), `sitemap.xml` (ровно prerendered-страницы, `lastmod` из
-`updatedDate`), `rss.xml`/`en/rss.xml` и `/<INDEXNOW_KEY>.txt` — on-demand на runtime
-`SITE_URL`. Гейты: `pnpm seo:check` и HTTP-набор (`e2e/http/seo.spec.ts`) в `pnpm check`; правило —
-`.claude/rules/seo-invariants.md`.
+из реестра и подпись; в `<body>` ни одного `<script>`. `robots.txt` (`ROBOTS_POLICY`; политика
+ИИ-ботов — поле сборки `AI_BOTS_POLICY`, группы — из реестра ботов базы strategy), `sitemap.xml`
+(ровно prerendered-страницы, `lastmod` из `updatedDate`), `rss.xml`/`en/rss.xml` и
+`/<INDEXNOW_KEY>.txt` — on-demand на runtime `SITE_URL`. Гейты: `pnpm seo:check` и HTTP-набор
+(`e2e/http/`: сырой HTML, тот же ответ ботам реестра, robots, карта, фиды) в `pnpm check`;
+правило — `.claude/rules/seo-invariants.md`.
 
 ## Один образ на все среды
 
