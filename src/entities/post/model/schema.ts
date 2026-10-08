@@ -11,8 +11,15 @@ export const DESCRIPTION_LENGTH = { min: 70, max: 170 } as const
 
 const slug = z.string().regex(SLUG_RE, 'только a-z, 0-9 и дефисы')
 
+// Контекст схемы: `image()` даёт Astro, id авторов — тот, кто собирает коллекцию
+// (`src/content.config.ts`, реестр гейтов `scripts/lib/content.mjs`): реестр живёт в соседнем
+// слайсе `entities/author`, а слайсы одного слоя друг друга не импортируют.
+export interface PostSchemaContext extends SchemaContext {
+  authors: readonly string[]
+}
+
 // Язык записи — каталог `content/<locale>/`, не поле: один источник, расхождений не бывает.
-export const postSchema = ({ image }: SchemaContext) =>
+export const postSchema = ({ image, authors }: PostSchemaContext) =>
   z
     .strictObject({
       title: z.string().trim().min(TITLE_LENGTH.min).max(TITLE_LENGTH.max),
@@ -24,6 +31,9 @@ export const postSchema = ({ image }: SchemaContext) =>
       tags: z.array(slug).refine((tags) => new Set(tags).size === tags.length, 'теги без дублей'),
       draft: z.boolean().default(false),
       translationKey: slug,
+      author: slug
+        .refine((id) => authors.includes(id), 'автора нет в реестре entities/author')
+        .optional(),
     })
     .superRefine((post, ctx) => {
       if (post.updatedDate && post.updatedDate < post.pubDate) {

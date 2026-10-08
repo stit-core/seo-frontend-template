@@ -17,6 +17,13 @@ const OrganizationRefSchema = z.object({
   name: z.string().min(1),
 })
 
+const PersonSchema = z.object({
+  '@type': z.literal('Person'),
+  '@id': absolute,
+  name: z.string().min(1),
+  jobTitle: z.string().min(1).optional(),
+})
+
 const OrganizationSchema = z.object({
   '@context': z.literal(CONTEXT),
   '@type': z.literal('Organization'),
@@ -86,7 +93,7 @@ const BlogPostingSchema = z.object({
   dateModified: calendarDate.optional(),
   inLanguage: z.string().min(2),
   image: absolute.optional(),
-  author: OrganizationRefSchema,
+  author: z.union([PersonSchema, OrganizationRefSchema]),
   publisher: OrganizationRefSchema,
   mainEntityOfPage: z.object({ '@type': z.literal('WebPage'), '@id': absolute }),
 })
@@ -117,6 +124,13 @@ export interface LocalBusinessInput {
   openingHours: string
 }
 
+export interface PersonInput {
+  // id автора в реестре — из него @id; имя и роль — те же строки, что печатает подпись.
+  id: string
+  name: string
+  jobTitle?: string | undefined
+}
+
 export interface BlogPostingInput {
   locale: Locale
   // Путь записи с префиксом локали.
@@ -127,6 +141,8 @@ export interface BlogPostingInput {
   updated?: Date | undefined
   // Корневой путь обложки; без обложки поле не выводится.
   imagePath?: string | undefined
+  // Автор-человек; без него автор записи — организация.
+  author?: PersonInput | undefined
 }
 
 // Организация у сайта одна: её узлы (Organization главной, LocalBusiness «о компании») и ссылки
@@ -138,6 +154,16 @@ const webSiteId = () => `${absoluteUrl('/')}#website`
 // Ссылка несёт и имя: блок читается и на странице, где узла организации нет.
 function organizationRef() {
   return { '@type': 'Organization', '@id': organizationId(), name: SITE_NAME } as const
+}
+
+// Автор — тоже одна сущность на сайт: @id не зависит от страницы и локали, имя — по локали.
+function person({ id, name, jobTitle }: PersonInput) {
+  return {
+    '@type': 'Person',
+    '@id': `${absoluteUrl('/')}#author-${id}`,
+    name,
+    ...(jobTitle === undefined ? {} : { jobTitle }),
+  } as const
 }
 
 export function organization(): JsonLd {
@@ -214,7 +240,7 @@ export function blogPosting(input: BlogPostingInput): JsonLd {
     ...(input.updated === undefined ? {} : { dateModified: isoDate(input.updated) }),
     inLanguage: input.locale,
     ...(input.imagePath === undefined ? {} : { image: absoluteUrl(input.imagePath) }),
-    author: organizationRef(),
+    author: input.author === undefined ? organizationRef() : person(input.author),
     publisher: organizationRef(),
     mainEntityOfPage: { '@type': 'WebPage', '@id': absoluteUrl(input.path) },
   }

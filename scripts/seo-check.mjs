@@ -12,7 +12,8 @@
 //   BreadcrumbList, разметка = видимое (headline = h1, даты = <time>, image = og:image,
 //   mainEntityOfPage = canonical, крошки = BreadcrumbList, имена и контакты организации — на
 //   странице); организация одна — один @id у её узлов и ссылок на неё и одно имя на всю сборку,
-//   издатель сайта и записи — она;
+//   издатель сайта и записи — она; автор-человек — со своим @id, подписан на странице, и имя у
+//   него на локали одно;
 // - тело: ни плейсхолдера origin, ни HTML-комментариев; исполняемый код (<script>, on*=,
 //   javascript:) — только острова из списка; у картинок размеры, картинка над h1 (LCP) — не lazy и
 //   с fetchpriority; ресурсов с чужих origin нет (и в style=""), @font-face — с font-display
@@ -228,15 +229,42 @@ function visibleCrumbs(body) {
   })
 }
 
-// Организация у сайта одна: её узел (Organization, LocalBusiness) и ссылка на неё где угодно в
-// разметке несут один @id, сайт и запись называют её издателем. Имена собираются со всей сборки:
-// второе имя — вторая сущность для поисковика.
+// Сущности разметки — одни на сайт, где бы в блоке ни стоял узел или ссылка. Организация
+// (Organization, LocalBusiness) — с одним @id, сайт и запись называют её издателем; имена
+// собираются со всей сборки: второе имя — вторая сущность для поисковика. Автор-человек — со своим
+// @id; его имя и роль видны на странице (подпись), и у одного @id на одной локали имя одно.
 const ORG_TYPES = ['Organization', 'LocalBusiness']
 const ORG_ID = `${OWN_ORIGIN}/#org`
 const WEBSITE_ID = `${OWN_ORIGIN}/#website`
 const orgNames = new Map()
+const personNames = new Map()
 
-function checkOrganization(where, blocks) {
+function checkPerson(where, label, node, { lang, visible }) {
+  const id = node['@id']
+  if (typeof id !== 'string' || !id.startsWith(`${OWN_ORIGIN}/`)) {
+    fail(where, `${label}: Person без своего @id на своём origin (${id ?? 'нет'})`)
+    return
+  }
+  for (const field of ['name', 'jobTitle']) {
+    if (node[field] && !visible.includes(node[field])) {
+      fail(
+        where,
+        `${label}: Person.${field} «${node[field]}» не виден — автор в разметке подписан на странице`,
+      )
+    }
+  }
+  const key = `${id} ${lang}`
+  const known = personNames.get(key)
+  if (known === undefined) personNames.set(key, { name: node.name, where })
+  else if (known.name !== node.name) {
+    fail(
+      where,
+      `${label}: у автора ${id} здесь имя «${node.name}», а в ${known.where} — «${known.name}»`,
+    )
+  }
+}
+
+function checkEntities(where, blocks, page) {
   const visit = (node, label) => {
     if (Array.isArray(node)) {
       for (const item of node) visit(item, label)
@@ -250,6 +278,7 @@ function checkOrganization(where, blocks) {
         }
         if (node.name && !orgNames.has(node.name)) orgNames.set(node.name, where)
       }
+      if (node['@type'] === 'Person') checkPerson(where, label, node, page)
       for (const [key, value] of Object.entries(node)) visit(value, `${label}.${key}`)
     }
   }
@@ -522,7 +551,7 @@ for (const file of walk(client)) {
     }
   }
   checkMarkupVisible(where, path, body, blocks, facts)
-  checkOrganization(where, blocks)
+  checkEntities(where, blocks, { lang, visible: textOf(body) })
 
   pages.set(path, { where, title, description, canonical, hrefs, noindex })
 }

@@ -1,3 +1,4 @@
+import { AUTHORS } from '@/entities/author'
 import {
   blogPath,
   blogRoute,
@@ -13,14 +14,24 @@ import {
   tagRoute,
 } from '@/entities/post'
 import { type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import { invariant } from '@/shared/lib'
 import { blogPosting, breadcrumbList, type Crumb } from '@/shared/seo'
 
 // Логика секций блога — здесь, разметка — в .astro: ru- и en-страницы делят и то и другое.
 const otherLocale = (locale: Locale): Locale | undefined =>
   SUPPORTED_LOCALES.find((candidate) => candidate !== locale)
 
+// Автор записи на языке страницы: одни и те же строки уходят в видимую подпись и в Person.
+function authorOf({ id, locale, data }: Post) {
+  if (data.author === undefined) return undefined
+  const author = AUTHORS[data.author]
+  invariant(author, `post: автора ${data.author} записи ${id} нет в реестре entities/author`)
+  return { id: data.author, name: author.name[locale], jobTitle: author.jobTitle?.[locale] }
+}
+
 export async function postPageModel(post: Post) {
   const { locale, data } = post
+  const author = authorOf(post)
   // Ссылка на перевод — только при реальном twin по translationKey; slug перевода может отличаться.
   const other = otherLocale(locale)
   const twin = other ? await findTranslation(post, other) : undefined
@@ -43,6 +54,7 @@ export async function postPageModel(post: Post) {
     alternatePath: twin ? postRoute(twin.slug) : undefined,
     ogImage,
     article: { published: data.pubDate, modified: data.updatedDate },
+    author,
     crumbs,
     jsonLd: [
       blogPosting({
@@ -53,6 +65,7 @@ export async function postPageModel(post: Post) {
         published: data.pubDate,
         updated: data.updatedDate,
         imagePath: ogImage?.path,
+        author,
       }),
       breadcrumbList(crumbs),
     ],

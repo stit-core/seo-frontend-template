@@ -1,6 +1,8 @@
 import type { GetStaticPathsResult } from 'astro'
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
+import type * as AuthorSlice from '@/entities/author'
+import { SITE_NAME } from '@/shared/config'
 import { parseHtml } from '@/shared/lib/testing'
 import { headTags } from '../../../scripts/lib/html.mjs'
 import NotFound from '../404.astro'
@@ -25,6 +27,11 @@ import Privacy from '../legal/privacy.astro'
 import Now from '../now.astro'
 
 vi.mock('astro:content', () => import('./fixtures').then((fixtures) => fixtures.astroContent))
+// Реестр авторов шаблона пуст: подпись и Person проверяются на фикстурных авторах.
+vi.mock('@/entities/author', async (importOriginal) => ({
+  ...(await importOriginal<typeof AuthorSlice>()),
+  AUTHORS: (await import('./fixtures')).AUTHORS,
+}))
 
 const ORIGIN = 'https://demo.example'
 
@@ -49,6 +56,9 @@ async function render(
     partial: false,
   })
   const tags = headTags(html)
+  const blocks = [...html.matchAll(/<script type="application\/ld\+json">([^<]*)<\/script>/g)].map(
+    ([, json]) => JSON.parse(json ?? '') as Record<string, unknown>,
+  )
   return {
     html,
     lang: /<html lang="([^"]+)"/.exec(html)?.[1],
@@ -57,9 +67,8 @@ async function render(
     hreflang: Object.fromEntries(
       tags.flatMap((tag) => (tag.hreflang ? [[tag.hreflang, tag.href]] : [])),
     ),
-    jsonLd: [...html.matchAll(/<script type="application\/ld\+json">([^<]*)<\/script>/g)].map(
-      ([, json]) => (JSON.parse(json ?? '') as { '@type': string })['@type'],
-    ),
+    blocks,
+    jsonLd: blocks.map((block) => block['@type']),
     h1: html.match(/<h1\b/g)?.length ?? 0,
   }
 }
@@ -176,5 +185,46 @@ describe('маршруты с параметрами', () => {
     expect(head.jsonLd).toEqual(['BlogPosting', 'BreadcrumbList'])
     const paragraphs = [...parseHtml(head.html).querySelectorAll('article p')]
     expect(paragraphs.map((paragraph) => paragraph.textContent)).toContain('Тело записи.')
+  })
+
+  // Разметка = видимое: Person печатается только вместе с подписью, теми же строками.
+  it('автор записи: подпись в шапке статьи и Person с тем же именем; @id один на обе локали', async () => {
+    const page = async (module: { default: AstroComponentFactory }, path: string) => {
+      const paths = await (module as DynamicRoute).getStaticPaths()
+      const found = paths.find(({ params }) => path.endsWith(`/${params.slug ?? ''}`))
+      const head = await render(module.default, path, found?.props)
+      const header = parseHtml(head.html).querySelector('article header')
+      return {
+        author: head.blocks.find((block) => block['@type'] === 'BlogPosting')?.author,
+        header: header?.textContent?.replace(/\s+/g, ' ') ?? '',
+      }
+    }
+    const id = `${ORIGIN}/#author-anna-smirnova`
+
+    const ru = await page(PostRu, '/blog/para')
+    expect(ru.author).toEqual({
+      '@type': 'Person',
+      '@id': id,
+      name: 'Анна Смирнова',
+      jobTitle: 'редактор блога',
+    })
+    expect(ru.header).toContain('Автор — Анна Смирнова, редактор блога')
+
+    const en = await page(PostEn, '/en/blog/pair')
+    expect(en.author).toEqual({
+      '@type': 'Person',
+      '@id': id,
+      name: 'Anna Smirnova',
+      jobTitle: 'blog editor',
+    })
+    expect(en.header).toContain('By Anna Smirnova, blog editor')
+
+    const plain = await page(PostRu, '/blog/zametka-1')
+    expect(plain.author).toEqual({
+      '@type': 'Organization',
+      '@id': `${ORIGIN}/#org`,
+      name: SITE_NAME,
+    })
+    expect(plain.header).not.toContain('Автор')
   })
 })

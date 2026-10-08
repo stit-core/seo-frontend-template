@@ -50,6 +50,7 @@ Reference-набор шаблона — **живой образец**, а не �
 
 ```
 src/entities/post/            слайс коллекции целиком (контент, схема, запросы, ui, тесты)
+src/entities/author/          реестр авторов и подпись: записей с автором не остаётся
 src/widgets/post-list/
 src/pages/blog/  src/pages/en/blog/  src/pages/_blog/
 src/pages/rss.xml.ts  src/pages/en/rss.xml.ts
@@ -60,8 +61,8 @@ src/shared/seo/rss.ts  src/shared/seo/rss.test.ts
 
 | файл | что |
 |---|---|
-| `src/content.config.ts` | убрать импорт коллекции → `export const collections = {}` |
-| `scripts/lib/content.mjs` | `collections = []`, убрать импорты из удалённого слайса |
+| `src/content.config.ts` | убрать импорты коллекции и реестра авторов → `export const collections = {}` |
+| `scripts/lib/content.mjs` | `collections = []`, убрать импорты из удалённых слайсов |
 | `scripts/check-content.mjs` | импорт `SLUG_RE` вёл в слайс — заменить локальной константой `const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/` |
 | `src/pages/sitemap.xml.ts` | убрать импорт `@/entities/post` и блоговые ветки; остаётся цикл по `STATIC_ROUTES` |
 | `src/pages/{index,en/index}.astro` | убрать `listPosts`/`PostList` и блок «свежие заметки»; CTA — на свою страницу |
@@ -70,12 +71,12 @@ src/shared/seo/rss.ts  src/shared/seo/rss.test.ts
 | `src/shared/seo/seo-head.astro` | убрать `<link rel="alternate" type="application/rss+xml">` и `feedTitle` — иначе `check:links` упадёт на несуществующем `/rss.xml` |
 | `src/shared/seo/index.ts` | убрать реэкспорт `buildFeed` |
 | `src/shared/seo/seo-head.astro.test.ts` | убрать ожидания RSS-ссылки |
-| `src/shared/i18n/dict.ts` | убрать ключи `blog.*`, `post.*`, `footer.rss` в обеих локалях |
+| `src/shared/i18n/dict.ts` | убрать ключи `blog.*`, `post.*`, `author.*`, `footer.rss` в обеих локалях |
 | `.size-limit.cjs` | убрать бюджет «HTML поста» и вычисление самой тяжёлой записи |
 | `content/redirects.yaml` | демо-записи (их цель `/blog` уходит вместе с блогом — `check:content` это поймает) |
 | `src/app/middleware/redirects.test.ts` | если таблица пустая — условие «непуста» меняется на «строится» |
 | `src/app/middleware/index.server.test.ts` | кейс «редиректы до роутинга» ходит по демо-адресам `/old` и `/blog/staraya-zametka` — заменить своими из `redirects.yaml` (нет `410` — убрать его половину кейса) |
-| `src/pages/_tests/fixtures.ts`, `src/pages/_tests/post-body.astro` | удалить вместе с `vi.mock('astro:content')` в тестах маршрутов: коллекции нет |
+| `src/pages/_tests/fixtures.ts`, `src/pages/_tests/post-body.astro` | удалить вместе с `vi.mock('astro:content')` и `vi.mock('@/entities/author')` в тестах маршрутов: коллекции нет |
 | `src/pages/_tests/endpoints.server.test.ts` | ожидаемая карта — без списков, тегов и записей; describe фидов убрать |
 | `src/pages/_tests/pages.astro.test.ts` | убрать строки `/blog`, `/en/blog` и таблицу маршрутов с параметрами |
 | `docs/reference/rendering.md` | убрать строки блога и фидов из карты маршрутов |

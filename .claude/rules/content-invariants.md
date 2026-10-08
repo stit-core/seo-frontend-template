@@ -1,6 +1,6 @@
 ---
-description: Контент в git — frontmatter и бюджеты, один h1, alt, переводы и черновики, редиректы как данные (YAML → данные на сборке), контентные гейты check:content / check:links.
-paths: ["src/entities/*/content/**", "src/entities/*/model/schema.ts", "src/entities/*/api/**", "src/shared/redirects/**", "src/app/middleware/redirects.ts", "astro.config.ts", "content/**", "scripts/check-content.mjs", "scripts/check-links.mjs", "scripts/lib/content.mjs"]
+description: Контент в git — frontmatter и бюджеты, один h1, alt, переводы и черновики, реестр авторов, редиректы как данные (YAML → данные на сборке), контентные гейты check:content / check:links.
+paths: ["src/entities/*/content/**", "src/entities/*/model/schema.ts", "src/entities/*/api/**", "src/entities/author/**", "src/shared/redirects/**", "src/app/middleware/redirects.ts", "astro.config.ts", "content/**", "scripts/check-content.mjs", "scripts/check-links.mjs", "scripts/lib/content.mjs"]
 ---
 
 # Контент-инварианты
@@ -19,7 +19,13 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
   `title` (25–65 символов), `description` (70–170), `pubDate`, `updatedDate?` (не раньше
   `pubDate`; единственный источник `lastmod` в sitemap и `dateModified` в JSON-LD), `cover?` +
   `coverAlt?` (только вместе; обложка — и `og:image` записи), `tags` (slug'и, без дублей),
-  `draft` (по умолчанию `false`), `translationKey` (slug, общий для переводов)
+  `draft` (по умолчанию `false`), `translationKey` (slug, общий для переводов), `author?` (id
+  реестра `src/entities/author/model/authors.ts`; id вне реестра — ошибка схемы)
+- Автор — запись реестра `AUTHORS`: имя и роль по локалям; у записи с `author` страница печатает
+  подпись под заголовком и `Person` в разметке — одними и теми же строками. Реестр шаблона пуст:
+  автор — реальный человек, который написал или проверил текст. Схема реестр не импортирует
+  (соседний слайс): id авторов ей передаёт тот, кто собирает коллекцию, — `src/content.config.ts`
+  и реестр гейтов `scripts/lib/content.mjs`
 - Бюджеты `title`/`description` — часть схемы: это ширина сниппета выдачи, не «пожелание».
   `title` и `description` уникальны внутри локали — у каждой страницы свой сниппет
 - YAML — полный (`js-yaml`, им же Astro читает frontmatter): значение с `: ` или с ведущим
@@ -91,9 +97,10 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
   `dist/client` существует (файл, `<path>/index.html` или on-demand маршрут)
 - Скрипты читают YAML напрямую `js-yaml` и исполняют TS-модули напрямую (Node strip-types),
   поэтому импортируют только «листовые» модули без `@/`-алиасов и относительных импортов:
-  `model/schema.ts`, `lib/paginate.ts`, `shared/redirects/table.ts`, `shared/i18n/locale.ts`,
-  `shared/config/runtime.ts`, `shared/config/site.ts` (его читает политика сборки; импорт там —
-  только типов)
+  `model/schema.ts`, `lib/paginate.ts`, `entities/author/model/authors.ts`,
+  `shared/redirects/table.ts`, `shared/i18n/locale.ts`, `shared/config/runtime.ts`,
+  `shared/config/site.ts` (его читает политика сборки); импорт в `authors.ts` и `site.ts` —
+  только типов
 - Новая коллекция — запись в реестре `collections` модуля `scripts/lib/content.mjs` (каталог,
   схема, порождаемые маршруты): каталог `src/entities/*/content` вне реестра и запись реестра без
   каталога — ошибка `check:content`. Скрипты берут реестр проверяемого корня: у мини-проектов

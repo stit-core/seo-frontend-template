@@ -1,3 +1,4 @@
+import type * as AuthorSlice from '@/entities/author'
 import { getPost, listPosts, type Post, paginate } from '@/entities/post'
 import { type DictKey, t } from '@/shared/i18n'
 import { blogPosting, breadcrumbList } from '@/shared/seo'
@@ -6,6 +7,11 @@ import { blogListPageModel, postPageModel, tagPageModel } from './sections'
 vi.mock('astro:content', () =>
   import('../_tests/fixtures').then((fixtures) => fixtures.astroContent),
 )
+// Реестр авторов шаблона пуст: подпись и Person проверяются на фикстурных авторах.
+vi.mock('@/entities/author', async (importOriginal) => ({
+  ...(await importOriginal<typeof AuthorSlice>()),
+  AUTHORS: (await import('../_tests/fixtures')).AUTHORS,
+}))
 
 const ORIGIN = 'https://demo.example'
 
@@ -32,8 +38,10 @@ describe('страница записи', () => {
   it('перевод: ссылка на slug перевода, крошки локали, BlogPosting без правки и обложки', async () => {
     const para = await post('ru', 'para')
     const model = await postPageModel(para)
+    const author = { id: 'anna-smirnova', name: 'Анна Смирнова', jobTitle: 'редактор блога' }
     expect(model.alternatePath).toBe('/blog/pair')
     expect(model.ogImage).toBeUndefined()
+    expect(model.author).toEqual(author)
     expect(model.crumbs).toEqual([home, blog, { name: 'Запись с переводом' }])
     expect(model.jsonLd).toEqual([
       blogPosting({
@@ -42,6 +50,7 @@ describe('страница записи', () => {
         title: 'Запись с переводом',
         description: 'Анонс записи ru/para.',
         published: new Date('2026-03-01'),
+        author,
       }),
       breadcrumbList(model.crumbs),
     ])
@@ -49,6 +58,37 @@ describe('страница записи', () => {
     const pair = await postPageModel(await post('en', 'pair'))
     expect(pair.alternatePath).toBe('/blog/para')
     expect(pair.crumbs[1]).toEqual({ name: t('en', 'blog.title'), href: '/en/blog' })
+  })
+
+  it('автор: имя и роль — на языке страницы; без роли — только имя; без автора подписи нет', async () => {
+    expect((await postPageModel(await post('en', 'pair'))).author).toEqual({
+      id: 'anna-smirnova',
+      name: 'Anna Smirnova',
+      jobTitle: 'blog editor',
+    })
+    expect((await postPageModel(await post('ru', 'odna'))).author).toEqual({
+      id: 'petr-ivanov',
+      name: 'Пётр Иванов',
+      jobTitle: undefined,
+    })
+    const plain = await postPageModel(await post('ru', 'zametka-1'))
+    expect(plain.author).toBeUndefined()
+    expect(plain.jsonLd[0]).toEqual(
+      blogPosting({
+        locale: 'ru',
+        path: '/blog/zametka-1',
+        title: 'Заметка 1',
+        description: 'Анонс записи ru/zametka-1.',
+        published: new Date('2026-01-01'),
+      }),
+    )
+  })
+
+  it('автор вне реестра — ошибка сборки, а не запись без подписи', async () => {
+    const para = await post('ru', 'para')
+    await expect(
+      postPageModel({ ...para, data: { ...para.data, author: 'nikto' } }),
+    ).rejects.toThrow('автора nikto записи ru/para нет в реестре')
   })
 
   it('правка без перевода: hreflang нет, dateModified и article:modified_time — из updatedDate', async () => {
@@ -66,6 +106,7 @@ describe('страница записи', () => {
         description: 'Анонс записи ru/odna.',
         published: new Date('2026-02-01'),
         updated: new Date('2026-02-10'),
+        author: { id: 'petr-ivanov', name: 'Пётр Иванов' },
       }),
     )
   })

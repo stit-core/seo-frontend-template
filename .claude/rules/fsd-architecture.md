@@ -37,7 +37,8 @@ widget — только при ≥ 2 страницах. Server route — `src/p
 (`src/components`, `src/lib`, новый вход Astro) — ошибка `boundaries/no-unknown-files`: вход
 заводится строкой в `ASTRO_ENTRIES`.
 `content.config.ts` импортирует коллекцию **напрямую из модуля** слайса
-(`@/entities/<x>/model/collection`): через баррель dev-сервер теряет конфиг контента.
+(`@/entities/<x>/model/collection`): через баррель dev-сервер теряет конфиг контента. Там же
+коллекция получает данные соседнего слайса, которые нужны её схеме (id реестра авторов).
 
 ## Public API
 
@@ -87,6 +88,7 @@ Frontmatter `.astro` и модули `.ts` исполняются на серв�
 | проектные UI-примитивы | `shared/ui/<name>/` |
 | каркас сайта, список записей, хлебные крошки (видимые; `BreadcrumbList` из того же массива печатает layout в `<head>`) | `widgets/site-header`, `widgets/site-footer`, `widgets/post-list`, `widgets/breadcrumbs` |
 | коллекция контента: `.md`, схема, запросы, карточка/статья | `entities/post/{content,model,api,lib,ui}` |
+| реестр авторов и подпись (подпись ставит страница в слот статьи: слайсы одного слоя не импортируют друг друга) | `entities/author/{model,ui}` |
 | секции страниц блога, их логика, `getStaticPaths` и фид (ru/en делят разметку, логику, пути и фид) | `src/pages/_blog/*.astro`, `src/pages/_blog/sections.ts`, `src/pages/_blog/static-paths.ts`, `src/pages/_blog/feed.ts` |
 | on-demand SEO-маршруты | `src/pages/{robots.txt,sitemap.xml,rss.xml,[key].txt}.ts`, `src/pages/en/rss.xml.ts` |
 

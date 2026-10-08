@@ -21,7 +21,7 @@ app → pages → widgets → features → entities → shared
 | `pages/` | роутинг: 1 файл = 1 URL; секции страниц — рядом, в `_<name>/` |
 | `widgets/` | блоки каркаса и переиспользуемые блоки: шапка, подвал, список записей, крошки |
 | `features/` | пользовательские сценарии: форма обратной связи, переключатель темы |
-| `entities/` | доменные сущности: коллекция контента `post` (с текстами внутри слайса), реквизиты `company` |
+| `entities/` | доменные сущности: коллекция контента `post` (с текстами внутри слайса), реквизиты `company`, реестр авторов `author` |
 | `shared/` | инфраструктура: config, i18n, seo, redirects, observability, antispam, lib, ui |
 
 ### Единственный импорт вверх
@@ -85,7 +85,7 @@ src/
 │                 · тесты маршрутов _tests/
 ├─ widgets/       site-header · site-footer · post-list · breadcrumbs
 ├─ features/      contact-form · theme
-├─ entities/      post (content/{ru,en}/*.md + covers, model, api, lib, ui) · company
+├─ entities/      post (content/{ru,en}/*.md + covers, model, api, lib, ui) · company · author
 └─ shared/        config · i18n · seo · redirects · observability · antispam · lib · ui
 ```
 

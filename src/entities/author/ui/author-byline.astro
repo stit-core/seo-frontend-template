@@ -1,0 +1,17 @@
+---
+import { type Locale, t } from '@/shared/i18n'
+
+interface Props {
+  locale: Locale
+  // Те же строки, что уходят в разметку Person: подпись и JSON-LD не расходятся.
+  name: string
+  jobTitle?: string | undefined
+}
+
+const { locale, name, jobTitle } = Astro.props
+const signature = jobTitle === undefined ? name : `${name}, ${jobTitle}`
+---
+
+<p class="mt-4 text-body-sm text-muted">
+  {t(locale, 'author.by')} <span class="text-app-fg">{signature}</span>
+</p>

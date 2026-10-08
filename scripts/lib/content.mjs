@@ -4,6 +4,7 @@
 // (без alias-импортов): их Node исполняет напрямую.
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { AUTHORS } from '../../src/entities/author/model/authors.ts'
 import { POSTS_PER_PAGE, pageCount } from '../../src/entities/post/lib/paginate.ts'
 import { postSchema } from '../../src/entities/post/model/schema.ts'
 
@@ -24,7 +25,8 @@ export const collections = [
   {
     name: 'post',
     dir: 'src/entities/post/content',
-    schema: postSchema,
+    // Тот же реестр авторов, что у сборки (src/content.config.ts).
+    schema: (context) => postSchema({ ...context, authors: Object.keys(AUTHORS) }),
     // Маршрут одной записи и все маршруты коллекции по видимым slug'ам и тегам.
     entryRoute: postRoute,
     routes: ({ slugs, tags }) => [

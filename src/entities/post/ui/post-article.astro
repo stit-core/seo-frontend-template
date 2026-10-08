@@ -32,6 +32,8 @@ const cover = data.cover && data.coverAlt ? { src: data.cover, alt: data.coverAl
   <header class="border-b border-divider pb-6">
     <h1 class="text-heading-xl font-semibold tracking-tight">{data.title}</h1>
     <p class="mt-4 text-body-lg text-muted">{data.description}</p>
+    {/* Подпись автора ставит страница: реестр авторов — соседний слайс. */}
+    <slot name="byline" />
     <p class="mt-4 flex flex-wrap items-center gap-x-2 text-body-sm text-muted">
       {data.draft && <DraftBadge locale={locale} />}
       <span>

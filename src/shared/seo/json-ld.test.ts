@@ -139,6 +139,37 @@ describe('seo/json-ld', () => {
     expect(JsonLdSchema.parse(full)).toEqual(full)
   })
 
+  it('BlogPosting с автором: Person со своим @id, именем и ролью; издатель — организация; проходит схему', () => {
+    const input = {
+      locale: 'ru' as const,
+      path: '/blog/x',
+      title: 'Заголовок',
+      description: 'Описание',
+      published: new Date('2026-09-08'),
+    }
+    const author = { id: 'anna-smirnova', name: 'Анна Смирнова' }
+    const signed = blogPosting({ ...input, author: { ...author, jobTitle: 'редактор блога' } })
+    expect(signed).toEqual({
+      ...blogPosting(input),
+      author: {
+        '@type': 'Person',
+        '@id': 'https://demo.example/#author-anna-smirnova',
+        name: 'Анна Смирнова',
+        jobTitle: 'редактор блога',
+      },
+    })
+    expect(signed).toHaveProperty('publisher', organizationRef)
+    expect(JsonLdSchema.parse(signed)).toEqual(signed)
+
+    const plain = blogPosting({ ...input, author })
+    expect(plain).toHaveProperty('author', {
+      '@type': 'Person',
+      '@id': 'https://demo.example/#author-anna-smirnova',
+      name: 'Анна Смирнова',
+    })
+    expect(JsonLdSchema.parse(plain)).toEqual(plain)
+  })
+
   it('схема отвергает относительные URL, узел без @id, пустой список крошек и чужие типы', () => {
     const node = {
       '@context': 'https://schema.org',

@@ -39,7 +39,7 @@ status: draft
 | `Organization` | `/en` | `site.ts` |
 | `LocalBusiness` | страница «о компании» — ровно те факты, что видны в тексте | `site.ts` (имя) + `entities/company` |
 | `BreadcrumbList` | вложенные страницы | массив крошек страницы |
-| `BlogPosting` | запись коллекции | frontmatter |
+| `BlogPosting` | запись коллекции | frontmatter; автор — `Person` из реестра `entities/author` или организация |
 | _<тип>_ | _где_ | _откуда_ |
 
 Печатается только в `<head>` и только про видимое. Организация одна: её узлы и ссылки на неё

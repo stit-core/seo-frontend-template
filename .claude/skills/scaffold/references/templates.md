@@ -128,7 +128,9 @@ export type <Name>Data = z.infer<ReturnType<typeof <name>Schema>>
 
 `strictObject` обязателен: опечатка в имени поля должна ломать сборку, а не молча
 исчезать. Поля со связью (`cover` ⊥ `coverAlt`, `updatedDate` ≥ `pubDate`) — через
-`.superRefine`.
+`.superRefine`. Подпись автора — поле `author` и контекст схемы как у `post`
+(`PostSchemaContext`): id реестра `entities/author` коллекции передаёт `src/content.config.ts`,
+подпись в слот статьи ставит страница.
 
 ## collection — `model/collection.ts`
 

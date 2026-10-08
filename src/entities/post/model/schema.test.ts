@@ -5,7 +5,8 @@ import { postSchema } from './schema'
 // Реальный image() резолвит файл на сборке; в unit-тесте достаточно заглушки.
 const image = (() =>
   z.object({ src: z.string(), width: z.number(), height: z.number() })) as unknown as ImageFunction
-const schema = postSchema({ image })
+// Реестр авторов шаблона пуст: схема получает id от того, кто собирает коллекцию.
+const schema = postSchema({ image, authors: ['anna-smirnova'] })
 
 const valid = {
   title: 'Prerender по умолчанию: почему статика',
@@ -41,6 +42,15 @@ describe('post schema', () => {
     })
     expect(post.draft).toBe(true)
     expect(post.cover?.width).toBe(1600)
+  })
+
+  it('автор — id из реестра: чужой id и любой id при пустом реестре — ошибка', () => {
+    expect(schema.parse(valid).author).toBeUndefined()
+    expect(schema.parse({ ...valid, author: 'anna-smirnova' }).author).toBe('anna-smirnova')
+    expect(schema.safeParse({ ...valid, author: 'petr-ivanov' }).success).toBe(false)
+    const empty = postSchema({ image, authors: [] })
+    expect(empty.safeParse({ ...valid, author: 'anna-smirnova' }).success).toBe(false)
+    expect(empty.safeParse(valid).success).toBe(true)
   })
 
   // Границы — литералами: сниппет выдачи держит title 25–65 и description 70–170 знаков.

@@ -1,10 +1,22 @@
 import type { CollectionEntry, CollectionKey } from 'astro:content'
+import type { Author } from '@/entities/author'
 import type { PostData, PostEntry } from '@/entities/post'
 import PostBody from './post-body.astro'
 
-// Коллекция для подмены astro:content в тестах маршрутов: пара переводов, запись без перевода
-// с updatedDate, черновик со своим тегом — сборка не видит ни черновик, ни его тег — и четыре
-// заметки, с которыми у русского блога две страницы списка, а у английского одна.
+// Реестр авторов шаблона пуст — страницам с подписью нужен фикстурный: автор пары переводов (имя и
+// роль по локалям) и автор без роли. Подменяет AUTHORS в `@/entities/author`.
+export const AUTHORS: Record<string, Author> = {
+  'anna-smirnova': {
+    name: { ru: 'Анна Смирнова', en: 'Anna Smirnova' },
+    jobTitle: { ru: 'редактор блога', en: 'blog editor' },
+  },
+  'petr-ivanov': { name: { ru: 'Пётр Иванов', en: 'Petr Ivanov' } },
+}
+
+// Коллекция для подмены astro:content в тестах маршрутов: пара переводов с автором, запись без
+// перевода с updatedDate и автором без роли, черновик со своим тегом — сборка не видит ни
+// черновик, ни его тег — и четыре заметки без автора, с которыми у русского блога две страницы
+// списка, а у английского одна.
 const entry = (id: string, data: Partial<PostData>): PostEntry =>
   ({
     id,
@@ -18,12 +30,14 @@ export const POSTS: readonly PostEntry[] = [
     pubDate: new Date('2026-03-01'),
     tags: ['seo'],
     translationKey: 'pair',
+    author: 'anna-smirnova',
   }),
   entry('en/pair', {
     title: 'Post with a translation',
     pubDate: new Date('2026-03-02'),
     tags: ['seo'],
     translationKey: 'pair',
+    author: 'anna-smirnova',
   }),
   entry('ru/odna', {
     title: 'Запись без перевода',
@@ -31,6 +45,7 @@ export const POSTS: readonly PostEntry[] = [
     updatedDate: new Date('2026-02-10'),
     tags: ['astro'],
     translationKey: 'alone',
+    author: 'petr-ivanov',
   }),
   entry('ru/chernovik', {
     title: 'Черновик',

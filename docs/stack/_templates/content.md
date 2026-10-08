@@ -48,7 +48,8 @@ status: draft
 
 Поля frontmatter (Zod, строгая мапа — неизвестное поле ломает сборку): `title` (25–65),
 `description` (70–170, уникален в локали), `pubDate`, `updatedDate?`, `cover?` + `coverAlt?`,
-`tags`, `draft`, `translationKey`.
+`tags`, `draft`, `translationKey`, `author?` (id реестра авторов `src/entities/author`: реальные
+люди, которые пишут или проверяют тексты; в шаблоне реестр пуст).
 
 ## Локали контента
 

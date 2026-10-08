@@ -37,6 +37,21 @@ describe('PostArticle', () => {
     expect(html).not.toContain('Черновик')
   })
 
+  it('подпись автора — слот шапки статьи: над датами, а без него шапка без подписи', async () => {
+    const container = await AstroContainer.create()
+    const signed = await container.renderToString(PostArticle, {
+      props: { post },
+      slots: { byline: '<p>Автор — Анна Смирнова</p>', default: '<p>Тело записи.</p>' },
+    })
+    const header = parseHtml(signed).querySelector('article header')
+    const lines = [...(header?.querySelectorAll('p') ?? [])].map((line) => line.textContent)
+    expect(lines.indexOf('Автор — Анна Смирнова')).toBe(1)
+    expect(lines).toHaveLength(3)
+
+    const plain = await container.renderToString(PostArticle, { props: { post } })
+    expect(parseHtml(plain).querySelectorAll('article header p')).toHaveLength(2)
+  })
+
   it('без updatedDate второй даты нет', async () => {
     const container = await AstroContainer.create()
     const { updatedDate: _omit, ...data } = post.data
