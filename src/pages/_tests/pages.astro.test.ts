@@ -139,6 +139,9 @@ interface DynamicRoute {
   getStaticPaths: () => Promise<GetStaticPathsResult>
 }
 
+// Теги фикстур ниже порога трёх записей локали: тонкие страницы — только noindex.
+const THIN_TAGS = ['/blog/tag/almost', '/blog/tag/astro', '/en/blog/tag/i18n']
+
 describe('маршруты с параметрами', () => {
   it.each<[string, { default: AstroComponentFactory }, string[]]>([
     [
@@ -153,9 +156,13 @@ describe('маршруты с параметрами', () => {
         '/blog/zametka-1',
       ],
     ],
-    ['/en/blog/[slug]', PostEn, ['/en/blog/pair']],
-    ['/blog/tag/[tag]', TagRu, ['/blog/tag/astro', '/blog/tag/seo']],
-    ['/en/blog/tag/[tag]', TagEn, ['/en/blog/tag/seo']],
+    ['/en/blog/[slug]', PostEn, ['/en/blog/pair', '/en/blog/note-2', '/en/blog/note-1']],
+    [
+      '/blog/tag/[tag]',
+      TagRu,
+      ['/blog/tag/almost', '/blog/tag/astro', '/blog/tag/i18n', '/blog/tag/seo'],
+    ],
+    ['/en/blog/tag/[tag]', TagEn, ['/en/blog/tag/i18n', '/en/blog/tag/seo']],
     ['/blog/page/[page]', ListRu, ['/blog/page/2']],
     ['/en/blog/page/[page]', ListEn, []],
   ])(
@@ -170,11 +177,31 @@ describe('маршруты с параметрами', () => {
       for (const { path, props } of pages) {
         const head = await render(page, path, props)
         expect(head.lang, path).toBe(localeOf(path))
-        expect(head.canonical, path).toBe(`${ORIGIN}${path}`)
         expect(head.h1, path).toBe(1)
+        if (THIN_TAGS.includes(path)) {
+          expect(head.robots, path).toBe('noindex')
+          expect(head.canonical, path).toBeUndefined()
+          expect(head.hreflang, path).toEqual({})
+        } else {
+          expect(head.robots, path).toBeUndefined()
+          expect(head.canonical, path).toBe(`${ORIGIN}${path}`)
+        }
       }
     },
   )
+
+  it('тег от трёх записей в обеих локалях — пара hreflang; перевод с тонкой страницей парой не считается', async () => {
+    const tagPage = async (module: { default: AstroComponentFactory }, path: string) => {
+      const paths = await (module as DynamicRoute).getStaticPaths()
+      const found = paths.find(({ params }) => path.endsWith(`/${params.tag ?? ''}`))
+      return render(module.default, path, found?.props)
+    }
+    const seo = pair('/blog/tag/seo', '/en/blog/tag/seo')
+    expect((await tagPage(TagRu, '/blog/tag/seo')).hreflang).toEqual(seo)
+    expect((await tagPage(TagEn, '/en/blog/tag/seo')).hreflang).toEqual(seo)
+    // Русская страница — от порога, английская — тонкая: hreflang на закрытую страницу не взаимен.
+    expect((await tagPage(TagRu, '/blog/tag/i18n')).hreflang).toEqual({})
+  })
 
   it('запись с переводом: hreflang пары, BlogPosting и тело записи', async () => {
     const [first] = await (PostRu as DynamicRoute).getStaticPaths()

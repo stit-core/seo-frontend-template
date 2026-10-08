@@ -153,6 +153,8 @@
     "dist/client/blog/odinokaya: страницы нет в сборке, хотя запись не черновик",
     "dist/client/blog/chernovik/index.html: страница черновика в сборке: черновик виден только в astro dev",
     "dist/client/kontakty: страницы нет в сборке, хотя маршрут есть в src/pages",
+    "dist/client/blog/tag/tolstyy/index.html: тег с 3 записями закрыт noindex, а порог индексации — 3 (TAG_INDEX_MIN_POSTS)",
+    "dist/client/blog/tag/tonkiy/index.html: тег с 1 записями индексируется, а порог — 3 (TAG_INDEX_MIN_POSTS): тонкой странице нужен noindex",
     "dist/client/sitemap.xml: https://__site_origin__/kroshki — в карте дважды",
     "dist/client/sitemap.xml: https://__site_origin__/about: lastmod 2026-10-08, а дата последнего изменения по источнику — нет: страница не запись коллекции",
     "dist/client/sitemap.xml: https://__site_origin__/blog/statya: lastmod 2026-02-02, а дата последнего изменения по источнику — 2026-02-20",

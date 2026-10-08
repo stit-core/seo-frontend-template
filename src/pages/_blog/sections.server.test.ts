@@ -136,7 +136,7 @@ describe('страница списка', () => {
     expect(model.title).toBe(ru('blog.pageTitle'))
     expect(model.description).toBe(ru('blog.description'))
     expect(model.crumbs).toEqual([home, { name: ru('blog.title') }])
-    expect(model.tags).toEqual(['astro', 'seo'])
+    expect(model.tags).toEqual(['almost', 'astro', 'i18n', 'seo'])
     expect(model.pagination).toEqual({
       current: 1,
       last: 2,
@@ -163,14 +163,28 @@ describe('страница списка', () => {
   it('английский список: перевод — русская первая страница', async () => {
     const model = await blogListPageModel('en', paginate(await listPosts('en'), 1))
     expect(model.alternatePath).toBe('/blog')
-    expect(model.tags).toEqual(['seo'])
+    expect(model.tags).toEqual(['i18n', 'seo'])
   })
 })
 
 describe('страница тега', () => {
-  it('ссылка на перевод — только если в другой локали есть записи с тегом', async () => {
+  // Порог — три опубликованные записи локали: ниже страница тега почти повторяет список.
+  it('индексируется от трёх записей локали, ниже порога — noindex; черновик не в счёт', async () => {
+    expect((await tagPageModel('ru', 'seo')).noindex).toBe(false)
+    expect((await tagPageModel('en', 'seo')).noindex).toBe(false)
+    expect((await tagPageModel('ru', 'i18n')).noindex).toBe(false)
+    expect((await tagPageModel('en', 'i18n')).noindex).toBe(true)
+    expect((await tagPageModel('ru', 'astro')).noindex).toBe(true)
+    // Две записи и черновик с тем же тегом.
+    expect((await tagPageModel('ru', 'almost')).noindex).toBe(true)
+  })
+
+  it('ссылка на перевод — только на страницу тега другой локали от порога', async () => {
     expect((await tagPageModel('ru', 'seo')).alternatePath).toBe('/blog/tag/seo')
     expect((await tagPageModel('en', 'seo')).alternatePath).toBe('/blog/tag/seo')
+    // Английская страница тега — тонкая: русской ссылаться не на что; обратная ссылка есть.
+    expect((await tagPageModel('ru', 'i18n')).alternatePath).toBeUndefined()
+    expect((await tagPageModel('en', 'i18n')).alternatePath).toBe('/blog/tag/i18n')
     expect((await tagPageModel('ru', 'astro')).alternatePath).toBeUndefined()
   })
 

@@ -1,4 +1,5 @@
 ---
+tags: [polnyy, tolstyy, pochti]
 pubDate: 2026-01-08
 translationKey: para
 ---

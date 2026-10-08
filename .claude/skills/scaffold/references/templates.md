@@ -161,6 +161,11 @@ export const collections = { <name>: <name>Collection }
 }
 ```
 
+У коллекции со страницами тегов — ещё `tagRoute: (tag) => `/<path>/tag/${tag}`` (и эти адреса в
+`routes`): по нему `seo:check` держит порог индексации тега — от трёх записей локали страница
+индексируется, ниже — только с `noindex` (`isTagIndexable` в `entities/post`, `TAG_INDEX_MIN_POSTS`
+политики сборки).
+
 ## collection — `api/queries.ts`
 
 Обязанности: фильтр `draft` (виден только в `astro dev` — `import.meta.env.DEV`), фильтр

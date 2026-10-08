@@ -14,7 +14,8 @@ interface Props {
   description: string
   // Путь перевода без префикса локали; без него нет ни ссылки на другую локаль в шапке, ни hreflang.
   alternatePath?: string | undefined
-  // Служебная страница (404, /now, подтверждение заявки): noindex, без canonical, OG и hreflang.
+  // Служебная страница (404, /now, подтверждение заявки) и тонкая (тег ниже порога записей):
+  // noindex, без canonical, OG и hreflang.
   noindex?: boolean | undefined
   ogType?: 'website' | 'article'
   ogImage?: OgImage | undefined

@@ -3,8 +3,9 @@
 //   абсолютным URL на плейсхолдере origin (один образ на все среды), lang по локали пути, полный
 //   OG с существующей картинкой, без keywords; title и description уникальны среди всех страниц;
 // - сниппет индексируемой страницы в бюджетах и не общий; noindex (в любой форме) — только у
-//   служебных маршрутов из списка политики (scripts/lib/site-policy.mjs), и тогда без canonical,
-//   OG и hreflang; og:image и hreflang — на своём origin;
+//   служебных маршрутов из списка политики (scripts/lib/site-policy.mjs) и у страницы тега ниже
+//   порога записей (а от порога тег обязан индексироваться), и тогда без canonical, OG и hreflang;
+//   og:image и hreflang — на своём origin;
 // - hreflang — полный взаимный набор (self + x-default) у каждой пары переводов из источника
 //   (главные, списки и теги под обоими префиксами локалей; записи — twin по translationKey) и
 //   только у них;
@@ -53,6 +54,7 @@ import {
   ORG_TYPES,
   RESOURCE_ORIGINS,
   scriptViolations,
+  TAG_INDEX_MIN_POSTS,
   TITLE_BUDGET,
 } from './lib/site-policy.mjs'
 
@@ -455,16 +457,9 @@ for (const file of walk(client)) {
   checkMedia(where, body)
   checkMicrodata(where, html)
 
-  // Служебная prerendered-страница (подтверждение заявки, 500) закрыта одним noindex и не
-  // печатает ни canonical, ни OG, ни hreflang: разрешающие и запрещающие директивы не
-  // смешиваются. Всё остальное prerendered — индексируемое, и noindex там ошибка сборки.
+  // Закрытая страница — один noindex, без canonical, OG и hreflang: разрешающие и запрещающие
+  // директивы не смешиваются. Кому noindex положен, решается ниже, когда прочитан источник.
   const noindex = isNoindex(tags)
-  if (noindex && !NOINDEX_ROUTES.includes(routeOf(path))) {
-    fail(
-      where,
-      'noindex вне NOINDEX_ROUTES (scripts/lib/site-policy.mjs): страница выпадает из выдачи',
-    )
-  }
   if (meta('keywords').length > 0) fail(where, 'meta keywords не используется никогда')
 
   const canonicalTags = tags.filter((item) => item.tag === 'link' && item.rel === 'canonical')
@@ -643,6 +638,8 @@ const pair = (key, locale, path) => {
 }
 const entryPaths = new Set()
 const draftPaths = new Set()
+// Страницы тегов коллекций: адрес → число опубликованных записей локали с этим тегом.
+const tagPosts = new Map()
 // Дата последнего изменения записи — правка, без неё публикация: ею карта сайта датирует страницу.
 const entryDates = new Map()
 const day = (date) => new Date(date).toISOString().slice(0, 10)
@@ -663,6 +660,10 @@ for (const collection of collections) {
     entryPaths.add(path)
     const changed = data.updatedDate ?? data.pubDate
     if (changed !== undefined) entryDates.set(path, day(changed))
+    for (const tag of collection.tagRoute ? (data.tags ?? []) : []) {
+      const tagPath = localePath(locale, collection.tagRoute(tag))
+      tagPosts.set(tagPath, (tagPosts.get(tagPath) ?? 0) + 1)
+    }
     pair(`${collection.name}:${data.translationKey}`, locale, path)
   }
 }
@@ -686,6 +687,32 @@ for (const { route, prerender, parametrized } of pageRoutes(resolve(root, 'src/p
   // файлом, остальные — каталогом с index.html.
   const built = pages.has(route) || fileInDist(`${route}.html`) || fileInDist(route)
   if (!built) fail(`dist/client${route}`, 'страницы нет в сборке, хотя маршрут есть в src/pages')
+}
+
+// ---------- кому положен noindex ----------
+// Prerendered-страница индексируется; noindex — у служебных маршрутов из списка политики и у
+// тонкой страницы тега: ниже порога записей она почти повторяет список. Порог — в обе стороны:
+// тонкий тег в индексе и закрытый тег от порога — оба нарушения.
+for (const [path, page] of pages) {
+  const posts = tagPosts.get(path)
+  if (posts === undefined) {
+    if (page.noindex && !NOINDEX_ROUTES.includes(routeOf(path))) {
+      fail(
+        page.where,
+        'noindex вне NOINDEX_ROUTES (scripts/lib/site-policy.mjs): страница выпадает из выдачи',
+      )
+    }
+  } else if (posts < TAG_INDEX_MIN_POSTS && !page.noindex) {
+    fail(
+      page.where,
+      `тег с ${posts} записями индексируется, а порог — ${TAG_INDEX_MIN_POSTS} (TAG_INDEX_MIN_POSTS): тонкой странице нужен noindex`,
+    )
+  } else if (posts >= TAG_INDEX_MIN_POSTS && page.noindex) {
+    fail(
+      page.where,
+      `тег с ${posts} записями закрыт noindex, а порог индексации — ${TAG_INDEX_MIN_POSTS} (TAG_INDEX_MIN_POSTS)`,
+    )
+  }
 }
 
 // ---------- карта сайта ----------

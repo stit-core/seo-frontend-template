@@ -15,8 +15,11 @@ export const AUTHORS: Record<string, Author> = {
 
 // Коллекция для подмены astro:content в тестах маршрутов: пара переводов с автором, запись без
 // перевода с updatedDate и автором без роли, черновик со своим тегом — сборка не видит ни
-// черновик, ни его тег — и четыре заметки без автора, с которыми у русского блога две страницы
-// списка, а у английского одна.
+// черновик, ни его тег — и заметки без автора, с которыми у русского блога две страницы списка, а
+// у английского одна. Теги — вокруг порога индексации: `seo` — по три записи в обеих локалях (пара
+// индексируемых страниц), `i18n` — три русских и одна английская (страница от порога и тонкая),
+// `astro` — одна запись (тонкая страница без перевода), `almost` — две записи и черновик (до
+// порога не хватает записи: черновик не в счёт).
 const entry = (id: string, data: Partial<PostData>): PostEntry =>
   ({
     id,
@@ -50,7 +53,7 @@ export const POSTS: readonly PostEntry[] = [
   entry('ru/chernovik', {
     title: 'Черновик',
     pubDate: new Date('2026-04-01'),
-    tags: ['draft-only'],
+    tags: ['draft-only', 'almost'],
     draft: true,
     translationKey: 'draft',
   }),
@@ -58,7 +61,20 @@ export const POSTS: readonly PostEntry[] = [
     entry(`ru/zametka-${n}`, {
       title: `Заметка ${n}`,
       pubDate: new Date(`2026-01-0${n}`),
+      tags: [
+        ...(n <= 2 ? ['seo'] : []),
+        ...(n >= 2 ? ['i18n'] : []),
+        ...(n >= 3 ? ['almost'] : []),
+      ],
       translationKey: `zametka-${n}`,
+    }),
+  ),
+  ...[1, 2].map((n) =>
+    entry(`en/note-${n}`, {
+      title: `Note ${n}`,
+      pubDate: new Date(`2026-01-0${n + 4}`),
+      tags: n === 1 ? ['seo', 'i18n'] : ['seo'],
+      translationKey: `note-${n}`,
     }),
   ),
 ]

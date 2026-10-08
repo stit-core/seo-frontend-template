@@ -10,6 +10,8 @@ import { postSchema } from '../../src/entities/post/model/schema.ts'
 
 /** @param {string} slug */
 const postRoute = (slug) => `/blog/${slug}`
+/** @param {string} tag */
+const tagRoute = (tag) => `/blog/tag/${tag}`
 
 /**
  * @typedef {object} Collection
@@ -17,6 +19,7 @@ const postRoute = (slug) => `/blog/${slug}`
  * @property {string} dir — каталог `.md` от корня проекта, внутри — `<locale>/<slug>.md`
  * @property {(context: { image: () => import('zod').ZodType }) => import('zod').ZodType} schema
  * @property {(slug: string) => string} entryRoute
+ * @property {(tag: string) => string} [tagRoute] — страница тега, если у коллекции есть теги
  * @property {(visible: { slugs: string[], tags: string[] }) => string[]} routes
  */
 
@@ -27,8 +30,9 @@ export const collections = [
     dir: 'src/entities/post/content',
     // Тот же реестр авторов, что у сборки (src/content.config.ts).
     schema: (context) => postSchema({ ...context, authors: Object.keys(AUTHORS) }),
-    // Маршрут одной записи и все маршруты коллекции по видимым slug'ам и тегам.
+    // Маршрут одной записи, страницы тега и все маршруты коллекции по видимым slug'ам и тегам.
     entryRoute: postRoute,
+    tagRoute,
     routes: ({ slugs, tags }) => [
       '/blog',
       ...Array.from(
@@ -36,7 +40,7 @@ export const collections = [
         (_, index) => `/blog/page/${index + 2}`,
       ),
       ...slugs.map(postRoute),
-      ...tags.map((tag) => `/blog/tag/${tag}`),
+      ...tags.map(tagRoute),
     ],
   },
 ]

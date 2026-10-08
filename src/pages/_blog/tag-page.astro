@@ -18,6 +18,7 @@ const model = await tagPageModel(locale, tag)
 
 <DocumentLayout
   locale={locale}
+  noindex={model.noindex}
   alternatePath={model.alternatePath}
   title={model.title}
   description={model.description}

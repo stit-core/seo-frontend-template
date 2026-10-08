@@ -34,7 +34,7 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 | `/blog`, `/en/blog` | `blog/index.astro`, `en/blog/index.astro` | `static` | то же | да | да |
 | `/blog/page/N`, `/en/blog/page/N` | `blog/page/[page].astro`, `en/blog/page/[page].astro` | `static`, пути из `getStaticPaths` | то же | да | да |
 | `/blog/<slug>`, `/en/blog/<slug>` | `blog/[slug].astro`, `en/blog/[slug].astro` | `static`, пути из контента (без черновиков) | то же | да | да |
-| `/blog/tag/<tag>`, `/en/blog/tag/<tag>` | `blog/tag/[tag].astro`, `en/blog/tag/[tag].astro` | `static`, теги видимых записей | то же | да | да |
+| `/blog/tag/<tag>`, `/en/blog/tag/<tag>` | `blog/tag/[tag].astro`, `en/blog/tag/[tag].astro` | `static`, теги видимых записей | то же | от трёх записей локали — да; ниже — `noindex` | от трёх записей — да |
 | `/about`, `/en/about` | `about.astro`, `en/about.astro` | `static` | то же | да | да |
 | `/contacts`, `/en/contacts` | `contacts/index.astro`, `en/contacts/index.astro` | `static` | то же | да | да |
 | `/contacts/spasibo`, `/en/contacts/spasibo` | `contacts/spasibo.astro`, `en/contacts/spasibo.astro` | `static` | то же | нет — `noindex` | нет |

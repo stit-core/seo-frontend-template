@@ -114,7 +114,8 @@ docs/stack/       формы платформенных артефактов (12
 Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `translationKey`,
 `draft`, обложка с `alt`, `author` — id из реестра авторов). Язык задаёт каталог; переводы
 связаны `translationKey`, непереведённое под `/en/` — 404, черновики видны только в
-`astro dev`. Списки — `/blog`, `/blog/page/N`, `/blog/tag/<tag>`; всё prerender, 0 JS.
+`astro dev`. Списки — `/blog`, `/blog/page/N`, `/blog/tag/<tag>` (страница тега индексируется от
+трёх записей локали, ниже — `noindex` и вне карты сайта); всё prerender, 0 JS.
 Инварианты и гейты — rule `.claude/rules/content-invariants.md`.
 
 ## Режимы рендера

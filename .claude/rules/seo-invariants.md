@@ -29,7 +29,10 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   служебная страница — маршрут из `NOINDEX_ROUTES` (`scripts/lib/site-policy.mjs`), вне карты
   сайта и вне пар hreflang: `noindex` на любой другой странице (в любой форме: `robots`,
   `googlebot`, `yandex`, `bingbot`, любым регистром) `seo:check` валит, и он же сверяет карту со
-  сборкой. На prerendered мета — значение сборки, поэтому
+  сборкой. Второй законный `noindex` — тонкая страница тега: меньше трёх опубликованных записей
+  локали (`TAG_INDEX_MIN_POSTS` политики; у коллекции — `isTagIndexable`). Право на него тегу
+  `seo:check` берёт из источника, а не из списка, и держит порог в обе стороны: тонкий тег в
+  индексе и тег от порога под `noindex` — оба нарушения. На prerendered мета — значение сборки, поэтому
   staging закрывают `ROBOTS_POLICY` (`robots.txt` + `X-Robots-Tag: noindex, nofollow`, который
   обёртка процесса ставит на каждый ответ, статику включительно) и Traefik (`basicAuth` +
   `X-Robots-Tag`) — три контура
@@ -142,7 +145,7 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
 - `pnpm seo:check` (после `build`, внутри `pnpm check`): по `dist/client` — один `<title>` и
   `<h1>`, description с непустым `content`, self-canonical, `lang` по локали пути, OG с
   существующей картинкой, уникальность title/description; hreflang — полный взаимный набор у
-  каждой пары переводов (главные, списки и теги под обоими префиксами локалей; записи — twin по
+  каждой пары переводов (главные, списки и индексируемые теги под обоими префиксами локалей; записи — twin по
   `translationKey` из frontmatter, реестр коллекций `scripts/lib/content.mjs`) и ни одной ссылки
   на отсутствующую страницу; JSON-LD (любой блок этого типа; типы, `Organization`/`WebSite` только
   на главной, форма `BreadcrumbList`, разметка = видимое без скрытых поддеревьев, одна организация —
@@ -150,7 +153,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   странице, одно имя на локали), микроданных нет; карта сайта `sitemap.xml` — ровно индексируемые
   страницы сборки своим self-canonical, `lastmod` — дата последнего изменения записи из frontmatter
   (правка, без неё — публикация), у остальных страниц его нет;
-  сниппет в бюджетах и не общий, `noindex` только у `NOINDEX_ROUTES`, canonical на плейсхолдере
+  сниппет в бюджетах и не общий, `noindex` только у `NOINDEX_ROUTES` и у тегов ниже порога записей (от
+  порога тег индексируется), canonical на плейсхолдере
   origin и ни плейсхолдера в `<body>`, исполняемый код (`<script>`, обработчики `on*=`,
   `javascript:`) — острова `ISLANDS`, ресурсов с чужих origin нет (и в `style`), og:image и
   hreflang — на своём origin, у картинок размеры, картинка над h1 — не lazy и с

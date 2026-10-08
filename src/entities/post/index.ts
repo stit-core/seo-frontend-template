@@ -3,6 +3,7 @@ export { findTranslation, getPost, listByTag, listPosts, listTags, renderPost } 
 export type { Page } from './lib/paginate'
 export { POSTS_PER_PAGE, pageCount, paginate } from './lib/paginate'
 export { blogPath, blogRoute, postPath, postRoute, tagPath, tagRoute } from './lib/paths'
+export { isTagIndexable } from './lib/tags'
 export type { PostData } from './model/schema'
 export { default as PostArticle } from './ui/post-article.astro'
 export { default as PostCard } from './ui/post-card.astro'

@@ -80,7 +80,7 @@ origin штампуется при старте.
 | `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome и свои скрипты гейта (`seo:check`, `check:links`, `check:content`, `plan:check`) — ровно нарушениями из `expected.json`; guard-хук — отказ каждому обходу из `guard.json` |
 | `pnpm check:content` | контент-гейт до build: схема каждого `.md`, тело, переводы, ссылки, `content/redirects.yaml`, строка карты `rendering.md` у каждого on-demand маршрута |
 | `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` (и абсолютные URL своего сайта) существуют |
-| `pnpm seo:check` | после build: у каждой страницы `dist/client` title/description (уникальные, в бюджетах, не общие), self-canonical, `lang`, один h1, OG с картинкой, hreflang у каждой пары переводов, JSON-LD = видимое, организация одна (`@id`, имя), карта сайта = индексируемые страницы сборки; `noindex`, острова, чужие ресурсы и типы JSON-LD — только по списку `scripts/lib/site-policy.mjs` |
+| `pnpm seo:check` | после build: у каждой страницы `dist/client` title/description (уникальные, в бюджетах, не общие), self-canonical, `lang`, один h1, OG с картинкой, hreflang у каждой пары переводов, JSON-LD = видимое, организация одна (`@id`, имя), карта сайта = индексируемые страницы сборки; `noindex`, острова, чужие ресурсы и типы JSON-LD — только по списку `scripts/lib/site-policy.mjs`, теги индексируются от порога записей |
 | `pnpm size` | бюджеты `.size-limit.cjs` (CSS, HTML главной и поста) |
 | `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
 | `pnpm ttfb <origin> <path…>` | TTFB запущенного сервера: медиана/p90 20 запросов (`scripts/ttfb.mjs`) |

@@ -3,6 +3,7 @@ import {
   blogPath,
   blogRoute,
   findTranslation,
+  isTagIndexable,
   listByTag,
   listPosts,
   listTags,
@@ -108,10 +109,12 @@ export async function blogListPageModel(locale: Locale, page: Page<Post>) {
 }
 
 export async function tagPageModel(locale: Locale, tag: string) {
-  // Тег есть в другой локали — только если там есть опубликованные записи с ним.
+  // Тег с записями ниже порога — тонкая страница: она закрыта noindex. Перевод — страница тега
+  // другой локали, и только от того же порога: hreflang на закрытую страницу не взаимен.
+  const indexable = isTagIndexable((await listByTag(locale, tag)).length)
   const other = otherLocale(locale)
   const alternatePath =
-    other && (await listByTag(other, tag)).length > 0 ? tagRoute(tag) : undefined
+    other && isTagIndexable((await listByTag(other, tag)).length) ? tagRoute(tag) : undefined
   const heading = `${t(locale, 'blog.tagLead')} #${tag}`
   const crumbs: Crumb[] = [
     { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
@@ -119,6 +122,7 @@ export async function tagPageModel(locale: Locale, tag: string) {
     { name: `#${tag}` },
   ]
   return {
+    noindex: !indexable,
     alternatePath,
     title: heading,
     heading,

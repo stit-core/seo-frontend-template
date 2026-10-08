@@ -97,7 +97,11 @@ describe('фиды', () => {
     expect(ruXml).toContain(`<atom:link href="${ORIGIN}/rss.xml" rel="self"`)
 
     const enXml = await (await get(feedEn)).text()
-    expect(links(enXml)).toEqual([`${ORIGIN}/en/blog/pair`])
+    expect(links(enXml)).toEqual([
+      `${ORIGIN}/en/blog/pair`,
+      `${ORIGIN}/en/blog/note-2`,
+      `${ORIGIN}/en/blog/note-1`,
+    ])
     expect(enXml).toContain('<language>en</language>')
     expect(enXml).toContain(`<atom:link href="${ORIGIN}/en/rss.xml" rel="self"`)
 
