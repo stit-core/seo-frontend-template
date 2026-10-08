@@ -1,4 +1,4 @@
-import { spawnSync } from 'node:child_process'
+import { spawn as spawnProcess, spawnSync } from 'node:child_process'
 import {
   chmodSync,
   cpSync,
@@ -108,6 +108,67 @@ describe('docker/server.mjs: env целиком проверяется до за
       expect(result.stderr, key).not.toContain(value)
     }
   })
+})
+
+// Заглушка адаптера: слушатель бросает до отправки заголовков и после неё. У настоящего адаптера
+// есть только первый путь (его держит HTTP-набор), перехват обязан пережить оба.
+const THROWING_ADAPTER = `import { createServer } from 'node:http'
+export function startServer() {
+  const server = createServer((request, response) => {
+    if (request.url === '/before') throw new TypeError('до заголовков')
+    if (request.url === '/after') {
+      response.writeHead(200).write('начало')
+      throw new TypeError('после заголовков')
+    }
+    response.end('ok')
+  })
+  server.listen(0, '127.0.0.1', () => console.log('port=' + server.address().port))
+  return { server: { server }, done: new Promise(() => {}) }
+}
+`
+
+describe('docker/server.mjs: исключение слушателя адаптера не завершает процесс', () => {
+  it('до заголовков — 400, после — разрыв соединения, следующий запрос отвечает', async () => {
+    const app = mkdtempSync(join(tmpdir(), 'server-guard-'))
+    mkdirSync(join(app, 'docker'))
+    cpSync(repoFile('docker/server.mjs'), join(app, 'docker/server.mjs'))
+    writeConfigModule(join(app, 'dist'))
+    writeFileSync(join(app, 'dist/server/entry.mjs'), THROWING_ADAPTER)
+    const server = spawnProcess(process.execPath, [join(app, 'docker/server.mjs')], {
+      env: { PATH: process.env.PATH ?? '', SITE_URL: 'https://demo.example' },
+      stdio: ['ignore', 'pipe', 'inherit'],
+    })
+    try {
+      // Срок на подъём и на каждый запрос: зависший процесс или повисший ответ — красный тест, а
+      // не подвешенный гейт.
+      const origin = await new Promise<string>((done, fail) => {
+        const late = setTimeout(() => fail(new Error('обёртка не поднялась за 4 с')), 4_000)
+        server.stdout.on('data', (chunk: Buffer) => {
+          const port = /port=(\d+)/.exec(String(chunk))?.[1]
+          if (port) {
+            clearTimeout(late)
+            done(`http://127.0.0.1:${port}`)
+          }
+        })
+        server.once('exit', (code) => fail(new Error(`обёртка вышла с кодом ${String(code)}`)))
+      })
+      const get = (path: string) =>
+        fetch(`${origin}${path}`, { signal: AbortSignal.timeout(2_000) })
+      const refused = await get('/before')
+      expect(refused.status).toBe(400)
+      expect(await refused.text()).toBe('Bad request')
+      const broken: unknown = await get('/after')
+        .then((response) => response.text())
+        .catch((error: unknown) => error)
+      // Соединение разорвано, а не оставлено висеть до срока запроса.
+      expect(broken).toBeInstanceOf(Error)
+      expect(broken).not.toHaveProperty('name', 'TimeoutError')
+      expect(await (await get('/ok')).text()).toBe('ok')
+    } finally {
+      server.kill()
+      rmSync(app, { recursive: true, force: true })
+    }
+  }, 15_000)
 })
 
 describe('docker/entrypoint.sh: SITE_URL по схеме, штамповка dist/client', () => {

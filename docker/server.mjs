@@ -38,7 +38,9 @@ http.on('request', (request, response) => {
   try {
     handle(request, response)
   } catch {
-    response.writeHead(400, { 'content-type': 'text/plain; charset=utf-8' }).end('Bad request')
+    // Заголовки уже ушли — ответ не исправить, а writeHead бросил бы сам: соединение рвётся.
+    if (response.headersSent) response.destroy()
+    else response.writeHead(400, { 'content-type': 'text/plain; charset=utf-8' }).end('Bad request')
   }
 })
 
