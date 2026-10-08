@@ -7,6 +7,7 @@ import {
   redirects,
   requestTarget,
   THROWING_REQUESTS,
+  wrapperAnswers,
 } from '../site'
 
 // Контур staging (ROBOTS_POLICY=noindex): тот же образ, закрытый процессом. Заголовок ставит обёртка
@@ -24,7 +25,6 @@ test.describe('staging: ROBOTS_POLICY=noindex', () => {
     const home = await (await request.get('/')).text()
     const stylesheet = /<link rel="stylesheet" href="(\/_astro\/[^"]+\.css)"/.exec(home)?.[1]
     expect(stylesheet, 'таблица стилей в <head> главной').toBeTruthy()
-    const page = prerenderedPaths().find((path) => path !== '/') ?? ''
     const paths = [
       ...prerenderedPaths(),
       ...crawlerFiles(),
@@ -33,10 +33,7 @@ test.describe('staging: ROBOTS_POLICY=noindex', () => {
       ...onDemandRoutes(),
       '/net-takogo-adresa',
       ...redirects().map(requestTarget),
-      // Ответы самой обёртки: 301 с неканонической формы и 404 на спрятанный разделитель.
-      `${page}/`,
-      `${page}/index.html`,
-      `${page}%2Fx`,
+      ...wrapperAnswers(),
     ]
     for (const path of paths) {
       const response = await request.get(path, { maxRedirects: 0 })

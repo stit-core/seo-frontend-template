@@ -282,6 +282,13 @@ export function redirects(): readonly RedirectRule[] {
 export const requestTarget = (rule: RedirectRule): string =>
   rule.from.replace(/[^ -~]+/g, encodeURIComponent)
 
+// Адреса, на которые обёртка процесса отвечает сама, не доходя до адаптера: 301 с неканонической
+// формы страницы и 404 на спрятанный разделитель.
+export function wrapperAnswers(): string[] {
+  const page = prerenderedPaths().find((path) => path !== '/') ?? ''
+  return [`${page}/`, `${page}/index.html`, `${page}%2Fx`]
+}
+
 export interface RawResponse {
   status: number
   headers: IncomingHttpHeaders

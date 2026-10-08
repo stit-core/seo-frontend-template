@@ -1,5 +1,13 @@
 import { expect, test } from '@playwright/test'
-import { botUserAgents, crawlerFiles, onDemandRoutes, pageTemplates } from '../site'
+import {
+  botUserAgents,
+  crawlerFiles,
+  onDemandRoutes,
+  pageTemplates,
+  redirects,
+  requestTarget,
+  wrapperAnswers,
+} from '../site'
 
 const BROWSER =
   'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'
@@ -21,11 +29,25 @@ const comparable = (headers: Record<string, string>) =>
 test.describe('ответ ботам реестра', () => {
   const agents = botUserAgents()
   const templates = pageTemplates()
+  // Не только файлы и приложение: на адрес правила redirects.yaml и на неканоническую форму отвечает
+  // обёртка процесса — боту тем же переездом и тем же отказом.
+  const paths = new Set([
+    ...templates,
+    ...onDemandRoutes(),
+    ...crawlerFiles(),
+    UNKNOWN,
+    ...redirects().map(requestTarget),
+    ...wrapperAnswers(),
+  ])
 
-  test('матрица не пуста: шаблоны страниц, on-demand маршруты, файлы для краулеров и боты всех назначений', () => {
+  test('матрица не пуста: шаблоны страниц, on-demand маршруты, файлы для краулеров, ответы обёртки и боты всех назначений', () => {
     expect(templates.length, 'шаблоны страниц сборки').toBeGreaterThan(0)
     expect(onDemandRoutes()).toContain('/robots.txt')
     expect(crawlerFiles()).toContain('/sitemap.xml')
+    expect(
+      [...paths].some((path) => path.endsWith('/index.html')),
+      'неканоническая форма страницы',
+    ).toBe(true)
     expect(Object.keys(agents)).toEqual(
       expect.arrayContaining([
         'YandexBot',
@@ -45,7 +67,7 @@ test.describe('ответ ботам реестра', () => {
     )
   })
 
-  for (const path of new Set([...templates, ...onDemandRoutes(), ...crawlerFiles(), UNKNOWN])) {
+  for (const path of paths) {
     test(`${path}: каждому боту — те же статус, заголовки и тело, что браузеру`, async ({
       request,
     }) => {
