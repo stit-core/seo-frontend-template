@@ -57,6 +57,12 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   тексте), `BreadcrumbList`, `BlogPosting` (запись). `FAQPage`, `HowTo`, `SearchAction` не
   генерируются — `seo:check` валит сборку. Списки — `JSON_LD_TYPES` и `JSON_LD_FORBIDDEN` в
   `scripts/lib/site-policy.mjs`: новый тип разметки — строкой там, а не правкой скрипта
+- Организация у сайта одна — граф по `@id`: её узлы (`Organization` главной, `LocalBusiness`
+  «О компании») и каждая ссылка на неё (`publisher` сайта, `author` и `publisher` записи) несут
+  `@id` `<origin>/#org`, `WebSite` — `<origin>/#website`; имя сущности — бренд (`SITE_NAME`),
+  юрлицо — `legalName`. Блоки отдельные, не `@graph`: ссылка — `@type`, `@id` и `name`, блок
+  читается и на странице без узла организации. `seo:check`: у любой организации в разметке этот
+  `@id`, имя на всю сборку одно, издатель `WebSite` и записи — организация
 - `BreadcrumbList` — норма вложенной страницы: страница строит один массив крошек и отдаёт его и
   в `<Breadcrumbs>` (`widgets/breadcrumbs`, видимые), и в `jsonLd={[breadcrumbList(crumbs)]}`;
   `seo:check` проверяет форму блока (позиции с 1, абсолютные `item` у предков, последняя
@@ -70,8 +76,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   странице: `dateModified` — при `updatedDate`, `image` — при обложке. «Разметка = видимое»
   держит `seo:check` на каждой странице: `headline` = видимый h1, `datePublished`/`dateModified`
   и `article:*_time` — `datetime` видимого `<time>`, `image` = `og:image`, `mainEntityOfPage` =
-  canonical, `inLanguage` = язык страницы; у `Organization`/`LocalBusiness` имя, адрес и почта
-  видны в тексте, телефон — ссылкой `tel:` с тем же номером. Текст обеих сторон сравнивается в
+  canonical, `inLanguage` = язык страницы; у `Organization`/`LocalBusiness` имя, юрлицо, адрес и
+  почта видны в тексте, телефон — ссылкой `tel:` с тем же номером. Текст обеих сторон сравнивается в
   одной нормализации (`decode` и `normalizeSpace`, `scripts/lib/html.mjs`): сущности разметки
   (`&nbsp;`, `&laquo;`, числовые) раскодированы, неразрывный пробел типографики («+64 %», «ООО
   «Пример»») равен обычному
@@ -112,11 +118,12 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   каждой пары переводов (главные, списки и теги под обоими префиксами локалей; записи — twin по
   `translationKey` из frontmatter, реестр коллекций `scripts/lib/content.mjs`) и ни одной ссылки
   на отсутствующую страницу; JSON-LD (типы, `Organization`/`WebSite` только на главной, форма
-  `BreadcrumbList`, разметка = видимое); сниппет в бюджетах и не общий, `noindex` только у
-  `NOINDEX_ROUTES`, canonical на плейсхолдере origin и ни плейсхолдера в `<body>`, исполняемый
-  код (`<script>`, обработчики `on*=`, `javascript:`) — острова `ISLANDS`, ресурсов с чужих origin
-  нет (и в `style`), og:image и hreflang — на своём origin, у картинок размеры, картинка над h1 —
-  не lazy и с `fetchpriority="high"`, у `@font-face` — `font-display` swap/fallback/optional;
+  `BreadcrumbList`, разметка = видимое, одна организация — `@id` узлов и ссылок, одно имя);
+  сниппет в бюджетах и не общий, `noindex` только у `NOINDEX_ROUTES`, canonical на плейсхолдере
+  origin и ни плейсхолдера в `<body>`, исполняемый код (`<script>`, обработчики `on*=`,
+  `javascript:`) — острова `ISLANDS`, ресурсов с чужих origin нет (и в `style`), og:image и
+  hreflang — на своём origin, у картинок размеры, картинка над h1 — не lazy и с
+  `fetchpriority="high"`, у `@font-face` — `font-display` swap/fallback/optional;
   страниц черновиков нет; сборка против источника — страница у каждой опубликованной записи и
   prerendered-маршрута `src/pages`, hreflang только у страниц сверенных пар. Сам скрипт под
   гейтом: фикстура `.gate-fixtures/seo` обязана давать ровно нарушения из `expected.json`

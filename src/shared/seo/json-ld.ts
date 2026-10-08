@@ -13,13 +13,14 @@ const calendarDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 
 const OrganizationRefSchema = z.object({
   '@type': z.literal('Organization'),
+  '@id': absolute,
   name: z.string().min(1),
-  url: absolute,
 })
 
 const OrganizationSchema = z.object({
   '@context': z.literal(CONTEXT),
   '@type': z.literal('Organization'),
+  '@id': absolute,
   name: z.string().min(1),
   url: absolute,
   logo: absolute,
@@ -29,10 +30,12 @@ const OrganizationSchema = z.object({
 const WebSiteSchema = z.object({
   '@context': z.literal(CONTEXT),
   '@type': z.literal('WebSite'),
+  '@id': absolute,
   name: z.string().min(1),
   description: z.string().min(1),
   url: absolute,
   inLanguage: z.string().min(2),
+  publisher: OrganizationRefSchema,
 })
 
 const PostalAddressSchema = z.object({
@@ -46,7 +49,9 @@ const PostalAddressSchema = z.object({
 const LocalBusinessSchema = z.object({
   '@context': z.literal(CONTEXT),
   '@type': z.literal('LocalBusiness'),
+  '@id': absolute,
   name: z.string().min(1),
+  legalName: z.string().min(1),
   description: z.string().min(1),
   url: absolute,
   image: absolute,
@@ -104,7 +109,7 @@ export interface Crumb {
 export interface LocalBusinessInput {
   // Всё перечисленное страница показывает читателю: разметка не добавляет фактов,
   // которых нет в тексте.
-  name: string
+  legalName: string
   description: string
   email: string
   telephone: string
@@ -124,14 +129,22 @@ export interface BlogPostingInput {
   imagePath?: string | undefined
 }
 
+// Организация у сайта одна: её узлы (Organization главной, LocalBusiness «о компании») и ссылки
+// на неё несут один @id — по нему поисковик и ИИ-система склеивают страницы в одну сущность.
+// Имя сущности — бренд; юрлицо — legalName.
+const organizationId = () => `${absoluteUrl('/')}#org`
+const webSiteId = () => `${absoluteUrl('/')}#website`
+
+// Ссылка несёт и имя: блок читается и на странице, где узла организации нет.
 function organizationRef() {
-  return { '@type': 'Organization', name: SITE_NAME, url: absoluteUrl('/') } as const
+  return { '@type': 'Organization', '@id': organizationId(), name: SITE_NAME } as const
 }
 
 export function organization(): JsonLd {
   return {
     '@context': CONTEXT,
     '@type': 'Organization',
+    '@id': organizationId(),
     name: SITE_NAME,
     url: absoluteUrl('/'),
     logo: absoluteUrl(SITE_LOGO_PATH),
@@ -144,20 +157,23 @@ export function webSite(): JsonLd {
   return {
     '@context': CONTEXT,
     '@type': 'WebSite',
+    '@id': webSiteId(),
     name: SITE_NAME,
     description: SITE_DESCRIPTION,
     url: absoluteUrl('/'),
     inLanguage: DEFAULT_LOCALE,
+    publisher: organizationRef(),
   }
 }
 
-// Организация с адресом и часами работы — разметка страницы «о компании»; на остальных
-// страницах её нет, дублировать Organization она не должна.
+// Та же организация с адресом и часами работы — разметка страницы «о компании».
 export function localBusiness(input: LocalBusinessInput): JsonLd {
   return {
     '@context': CONTEXT,
     '@type': 'LocalBusiness',
-    name: input.name,
+    '@id': organizationId(),
+    name: SITE_NAME,
+    legalName: input.legalName,
     description: input.description,
     url: absoluteUrl('/'),
     image: absoluteUrl(SITE_LOGO_PATH),

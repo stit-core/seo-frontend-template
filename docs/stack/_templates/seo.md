@@ -37,13 +37,15 @@ status: draft
 |---|---|---|
 | `Organization` + `WebSite` | `/` | `site.ts` |
 | `Organization` | `/en` | `site.ts` |
-| `LocalBusiness` | страница «о компании» — ровно те факты, что видны в тексте | `entities/company` |
+| `LocalBusiness` | страница «о компании» — ровно те факты, что видны в тексте | `site.ts` (имя) + `entities/company` |
 | `BreadcrumbList` | вложенные страницы | массив крошек страницы |
 | `BlogPosting` | запись коллекции | frontmatter |
 | _<тип>_ | _где_ | _откуда_ |
 
-Печатается только в `<head>` и только про видимое. `FAQPage`, `HowTo`, `SearchAction` не
-генерируются — `seo:check` валит сборку; `<meta name="keywords">` — никогда.
+Печатается только в `<head>` и только про видимое. Организация одна: её узлы и ссылки на неё
+(издатель сайта, автор и издатель записи) несут `@id` `<origin>/#org`, имя — бренд (`SITE_NAME`),
+юрлицо — `legalName`. `FAQPage`, `HowTo`, `SearchAction` не генерируются — `seo:check` валит
+сборку; `<meta name="keywords">` — никогда.
 
 ## Локали и hreflang
 

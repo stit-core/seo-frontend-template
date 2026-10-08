@@ -10,18 +10,21 @@ import {
 } from './json-ld'
 
 const ORIGIN = 'https://demo.example'
-const publisher = { '@type': 'Organization', name: SITE_NAME, url: `${ORIGIN}/` }
+// Адреса узлов графа — литералами: по ним страницы сайта склеиваются в одну сущность.
+const ORG_ID = 'https://demo.example/#org'
+const organizationRef = { '@type': 'Organization', '@id': ORG_ID, name: SITE_NAME }
 
 // Фабрики не парсят результат на рендере — схему к их выходу применяет этот тест.
 describe('seo/json-ld', () => {
   beforeEach(() => vi.stubEnv('SITE_URL', ORIGIN))
   afterEach(() => vi.unstubAllEnvs())
 
-  it('Organization: имя, абсолютные url и logo, профили в других сервисах; проходит схему', () => {
+  it('Organization: @id сущности, имя — бренд, абсолютные url и logo, профили; проходит схему', () => {
     const data = organization()
     expect(data).toEqual({
       '@context': 'https://schema.org',
       '@type': 'Organization',
+      '@id': ORG_ID,
       name: SITE_NAME,
       url: `${ORIGIN}/`,
       logo: `${ORIGIN}${SITE_LOGO_PATH}`,
@@ -30,22 +33,24 @@ describe('seo/json-ld', () => {
     expect(JsonLdSchema.parse(data)).toEqual(data)
   })
 
-  it('WebSite: корень домена на дефолтной локали, проходит схему', () => {
+  it('WebSite: свой @id, корень домена, издатель — организация по @id; проходит схему', () => {
     const data = webSite()
     expect(data).toEqual({
       '@context': 'https://schema.org',
       '@type': 'WebSite',
+      '@id': 'https://demo.example/#website',
       name: SITE_NAME,
       description: SITE_DESCRIPTION,
       url: `${ORIGIN}/`,
       inLanguage: 'ru',
+      publisher: organizationRef,
     })
     expect(JsonLdSchema.parse(data)).toEqual(data)
   })
 
-  it('LocalBusiness: адрес разложен по PostalAddress, url — корень сайта, проходит схему', () => {
+  it('LocalBusiness: @id организации, имя — бренд, юрлицо — legalName, адрес — PostalAddress; проходит схему', () => {
     const data = localBusiness({
-      name: 'ООО «Пример»',
+      legalName: 'ООО «Пример»',
       description: 'Небольшая студия',
       email: 'hello@example.com',
       telephone: '+7 495 000-00-00',
@@ -60,7 +65,9 @@ describe('seo/json-ld', () => {
     expect(data).toEqual({
       '@context': 'https://schema.org',
       '@type': 'LocalBusiness',
-      name: 'ООО «Пример»',
+      '@id': ORG_ID,
+      name: SITE_NAME,
+      legalName: 'ООО «Пример»',
       description: 'Небольшая студия',
       url: `${ORIGIN}/`,
       image: `${ORIGIN}${SITE_LOGO_PATH}`,
@@ -97,7 +104,7 @@ describe('seo/json-ld', () => {
     expect(JsonLdSchema.parse(data)).toEqual(data)
   })
 
-  it('BlogPosting: календарные даты, dateModified и image только при наличии, проходит схему', () => {
+  it('BlogPosting: даты, dateModified и image при наличии, автор и издатель — организация по @id; проходит схему', () => {
     const base = {
       locale: 'ru' as const,
       path: '/blog/x',
@@ -113,8 +120,8 @@ describe('seo/json-ld', () => {
       description: 'Описание',
       datePublished: '2026-09-08',
       inLanguage: 'ru',
-      author: publisher,
-      publisher,
+      author: organizationRef,
+      publisher: organizationRef,
       mainEntityOfPage: { '@type': 'WebPage', '@id': `${ORIGIN}/blog/x` },
     })
     expect(JsonLdSchema.parse(plain)).toEqual(plain)
@@ -132,17 +139,20 @@ describe('seo/json-ld', () => {
     expect(JsonLdSchema.parse(full)).toEqual(full)
   })
 
-  it('схема отвергает относительные URL, пустой список крошек и чужие типы', () => {
-    expect(
-      JsonLdSchema.safeParse({
-        '@context': 'https://schema.org',
-        '@type': 'Organization',
-        name: 'x',
-        url: '/',
-        logo: '/logo.png',
-        sameAs: [],
-      }).success,
-    ).toBe(false)
+  it('схема отвергает относительные URL, узел без @id, пустой список крошек и чужие типы', () => {
+    const node = {
+      '@context': 'https://schema.org',
+      '@type': 'Organization',
+      '@id': ORG_ID,
+      name: 'x',
+      url: `${ORIGIN}/`,
+      logo: `${ORIGIN}/logo.png`,
+      sameAs: [],
+    }
+    expect(JsonLdSchema.safeParse(node).success).toBe(true)
+    expect(JsonLdSchema.safeParse({ ...node, url: '/', logo: '/logo.png' }).success).toBe(false)
+    const { '@id': _omit, ...withoutId } = node
+    expect(JsonLdSchema.safeParse(withoutId).success).toBe(false)
     expect(JsonLdSchema.safeParse(breadcrumbList([])).success).toBe(false)
     expect(
       JsonLdSchema.safeParse({ '@context': 'https://schema.org', '@type': 'FAQPage' }).success,

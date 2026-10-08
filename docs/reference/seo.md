@@ -15,7 +15,7 @@
 |---|---|
 | `<head>` из пропсов страницы: title-шаблон, description, self-canonical, OG, `twitter:card`, RSS autodiscovery | `app/layouts/document.astro` + `shared/seo/seo-head.astro` |
 | hreflang только для реальных переводов, взаимно, + `x-default` | `shared/seo/urls.ts` (`alternates`) |
-| JSON-LD в `<head>`: `Organization`/`WebSite`, `LocalBusiness`, `BreadcrumbList`, `BlogPosting` | `shared/seo/json-ld.ts` + проп `jsonLd` layout'а |
+| JSON-LD в `<head>`: `Organization`/`WebSite`, `LocalBusiness`, `BreadcrumbList`, `BlogPosting`; организация одна — её узлы и ссылки на неё с `@id` `<origin>/#org` | `shared/seo/json-ld.ts` + проп `jsonLd` layout'а |
 | видимые хлебные крошки из того же массива, что разметка | `widgets/breadcrumbs` |
 | `robots.txt`, `sitemap.xml`, `rss.xml`, файл ключа IndexNow на runtime origin | `src/pages/*.ts` + `shared/seo` |
 | честные статусы: 404, 410, 301/308 одним хопом, 500 | `app/middleware` + `content/redirects.yaml` |
@@ -44,7 +44,8 @@ hreflang, `og:image`, JSON-LD, крошки, `h1`, размеры и LCP кар�
    `<link hreflang>` не печатается.
 6. **`og:image`** — обложка записи или дефолт сайта 1200×630; URL абсолютный, файл в сборке.
 7. **JSON-LD** — только про видимое и только из белого списка типов; `FAQPage`, `HowTo`,
-   `SearchAction` не генерируются.
+   `SearchAction` не генерируются. Организацию страница заново не описывает: фабрики
+   `shared/seo` ссылаются на неё по `@id`.
 8. **Крошки** — у вложенной страницы один массив: и в `<Breadcrumbs>`, и в
    `breadcrumbList(crumbs)`.
 9. **Карта сайта** — индексируемая страница вне коллекций ⇒ строка в `STATIC_ROUTES`
@@ -82,7 +83,7 @@ hreflang, `og:image`, JSON-LD, крошки, `h1`, размеры и LCP кар�
 |---|---|
 | unit `shared/seo/*.test.ts` | `absoluteUrl`, `alternates`, `buildRobotsTxt`, `buildSitemap`, `buildFeed`, фабрики JSON-LD (их выход проходит Zod-схему) |
 | Container API | `seo-head.astro`, `json-ld.astro` — разметка `<head>`; `widgets/breadcrumbs` — разметка и axe |
-| `pnpm seo:check` (в `pnpm check`) | каждая страница `dist/client`, и страница ошибки `500.html`: один `<title>` и `<h1>`, description, self-canonical, `lang`, OG с существующей картинкой, сниппет уникальный, в бюджетах и не общий, полные пары hreflang на своём origin, разметка = видимое; `noindex` в любой форме, острова (и обработчики `on*=`), чужие ресурсы и типы JSON-LD — по списку `scripts/lib/site-policy.mjs`; картинки с размерами, LCP не lazy; страница у каждой опубликованной записи и маршрута `src/pages`, черновиков нет, hreflang только у сверенных пар |
+| `pnpm seo:check` (в `pnpm check`) | каждая страница `dist/client`, и страница ошибки `500.html`: один `<title>` и `<h1>`, description, self-canonical, `lang`, OG с существующей картинкой, сниппет уникальный, в бюджетах и не общий, полные пары hreflang на своём origin, разметка = видимое, организация одна (`@id`, имя); `noindex` в любой форме, острова (и обработчики `on*=`), чужие ресурсы и типы JSON-LD — по списку `scripts/lib/site-policy.mjs`; картинки с размерами, LCP не lazy; страница у каждой опубликованной записи и маршрута `src/pages`, черновиков нет, hreflang только у сверенных пар |
 | `pnpm check:gate` | сам `seo:check`, `check:links` и `check:content` на негативных мини-проектах `.gate-fixtures/{seo,links,content}` — ровно ожидаемые нарушения |
 | `pnpm check:links` | каждый внутренний `href`/`src`/`srcset` сборки существует |
 | `pnpm check:content` | бюджеты и уникальность полей записей, ссылки в теле, `redirects.yaml` |

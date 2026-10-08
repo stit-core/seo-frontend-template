@@ -10,7 +10,9 @@
 //   только у них;
 // - JSON-LD: типы из списка политики, Organization/WebSite только на главной, правильный
 //   BreadcrumbList, разметка = видимое (headline = h1, даты = <time>, image = og:image,
-//   mainEntityOfPage = canonical, крошки = BreadcrumbList, контакты организации — на странице);
+//   mainEntityOfPage = canonical, крошки = BreadcrumbList, имена и контакты организации — на
+//   странице); организация одна — один @id у её узлов и ссылок на неё и одно имя на всю сборку,
+//   издатель сайта и записи — она;
 // - тело: ни плейсхолдера origin, ни HTML-комментариев; исполняемый код (<script>, on*=,
 //   javascript:) — только острова из списка; у картинок размеры, картинка над h1 (LCP) — не lazy и
 //   с fetchpriority; ресурсов с чужих origin нет (и в style=""), @font-face — с font-display
@@ -226,6 +228,47 @@ function visibleCrumbs(body) {
   })
 }
 
+// Организация у сайта одна: её узел (Organization, LocalBusiness) и ссылка на неё где угодно в
+// разметке несут один @id, сайт и запись называют её издателем. Имена собираются со всей сборки:
+// второе имя — вторая сущность для поисковика.
+const ORG_TYPES = ['Organization', 'LocalBusiness']
+const ORG_ID = `${OWN_ORIGIN}/#org`
+const WEBSITE_ID = `${OWN_ORIGIN}/#website`
+const orgNames = new Map()
+
+function checkOrganization(where, blocks) {
+  const visit = (node, label) => {
+    if (Array.isArray(node)) {
+      for (const item of node) visit(item, label)
+    } else if (node !== null && typeof node === 'object') {
+      if (ORG_TYPES.includes(node['@type'])) {
+        if (node['@id'] !== ORG_ID) {
+          fail(
+            where,
+            `${label}: @id ${node['@id'] ?? 'нет'} — у организации сайта он один: ${ORG_ID}`,
+          )
+        }
+        if (node.name && !orgNames.has(node.name)) orgNames.set(node.name, where)
+      }
+      for (const [key, value] of Object.entries(node)) visit(value, `${label}.${key}`)
+    }
+  }
+  for (const data of blocks) {
+    const type = data['@type']
+    visit(data, type)
+    if (type === 'WebSite' && data['@id'] !== WEBSITE_ID) {
+      fail(where, `WebSite: @id ${data['@id'] ?? 'нет'}, а не ${WEBSITE_ID}`)
+    }
+    const published = type === 'WebSite' || typeof data.headline === 'string'
+    if (published && !ORG_TYPES.includes(data.publisher?.['@type'])) {
+      fail(
+        where,
+        `${type}.publisher — не Organization: издатель сайта и записи — организация по @id`,
+      )
+    }
+  }
+}
+
 // Разметка = видимое: JSON-LD не добавляет фактов, которых нет на странице.
 function checkMarkupVisible(where, path, body, blocks, page) {
   const visible = textOf(body)
@@ -262,14 +305,14 @@ function checkMarkupVisible(where, path, body, blocks, page) {
         fail(where, `${type}.inLanguage «${data.inLanguage}» ≠ язык страницы «${page.lang}»`)
       }
     }
-    if (type === 'Organization' || type === 'LocalBusiness') {
-      if (data.name && !visible.includes(data.name))
-        fail(where, `${type}.name «${data.name}» не виден на странице`)
+    if (ORG_TYPES.includes(type)) {
+      for (const field of ['name', 'legalName', 'email']) {
+        if (data[field] && !visible.includes(data[field]))
+          fail(where, `${type}.${field} «${data[field]}» не виден на странице`)
+      }
       if (data.telephone && !tels.includes(data.telephone.replace(/[^\d+]/g, ''))) {
         fail(where, `${type}.telephone «${data.telephone}» — нет ссылки tel: с этим номером`)
       }
-      if (data.email && !visible.includes(data.email))
-        fail(where, `${type}.email «${data.email}» не виден на странице`)
       for (const field of ['streetAddress', 'addressLocality', 'postalCode']) {
         const value = data.address?.[field]
         if (value && !visible.includes(value))
@@ -479,6 +522,7 @@ for (const file of walk(client)) {
     }
   }
   checkMarkupVisible(where, path, body, blocks, facts)
+  checkOrganization(where, blocks)
 
   pages.set(path, { where, title, description, canonical, hrefs, noindex })
 }
@@ -492,7 +536,15 @@ for (const file of walk(client).filter((path) => path.endsWith('.css'))) {
   checkCss(`dist/client/${relative(client, file).split(sep).join('/')}`, readFileSync(file, 'utf8'))
 }
 
-// ---------- между страницами: уникальность сниппета, взаимность и полнота hreflang ----------
+// ---------- между страницами: имя организации, уникальность сниппета, hreflang ----------
+if (orgNames.size > 1) {
+  const names = [...orgNames].map(([name, where]) => `«${name}» (${where})`).join(', ')
+  fail(
+    'dist/client',
+    `у организации несколько имён в JSON-LD: ${names} — имя одно, бренд; юрлицо — в legalName`,
+  )
+}
+
 for (const field of ['title', 'description']) {
   const seen = new Map()
   for (const [, page] of pages) {

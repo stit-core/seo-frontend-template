@@ -115,6 +115,8 @@ git grep -lF '@stit/ssr-frontend-template' -- ':!.claude' ':!docs/research' \
 в `routing.md`. Заменить: `legalName`, `email`, `phone` + `phoneHref`, `address` на обеих
 локалях, `openingHours` + `hours`. Разметка `LocalBusiness` обязана совпадать с тем, что
 видно в тексте страницы: нет офиса с приёмом — убери адрес и часы и из данных, и из типа.
+Имя организации в разметке — бренд `SITE_NAME` (A.2), `legalName` — юрлицо отсюда: второе имя
+у организации `seo:check` считает второй сущностью.
 
 ### A.5 Социальная карточка и иконки → `public/`
 

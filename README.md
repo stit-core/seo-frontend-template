@@ -142,8 +142,9 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 `alternatePath`, `jsonLd`): title-шаблон, self-canonical, полный OG (`og:image` — обложка записи
 или `public/og-default.png`), `twitter:card`, hreflang только для реальных переводов (взаимно, +
 `x-default`), RSS autodiscovery. JSON-LD — в `<head>`: `Organization`/`WebSite` на главной,
-`BreadcrumbList` на вложенных (из того же массива, что видимые крошки `widgets/breadcrumbs`),
-`BlogPosting` у записи; в `<body>` ни одного `<script>`. `robots.txt`
+`LocalBusiness` на «О компании» — одна организация с `@id` `<origin>/#org`, на неё ссылаются сайт
+и записи; `BreadcrumbList` на вложенных (из того же массива, что видимые крошки
+`widgets/breadcrumbs`), `BlogPosting` у записи; в `<body>` ни одного `<script>`. `robots.txt`
 (`ROBOTS_POLICY`, `AI_TRAINING`), `sitemap.xml` (ровно prerendered-страницы, `lastmod` из
 `updatedDate`), `rss.xml`/`en/rss.xml` и `/<INDEXNOW_KEY>.txt` — on-demand на runtime
 `SITE_URL`. Гейты: `pnpm seo:check` и HTTP-набор (`e2e/http/seo.spec.ts`) в `pnpm check`; правило —
