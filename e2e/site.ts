@@ -82,19 +82,18 @@ export function pageTemplates(): string[] {
 interface Crawler {
   user_agent_token: string
   ua_substring: string | null
-  purpose: string
   kind: string
 }
 
-// Боты, которые приходят за страницей, — поисковые и загрузки по запросу человека из реестра
-// (src/shared/seo/crawlers.yaml); токен без своих запросов (control-token) в сеть не ходит. Строка
-// User-Agent — как у бота: «compatible; <токен/версия>».
+// Боты реестра (src/shared/seo/crawlers.yaml), которые приходят по сети: поисковые, загрузки по
+// запросу человека, обучающие, рекламные, превью — все записи, кроме токенов без своих запросов
+// (control-token: ими управляют только в robots.txt). Строка User-Agent — как у бота:
+// «compatible; <токен/версия>».
 export function botUserAgents(): Record<string, string> {
   const registry = readFileSync(resolve(root, 'src/shared/seo/crawlers.yaml'), 'utf8')
   const { bots } = load(registry) as { bots: Crawler[] }
   return Object.fromEntries(
     bots
-      .filter((bot) => ['search', 'user_fetch'].includes(bot.purpose))
       .filter((bot) => bot.kind !== 'control-token')
       .map((bot) => {
         const product = bot.ua_substring ?? bot.user_agent_token

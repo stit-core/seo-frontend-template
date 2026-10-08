@@ -7,8 +7,8 @@
 Главный принцип: **всё, что читает краулер, — в первом HTML-ответе**. Не в островке, не
 после гидрации, не за `server:defer`. Поэтому контентные страницы prerender, JavaScript
 на них нет, а разметка одинакова для человека и для бота (клоакинга нет; HTTP-набор гейта
-запрашивает каждую страницу и с `User-Agent: Googlebot`, а шаблоны страниц — под UA каждого
-поискового и user-fetch бота реестра, и сверяет, что ответ тот же). Кого пускать, решает
+запрашивает каждую страницу и с `User-Agent: Googlebot`, а шаблоны страниц и on-demand маршруты —
+под UA каждого бота реестра, и сверяет ответ целиком: статус, тело, заголовки). Кого пускать, решает
 `robots.txt`, а не сервер; чтобы ботов не резал и edge — `infra-handoff.md § 1.5`.
 
 ## Что даёт шаблон из коробки
@@ -90,7 +90,7 @@ hreflang, `og:image`, JSON-LD, крошки, `h1`, размеры и LCP кар�
 | `pnpm check:gate` | сам `seo:check`, `check:links` и `check:content` на негативных мини-проектах `.gate-fixtures/{seo,links,content}` — ровно ожидаемые нарушения |
 | `pnpm check:links` | каждый внутренний `href`/`src`/`srcset` сборки существует |
 | `pnpm check:content` | бюджеты и уникальность полей записей, ссылки в теле, `redirects.yaml` |
-| HTTP-набор `e2e/http/` (в `pnpm check`) | сырой HTML prod-сервера, в т.ч. под Googlebot; шаблоны страниц, `robots.txt` и карта под UA поисковых и user-fetch ботов реестра — тот же ответ; `/llms.txt` — 404 `text/plain`; статусы и заголовки, штамповка origin, HTML on-demand маршрутов — только `noindex` и только острова политики, `robots.txt` (прод и staging) ↔ `sitemap.xml` ↔ `dist/client`, фиды, ключ IndexNow, вес HTML; staging — `X-Robots-Tag: noindex, nofollow` на каждом ответе, от страниц сборки и PNG до редиректов |
+| HTTP-набор `e2e/http/` (в `pnpm check`) | сырой HTML prod-сервера, в т.ч. под Googlebot; шаблоны страниц, on-demand маршруты и 404 под UA каждого бота реестра — тот же ответ: статус, тело, заголовки; `/llms.txt` — 404 `text/plain`; статусы и заголовки, штамповка origin, HTML on-demand маршрутов — только `noindex` и только острова политики, `robots.txt` (прод и staging) ↔ `sitemap.xml` ↔ `dist/client`, фиды, ключ IndexNow, вес HTML; staging — `X-Robots-Tag: noindex, nofollow` на каждом ответе, от страниц сборки и PNG до редиректов |
 | `/seo-audit` | сборка, `seo:check`, `check:links`, HTTP-набор + curl по живому домену + внешние валидаторы |
 
 Ручное — раз на релиз: Rich Results Test, validator.schema.org, валидатор микроразметки

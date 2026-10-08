@@ -1,16 +1,30 @@
 import { expect, test } from '@playwright/test'
-import { botUserAgents, pageTemplates } from '../site'
+import { botUserAgents, onDemandRoutes, pageTemplates } from '../site'
 
 const BROWSER =
   'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36'
+// Адрес без страницы: отказ боту — тот же, что человеку.
+const UNKNOWN = '/net-takogo-adresa'
+
+// Заголовки, которые различаются у двух ответов на один и тот же запрос: время ответа и id запроса,
+// который приложение генерирует само. Все остальные обязаны совпасть.
+const VARIABLE_HEADERS = ['date', 'x-request-id']
+// Маршруты с живым телом: в разметке время запроса — у них сверяются статус и заголовки.
+const LIVE_BODY = ['/now']
+
+const comparable = (headers: Record<string, string>) =>
+  Object.fromEntries(Object.entries(headers).filter(([name]) => !VARIABLE_HEADERS.includes(name)))
 
 // Боту — тот же ответ, что человеку: ни отказа по User-Agent, ни отдельной версии страницы, ни
-// своей директивы индексации. Кого пускать, решает robots.txt (политика ИИ-ботов сайта), а не
-// сервер; тот же принцип edge держит по контракту (docs/reference/infra-handoff.md § 1.5).
-test.describe('ответ поисковым и user-fetch ботам реестра', () => {
+// своего заголовка. Кого пускать, решает robots.txt (политика ИИ-ботов сайта), а не сервер; тот же
+// принцип edge держит по контракту (docs/reference/infra-handoff.md § 1.5).
+test.describe('ответ ботам реестра', () => {
   const agents = botUserAgents()
+  const templates = pageTemplates()
 
-  test('реестр читается: в матрице классический поиск, ИИ-поиск и загрузки по запросу человека', () => {
+  test('матрица не пуста: шаблоны страниц, on-demand маршруты и боты всех назначений', () => {
+    expect(templates.length, 'шаблоны страниц сборки').toBeGreaterThan(0)
+    expect(onDemandRoutes()).toContain('/robots.txt')
     expect(Object.keys(agents)).toEqual(
       expect.arrayContaining([
         'YandexBot',
@@ -20,29 +34,33 @@ test.describe('ответ поисковым и user-fetch ботам реест
         'PerplexityBot',
         'Claude-SearchBot',
         'ChatGPT-User',
+        'GPTBot',
+        'ClaudeBot',
+        'CCBot',
+        'AdsBot-Google',
+        'YaDirectFetcher',
+        'facebookexternalhit',
       ]),
     )
   })
 
-  test('шаблоны страниц, robots.txt и карта сайта под UA каждого бота — 200, то же тело и тот же X-Robots-Tag, что браузеру', async ({
-    request,
-  }) => {
-    const templates = pageTemplates()
-    expect(templates.length, 'шаблоны страниц сборки').toBeGreaterThan(0)
-    for (const path of [...templates, '/robots.txt', '/sitemap.xml']) {
-      const browser = await request.get(path, { headers: { 'user-agent': BROWSER } })
-      expect(browser.status(), path).toBe(200)
+  for (const path of [...templates, ...onDemandRoutes(), UNKNOWN]) {
+    test(`${path}: каждому боту — те же статус, заголовки и тело, что браузеру`, async ({
+      request,
+    }) => {
+      const get = (userAgent: string) =>
+        request.get(path, { headers: { 'user-agent': userAgent }, maxRedirects: 0 })
+      const browser = await get(BROWSER)
+      if (templates.includes(path)) expect(browser.status()).toBe(200)
       const body = await browser.text()
       for (const [token, userAgent] of Object.entries(agents)) {
-        const response = await request.get(path, { headers: { 'user-agent': userAgent } })
-        expect(response.status(), `${token} ${path}`).toBe(200)
-        expect(response.headers()['x-robots-tag'], `${token} ${path}`).toBe(
-          browser.headers()['x-robots-tag'],
-        )
-        expect(await response.text(), `${token} ${path}`).toBe(body)
+        const response = await get(userAgent)
+        expect(response.status(), token).toBe(browser.status())
+        expect(comparable(response.headers()), token).toEqual(comparable(browser.headers()))
+        if (!LIVE_BODY.includes(path)) expect(await response.text(), token).toBe(body)
       }
-    }
-  })
+    })
+  }
 })
 
 // llms.txt сайт не публикует: читателей среди поисковых и ИИ-ботов у файла нет. Адрес отвечает

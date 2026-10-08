@@ -150,7 +150,7 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 ИИ-ботов — поле сборки `AI_BOTS_POLICY`, группы — из реестра ботов базы strategy), `sitemap.xml`
 (ровно prerendered-страницы, `lastmod` из `updatedDate`), `rss.xml`/`en/rss.xml` и
 `/<INDEXNOW_KEY>.txt` — on-demand на runtime `SITE_URL`. Гейты: `pnpm seo:check` и HTTP-набор
-(`e2e/http/`: сырой HTML, тот же ответ ботам реестра, robots, карта, фиды) в `pnpm check`;
+(`e2e/http/`: сырой HTML, тот же ответ каждому боту реестра, robots, карта, фиды) в `pnpm check`;
 правило — `.claude/rules/seo-invariants.md`.
 
 ## Один образ на все среды
