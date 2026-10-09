@@ -66,8 +66,9 @@ const blocksOf = (css: string) =>
   )
 
 // Темы файла токенов — `color-scheme` блока `:root`: первая — тема значений, парную включают
-// система (без выбора) и атрибут `data-theme` (выбор). `themes` — имя и значения переменных каждой
-// темы, `faults` — чем блоки тем расходятся с этой формой.
+// система (без выбора) и атрибут `data-theme` (выбор). Выбор атрибутом несёт и `color-scheme` темы
+// — иначе системные элементы (флажок, полосы прокрутки) остаются в теме системы. `themes` — имя и
+// значения переменных каждой темы, `faults` — чем блоки тем расходятся с этой формой.
 function themesOf(css: string) {
   const blocks = blocksOf(css)
   const find = (media: string, selector: string) =>
@@ -81,6 +82,7 @@ function themesOf(css: string) {
     byAttribute(base),
     ...pairs.flatMap((pair) => [byAttribute(pair), bySystem(pair)]),
   ])
+  const lacksScheme = (theme: string) => byAttribute(theme)?.get('color-scheme') !== theme
   const faults = [
     ...(base === '' ? ['у :root нет color-scheme'] : []),
     ...blocks
@@ -99,9 +101,10 @@ function themesOf(css: string) {
             `тема ${pair}, ${name}: по атрибуту ${attribute.get(name)}, по системе ${system.get(name)}`,
         )
     }),
-    ...pairs
-      .filter((pair) => byAttribute(pair) && byAttribute(pair)?.get('color-scheme') !== pair)
-      .map((pair) => `блок :root[data-theme="${pair}"] не объявляет color-scheme ${pair}`),
+    // У файла с одной темой выбирать не из чего: блок темы значений по атрибуту ему не нужен.
+    ...[...(pairs.length > 0 ? [base] : []), ...pairs.filter((pair) => byAttribute(pair))]
+      .filter(lacksScheme)
+      .map((theme) => `блок :root[data-theme="${theme}"] не объявляет color-scheme ${theme}`),
   ]
   const themes: [Theme, ...Theme[]] = [
     [base, root],
@@ -279,8 +282,8 @@ it('гарнитуры и толщина линии по умолчанию — 
   expect(fromRole('border', 'border-width')).toBe(true)
 })
 
-// Файл токенов в форме ds_build из тем: тема значений — блоком `:root`, отличия парных от неё —
-// блоком по системе и блоком по атрибуту.
+// Файл токенов в форме ds_build из тем: тема значений — блоком `:root` (при парных — ещё и её
+// `color-scheme` под атрибутом), отличия парных от неё — блоком по системе и блоком по атрибуту.
 const render = ([base, values]: Theme, pairs: readonly Theme[] = []) => {
   const print = (entries: Iterable<readonly [string, string]>) =>
     Array.from(entries, ([name, value]) => `  ${name}: ${value};`).join('\n')
@@ -299,6 +302,7 @@ const render = ([base, values]: Theme, pairs: readonly Theme[] = []) => {
         `:root[data-theme="${pair}"] {\n${own}\n}`,
       ]
     }),
+    ...(pairs.length > 0 ? [`:root[data-theme="${base}"] {\n  color-scheme: ${base};\n}`] : []),
   ].join('\n\n')
 }
 
@@ -330,7 +334,7 @@ describe.each(DS)('$ds', ({ css, site }) => {
     expect([...referenced(layer)].filter((name) => !own.has(name) && !roles.has(name))).toEqual([])
   })
 
-  it('парную тему система и атрибут включают одними значениями, блоков вне тем файла нет', () => {
+  it('блоки тем: система и атрибут — одни значения, выбор несёт color-scheme темы, чужих блоков нет', () => {
     expect(faults).toEqual([])
   })
 
@@ -344,26 +348,15 @@ describe.each(DS)('$ds', ({ css, site }) => {
   })
 })
 
-// Выбор темы атрибутом обязан нести и её color-scheme — иначе системные элементы (флажок, полосы
-// прокрутки) остаются в теме системы. У темы значений блока по атрибуту форма ds_build может не
-// нести: тест включается, когда блок в файле токенов есть.
-const chosen = (theme: string) =>
-  blocksOf(tokens).find(
-    ({ media, selector }) => `${media}${selector}` === `:root[data-theme="${theme}"]`,
-  )
-it.skipIf(!chosen(ofValues[0]))('выбор темы атрибутом несёт её color-scheme', () => {
-  const names = themesOf(tokens).themes.map(([name]) => name)
-  expect(names.map((theme) => chosen(theme)?.values.get('color-scheme'))).toEqual(names)
-})
-
 describe('проверки файла токенов называют нарушение', () => {
   const INK = '--ink: #eeeeee; --paper: #111111;'
   const TWO = [
     ':root { color-scheme: light dark; --ink: #222222; --paper: #ffffff; }',
     `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark; ${INK} } }`,
     `:root[data-theme="dark"] { color-scheme: dark; ${INK} }`,
+    ':root[data-theme="light"] { color-scheme: light; }',
   ]
-  const [root = '', bySystem = '', byAttribute = ''] = TWO
+  const [root = '', bySystem = '', byAttribute = '', ofBase = ''] = TWO
   const ONE = root.replace('light dark', 'light')
 
   it('согласованный файл — без замечаний, темы — из color-scheme блока :root', () => {
@@ -374,18 +367,25 @@ describe('проверки файла токенов называют наруш
 
   it('блок темы по атрибуту расходится с блоком по системе или один из них потерян', () => {
     const drifted = byAttribute.replace('#eeeeee', '#777777')
-    expect(themesOf([root, bySystem, drifted].join('\n')).faults).toEqual([
+    expect(themesOf([root, bySystem, drifted, ofBase].join('\n')).faults).toEqual([
       'тема dark, --ink: по атрибуту #777777, по системе #eeeeee',
     ])
-    expect(themesOf([root, bySystem].join('\n')).faults).toEqual([
+    expect(themesOf([root, bySystem, ofBase].join('\n')).faults).toEqual([
       'тема dark: нет блока по атрибуту или по системе',
     ])
+  })
+
+  it('выбор темы атрибутом без её color-scheme: у парной темы и у темы значений', () => {
     const schemeless = [bySystem, byAttribute].map((block) =>
       block.replace('color-scheme: dark; ', ''),
     )
-    expect(themesOf([root, ...schemeless].join('\n')).faults).toEqual([
+    expect(themesOf([root, ...schemeless, ofBase].join('\n')).faults).toEqual([
       'блок :root[data-theme="dark"] не объявляет color-scheme dark',
     ])
+    expect(themesOf([root, bySystem, byAttribute].join('\n')).faults).toEqual([
+      'блок :root[data-theme="light"] не объявляет color-scheme light',
+    ])
+    expect(themesOf([ONE, ofBase].join('\n')).faults).toEqual([])
   })
 
   it('блок темы, которой нет в color-scheme блока :root', () => {

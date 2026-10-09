@@ -145,6 +145,11 @@
   --motion-marketing-easing-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 }
 
+/* Тема «Светлая» (light) — тема значений: под атрибутом — её color-scheme, иначе системные элементы остаются в теме системы. */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
 /* Тема «Тёмная» (dark): на :root, где объявлены переменные, иначе алиасы не пересчитаются. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
