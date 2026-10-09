@@ -270,7 +270,7 @@ blocked-by: —
   ссылка `rel="author"` на профиль и правило «подпись ⇒ `Person`» в `seo:check`; узлы чужих организаций (`worksFor`,
   партнёр) — типом вне `ORG_TYPES` или своим правилом.
 - P7: `infra-handoff.md` § 1.4 (`User-Agent` в access-log), § 1.5 (allowlist ИИ-ботов, обучающие по политике), приёмка
-  § 1.7; `SITE_AI_TRAINING` и `strip-index-html` в контракте нет. Форма адреса (§ 1.3): правил на путь нет,
+  § 1.7; `SITE_AI_TRAINING` и `strip-index-html` в контракте нет. Форма адреса (§ 1.3): правил приведения пути нет,
   `sanitizePath` entryPoint не выключается — `//`, точки и букву процентами edge приводит сам (за ним 200 с canonical).
 - P8: бриф → `AI_BOTS_POLICY` (`ask` → `allow-all`, «текст — продукт» — предложить `allow-search-deny-training`),
   `profiles` → `SITE_SAME_AS`, бренд → `alternateName`; факты `person` → реестр авторов, `machine` → часы и `geo`;
@@ -280,7 +280,9 @@ blocked-by: —
 - P9: разворот «без блога» уносит теги и фиды, реестр авторов — с последней коллекцией с `author`; проверка
   идентичности форка — `SITE_SAME_AS` и имя организации; канал `/upgrade` переводит env `AI_TRAINING=deny` форка в
   `AI_BOTS_POLICY = 'allow-search-deny-training'`: контейнер с прежним ключом стартует и открывает обучающих ботов.
-- strategy: копия `crawlers.yaml` равна файлу базы 0.2.0 (`pnpm geo:probe` сверяет), дальше — заменой файла.
+- strategy: копия `crawlers.yaml` равна файлу базы 0.2.0 (`pnpm geo:probe` сверяет), дальше — заменой файла. Уточнить
+  в базе по справкам: метка Openstat — `_openstat`, а не `openstat`; опции «не выполнять» у рендеринга JS в Вебмастере
+  справка не называет («Запретите рендеринг»); охват «AI Performance» Bing — Copilot, ИИ-сводки, партнёры, без ChatGPT.
 
 ## Где мы сейчас
 Этапы A (S1–S4), B (S5–S8) и C (S9–S12) приняты валидаторами (`M/validation-seo-geo-layer-{A,B,C}.md`).

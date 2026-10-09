@@ -42,7 +42,8 @@ export type AiBotsPolicy = 'allow-all' | 'allow-search-deny-training' | 'deny-al
 export const AI_BOTS_POLICY: AiBotsPolicy = 'allow-all'
 
 // Служебные параметры адреса для Яндекса (Clean-param в robots.txt): метки кликов рекламных систем
-// страницу не меняют, а каждый клик рождал бы адрес-дубль. `utm_*`, `ysclid` и `yrclid` Яндекс
+// страницу не меняют, а каждый клик рождал бы адрес-дубль. Метка Openstat в Директе — `_openstat`;
+// `openstat` — имя из нормы базы strategy, вреда от него нет. `utm_*`, `ysclid` и `yrclid` Яндекс
 // срезает сам; свои параметры проекта (сессия, `ref`) дописываются сюда.
 export const CLEAN_PARAMS: readonly string[] = ['yclid', 'gclid', 'fbclid', 'openstat', '_openstat']
 

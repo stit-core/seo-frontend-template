@@ -17,7 +17,7 @@ status: draft
 | title-шаблон | `%s — <Бренд>`; один для `<title>` и `og:title` | `shared/seo/meta.ts` |
 | профили в других сервисах | _ссылки_ | `SITE_SAME_AS` |
 | логотип | `/icon-512.png` | `SITE_LOGO_PATH` |
-| иконки | `icon-192.png` 192×192 — первой: её берёт выдача Google (растр от 48 px, SVG не читает) · `favicon.ico` 32×32 · `icon.svg` · `apple-touch-icon.png` 180×180 · manifest | `public/`, порядок — `app/layouts/document.astro` |
+| иконки | `icon-192.png` 192×192 — первой: она подходит выдаче Google (растр; минимум — 8×8, рекомендация — крупнее 48×48; SVG в списке его форматов нет) · `favicon.ico` 32×32 · `icon.svg` · `apple-touch-icon.png` 180×180 · manifest | `public/`, порядок — `app/layouts/document.astro` |
 
 Поля без пометки «env» — `src/shared/config/site.ts`: prerendered-страница печатается на
 сборке, а образ собирается без env, поэтому runtime-значение до неё не доходит.
@@ -96,10 +96,10 @@ hreflang выводится только для реально существу�
 
 | кабинет | что настроить | решение проекта |
 |---|---|---|
-| Яндекс Вебмастер | сайт подтверждён, sitemap подан; рендеринг JS — «не выполнять» (страницы отдаёт сервер); «Настройка GET-параметров» — сверка с `Clean-param`: правило живёт в `CLEAN_PARAMS`; «Видимость сайта в Алисе AI» | регион — _город или «без региона»_ |
+| Яндекс Вебмастер | сайт подтверждён, sitemap подан; «Рендеринг страниц JavaScript» — рендеринг запрещён (страницы отдаёт сервер; умолчание кабинета — «На усмотрение робота Яндекса»); «Настройка GET-параметров» — сверка с `Clean-param`: правило живёт в `CLEAN_PARAMS`; «Видимость сайта в Алисе AI» | регион — _город или «без региона»_ |
 | Яндекс Бизнес | профиль организации с сайтом; название, адрес, телефон и часы — как на странице «о компании» | _есть адрес или зона обслуживания: да / нет_ |
 | Google Search Console | домен подтверждён, sitemap подан; «Search generative AI» — `Include` при `allow-all` и `allow-search-deny-training`, `Exclude` при `deny-all`; отчёт «Generative AI performance» | — (следует из `AI_BOTS_POLICY`) |
-| Bing Webmaster Tools | сайт добавлен импортом из Search Console, sitemap подан; отчёт «AI Performance» — цитирования в Copilot и ChatGPT search | _заводим: да / нет_ |
+| Bing Webmaster Tools | сайт добавлен импортом из Search Console, sitemap подан; отчёт «AI Performance» — цитирования в Copilot, ИИ-сводках Bing и партнёрских интеграциях Microsoft | _заводим: да / нет_ |
 
 ## Generates
 

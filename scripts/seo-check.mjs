@@ -107,8 +107,8 @@ function pngSide(path) {
   return width === height ? width : undefined
 }
 
-// Иконку сайта для выдачи поисковик берёт из первого <link rel="icon">: формат и размер первой
-// решают, покажет ли он её. Остальные иконки — браузерам (ICO, SVG) — идут следом.
+// Какую из нескольких иконок страницы возьмёт выдача, справка Google не говорит: первой стоит
+// та, что ему подходит, — растр рекомендованного размера. Остальные — браузерам (ICO, SVG) — следом.
 function checkIcon(where, tags, home) {
   const icon = tags.find(
     (item) => item.tag === 'link' && (item.rel ?? '').toLowerCase().split(/\s+/).includes('icon'),

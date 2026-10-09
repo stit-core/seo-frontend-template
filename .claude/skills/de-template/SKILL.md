@@ -122,8 +122,8 @@ git grep -lF '@stit/ssr-frontend-template' -- ':!.claude' ':!docs/research' \
 
 ### A.5 Социальная карточка и иконки → `public/`
 
-`og-default.png` 1200×630 — свой; `icon-192.png` (первая иконка в `<head>`: её берёт выдача
-Google, файл — PNG ровно 192×192), `favicon.ico`, `icon.svg`, `icon-512.png`,
+`og-default.png` 1200×630 — свой; `icon-192.png` (первая иконка в `<head>` — та, что подходит
+выдаче Google; файл — PNG ровно 192×192), `favicon.ico`, `icon.svg`, `icon-512.png`,
 `apple-touch-icon.png`, `manifest.webmanifest` — свои имя и цвета. Файлы бинарные:
 скилл их не рисует — назови юзеру список и размеры, дождись подмены.
 
