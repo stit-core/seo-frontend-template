@@ -105,6 +105,9 @@ importers:
       prettier-plugin-astro:
         specifier: 1.1.0
         version: 1.1.0(@emnapi/core@1.11.3)(@emnapi/runtime@1.11.3)(prettier@3.9.9)
+      satteri:
+        specifier: 0.10.5
+        version: 0.10.5
       size-limit:
         specifier: 14.1.0
         version: 14.1.0

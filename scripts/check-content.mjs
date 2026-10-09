@@ -3,19 +3,19 @@
 // корневые ссылки на существующие маршруты, ни скрытой разметки, ни своего оформления), переводы и
 // content/redirects.yaml согласованы с маршрутами, у каждого on-demand маршрута — строка в карте
 // docs/reference/rendering.md. Падает раньше и понятнее сборки.
-// YAML читает js-yaml (им же Astro читает frontmatter); TS-модули — только «листовые»
-// (без alias-импортов), их Node исполняет напрямую. Реестр коллекций — scripts/lib/content.mjs
-// проверяемого корня.
+// YAML читает js-yaml, тело записи — satteri (ими же запись читает Astro); TS-модули — только
+// «листовые» (без alias-импортов), их Node исполняет напрямую. Реестр коллекций —
+// scripts/lib/content.mjs проверяемого корня.
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, extname, relative, resolve, sep } from 'node:path'
 import { load, YAMLException } from 'js-yaml'
+import { htmlToHast, markdownToMdast } from 'satteri'
 import { z } from 'zod'
 import { SLUG_RE } from '../src/entities/post/model/schema.ts'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
 import { localePath, SUPPORTED_LOCALES } from '../src/shared/i18n/locale.ts'
 import { buildRedirectTable, isExternalTarget } from '../src/shared/redirects/table.ts'
 import { collectionsOf, splitFrontmatter } from './lib/content.mjs'
-import { attributesOf } from './lib/html.mjs'
 import { pageRoutes, walk } from './lib/routes.mjs'
 
 // Корень проекта; другой корень — негативные фикстуры check:gate (`.gate-fixtures/<скрипт>`).
@@ -141,19 +141,23 @@ for (const collection of collections) {
   }
 }
 
-// ---------- тело: заголовки, картинки, ссылки ----------
-const IMAGE_RE = /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g
-const LINK_RE = /(?<!!)\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g
-const HREF_RE = /\bhref=("([^"]*)"|'([^']*)')/gi
+// ---------- тело: заголовки, картинки, ссылки, сырой HTML ----------
+// Тело читает разборщик сборки (satteri — им Astro собирает записи): что в нём код, а что разметка,
+// гейт знает из того же дерева, что и страница. Сырой HTML — узлы `html` дерева; их теги и атрибуты
+// разбирает HTML-разборщик той же библиотеки — как браузер.
 const internalLinks = []
-// Атрибуты сырого HTML, которыми текст прячут от читателя или оформляют мимо стилей статьи.
-// Скрытый текст — текст только для роботов (спам для поисковика), а инлайн-стиль ещё и блокирует
-// CSP страницы: в гейте это видел бы только браузерный набор.
+// Свойства элемента (имена дерева hast), которыми текст прячут от читателя или оформляют мимо
+// стилей статьи, — атрибут и причина. Скрытый текст — текст только для роботов (спам для
+// поисковика), а инлайн-стиль ещё и блокирует CSP страницы: в гейте это видел бы только браузерный
+// набор.
 const HIDING = {
-  style: 'инлайн-стиль блокирует CSP страницы, а скрытый им текст читатель не видит',
-  class: 'вид записи задаёт статья, а класс (hidden, sr-only) прячет текст от читателя',
-  hidden: 'текст, которого читатель не видит, — текст только для роботов',
-  'aria-hidden': 'текст, которого читатель не видит, — текст только для роботов',
+  style: ['style', 'инлайн-стиль блокирует CSP страницы, а скрытый им текст читатель не видит'],
+  className: [
+    'class',
+    'вид записи задаёт статья, а класс (hidden, sr-only) прячет текст от читателя',
+  ],
+  hidden: ['hidden', 'текст, которого читатель не видит, — текст только для роботов'],
+  ariaHidden: ['aria-hidden', 'текст, которого читатель не видит, — текст только для роботов'],
 }
 
 const classify = (url) => {
@@ -162,64 +166,54 @@ const classify = (url) => {
   return url.startsWith('/') ? 'internal' : 'relative'
 }
 
+function* nodesOf(node) {
+  yield node
+  for (const child of node.children ?? []) yield* nodesOf(child)
+}
+
 for (const doc of docs) {
-  let inFence = false
+  const nodes = [...nodesOf(markdownToMdast(doc.body))]
+  // Ссылка и картинка по метке (`[текст][метка]`) — те же ссылка и картинка: адрес — у определения.
+  const definitions = new Map(
+    nodes.filter((node) => node.type === 'definition').map((node) => [node.identifier, node.url]),
+  )
   let previousLevel = 1
-  // Тело без кода, строка в строку: по нему ищутся теги — атрибут бывает и на следующей строке.
-  const clean = []
-  doc.body.split('\n').forEach((line, index) => {
-    const where = `${doc.file}:${doc.offset + index + 1}`
-    clean[index] = ''
-    if (/^\s*(```|~~~)/.test(line)) {
-      inFence = !inFence
-      return
-    }
-    if (inFence) return
-    // Inline-код — текст, а не разметка: упоминание `<img>` или `<meta http-equiv>` допустимо.
-    const markup = line.replace(/`[^`]*`/g, '')
-    clean[index] = markup
-
-    const heading = /^(#{1,6})\s/.exec(line)
-    if (heading) {
-      const level = heading[1].length
-      if (level === 1) fail(where, 'h1 в теле — заголовок страницы берётся из title')
-      else if (level > previousLevel + 1) {
-        fail(where, `скачок уровня заголовков: h${previousLevel} → h${level}`)
-      }
-      previousLevel = Math.max(level, 2)
-    }
-    if (/<h1\b/i.test(markup)) fail(where, 'h1 в теле — заголовок страницы берётся из title')
-
-    for (const [, alt, src] of markup.matchAll(IMAGE_RE)) {
-      if (alt.trim() === '') fail(where, `картинка ${src} без alt`)
-      const kind = classify(src)
-      if (kind === 'relative' && !existsSync(resolve(doc.dir, src)))
-        fail(where, `картинка ${src} не найдена`)
-      if (kind === 'internal') internalLinks.push({ where, url: src })
-    }
-    if (/<img\b(?![^>]*\balt=)[^>]*>/i.test(markup)) fail(where, '<img> без alt')
-    if (/<script\b/i.test(markup)) fail(where, '<script> в теле — контентная страница без JS')
-    if (/http-equiv/i.test(markup))
-      fail(where, 'meta refresh запрещён — редиректы в content/redirects.yaml')
-
-    const urls = [
-      ...[...markup.matchAll(LINK_RE)].map((match) => match[1]),
-      ...[...markup.matchAll(HREF_RE)].map((match) => match[2] ?? match[3] ?? ''),
-    ]
-    for (const url of urls) {
+  for (const node of nodes) {
+    const where = `${doc.file}:${doc.offset + node.position.start.line}`
+    const link = (url) => {
       const kind = classify(url)
       if (kind === 'relative') fail(where, `ссылка ${url}: относительная, нужен корневой путь`)
       if (kind === 'internal') internalLinks.push({ where, url })
     }
-  })
-
-  const text = clean.join('\n')
-  for (const tag of text.matchAll(/<[a-z][\w:-]*\b([^>]*)>/gi)) {
-    const line = text.slice(0, tag.index).split('\n').length
-    const attributes = attributesOf(tag[1] ?? '')
-    for (const [name, reason] of Object.entries(HIDING)) {
-      if (attributes.has(name))
-        fail(`${doc.file}:${doc.offset + line}`, `атрибут ${name} в теле: ${reason}`)
+    if (node.type === 'heading') {
+      if (node.depth === 1) fail(where, 'h1 в теле — заголовок страницы берётся из title')
+      else if (node.depth > previousLevel + 1) {
+        fail(where, `скачок уровня заголовков: h${previousLevel} → h${node.depth}`)
+      }
+      previousLevel = Math.max(node.depth, 2)
+    } else if (node.type === 'image' || node.type === 'imageReference') {
+      const src = node.url ?? definitions.get(node.identifier)
+      if (!node.alt?.trim()) fail(where, `картинка ${src} без alt`)
+      const kind = classify(src)
+      if (kind === 'relative' && !existsSync(resolve(doc.dir, src)))
+        fail(where, `картинка ${src} не найдена`)
+      if (kind === 'internal') internalLinks.push({ where, url: src })
+    } else if (node.type === 'link' || node.type === 'linkReference') {
+      link(node.url ?? definitions.get(node.identifier))
+    } else if (node.type === 'html') {
+      for (const { tagName, properties = {} } of nodesOf(
+        htmlToHast(node.value, { fragment: true }),
+      )) {
+        if (tagName === 'h1') fail(where, 'h1 в теле — заголовок страницы берётся из title')
+        if (tagName === 'img' && !('alt' in properties)) fail(where, '<img> без alt')
+        if (tagName === 'script') fail(where, '<script> в теле — контентная страница без JS')
+        if ('httpEquiv' in properties)
+          fail(where, 'meta refresh запрещён — редиректы в content/redirects.yaml')
+        if (typeof properties.href === 'string') link(properties.href)
+        for (const [property, [name, reason]] of Object.entries(HIDING)) {
+          if (property in properties) fail(where, `атрибут ${name} в теле: ${reason}`)
+        }
+      }
     }
   }
 }
