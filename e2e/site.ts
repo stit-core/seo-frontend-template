@@ -5,7 +5,12 @@ import { relative, resolve, sep } from 'node:path'
 import { load } from 'js-yaml'
 import { collections, splitFrontmatter } from '../scripts/lib/content.mjs'
 import { headTags, isJsonLd, isNoindex } from '../scripts/lib/html.mjs'
-import { pageRoutes, walk } from '../scripts/lib/routes.mjs'
+import {
+  builtPages,
+  pageRoutes,
+  pageTemplates as templatesOf,
+  walk,
+} from '../scripts/lib/routes.mjs'
 import { cspHash, ISLANDS, RESOURCE_ORIGINS } from '../scripts/lib/site-policy.mjs'
 import { type Locale, localePath } from '../src/shared/i18n/locale.ts'
 import { buildRedirectTable, type RedirectRule } from '../src/shared/redirects/table.ts'
@@ -45,13 +50,7 @@ export function freePort(): Promise<number> {
 // Сборка готова до старта Playwright (шаг build гейта, `pnpm test:e2e`).
 
 // Все prerendered-страницы — ровно то, что статик-хендлер отдаёт в контейнере.
-export function prerenderedPaths(): string[] {
-  return walk(clientDir)
-    .map((file) => relative(clientDir, file).split(sep).join('/'))
-    .filter((file) => file.endsWith('index.html'))
-    .map((file) => `/${file.replace(/\/?index\.html$/, '')}`)
-    .sort()
-}
+export const prerenderedPaths = (): string[] => builtPages(clientDir)
 
 // Индексируемые страницы сборки: prerendered минус закрытые noindex. Ровно их называет карта сайта.
 export function indexablePaths(): string[] {
@@ -61,23 +60,9 @@ export function indexablePaths(): string[] {
   })
 }
 
-// Шаблоны страниц — по одной странице сборки на prerendered-маршрут src/pages: у маршрута с
-// параметром (`/blog/[slug]`) — первый собранный адрес. Ответ боту зависит от сервера и шаблона, а
-// не от записи, поэтому матрица ботов ходит по шаблонам, а не по всей сборке.
-export function pageTemplates(): string[] {
-  const built = prerenderedPaths()
-  const matches = (route: string, path: string) => {
-    const pattern = route.split('/')
-    const segments = path.split('/')
-    return (
-      pattern.length === segments.length &&
-      pattern.every((segment, index) => segment.startsWith('[') || segment === segments[index])
-    )
-  }
-  return pageRoutes(resolve(root, 'src/pages'))
-    .filter((page) => page.prerender)
-    .flatMap((page) => built.filter((path) => matches(page.route, path)).slice(0, 1))
-}
+// Шаблоны страниц — по одной странице сборки на prerendered-маршрут src/pages: по ним ходит
+// матрица ботов.
+export const pageTemplates = (): string[] => templatesOf(resolve(root, 'src/pages'), clientDir)
 
 interface Crawler {
   user_agent_token: string

@@ -1,4 +1,5 @@
-// Маршруты из файлов src/pages — общая основа контентных гейтов и таблицы режимов.
+// Маршруты из файлов src/pages и страницы сборки — общая основа гейтов, HTTP-набора и таблицы
+// режимов.
 import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 
@@ -46,4 +47,40 @@ export function pageRoutes(pagesDir) {
         mode: prerender ? 'static' : 'dynamic',
       }
     })
+}
+
+/**
+ * Страницы сборки — ровно то, что статик-хендлер отдаёт в контейнере: путь каталога с index.html.
+ * @param {string} clientDir
+ * @returns {string[]}
+ */
+export function builtPages(clientDir) {
+  return walk(clientDir)
+    .map((file) => relative(clientDir, file).split(sep).join('/'))
+    .filter((file) => file.endsWith('index.html'))
+    .map((file) => `/${file.replace(/\/?index\.html$/, '')}`)
+    .sort()
+}
+
+/**
+ * Шаблоны страниц — по одной странице сборки на prerendered-маршрут src/pages: у маршрута с
+ * параметром (`/blog/[slug]`) — первый собранный адрес. Ответ боту зависит от сервера и шаблона, а
+ * не от записи: матрица ботов и GEO-проба ходят по шаблонам, а не по всей сборке.
+ * @param {string} pagesDir
+ * @param {string} clientDir
+ * @returns {string[]}
+ */
+export function pageTemplates(pagesDir, clientDir) {
+  const built = builtPages(clientDir)
+  const matches = (/** @type {string} */ route, /** @type {string} */ path) => {
+    const pattern = route.split('/')
+    const segments = path.split('/')
+    return (
+      pattern.length === segments.length &&
+      pattern.every((segment, index) => segment.startsWith('[') || segment === segments[index])
+    )
+  }
+  return pageRoutes(pagesDir)
+    .filter((page) => page.prerender)
+    .flatMap((page) => built.filter((path) => matches(page.route, path)).slice(0, 1))
 }

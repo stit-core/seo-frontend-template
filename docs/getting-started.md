@@ -93,7 +93,7 @@ pnpm check            # полный гейт
 ## Шаг 4: выпуск
 
 ```bash
-/seo-audit            # build + seo:check + HTTP-набор + curl по домену
+/seo-audit            # build + seo:check + HTTP-набор + curl по домену + GEO-проба
 /release              # аудит зависимостей, образ, приёмка (pnpm accept:image), тег, пуш, handoff в <org>/infra
 ```
 

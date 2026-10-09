@@ -1,5 +1,5 @@
 ---
-description: SEO-канон шаблона — head через DocumentLayout (title/description уникальны, self-canonical, hreflang только для реальных переводов, OG полный), JSON-LD в head только про видимое и только допустимые типы, одна организация и авторы по @id, политика ИИ-ботов из реестра базы, robots.txt и ключ IndexNow on-demand на runtime origin, sitemap.xml и фиды — файлы сборки, staging в три контура, ботам тот же ответ, гейты seo:check и HTTP-набор.
+description: SEO-канон шаблона — head через DocumentLayout (title/description уникальны, self-canonical, hreflang только для реальных переводов, OG полный), JSON-LD в head только про видимое и только допустимые типы, одна организация и авторы по @id, политика ИИ-ботов из реестра базы, robots.txt и ключ IndexNow on-demand на runtime origin, sitemap.xml и фиды — файлы сборки, staging в три контура, ботам тот же ответ, гейты seo:check и HTTP-набор, GEO-проба geo:probe.
 paths: ["src/shared/seo/**", "src/shared/config/site.ts", "src/app/layouts/**", "src/pages/**", "src/widgets/breadcrumbs/**", "scripts/seo-check.mjs", "scripts/lib/html.mjs", "scripts/lib/sitemap.mjs", "e2e/http/**", "public/**"]
 ---
 
@@ -211,5 +211,10 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   каждой записи) и фиды, ключ IndexNow; размер HTML
   < 300 КБ. Парсер `<head>` и `decode` сущностей один — `scripts/lib/html.mjs` (он же в
   `seo:check` и `check:links`)
+- `pnpm geo:probe <origin>` — шаг `/seo-audit`, вне гейта (Python соседа и сеть): утилита базы
+  strategy `geo_probe.py --ua-probe` по шаблонам страниц сборки с реестром ботов сайта; флаги B и S
+  её таблицы `head-kit.yaml#checks` — «чинить», кроме тех, что даёт решение сайта (страница закрыта
+  сборкой, политика `deny-all`); заодно копия реестра сверяется с файлом базы. На живом домене
+  проба видит edge: бан бота по UA, заглушку антибота, сертификат. Соседа нет — строка пропуска
 - Перед релизом вручную: Rich Results Test, validator.schema.org, валидатор Яндекса
   (`webmaster.yandex.ru/site/tools/microtest/`)

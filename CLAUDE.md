@@ -60,7 +60,7 @@ origin штампуется при старте.
 | `/de-template` | разворот фундамента по stable-артефактам (на каноническом репо — никогда) |
 | `/scaffold` | `page` · `collection` · `feature` · `widget` · `route` по канону |
 | `/content` | запись коллекции: frontmatter в бюджетах, текст для поиска и ИИ-ответов, перевод, `check:content` |
-| `/seo-audit` | прогон `seo:check` + HTTP-набора + curl по домену, отчёт |
+| `/seo-audit` | прогон `seo:check` + HTTP-набора + curl по домену + GEO-проба `geo:probe`, отчёт |
 | `/release` | аудит прод-зависимостей, образ, приёмка, тег, пуш, handoff в `<org>/infra` |
 
 ## Команды
@@ -85,6 +85,7 @@ origin штампуется при старте.
 | `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
 | `pnpm ttfb <origin> <path…>` | TTFB запущенного сервера: медиана/p90 20 запросов (`scripts/ttfb.mjs`) |
 | `pnpm indexnow <origin> [карта-до.xml] --key <ключ>` | после выката: адреса, которые изменил релиз, — новые, изменённые и удалённые против карты до выката; ключ сверяется с живым `/<ключ>.txt`; сухой прогон, отправка — `--send` (`scripts/indexnow.mjs`, шаг `/release`) |
+| `pnpm geo:probe <origin> [strategy-path]` | GEO-шаг `/seo-audit` (вне gate): `geo_probe.py --ua-probe` соседнего strategy по шаблонам страниц сборки, флаги B и S — «чинить», кроме ожидаемых политикой сайта; сверка копии реестра ботов с базой; без соседа — строка пропуска |
 | `pnpm accept:image <image>` | приёмка собранного образа до пуша: отказ без `SITE_URL` за 20 с, штамповка (страницы, карта, фиды), статусы, canonical, robots, одна форма адреса, отказ 400 без падения на `TRACE`, staging, дренаж по SIGTERM быстрее `SHUTDOWN_TIMEOUT_MS`; TTFB — печать без порога |
 | `pnpm check` | **gate**: шаги по порядку до первого красного — состав и что держит каждый: rule `tests-pipeline` § Gate |
 
@@ -104,6 +105,7 @@ origin штампуется при старте.
 | Форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка | rule `forms-antispam` |
 | Deployment: образ, entrypoint, `server.mjs`, env-контракт, требования к прокси | `docs/reference/deployment.md` |
 | SEO: head через `DocumentLayout`, hreflang, OG, JSON-LD, `robots.txt`/`sitemap.xml`/фиды/ключ IndexNow, staging в три контура, гейты `seo:check` и HTTP-набор | rule `seo-invariants` + `docs/reference/seo.md` |
+| GEO (видимость в ИИ-ответах): политика ИИ-ботов из реестра базы, ботам тот же ответ, одна организация и авторы, текст записи без скрытой разметки, проба `geo:probe` | rules `seo-invariants`, `content-invariants` + скиллы `/content`, `/seo-audit` |
 | Наблюдаемость: JSON-лог, `X-Request-Id`, `/healthz`, Sentry по DSN | `docs/reference/observability.md` |
 | Платформа проекта: 12 kinds, порядок волн, гейт `stable` | `docs/stack/README.md` |
 | Обновления стека: ритм, мажоры N / N−1, аудит, условия пересмотра | `docs/stack/dependencies.md § Обновления` (в шаблоне — `docs/stack/_templates/`) |

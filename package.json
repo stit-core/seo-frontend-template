@@ -29,6 +29,7 @@
     "kin:diff": "node scripts/kin-diff.mjs",
     "ttfb": "node scripts/ttfb.mjs",
     "indexnow": "node scripts/indexnow.mjs",
+    "geo:probe": "node scripts/geo-probe.mjs",
     "accept:image": "sh scripts/accept-image.sh",
     "plan:check": "bash scripts/validate-plan.sh",
     "check": "pnpm plan:check && pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm steiger && pnpm check:gate && pnpm check:content && pnpm build && pnpm check:links && pnpm seo:check && pnpm size && pnpm test:http",
