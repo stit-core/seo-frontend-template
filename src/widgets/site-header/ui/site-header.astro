@@ -1,6 +1,6 @@
 ---
 import { ThemeToggle } from '@/features/theme'
-import { SITE_NAME } from '@/shared/config'
+import { SITE_NAME, THEME } from '@/shared/config'
 import { type DictKey, type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 
 interface Props {
@@ -24,11 +24,11 @@ const isCurrent = (route: string): boolean => {
 }
 ---
 
-<header class="border-b border-divider">
+<header class="border-b border-subtle">
   <div class="mx-auto flex max-w-page flex-wrap items-center justify-between gap-x-8 gap-y-3 px-6 py-4">
     <a
       href={localePath(locale, '/')}
-      class="font-semibold tracking-tight text-app-fg no-underline hover:text-accent"
+      class="font-semibold tracking-tight text-primary no-underline hover:text-accent"
     >
       {SITE_NAME}
     </a>
@@ -41,10 +41,10 @@ const isCurrent = (route: string): boolean => {
               href={localePath(locale, item.route)}
               aria-current={isCurrent(item.route) ? 'page' : undefined}
               class:list={[
-                'no-underline hover:text-app-fg',
+                'no-underline hover:text-primary',
                 isCurrent(item.route)
-                  ? 'text-app-fg underline decoration-accent decoration-2 underline-offset-8'
-                  : 'text-muted',
+                  ? 'text-primary underline decoration-accent decoration-2 underline-offset-8'
+                  : 'text-secondary',
               ]}
             >
               {t(locale, item.key)}
@@ -58,15 +58,17 @@ const isCurrent = (route: string): boolean => {
               hreflang={other}
               lang={other}
               rel="alternate"
-              class="text-muted no-underline hover:text-app-fg"
+              class="text-secondary no-underline hover:text-primary"
             >
               {t(other, 'lang.name')}
             </a>
           </li>
         )}
-        <li class="flex items-center">
-          <ThemeToggle locale={locale} />
-        </li>
+        {THEME.switcher && (
+          <li class="flex items-center">
+            <ThemeToggle locale={locale} />
+          </li>
+        )}
       </ul>
     </nav>
   </div>

@@ -47,6 +47,15 @@ export const AI_BOTS_POLICY: AiBotsPolicy = 'allow-all'
 // срезает сам; свои параметры проекта (сессия, `ref`) дописываются сюда.
 export const CLEAN_PARAMS: readonly string[] = ['yclid', 'gclid', 'fbclid', 'openstat', '_openstat']
 
+// Тема сайта — решение проекта (блок `themes` брифа strategy); значения тем — файл токенов ДС
+// src/app/styles/tokens.css. `default`: `system` — по настройке системы, иначе одна тема атрибутом
+// `data-theme`; `switcher` — кнопка выбора в шапке и остров темы. Темы поля — ровно темы файла
+// токенов: расхождение называет тест токен-слоя.
+export const THEME: {
+  readonly default: 'system' | 'light' | 'dark'
+  readonly switcher: boolean
+} = { default: 'system', switcher: true }
+
 // Социальная карточка по умолчанию, 1200×630 (public/og-default.png); у записи с обложкой —
 // её обложка.
 export const OG_DEFAULT_IMAGE = {

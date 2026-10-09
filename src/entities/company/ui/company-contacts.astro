@@ -12,23 +12,23 @@ const address = COMPANY.address[locale]
 ---
 
 <dl class:list={['grid gap-x-8 gap-y-3 text-body-md sm:grid-cols-[9rem_minmax(0,1fr)]', className]}>
-  <dt class="text-muted">{t(locale, 'company.email')}</dt>
+  <dt class="text-secondary">{t(locale, 'company.email')}</dt>
   <dd>
     <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>
   </dd>
 
-  <dt class="text-muted">{t(locale, 'company.phone')}</dt>
+  <dt class="text-secondary">{t(locale, 'company.phone')}</dt>
   <dd>
     <a href={`tel:${COMPANY.phoneHref}`}>{COMPANY.phone}</a>
   </dd>
 
-  <dt class="text-muted">{t(locale, 'company.address')}</dt>
+  <dt class="text-secondary">{t(locale, 'company.address')}</dt>
   <dd>
     <address class="not-italic">
       {address.postalCode}, {address.locality}, {address.street}
     </address>
   </dd>
 
-  <dt class="text-muted">{t(locale, 'company.hours')}</dt>
+  <dt class="text-secondary">{t(locale, 'company.hours')}</dt>
   <dd>{COMPANY.hours[locale]}</dd>
 </dl>

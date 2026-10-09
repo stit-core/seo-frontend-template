@@ -14,7 +14,7 @@ const label = t(locale, 'theme.toggle')
   data-theme-toggle
   aria-label={label}
   title={label}
-  class="theme-toggle -mr-2 h-10 w-10 items-center justify-center rounded-control text-muted hover:text-app-fg"
+  class="theme-toggle -mr-2 h-10 w-10 items-center justify-center rounded-control text-secondary hover:text-primary"
 >
   <svg
     class="icon-to-dark"
@@ -63,20 +63,20 @@ const label = t(locale, 'theme.toggle')
   }
 
   @media (prefers-color-scheme: dark) {
-    :global(html:not([data-scheme='light'])) .icon-to-dark {
+    :global(html:not([data-theme='light'])) .icon-to-dark {
       display: none;
     }
 
-    :global(html:not([data-scheme='light'])) .icon-to-light {
+    :global(html:not([data-theme='light'])) .icon-to-light {
       display: block;
     }
   }
 
-  :global(html[data-scheme='dark']) .icon-to-dark {
+  :global(html[data-theme='dark']) .icon-to-dark {
     display: none;
   }
 
-  :global(html[data-scheme='dark']) .icon-to-light {
+  :global(html[data-theme='dark']) .icon-to-light {
     display: block;
   }
 </style>

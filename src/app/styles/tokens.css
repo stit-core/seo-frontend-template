@@ -1,0 +1,199 @@
+/* Производный файл: собирает scripts/project/ds_build.py из system.tokens.json — руками не правится.
+   Имя переменной — путь токена DTCG через дефис; алиасы разрешены до значения. */
+
+:root {
+  color-scheme: light dark;
+  --primitive-color-white: #ffffff;
+  --primitive-color-neutral-50: #f8faf8;
+  --primitive-color-neutral-100: #eef3f0;
+  --primitive-color-neutral-150: #e8efea;
+  --primitive-color-neutral-200: #d5ded8;
+  --primitive-color-neutral-400: #93a49b;
+  --primitive-color-neutral-500: #7d8b84;
+  --primitive-color-neutral-600: #62726a;
+  --primitive-color-neutral-700: #55635c;
+  --primitive-color-neutral-800: #252f2b;
+  --primitive-color-neutral-850: #1a2320;
+  --primitive-color-neutral-900: #141b18;
+  --primitive-color-neutral-925: #101915;
+  --primitive-color-neutral-950: #0c110f;
+  --primitive-color-accent-50: #e6f2ec;
+  --primitive-color-accent-300: #7ce2b7;
+  --primitive-color-accent-400: #57d79f;
+  --primitive-color-accent-700: #0a6b4b;
+  --primitive-color-accent-800: #085439;
+  --primitive-color-accent-950: #152a22;
+  --primitive-color-red-50: #fdecea;
+  --primitive-color-red-300: #ff9a92;
+  --primitive-color-red-700: #b3261e;
+  --primitive-color-red-950: #2a1614;
+  --color-bg-canvas: #f8faf8;
+  --color-bg-surface: #ffffff;
+  --color-bg-subtle: #eef3f0;
+  --color-border-subtle: #d5ded8;
+  --color-border-strong: #7d8b84;
+  --color-text-primary: #101915;
+  --color-text-secondary: #55635c;
+  --color-text-on-accent: #f8faf8;
+  --color-accent-bg: #e6f2ec;
+  --color-accent-border: #0a6b4b;
+  --color-accent-solid: #0a6b4b;
+  --color-accent-solid-hover: #085439;
+  --color-accent-text: #0a6b4b;
+  --color-focus-ring: #0a6b4b;
+  --color-danger-bg: #fdecea;
+  --color-danger-border: #b3261e;
+  --color-danger-text: #b3261e;
+  --font-text: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --type-page-title-lg-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --type-page-title-lg-size: 2.75rem;
+  --type-page-title-lg-leading: 1.09091;
+  --type-page-title-lg-weight: 600;
+  --type-page-title-lg-tracking: -1.1px;
+  --type-page-title-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --type-page-title-size: 2.125rem;
+  --type-page-title-leading: 1.176471;
+  --type-page-title-weight: 600;
+  --type-page-title-tracking: -0.85px;
+  --type-section-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --type-section-size: 1.375rem;
+  --type-section-leading: 1.272728;
+  --type-section-weight: 600;
+  --type-section-tracking: 0px;
+  --type-card-title-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --type-card-title-size: 1.375rem;
+  --type-card-title-leading: 1.272728;
+  --type-card-title-weight: 600;
+  --type-card-title-tracking: -0.55px;
+  --type-lead-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --type-lead-size: 1.1875rem;
+  --type-lead-leading: 1.526316;
+  --type-lead-weight: 400;
+  --type-lead-tracking: 0px;
+  --type-body-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --type-body-size: 1rem;
+  --type-body-leading: 1.625;
+  --type-body-weight: 400;
+  --type-body-tracking: 0px;
+  --type-body-long-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --type-body-long-size: 1rem;
+  --type-body-long-leading: 1.75;
+  --type-body-long-weight: 400;
+  --type-body-long-tracking: 0px;
+  --type-body-strong-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --type-body-strong-size: 1rem;
+  --type-body-strong-leading: 1.625;
+  --type-body-strong-weight: 500;
+  --type-body-strong-tracking: 0px;
+  --type-label-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --type-label-size: 0.8125rem;
+  --type-label-leading: 1.538462;
+  --type-label-weight: 500;
+  --type-label-tracking: 0px;
+  --type-helper-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --type-helper-size: 0.8125rem;
+  --type-helper-leading: 1.538462;
+  --type-helper-weight: 400;
+  --type-helper-tracking: 0px;
+  --type-button-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --type-button-size: 1rem;
+  --type-button-leading: 1.5;
+  --type-button-weight: 600;
+  --type-button-tracking: 0px;
+  --type-code-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  --type-code-size: 0.875rem;
+  --type-code-leading: 1.714286;
+  --type-code-weight: 400;
+  --type-code-tracking: 0px;
+  --space-3xs: 0.125rem;
+  --space-2xs: 0.25rem;
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 2.5rem;
+  --space-3xl: 3rem;
+  --space-4xl: 4rem;
+  --space-5xl: 6rem;
+  --rhythm-page-x: 1.5rem;
+  --rhythm-section-s: 3rem;
+  --rhythm-section-m: 4rem;
+  --rhythm-section-l: 5rem;
+  --rhythm-stack-display: 1rem;
+  --size-control-md: 2.75rem;
+  --size-icon-md: 1.125rem;
+  --size-measure: 40rem;
+  --size-container: 48rem;
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.875rem;
+  --border-width-default: 1px;
+  --border-width-strong: 2px;
+  --border-width-focus: 2px;
+  --border-offset-focus: 2px;
+  --breakpoint-tablet: 40rem;
+  --breakpoint-desktop: 60rem;
+  --motion-marketing-duration-hover: 150ms;
+  --motion-marketing-duration-page: 300ms;
+  --motion-marketing-easing-out: cubic-bezier(0, 0, 0.58, 1);
+  --motion-marketing-easing-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Тема «Тёмная» (dark): на :root, где объявлены переменные, иначе алиасы не пересчитаются. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --color-bg-canvas: #0c110f;
+    --color-bg-surface: #141b18;
+    --color-bg-subtle: #1a2320;
+    --color-border-subtle: #252f2b;
+    --color-border-strong: #62726a;
+    --color-text-primary: #e8efea;
+    --color-text-secondary: #93a49b;
+    --color-text-on-accent: #0c110f;
+    --color-accent-bg: #152a22;
+    --color-accent-border: #57d79f;
+    --color-accent-solid: #57d79f;
+    --color-accent-solid-hover: #7ce2b7;
+    --color-accent-text: #57d79f;
+    --color-focus-ring: #57d79f;
+    --color-danger-bg: #2a1614;
+    --color-danger-border: #ff9a92;
+    --color-danger-text: #ff9a92;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg-canvas: #0c110f;
+  --color-bg-surface: #141b18;
+  --color-bg-subtle: #1a2320;
+  --color-border-subtle: #252f2b;
+  --color-border-strong: #62726a;
+  --color-text-primary: #e8efea;
+  --color-text-secondary: #93a49b;
+  --color-text-on-accent: #0c110f;
+  --color-accent-bg: #152a22;
+  --color-accent-border: #57d79f;
+  --color-accent-solid: #57d79f;
+  --color-accent-solid-hover: #7ce2b7;
+  --color-accent-text: #57d79f;
+  --color-focus-ring: #57d79f;
+  --color-danger-bg: #2a1614;
+  --color-danger-border: #ff9a92;
+  --color-danger-text: #ff9a92;
+}
+
+/* Сокращённое движение: только токены движения. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-marketing-duration-page: 0ms;
+  }
+}
+
+:root[data-motion="reduced"] {
+  --motion-marketing-duration-page: 0ms;
+}

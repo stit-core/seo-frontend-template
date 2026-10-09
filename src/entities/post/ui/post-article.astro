@@ -26,15 +26,15 @@ const cover = data.cover && data.coverAlt ? { src: data.cover, alt: data.coverAl
       loading="eager"
       fetchpriority="high"
       decoding="async"
-      class="mb-8 rounded-panel border border-divider"
+      class="mb-8 rounded-panel border border-subtle"
     />
   )}
-  <header class="border-b border-divider pb-6">
+  <header class="border-b border-subtle pb-6">
     <h1 class="text-heading-xl font-semibold tracking-tight">{data.title}</h1>
-    <p class="mt-4 text-body-lg text-muted">{data.description}</p>
+    <p class="mt-4 text-body-lg text-secondary">{data.description}</p>
     {/* Подпись автора ставит страница: реестр авторов — соседний слайс. */}
     <slot name="byline" />
-    <p class="mt-4 flex flex-wrap items-center gap-x-2 text-body-sm text-muted">
+    <p class="mt-4 flex flex-wrap items-center gap-x-2 text-body-sm text-secondary">
       {data.draft && <DraftBadge locale={locale} />}
       <span>
         {t(locale, 'post.published')}{' '}

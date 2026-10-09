@@ -1,5 +1,5 @@
 ---
-description: UI — .astro-компоненты на собственном токен-слое, тема через light-dark()/data-scheme и инлайн-остров, scoped-CSS только для layout, картинки через <Picture> с LCP-политикой, 0 JS по умолчанию — острова только по списку политики.
+description: UI — .astro-компоненты на ролях дизайн-системы (файл токенов в форме ds_build и слой сопоставления «утилита → роль»), тема — data-theme, поле THEME и инлайн-остров, scoped-CSS только для layout, картинки через <Picture> с LCP-политикой, 0 JS по умолчанию — острова только по списку политики.
 paths: ["src/**/ui/**", "src/app/layouts/**", "src/app/styles/**", "src/app/analytics/**", "src/shared/ui/**", "src/features/theme/**"]
 ---
 
@@ -11,26 +11,55 @@ UI-киты и их токены не подключаются: импорт л�
 
 ## Токены — единственный источник значений
 
-- Только семантические утилиты и переменные из `src/app/styles/index.css`:
-  `bg-app-bg`, `text-app-fg`, `text-muted`, `text-accent`, `bg-accent-soft`, `border-divider`,
-  `text-link`, `text-body-md`, `text-heading-xl`, `rounded-control`, `max-w-content`,
-  `max-w-page`, `--scheme-*`
+- Значения — файл токенов дизайн-системы `src/app/styles/tokens.css` в форме производного
+  `ds_build` соседнего strategy (`design/system.tokens.css`): имя переменной — путь токена
+  (`color.bg.canvas` → `--color-bg-canvas`), темы и сокращённое движение — блоки `[data-theme]`,
+  `prefers-color-scheme` и `[data-motion]`. ДС меняется заменой файла целиком: по строкам он не
+  правится, форматтер его не трогает (`biome.json`)
+- Слой сопоставления «утилита → роль» — блок `@theme inline` в `src/app/styles/index.css`,
+  единственное место, которое знает переменные ДС. Компонент берёт роль утилитой,
+  класс-компонент — `@apply` той же утилиты; `var(--color-…)` и `var(--primitive-…)` вне слоя не
+  пишутся. У ДС с другими именами ролей меняются только правые части строк слоя
+- Имя утилиты — свойство и роль: сегмент пути, который называет свойство, становится префиксом
+  (`color.bg.canvas` → `bg-canvas`, `color.text.secondary` → `text-secondary`,
+  `color.border.subtle` → `border-subtle`), у группы смысла остаётся её имя (`color.accent.bg` →
+  `bg-accent`, `color.accent.text` → `text-accent`, `color.accent.solid` → `bg-accent-solid`,
+  `color.danger.border` → `border-danger`, `color.focus-ring` → `outline-focus-ring`). Ключ слоя —
+  пространство имён своего свойства (`--background-color-*`, `--text-color-*`,
+  `--border-color-*`, `--outline-color-*`, `--text-decoration-color-*`), а не общее `--color-*`:
+  роль фона не становится цветом текста, а имя ключа не совпадает с переменной ДС — одноимённая
+  пара в `@theme inline` дала бы ссылку переменной на себя
+- Роли цвета: `bg-canvas`, `bg-surface`, `bg-subtle`, `bg-accent`, `bg-accent-solid`, `bg-danger`,
+  `text-primary`, `text-secondary`, `text-on-accent`, `text-accent`, `text-danger`,
+  `border-subtle` (декоративный разделитель), `border-strong` (граница поля — не ниже 3:1 к
+  фону), `border-accent`, `border-danger`, `decoration-accent`, `outline-focus-ring`. Кегли,
+  радиусы и ширины — `text-body-md`, `text-heading-xl`, `rounded-control`, `max-w-content`,
+  `max-w-page` — ключи `@theme` там же
 - Классы-компоненты там же: `.button` (единственная заливка акцентом), `.field` (одна геометрия
   input/textarea), `.note` (врезка), `.section-title` (штрих акцента над заголовком раздела),
   `.prose` (тело markdown)
-- ❌ сырые цвета/размеры в компонентах; нужна новая семантика — новый токен в `index.css`.
-  ESLint в `.astro` валит инлайн-`style`, литерал цвета (`#…`, `rgb(…)`, `oklch(…)`) в классе
-  (`bg-[#18181b]`), в цветовом атрибуте SVG (`fill`, `stroke`) и в `<style>`; палитра Tailwind по
-  умолчанию выключена в токен-слое — `text-zinc-500` не даёт ни байта CSS (держит тест токен-слоя
-  `app/styles/index.server.test.ts`)
+- ❌ сырые цвета/размеры в компонентах; нужна новая семантика — роль в файле токенов и строка
+  слоя. ESLint в `.astro` валит инлайн-`style`, литерал цвета (`#…`, `rgb(…)`, `oklch(…)`) в
+  классе (`bg-[#18181b]`), в цветовом атрибуте SVG (`fill`, `stroke`) и в `<style>`; палитра и
+  гарнитуры Tailwind по умолчанию выключены в слое — `text-zinc-500` и `font-mono` не дают ни
+  байта CSS, гарнитуры текста и кода страница получает от базовых стилей (роли `font.*`)
+- Тест токен-слоя `app/styles/index.server.test.ts` держит на компиляторе Tailwind: закрытую
+  палитру; утилиту роли — только у своего свойства; каждую переменную, на которую ссылается слой,
+  — объявленной в файле токенов (роль, которой в файле нет, тест называет); темы поля `THEME` —
+  равными темам файла; `color-scheme` — только из файла токенов
 - Колонка чтения — `max-w-content` (≈ 72 знака), каркас сайта — `max-w-page`
 
-## Тема: инлайн-остров
+## Тема: файл токенов и инлайн-остров
 
-- Системная тема — без JS: `light-dark()` + `color-scheme` в токен-слое
-- Явный выбор — `data-scheme="light|dark"` на `<html>`; хранится в cookie `scheme`
-  (техническая, согласия не требует). Читает её только сам остров: сервер тему не знает и на
-  prerendered знать не может
+- Темы — блоки файла токенов: без выбора — системная, без JS (`prefers-color-scheme`); выбор —
+  атрибут ДС `data-theme="light|dark"` на `<html>`. `color-scheme` объявляет только файл токенов:
+  своего у оболочки и компонентов нет (тест токен-слоя и тест оболочки
+  `app/layouts/document.astro.test.ts`)
+- Поле `THEME` (`shared/config/site.ts`) — решение проекта: `default` — `system` или тема, которую
+  оболочка ставит атрибутом; `switcher` — кнопка выбора в шапке и остров темы (без него нет ни
+  кнопки, ни острова, ни его хеша в CSP — `on` в `ISLANDS`). Темы поля — ровно темы файла токенов
+- Выбор хранит cookie `scheme` (техническая, согласия не требует). Читает её только сам остров:
+  сервер тему не знает и на prerendered знать не может
 - Весь код острова — один инлайн-`<script is:inline data-island="theme">` в `<head>`
   (`features/theme/ui/theme-init`): применяет выбор **до первой отрисовки** и обслуживает
   кнопку делегированием. В `<body>` скриптов нет — ни одного; исполняемый скрипт страницы —

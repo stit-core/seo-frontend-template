@@ -49,7 +49,7 @@ const crumbs = [
 >
   <Breadcrumbs locale={locale} items={crumbs} class="mb-4" />
   <h1 class="text-heading-xl font-semibold tracking-tight">{copy.title}</h1>
-  <p class="mt-4 text-body-lg text-muted">{copy.lead}</p>
+  <p class="mt-4 text-body-lg text-secondary">{copy.lead}</p>
 </DocumentLayout>
 ```
 

@@ -24,7 +24,7 @@ const model = await blogListPageModel(locale, page)
 >
   <Breadcrumbs locale={locale} items={model.crumbs} class="mb-4" />
   <h1 class="text-heading-xl font-semibold tracking-tight">{model.heading}</h1>
-  <p class="mt-4 text-body-lg text-muted">{t(locale, 'blog.lead')}</p>
+  <p class="mt-4 text-body-lg text-secondary">{t(locale, 'blog.lead')}</p>
   <TagList locale={locale} tags={model.tags} class="mt-6" />
   <div class="mt-10">
     <PostList locale={locale} posts={page.items} pagination={model.pagination} />

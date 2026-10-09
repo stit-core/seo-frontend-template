@@ -13,7 +13,10 @@ interface Props {
 const { locale, items, class: className } = Astro.props
 ---
 
-<nav aria-label={t(locale, 'nav.breadcrumbs')} class:list={['text-body-sm text-muted', className]}>
+<nav
+  aria-label={t(locale, 'nav.breadcrumbs')}
+  class:list={['text-body-sm text-secondary', className]}
+>
   <ol class="flex flex-wrap items-center gap-x-2">
     {items.map((item, index) => (
       <li class="flex items-center gap-x-2">

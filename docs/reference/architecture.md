@@ -17,7 +17,7 @@ app → pages → widgets → features → entities → shared
 
 | слой | что лежит |
 |---|---|
-| `app/` | документ-шелл `layouts/document.astro`, `middleware` (лог, адреса `redirects.yaml`, заголовки), токен-слой `styles/index.css`, единственная точка аналитики |
+| `app/` | документ-шелл `layouts/document.astro`, `middleware` (лог, адреса `redirects.yaml`, заголовки), токены ДС и слой сопоставления `styles/{tokens,index}.css`, единственная точка аналитики |
 | `pages/` | роутинг: 1 файл = 1 URL; секции страниц — рядом, в `_<name>/` |
 | `widgets/` | блоки каркаса и переиспользуемые блоки: шапка, подвал, список записей, крошки |
 | `features/` | пользовательские сценарии: форма обратной связи, переключатель темы |
@@ -78,7 +78,7 @@ Frontmatter и модули `.ts` исполняются на сервере (с
 
 ```
 src/
-├─ app/           layouts/document.astro · middleware/ · styles/index.css · analytics/
+├─ app/           layouts/document.astro · middleware/ · styles/{tokens,index}.css · analytics/
 ├─ pages/         index · about · contacts/{index,spasibo} · legal/privacy · blog/**
 │                 en/** · 404 · 500 · now · healthz · robots.txt · rss.xml
 │                 [key].txt · api/contact · секции _about/ _blog/ _contacts/

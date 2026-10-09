@@ -47,7 +47,6 @@ SECURITY.md
 .claude/rules/env-local.md
 .claude/rules/tests-pipeline.md
 .claude/rules/shared-ui.md
-src/app/styles/index.css
 biome.json
 eslint.config.js
 steiger.config.ts
@@ -62,8 +61,6 @@ docs/README.md
 docs/reference/deployment.md
 ```
 
-- `src/app/styles/index.css` — те же имена токенов и семантика; тема через `light-dark()`
-  + `color-scheme` (системная без JS, `data-scheme` переключает).
 - Конфиги гейта — общие шаги цепочки (`typecheck`, `lint`, `format:check`, `test`, `steiger`,
   `check:gate`, `build`, `size`); внутри шагов — инструменты Astro, полный состав здешнего гейта —
   rule `tests-pipeline` § Gate.
@@ -85,7 +82,8 @@ docs/reference/deployment.md
   тихий no-op на `@/`-импортах) и `no-restricted-imports` по `@/<layer>/*/*`.
 - ESLint 10 (`@eslint/js@10` peer-требует `eslint ^10`).
 - Негативные фикстуры гейта `.gate-fixtures/` + `check:gate`.
-- Тема через `light-dark()` в токен-слое.
+- Токен-слой на нейминге ДС strategy: файл токенов в форме `ds_build`, слой сопоставления
+  «утилита → роль» (`@theme inline`), тема — `data-theme`.
 - `toThrowError` → `toThrow` в `invariant.test.ts` (в Vitest 5 алиас помечен deprecated).
 - pnpm ≥ 10.34 без corepack (в Node ≥ 25 его нет; в образе — `npm install -g` версии
   `packageManager`), настройки — `pnpm-workspace.yaml` (их читают pnpm 10.34, 11 и 12:

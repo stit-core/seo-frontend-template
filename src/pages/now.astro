@@ -23,21 +23,20 @@ Astro.response.headers.set('cache-control', 'private, no-store')
   <p class="mt-4 text-body-lg">
     <time datetime={now.toISOString()}>{formatDateTime(locale, now)}</time>
   </p>
-  <p class="mt-2 text-body-sm text-muted">
-    ISO 8601: <code class="font-mono">{now.toISOString()}</code>
+  <p class="mt-2 text-body-sm text-secondary">
+    ISO 8601: <code>{now.toISOString()}</code>
   </p>
 
   <h2 class="mt-10 text-heading-md font-semibold">Что такое on-demand в этом шаблоне</h2>
   <p class="mt-4 text-body-md">
     Почти все страницы собираются один раз на сборке и отдаются Node-процессом как файлы. Эта —
-    исключение: у неё стоит <code class="font-mono">export const prerender = false</code>, и она
-    рендерится на каждый запрос, поэтому время выше — свежее. Так же устроены только служебные
-    маршруты: проверка живости процесса, страница 404, robots.txt, карта сайта, фиды, обработчик
-    формы.
+    исключение: у неё стоит <code>export const prerender = false</code>, и она рендерится на каждый
+    запрос, поэтому время выше — свежее. Так же устроены только служебные маршруты: проверка живости
+    процесса, страница 404, robots.txt, карта сайта, фиды, обработчик формы.
   </p>
   <p class="mt-4 text-body-md">
-    Ответ уходит с <code class="font-mono">Cache-Control: private, no-store</code> и
-    <code class="font-mono">noindex</code>: живая страница не для общих кешей и не для поиска.
-    JavaScript здесь, как и на остальных страницах, нет.
+    Ответ уходит с <code>Cache-Control: private, no-store</code> и <code>noindex</code>: живая
+    страница не для общих кешей и не для поиска. JavaScript здесь, как и на остальных страницах,
+    нет.
   </p>
 </DocumentLayout>

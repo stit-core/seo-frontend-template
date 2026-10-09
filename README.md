@@ -88,7 +88,7 @@ entities → shared`); между слайсами одного слоя — з�
 ```
 content/redirects.yaml   адреса как данные: переезды старого сайта и 410, один хоп с любой формы адреса
 public/           иконки, manifest, og-default.png (социальная карточка 1200×630)
-src/app/          layouts/document.astro (<head> из props: SeoHead + JSON-LD), middleware, styles/index.css
+src/app/          layouts/document.astro (<head> из props: SeoHead + JSON-LD), middleware, styles/{tokens,index}.css
 src/pages/        роутинг Astro = слой pages: index, about, contacts/{index,spasibo},
                   legal/privacy, blog/{index,[slug],page/[page],tag/[tag]}, en/… , 500,
                   rss.xml, en/rss.xml (prerender); 404, healthz, now, robots.txt, [key].txt,
@@ -178,9 +178,11 @@ shutdown под Traefik и отказывается стартовать, есл
 
 ## UI
 
-Компоненты пишутся в проекте как `.astro` на собственном токен-слое
-(`src/app/styles/index.css`: Tailwind v4 `@theme` + семантические переменные, тема через
-`light-dark()` и `data-scheme`), без вендорных UI-китов. Ни одна страница не грузит внешних
+Компоненты пишутся в проекте как `.astro` на ролях дизайн-системы: значения — файл токенов
+`src/app/styles/tokens.css` в форме производного `ds_build` соседнего strategy (две темы —
+блоками `data-theme` и `prefers-color-scheme`), роли компонентам раздаёт слой сопоставления
+«утилита → роль» в `src/app/styles/index.css` (Tailwind v4 `@theme inline`); вендорных UI-китов
+нет. Ни одна страница не грузит внешних
 скриптов: из JavaScript в шаблоне только острова — тема (инлайн-`<script>` в `<head>`, который
 применяет выбор до первой отрисовки и обслуживает переключатель) и счётчик при заданном
 `METRIKA_ID`; CSP каждой страницы пропускает только их — по хешу тела. Картинки —

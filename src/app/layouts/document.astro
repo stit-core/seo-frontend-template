@@ -2,6 +2,7 @@
 import '@/app/styles/index.css'
 import Metrika from '@/app/analytics/metrika.astro'
 import { ThemeInit } from '@/features/theme'
+import { THEME } from '@/shared/config'
 import { type Locale, t } from '@/shared/i18n'
 import { type JsonLd, JsonLdScript, type OgImage, SeoHead } from '@/shared/seo'
 import { SiteFooter } from '@/widgets/site-footer'
@@ -35,13 +36,16 @@ const {
   article,
   jsonLd = [],
 } = Astro.props
+// Тема без выбора — системная: её включает блок prefers-color-scheme файла токенов; заданную
+// полем THEME ставит атрибут ДС. Своего color-scheme у оболочки нет — его объявляет файл токенов.
+const theme = THEME.default === 'system' ? undefined : THEME.default
 // Порядок иконок: первой — PNG 192×192. Какую из нескольких иконок возьмёт выдача Google, его
 // справка не говорит, поэтому первой стоит та, что ему подходит: растр (SVG в списке его форматов
 // нет) крупнее рекомендованных 48 px — ICO 32×32 мельче.
 ---
 
 <!doctype html>
-<html lang={locale}>
+<html lang={locale} data-theme={theme}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -58,20 +62,19 @@ const {
     {jsonLd.map((data) => (
       <JsonLdScript data={data} />
     ))}
-    <meta name="color-scheme" content="light dark" />
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <ThemeInit />
+    {THEME.switcher && <ThemeInit />}
     <Metrika />
     <slot name="head" />
   </head>
   <body class="flex min-h-dvh flex-col">
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-10 focus:rounded-control focus:bg-action-bg focus:px-4 focus:py-2 focus:text-action-fg"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-10 focus:rounded-control focus:bg-accent-solid focus:px-4 focus:py-2 focus:text-on-accent"
     >
       {t(locale, 'nav.skip')}
     </a>

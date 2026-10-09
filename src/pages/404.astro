@@ -17,7 +17,7 @@ const locale = localeOf(Astro.url.pathname)
   noindex
 >
   <h1 class="text-heading-xl font-semibold tracking-tight">{t(locale, 'notFound.title')}</h1>
-  <p class="mt-4 text-body-lg text-muted">{t(locale, 'notFound.lead')}</p>
+  <p class="mt-4 text-body-lg text-secondary">{t(locale, 'notFound.lead')}</p>
   <p class="mt-8 text-body-md">
     <a href={localePath(locale, '/')}>{t(locale, 'notFound.home')}</a>
   </p>

@@ -19,7 +19,7 @@ const { locale, posts, pagination } = Astro.props
 ---
 
 {posts.length === 0 ? (
-  <p class="text-body-md text-muted">{t(locale, 'blog.empty')}</p>
+  <p class="text-body-md text-secondary">{t(locale, 'blog.empty')}</p>
 ) : (
   <div class="flex flex-col gap-8">
     {posts.map((post) => (
@@ -39,7 +39,7 @@ const { locale, posts, pagination } = Astro.props
         </a>
       )}
     </span>
-    <span class="text-muted">
+    <span class="text-secondary">
       {pagination.current} / {pagination.last}
     </span>
     <span>

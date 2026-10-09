@@ -12,4 +12,5 @@ export {
   SITE_NAME,
   SITE_SAME_AS,
   SITE_VERIFICATION,
+  THEME,
 } from './site'

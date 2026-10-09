@@ -44,7 +44,7 @@ const describedBy = (id: string, failed: boolean): string | undefined =>
 {(failures.length > 0 || notice) && (
   <div
     role="alert"
-    class="mb-6 rounded-control border-l-2 border-danger bg-danger-soft px-4 py-3 text-body-md"
+    class="mb-6 rounded-control border-l-2 border-danger bg-danger px-4 py-3 text-body-md"
   >
     <p>{notice ? t(locale, notice) : t(locale, 'form.summary')}</p>
     {failures.length > 0 && (

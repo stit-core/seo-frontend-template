@@ -1,18 +1,13 @@
 ---
-// Остров темы целиком: применяет выбор до первой отрисовки и обслуживает переключатель
-// делегированием — скрипт живёт в <head>, в <body> их не ждут ни бот, ни гейт. Выбор хранится
-// в cookie `scheme` (техническая, согласия не требует); читает её только этот скрипт — сервер
-// тему не знает и на prerendered знать не может. Без выбора тему берёт CSS из
-// prefers-color-scheme. Признак `data-js` на <html> — для CSS: переключатель бесполезен, когда
-// скрипт не выполнился.
-// Тело уезжает в <head> каждой страницы как есть — поэтому оно плотное, без комментариев и
-// прагм, и его не трогает форматтер (.prettierignore); размер держит theme-init.astro.test.ts.
-// data-island — имя в списке островов политики сборки (scripts/lib/site-policy.mjs): другой
-// исполняемый скрипт seo:check не пропустит.
+// Остров темы целиком: ставит выбор атрибутом ДС `data-theme` до первой отрисовки и обслуживает
+// переключатель делегированием — скрипт живёт в <head>. Выбор хранит cookie `scheme` (техническая,
+// согласия не требует); без выбора тему даёт файл токенов. `data-js` на <html> — признак для CSS:
+// без скрипта переключатель бесполезен. Тело уезжает в <head> каждой страницы как есть: плотное,
+// без комментариев и прагм, мимо форматтера; хеш тела — строка ISLANDS политики сборки.
 ---
 
 <script is:inline data-island="theme">{const d=document,s=d.documentElement.dataset,m=/(^|; )scheme=(light|dark)/.exec(d.cookie)
-if(m)s.scheme=m[2]
+if(m)s.theme=m[2]
 s.js='on'
-d.addEventListener('click',e=>{if(e.target.closest?.('[data-theme-toggle]')){s.scheme=(s.scheme?s.scheme==='dark':matchMedia('(prefers-color-scheme:dark)').matches)?'light':'dark'
-d.cookie=`scheme=${s.scheme};path=/;max-age=31536000;samesite=lax${location.protocol==='https:'?';secure':''}`}})}</script>
+d.addEventListener('click',e=>{if(e.target.closest?.('[data-theme-toggle]')){s.theme=(s.theme?s.theme==='dark':matchMedia('(prefers-color-scheme:dark)').matches)?'light':'dark'
+d.cookie=`scheme=${s.theme};path=/;max-age=31536000;samesite=lax${location.protocol==='https:'?';secure':''}`}})}</script>

@@ -4,7 +4,7 @@
 // заголовки) и браузер — CSP строится отсюда же. Список расширяется решением — служебная
 // страница, остров, сторонний сервис, тип разметки, — а не по месту в скрипте.
 import { createHash } from 'node:crypto'
-import { METRIKA_ID } from '../../src/shared/config/site.ts'
+import { METRIKA_ID, THEME } from '../../src/shared/config/site.ts'
 import { isJsonLd } from './html.mjs'
 
 // Служебные prerendered-маршруты без префикса локали: только им положен noindex.
@@ -20,7 +20,8 @@ export const TAG_INDEX_MIN_POSTS = 3
 // и изменение исполняемого кода сайта видно в диффе политики. `on` — печатает ли остров сайт
 // (по умолчанию — да), `sources` — чужие origin острова по директивам CSP.
 export const ISLANDS = {
-  theme: { hash: 'sha256-6PP0q6y6JDJx8gwgskZkXliPGb4JSQLN9q1UUOcqu6Q=' },
+  // Остров темы — только с кнопкой выбора: без неё тему даёт файл токенов, без скрипта.
+  theme: { hash: 'sha256-8+CG27AgsskVr1qr5R4F7PxE9bcwBPNnKPwCKcnajC4=', on: THEME.switcher },
   // Счётчик — только с идентификатором; tag.js, хиты и пиксель — с его origin. Вебвизору, карте
   // кликов и региональным доменам нужно больше — список Яндекса:
   // https://yandex.ru/support/metrica/code/install-counter-csp.html

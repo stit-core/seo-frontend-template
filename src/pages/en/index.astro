@@ -43,7 +43,7 @@ const facts = [
   <h1 class="text-heading-xl font-semibold tracking-tight sm:text-display">
     Indexable site template
   </h1>
-  <p class="mt-5 text-body-lg text-muted">
+  <p class="mt-5 text-body-lg text-secondary">
     Pages are built ahead of time and served by the Node process as files. Server rendering turns on
     where a request is unavoidable: redirects, robots.txt, the contact form.
   </p>
@@ -58,8 +58,8 @@ const facts = [
   <dl class="mt-6 grid gap-x-8 gap-y-5 text-body-md sm:grid-cols-[8rem_minmax(0,1fr)]">
     {facts.map((fact) => (
       <Fragment>
-        <dt class="font-medium text-app-fg">{fact.term}</dt>
-        <dd class="text-muted">{fact.text}</dd>
+        <dt class="font-medium text-primary">{fact.term}</dt>
+        <dd class="text-secondary">{fact.text}</dd>
       </Fragment>
     ))}
   </dl>

@@ -17,8 +17,16 @@ afterEach(async () => {
 })
 
 // Остров исполняется в happy-dom как в браузере: системная тема и cookie прошлого визита —
-// входы, data-* на <html> и cookie выбора — выход.
-function open({ system = 'light', cookie }: { system?: 'light' | 'dark'; cookie?: string } = {}) {
+// входы, атрибут темы ДС на <html> и cookie выбора — выход.
+function open({
+  system = 'light',
+  cookie,
+  preset,
+}: {
+  system?: 'light' | 'dark'
+  cookie?: string
+  preset?: 'light' | 'dark'
+} = {}) {
   const browser = new Browser({
     settings: {
       // Исполняется только инлайн-скрипт острова из этого репозитория.
@@ -31,7 +39,8 @@ function open({ system = 'light', cookie }: { system?: 'light' | 'dark'; cookie?
   const page = browser.newPage()
   page.url = 'https://demo.example/blog/zapis'
   if (cookie) page.mainFrame.document.cookie = cookie
-  page.content = `<!doctype html><html><head>${island}</head><body><main>Текст</main><button type="button" data-theme-toggle><svg></svg></button></body></html>`
+  const root = preset ? `<html data-theme="${preset}">` : '<html>'
+  page.content = `<!doctype html>${root}<head>${island}</head><body><main>Текст</main><button type="button" data-theme-toggle><svg></svg></button></body></html>`
   const { document } = page.mainFrame
   const click = (selector: string) =>
     document
@@ -65,12 +74,12 @@ describe('ThemeInit', () => {
     expect(cspHash(body)).toBe(ISLANDS.theme.hash)
   })
 
-  it('без выбора тема системная: схемы на <html> нет, признак JS есть', () => {
+  it('без выбора тема системная: атрибута темы на <html> нет, признак JS есть', () => {
     expect(open().dataset()).toEqual({ js: 'on' })
   })
 
   it('выбор прошлого визита из cookie применяется до отрисовки', () => {
-    expect(open({ cookie: 'scheme=dark' }).dataset()).toEqual({ js: 'on', scheme: 'dark' })
+    expect(open({ cookie: 'scheme=dark' }).dataset()).toEqual({ js: 'on', theme: 'dark' })
   })
 
   it.each([
@@ -81,14 +90,21 @@ describe('ThemeInit', () => {
     (system, chosen) => {
       const page = open({ system })
       page.toggle()
-      expect(page.dataset().scheme).toBe(chosen)
+      expect(page.dataset().theme).toBe(chosen)
       const [cookie] = page.cookies()
       expect(cookie).toMatchObject({ key: 'scheme', value: chosen, path: '/', secure: true })
       expect((cookie?.expires?.getTime() ?? 0) - Date.now()).toBeGreaterThan(YEAR_MS - 60_000)
       page.toggle()
-      expect(page.dataset().scheme).toBe(system)
+      expect(page.dataset().theme).toBe(system)
     },
   )
+
+  it('тема по умолчанию из разметки: кнопка выбирает противоположную ей, а не системной', () => {
+    const page = open({ system: 'light', preset: 'dark' })
+    expect(page.dataset()).toEqual({ js: 'on', theme: 'dark' })
+    page.toggle()
+    expect(page.dataset().theme).toBe('light')
+  })
 
   it('клик мимо переключателя тему не трогает', () => {
     const page = open()

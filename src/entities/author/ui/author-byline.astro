@@ -12,6 +12,6 @@ const { locale, name, jobTitle } = Astro.props
 const signature = jobTitle === undefined ? name : `${name}, ${jobTitle}`
 ---
 
-<p class="mt-4 text-body-sm text-muted">
-  {t(locale, 'author.by')} <span class="text-app-fg">{signature}</span>
+<p class="mt-4 text-body-sm text-secondary">
+  {t(locale, 'author.by')} <span class="text-primary">{signature}</span>
 </p>

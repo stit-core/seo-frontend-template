@@ -75,18 +75,18 @@ const address = COMPANY.address[locale]
 >
   <Breadcrumbs locale={locale} items={crumbs} class="mb-4" />
   <h1 class="text-heading-xl font-semibold tracking-tight">{heading}</h1>
-  <p class="mt-4 text-body-lg text-muted">{copy.lead}</p>
+  <p class="mt-4 text-body-lg text-secondary">{copy.lead}</p>
 
   <h2 class="section-title mt-12 text-heading-md font-semibold">{copy.work}</h2>
   <ul class="mt-6 grid gap-4 text-body-md">
     {copy.works.map((item) => (
-      <li class="border-l-2 border-divider pl-4">{item}</li>
+      <li class="border-l-2 border-subtle pl-4">{item}</li>
     ))}
   </ul>
 
   <h2 class="section-title mt-14 text-heading-md font-semibold">{copy.details}</h2>
   <dl class="mt-6 grid gap-x-8 gap-y-3 text-body-md sm:grid-cols-[9rem_minmax(0,1fr)]">
-    <dt class="text-muted">{copy.legalNameLabel}</dt>
+    <dt class="text-secondary">{copy.legalNameLabel}</dt>
     <dd>{COMPANY.legalName}</dd>
   </dl>
   <CompanyContacts locale={locale} class="mt-3" />

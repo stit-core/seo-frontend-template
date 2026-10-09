@@ -1,23 +1,48 @@
 /* source(): автодетект источников Tailwind иначе сканирует весь репозиторий (доки, правила,
  * листинги в docs/research) и печёт в CSS утилиты, которых нет в src/. */
 @import "tailwindcss" source("../..");
+/* Значения дизайн-системы — производный файл в форме ds_build: меняется заменой целиком. */
+@import "./tokens.css";
 
-/*
- * Собственный токен-слой. Компоненты опираются только на эти семантические
- * утилиты/переменные — это и делает их design-system-agnostic и темизируемыми.
- * Тема: без явного выбора — системная (prefers-color-scheme через light-dark()),
- * явный выбор — data-scheme на <html>, который переключает color-scheme.
- */
+/* Слой сопоставления «утилита → роль» — единственное место, которое знает переменные ДС:
+ * компоненты и классы ниже берут роль утилитой. Ключ — пространство имён своего свойства, а не
+ * общее `--color-*`: роль фона не становится цветом текста, а имя ключа не совпадает с переменной
+ * ДС (одноимённая пара — ссылка на себя). `inline`: утилита несёт ссылку на роль, и блок темы
+ * файла токенов переключает её значение. */
+@theme inline {
+  /* Палитра и гарнитуры Tailwind по умолчанию выключены: `text-zinc-500` и `font-mono` не дают
+   * ни байта CSS (держит index.server.test.ts). */
+  --color-*: initial;
+  --font-*: initial;
+
+  --background-color-canvas: var(--color-bg-canvas);
+  --background-color-surface: var(--color-bg-surface);
+  --background-color-subtle: var(--color-bg-subtle);
+  --background-color-accent: var(--color-accent-bg);
+  --background-color-accent-solid: var(--color-accent-solid);
+  --background-color-accent-solid-hover: var(--color-accent-solid-hover);
+  --background-color-danger: var(--color-danger-bg);
+
+  --text-color-primary: var(--color-text-primary);
+  --text-color-secondary: var(--color-text-secondary);
+  --text-color-on-accent: var(--color-text-on-accent);
+  --text-color-accent: var(--color-accent-text);
+  --text-color-danger: var(--color-danger-text);
+
+  --border-color-subtle: var(--color-border-subtle);
+  --border-color-strong: var(--color-border-strong);
+  --border-color-accent: var(--color-accent-border);
+  --border-color-danger: var(--color-danger-border);
+  --border-color-focus-ring: var(--color-focus-ring);
+  --outline-color-focus-ring: var(--color-focus-ring);
+  --text-decoration-color-accent: var(--color-accent-border);
+
+  /* Гарнитуры текста и кода страница получает от базовых стилей Tailwind. */
+  --default-font-family: var(--font-text);
+  --default-mono-font-family: var(--font-mono);
+}
 
 @theme {
-  /* Палитра Tailwind по умолчанию выключена: цвет — только семантический токен ниже, а
-   * `text-zinc-500` не даёт ни байта CSS (держит index.server.test.ts). */
-  --color-*: initial;
-
-  --font-sans:
-    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-
   --text-body-sm: 0.8125rem;
   --text-body-sm--line-height: 1.25rem;
   --text-body-md: 1rem;
@@ -41,62 +66,11 @@
   --container-page: 48rem;
 }
 
-/* Цвета — семантические; утилита компилируется в var(--scheme-*), значение
- * которого зависит от color-scheme (см. блоки ниже). */
-@theme inline {
-  --color-app-bg: var(--scheme-app-bg);
-  --color-app-fg: var(--scheme-app-fg);
-  --color-surface: var(--scheme-surface);
-  --color-surface-muted: var(--scheme-surface-muted);
-  --color-divider: var(--scheme-divider);
-  --color-muted: var(--scheme-muted);
-  --color-danger: var(--scheme-danger);
-  --color-danger-soft: var(--scheme-danger-soft);
-  --color-accent: var(--scheme-accent);
-  --color-accent-soft: var(--scheme-accent-soft);
-  --color-link: var(--scheme-link);
-  --color-focus: var(--scheme-focus);
-  --color-action-bg: var(--scheme-action-bg);
-  --color-action-fg: var(--scheme-action-fg);
-}
-
-:root {
-  color-scheme: light dark;
-
-  --scheme-app-bg: light-dark(#f8faf8, #0c110f);
-  --scheme-app-fg: light-dark(#101915, #e8efea);
-  /* Поднятая поверхность: поле ввода, панель. На светлой теме — чистый белый поверх тонированного фона. */
-  --scheme-surface: light-dark(#ffffff, #141b18);
-  --scheme-surface-muted: light-dark(#eef3f0, #1a2320);
-  --scheme-divider: light-dark(#d5ded8, #252f2b);
-  --scheme-muted: light-dark(#55635c, #93a49b);
-  --scheme-danger: light-dark(#b3261e, #ff9a92);
-  --scheme-danger-soft: light-dark(#fdecea, #2a1614);
-  /* Зелёный акцент — «прошло»: единственный цветной сигнал интерфейса. */
-  --scheme-accent: light-dark(#0a6b4b, #57d79f);
-  --scheme-accent-soft: light-dark(#e6f2ec, #152a22);
-  --scheme-link: light-dark(#0a6b4b, #57d79f);
-  --scheme-focus: light-dark(#0a6b4b, #57d79f);
-  --scheme-action-bg: light-dark(#0a6b4b, #57d79f);
-  --scheme-action-hover: light-dark(#085439, #7ce2b7);
-  --scheme-action-fg: light-dark(#f8faf8, #0c110f);
-}
-
-[data-scheme="light"] {
-  color-scheme: light;
-}
-
-[data-scheme="dark"] {
-  color-scheme: dark;
-}
-
 @layer base {
   body {
-    background: var(--scheme-app-bg);
-    color: var(--scheme-app-fg);
-    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    @apply bg-canvas text-primary;
   }
 
   /* Даты и числа в мета-строках не должны «прыгать» по ширине. */
@@ -106,10 +80,10 @@
   }
 
   a {
-    color: var(--scheme-link);
     text-decoration: underline;
     text-decoration-thickness: 1px;
     text-underline-offset: 0.2em;
+    @apply text-accent;
   }
 
   a:hover {
@@ -117,14 +91,14 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--scheme-focus);
+    outline: 2px solid;
     outline-offset: 2px;
     border-radius: 2px;
+    @apply outline-focus-ring;
   }
 
   ::selection {
-    background: var(--scheme-accent-soft);
-    color: var(--scheme-app-fg);
+    @apply bg-accent text-primary;
   }
 }
 
@@ -137,7 +111,7 @@
     height: 2px;
     margin-bottom: 0.75rem;
     border-radius: 1px;
-    background: var(--scheme-accent);
+    @apply bg-accent-solid;
   }
 
   /* Поля формы: одна геометрия на input, textarea и select. */
@@ -145,27 +119,26 @@
     display: block;
     width: 100%;
     padding: 0.625rem 0.75rem;
-    border: 1px solid var(--scheme-divider);
+    border: 1px solid;
     border-radius: var(--radius-control);
-    background: var(--scheme-surface);
-    color: var(--scheme-app-fg);
     font-family: inherit;
     font-size: var(--text-body-md);
     line-height: var(--text-body-md--line-height);
+    @apply border-strong bg-surface text-primary;
   }
 
   .field::placeholder {
-    color: var(--scheme-muted);
+    @apply text-secondary;
   }
 
   .field:focus-visible {
-    outline: 2px solid var(--scheme-focus);
+    outline: 2px solid;
     outline-offset: 1px;
-    border-color: var(--scheme-focus);
+    @apply border-focus-ring outline-focus-ring;
   }
 
   .field[aria-invalid="true"] {
-    border-color: var(--scheme-danger);
+    @apply border-danger;
   }
 
   /* Главное действие страницы: единственная заливка акцентом. */
@@ -176,16 +149,15 @@
     min-height: 2.75rem;
     padding: 0.625rem 1.25rem;
     border-radius: var(--radius-control);
-    background: var(--scheme-action-bg);
-    color: var(--scheme-action-fg);
     font-size: var(--text-body-md);
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
+    @apply bg-accent-solid text-on-accent;
   }
 
   .button:hover {
-    background: var(--scheme-action-hover);
+    @apply bg-accent-solid-hover;
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -196,17 +168,17 @@
 
   /* Врезка рядом с формой и на юридических страницах: тон вместо рамки-коробки. */
   .note {
-    border-left: 2px solid var(--scheme-accent);
-    background: var(--scheme-accent-soft);
+    border-left: 2px solid;
     border-radius: 0 var(--radius-control) var(--radius-control) 0;
     padding: 0.875rem 1rem;
     font-size: var(--text-body-sm);
     line-height: 1.5rem;
+    @apply border-accent bg-accent;
   }
 }
 
 /* Markdown-тело записи: разметку рендерит контент-слой, утилиты на неё не повесить,
- * поэтому единственный класс `prose` собран из тех же токенов. */
+ * поэтому единственный класс `prose` собран из тех же ролей. */
 @layer components {
   .prose {
     font-size: var(--text-body-md);
@@ -249,7 +221,7 @@
   }
 
   .prose li::marker {
-    color: var(--scheme-muted);
+    @apply text-secondary;
   }
 
   .prose li + li {
@@ -261,18 +233,17 @@
   }
 
   .prose code {
-    font-family: var(--font-mono);
     font-size: 0.9em;
-    background: var(--scheme-surface-muted);
     border-radius: 0.25rem;
     padding: 0.1em 0.35em;
+    @apply bg-subtle;
   }
 
   .prose pre {
-    background: var(--scheme-surface-muted);
     border-radius: var(--radius-control);
     padding: 1rem;
     overflow-x: auto;
+    @apply bg-subtle;
   }
 
   .prose pre code {
@@ -282,9 +253,9 @@
   }
 
   .prose blockquote {
-    border-left: 2px solid var(--scheme-accent);
+    border-left: 2px solid;
     padding-left: 1rem;
-    color: var(--scheme-muted);
+    @apply border-accent text-secondary;
   }
 
   .prose img {
@@ -295,6 +266,7 @@
 
   .prose hr {
     border: 0;
-    border-top: 1px solid var(--scheme-divider);
+    border-top: 1px solid;
+    @apply border-subtle;
   }
 }
