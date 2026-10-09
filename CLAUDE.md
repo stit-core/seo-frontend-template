@@ -79,7 +79,7 @@ origin штампуется при старте.
 | `pnpm steiger` | структурный линтер FSD |
 | `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome и свои скрипты гейта (`seo:check`, `check:links`, `check:content`, `plan:check`) — ровно нарушениями из `expected.json`, скрипт релиза `indexnow` — ровно его исходами на локальной заглушке; guard-хук — отказ каждому обходу из `guard.json` |
 | `pnpm check:content` | контент-гейт до build: схема каждого `.md`, даты не из будущего, тело (без скрытой разметки), переводы, ссылки, `content/redirects.yaml`, строка карты `rendering.md` у каждого on-demand маршрута |
-| `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` (и абсолютные URL своего сайта) существуют и записаны канонической формой адреса |
+| `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` (и абсолютные URL своего сайта) существуют и ведут на каноническую форму адреса |
 | `pnpm seo:check` | после build: у каждой страницы `dist/client` title/description (уникальные, в бюджетах, не общие), self-canonical, `lang`, один h1, OG с картинкой, первая иконка — PNG от 48 px, hreflang у каждой пары переводов, JSON-LD = видимое, организация одна (`@id`, имя), карта сайта = индексируемые страницы сборки; `noindex`, острова, чужие ресурсы и типы JSON-LD — только по списку `scripts/lib/site-policy.mjs`, теги индексируются от порога записей |
 | `pnpm size` | бюджеты `.size-limit.cjs` (CSS, HTML главной и поста) |
 | `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |

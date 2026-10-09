@@ -120,8 +120,9 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
   держит HTTP-набор на сборке. Адрес читают только GET и HEAD.
   `410` — тело без стилей на языке префикса удалённого адреса + `X-Robots-Tag: noindex`
 - `meta refresh` и `redirects` в `astro.config.ts` не используются. Ссылок на адреса из
-  `redirects.yaml` и ссылок в неканонической форме (`//`, точки, буква процентами) в разметке
-  нет — `check:links`
+  `redirects.yaml` и ссылок в неканонической форме (двойной слеш в пути, буква процентами) в
+  разметке нет — `check:links`; кириллицу в пути и сегменты `.` и `..` браузер приводит сам до
+  запроса — такая ссылка законна
 
 ## Гейты
 
@@ -130,8 +131,8 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
   уникальность `title`/`description`/`translationKey` в коллекции и локали, ссылки по списку маршрутов
   (`src/pages` + контент + `public/` + карта сайта — файл сборки), `redirects.yaml`
 - `pnpm check:links` (после `build`): каждый внутренний `href`/`src`/`srcset` в
-  `dist/client` существует (файл, `<path>/index.html` или on-demand маршрут) и записан
-  канонической формой адреса
+  `dist/client` существует (файл, `<path>/index.html` или on-demand маршрут), и путь, каким его
+  запросит браузер, — каноническая форма адреса
 - Скрипты читают YAML напрямую `js-yaml` и исполняют TS-модули напрямую (Node strip-types),
   поэтому импортируют только «листовые» модули без `@/`-алиасов и относительных импортов:
   `model/schema.ts`, `lib/paginate.ts`, `entities/author/model/authors.ts`,

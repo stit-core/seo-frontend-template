@@ -1,9 +1,9 @@
 // Гейт ссылок на прод-сборке (после build): каждый внутренний href/src/srcset в dist/client —
 // корневой путь или абсолютный URL своего сайта (canonical, hreflang, RSS в <head>) — существует
 // как файл или страница (<path>/index.html при build.format 'directory') либо является on-demand
-// маршрутом; ссылок с хвостовым слешем, на .html, в неканонической форме (`//`, точки, буква
-// процентами) и на адреса из content/redirects.yaml нет — каждая ссылка ведёт сразу на конечный
-// документ и называет его единственным адресом.
+// маршрутом; ссылок с хвостовым слешем, на .html, в неканонической форме (двойной слеш в пути,
+// буква процентами) и на адреса из content/redirects.yaml нет — каждая ссылка ведёт сразу на
+// конечный документ и называет его единственным адресом.
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { relative, resolve, sep } from 'node:path'
 import { load } from 'js-yaml'
@@ -75,12 +75,15 @@ for (const file of pages) {
     }
     const path = url.replace(/[?#].*$/, '')
     const search = /\?[^#]*/.exec(url)?.[0] ?? ''
+    // Путь, каким его запросит браузер: кириллицу и пробел он запишет процентами, сегменты `.` и
+    // `..` уберёт сам — такая ссылка приходит на сервер канонической.
+    const requested = URL.parse(path, OWN_ORIGIN)?.pathname
     if (path !== '/' && path.endsWith('/'))
       errors.push(`${where}: ${url} — хвостовой слеш (лишний редирект)`)
     else if (path.endsWith('.html')) errors.push(`${where}: ${url} — .html (дубль маршрута)`)
-    // `//`, точки и буква процентами: процесс ответил бы 301, а за edge, который приводит такой путь
-    // сам, — второй адрес той же страницы.
-    else if (canonicalPath(path) !== path)
+    // Двойной слеш в пути и буква, записанная процентами, дойдут до сервера как есть: процесс
+    // ответит 301, а за edge, который приводит такой путь сам, это второй адрес той же страницы.
+    else if (requested === undefined || canonicalPath(requested) !== requested)
       errors.push(`${where}: ${url} — неканоническая форма адреса (лишний редирект или дубль)`)
     else if (redirects.find(canonicalPath(path) ?? path, search))
       errors.push(`${where}: ${url} — адрес из redirects.yaml, ведите на конечный`)

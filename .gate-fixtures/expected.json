@@ -185,7 +185,7 @@
     "dist/client/index.html: /net — не существует",
     "dist/client/index.html: /about/ — хвостовой слеш (лишний редирект)",
     "dist/client/index.html: /about.html — .html (дубль маршрута)",
-    "dist/client/index.html: /x/../about — неканоническая форма адреса (лишний редирект или дубль)",
+    "dist/client/index.html: /razdel//about — неканоническая форма адреса (лишний редирект или дубль)",
     "dist/client/index.html: /%61bout — неканоническая форма адреса (лишний редирект или дубль)",
     "dist/client/index.html: /old — адрес из redirects.yaml, ведите на конечный",
     "dist/client/index.html: /about?old=1&utm=x — адрес из redirects.yaml, ведите на конечный",
