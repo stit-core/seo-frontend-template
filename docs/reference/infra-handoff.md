@@ -46,8 +46,8 @@
   переездов процесс закрывает одним 301 на конечный адрес — раньше, чем отдаст файл; заглавные в
   своём адресе и закодированный слеш — 404. Двойной слеш, сегменты `.` и `..` и букву, записанную
   процентами, Traefik приводит сам до проксирования: в процесс такой запрос приходит уже
-  каноническим, и по публичному адресу отвечает страница — дубль закрывает её canonical. Правил на
-  путь у edge нет (1.3).
+  каноническим, и по публичному адресу отвечает страница — дубль закрывает её canonical. Правил
+  приведения пути у edge нет (1.3).
 - **Публичный `POST /api/contact`**: форма обратной связи работает без JavaScript, одна
   принятая заявка = одно письмо (или один запрос во внутренний сервис). Ограничителя
   частоты в приложении нет by design — счётчик в процессе не переживает рестарт и не
@@ -108,6 +108,10 @@
   `dist/` принадлежат `node`).
 - **`logging:` не задавать** — ротация json-file (10 МБ × 3) уже настроена на хосте
   ролью `ansible/roles/docker`. Регулятор объёма — `LOG_LEVEL`.
+- **Роутер `site-www` — для apex-домена.** У среды на поддомене (`staging.<domain>`) имени
+  `www.staging.<domain>` обычно нет: сертификат на него не выпускается, Traefik пишет ошибку
+  ACME, а preflight DNS (1.6) предупреждает на каждом деплое. Это шум, а не отказ; его снимает
+  DNS-запись `www.<поддомен>` (или wildcard).
 
 ```yaml
 services:
@@ -210,7 +214,7 @@ services:
 |---|---|---|---|
 | `SITE_TAG` | `RELEASE` | тег образа, он же версия в логах и Sentry | да |
 | — | `SITE_URL` | `https://${DOMAIN}` — канонический origin, **без хвостового слеша** | да |
-| `ROBOTS_POLICY` | то же | `index` на проде, `noindex` на любой не-прод среде | да |
+| `ROBOTS_POLICY` | то же | `index` на проде — умолчание compose, `noindex` на любой не-прод среде | на не-прод |
 | `SITE_LOG_LEVEL` | `LOG_LEVEL` | `debug \| info \| warn \| error`, дефолт `info` | нет |
 | `SITE_SENTRY_DSN` | `SENTRY_DSN` | пусто — SDK не грузится вовсе; DSN public by design | нет |
 | `ENV` | `SENTRY_ENVIRONMENT` | слаг среды | нет |
@@ -268,7 +272,18 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
         permissionsPolicy: "camera=(), microphone=(), geolocation=()"
 ```
 
-`crowdsec` и `rate-limit` остаются как есть. Новые middleware:
+`rate-limit` остаётся как есть. У `crowdsec` отказ — 429 вместо 403, умолчания плагина:
+
+```yaml
+    crowdsec:
+      plugin:
+        crowdsec-bouncer:
+          # Отказ WAF — «приходи позже», а не «страницы нет»: бот под баном сценария получает
+          # 429 и возвращается после срока бана.
+          remediationStatusCode: 429
+```
+
+Новые middleware:
 
 ```yaml
     compress:
@@ -308,7 +323,8 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
       ipAllowList:
         sourceRange: ["127.0.0.1/32"]
 
-    # Не-прод контур: подключается через SITE_EDGE_EXTRA_MW в .env среды.
+    # Не-прод контур: подключается через SITE_EDGE_EXTRA_MW в .env среды; в цепочке
+    # staging-noindex стоит перед staging-auth.
     staging-auth:
       basicAuth:
         # usersFile, а не users: в dynamic-файле нет удвоения `$`.
@@ -337,11 +353,15 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
   оно берёт из `SITE_URL`.
 - **Методы — `GET` и `HEAD` на `site`, `POST` — только `site-form`.** Статик-хендлер адаптера
   отдаёт файл на любой метод (`POST /` — 200 со страницей), на `TRACE` процесс отвечает 400.
-- **429, а не 403, для избыточного трафика.** Лимит частоты Traefik отдаёт 429 — это
-  сигнал «замедлись», который краулер понимает. Бан (403) для поискового робота —
-  выпадение из индекса, для ИИ-бота, который строит ответы или идёт за страницей по запросу
-  человека, — из ответов нейросети; поэтому ни те ни другие не должны доходить до WAF-решения
-  (см. 1.5).
+- **429, а не 403, — и у лимита, и у WAF.** Лимит частоты Traefik отдаёт 429 — это сигнал
+  «замедлись», который краулер понимает. Отказ CrowdSec по умолчанию — 403: для поискового
+  робота это выпадение из индекса, для ИИ-бота, который строит ответы или идёт за страницей по
+  запросу человека, — из ответов нейросети. Лимит от бана не бережёт: сценарий обхода
+  `http-crawl-non_statics` срабатывает на сорока разных страницах подряд быстрее двух в секунду —
+  намного ниже лимита сайта (100 запросов в секунду) — и статус ответа не смотрит, так что 429
+  лимита он считает наравне с 200. Поэтому отказ bouncer — тоже 429 (`remediationStatusCode`
+  выше), а боты, которых пускает политика сайта, до WAF-решения не доходят вовсе — allowlist
+  (1.5).
 - **Порядок цепочки**: `crowdsec` (дешёвый отказ) → лимит → `secure-headers` → `compress` →
   `retry`.
 - **Правил приведения пути у edge нет, `sanitizePath` остаётся включённым.** Хвостовой слеш, `/index.html`
@@ -361,8 +381,11 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
 - **`compress` — не для POST формы**: в цепочке `site-form` его нет, он там бесполезен.
 
 Staging-контур включается не отдельным файлом, а переменной среды: в `.env` не-прод VPS
-`SITE_EDGE_EXTRA_MW=,staging-auth@file,staging-noindex@file` (ведущая запятая обязательна)
-и `ROBOTS_POLICY=noindex`. На проде переменная пустая.
+`SITE_EDGE_EXTRA_MW=,staging-noindex@file,staging-auth@file` (ведущая запятая обязательна)
+и `ROBOTS_POLICY=noindex`. На проде переменная пустая. Порядок — часть контракта: отказ замка
+(401) рождается в `staging-auth`, и `X-Robots-Tag` на нём ставит только звено, которое стоит в
+цепочке раньше. При порядке «замок, заголовок» ответ 401 уходит без `X-Robots-Tag` (Traefik
+v3.6.16: с паролем заголовок есть при любом порядке, без пароля — только при этом).
 
 Файл замка — `configs/traefik/dynamic/staging.htpasswd.tpl` с одной строкой
 `${STAGING_BASIC_AUTH_USERS}`; его рендерит `scripts/render-configs.sh` вместе с
@@ -390,6 +413,10 @@ accessLog:
     minDuration: 0s
 ```
 
+Журнал — файл в каталоге хоста: `/var/log/traefik:/var/log/traefik` в `compose/traefik.yml`. Файл
+вне json-file докер-демона и сам не ротируется — ротация живёт в стеке `<org>/infra`. Его читают
+CrowdSec (1.5) и отчёт сайта «бот × статус».
+
 Почему это важно именно для сайта: prerendered-страницы отдаёт статик-хендлер адаптера, и
 в логе приложения их нет вовсе. Полная картина трафика — только в access-log Traefik.
 `X-Request-Id: keep` сшивает его со строкой лога приложения. `User-Agent: keep` — без него
@@ -400,25 +427,17 @@ accessLog:
 
 ### 1.5 CrowdSec
 
-- **Починить acquisition** — сейчас `configs/crowdsec/acquis.yaml` читает
-  `/var/log/traefik/*.log`, а Traefik пишет access-log в stdout: источник пустой, вся
-  остальная настройка декоративна. Два варианта:
-  - **A (файл)**: `filePath` из 1.4 + named volume `traefik-logs` в `docker-compose.yml`,
-    `traefik-logs:/var/log/traefik` в `compose/traefik.yml` и `:ro` в
-    `compose/crowdsec.yml`. Ближе к текущему устройству; помнить, что файл внутри volume
-    не попадает под ротацию docker-демона — нужен logrotate на хосте.
-  - **B (docker-источник)**: `source: docker`, `container_name: [traefik]`,
-    `labels: {type: traefik}` в `acquis.yaml` + `/var/run/docker.sock:ro` в
-    `compose/crowdsec.yml`. Файла и ротации нет вовсе, цена — сокет у ещё одного
-    контейнера.
+- **Починить acquisition** — `configs/crowdsec/acquis.yaml` читает `/var/log/traefik/*.log`, а
+  Traefik пишет access-log в stdout: источник пустой, вся остальная настройка декоративна.
+  Источник — файл журнала из 1.4: этот путь `acquis.yaml` уже называет, а каталог хоста
+  `/var/log` у `crowdsec` уже смонтирован на чтение. Docker-источник (`source: docker` и сокет
+  демона у `crowdsec`) не используется: с `filePath` он несовместим и отдаёт сокет контейнеру,
+  который разбирает чужой ввод.
 - **Whitelist поисковиков** — в `compose/crowdsec.yml`:
   `POSTOVERFLOWS: "crowdsecurity/rdns crowdsecurity/seo-bots-whitelist"` рядом с
-  существующим `COLLECTIONS`. Без `rdns` whitelist не на чем работать.
-- **Локальная страховка** (опционально, если хаб-данные отстают) —
-  `configs/crowdsec/postoverflows/seo-bots-local.yaml`: whitelist по
-  forward-confirmed rDNS (`.googlebot.com.`, `.google.com.`, `.yandex.ru.`,
-  `.yandex.net.`, `.yandex.com.`, `.search.msn.com.`). **Whitelist по User-Agent не
-  делать** — UA подделывается.
+  существующим `COLLECTIONS`. Без `rdns` whitelist не на чем работать. Своей копии суффиксов
+  rDNS рядом не заводить — это рукописный дубль списка хаба CrowdSec. **Whitelist по User-Agent
+  не делать** — UA подделывается.
 - **ИИ-боты — продуктовое решение, а не гигиена.** На индексируемом сайте ими управляет
   политика сайта — поле сборки `AI_BOTS_POLICY`, именная группа в `robots.txt` сервиса, — а не
   бан на edge. Трафик из ответов нейросетей приносят поисковые ИИ-боты (`OAI-SearchBot`,
@@ -427,10 +446,10 @@ accessLog:
   их пускают или нет по политике.
 - **Allowlist ИИ-ботов — по спискам вендоров.** `seo-bots-whitelist` знает rDNS классических
   поисковиков, ИИ-ботов в нём нет: бот, который обходит карту сайта, упирается в сценарии
-  `http-crawl-non_statics` и `http-probing`, получает бан и 403 — сайт выпадает из ответов этой
-  системы. Поэтому сети ботов, которых пускает политика сайта, вносятся в allowlist CrowdSec
-  (`cscli allowlists`, CrowdSec ≥ 1.6.8) и обновляются по расписанию, раз в неделю: вендоры
-  меняют адреса. Источник — реестр ботов сайта `src/shared/seo/crawlers.yaml` (копия
+  `http-crawl-non_statics` и `http-probing` и получает бан — на его срок сайт для этой системы
+  закрыт, при повторах он выпадает из её ответов. Поэтому сети ботов, которых пускает политика
+  сайта, вносятся в allowlist CrowdSec (`cscli allowlists`, CrowdSec ≥ 1.6.8) и обновляются по
+  расписанию, раз в неделю: вендоры меняют адреса. Источник — реестр ботов сайта `src/shared/seo/crawlers.yaml` (копия
   `crawlers.yaml` базы strategy): у записи `bots[]` поле `ip_list_url` — список сетей вендора,
   `rdns_suffix` — суффиксы обратного DNS. Печать источников — команда пакета сайта, в `<org>/site`
   на теге релиза:
@@ -451,13 +470,16 @@ accessLog:
   не носит.
 
   Строка с `ip_list_url` — сети в `cscli allowlists`. Строка только с `rdns_suffix` (Яндекс) —
-  суффиксы в rDNS-whitelist (`seo-bots-whitelist` и локальная страховка выше): `cscli allowlists`
+  её суффиксы несёт rDNS-whitelist хаба CrowdSec (`seo-bots-whitelist`): `cscli allowlists`
   принимает адреса и сети, а не имена. Строка без обоих полей — вендор списка не публикует: в
-  allowlist ей нечем попасть, такого бота бережёт только «429, а не 403» (1.3). По User-Agent
+  allowlist ей нечем попасть. Такой бот при обходе получает бан сценария и на срок бана — 429
+  (1.3), а не проход: отказ говорит ему «приходи позже», а не «страницы нет». По User-Agent
   allowlist не строится — как и whitelist поисковиков: UA подделывается.
 - **Edge согласован с `robots.txt`: кого политика сайта пускает — в allowlist, кого закрывает —
-  нет.** Политику инфра у себя не хранит, а читает с сайта: бот, которого называет именная группа с
-  `Disallow: /` живого `https://<domain>/robots.txt`, в allowlist не идёт. При `allow-all` именной
+  нет.** Политику инфра у себя не хранит, а читает с сайта — с `robots.txt` сервиса
+  (`http://site:3000/robots.txt` в сети `proxy`), а не с публичного адреса: на не-прод тот за
+  замком и отвечает 401. Бот, которого называет именная группа с `Disallow: /`, в allowlist не
+  идёт; сервис не отвечает — allowlist не меняется. При `allow-all` именной
   группы нет — идут все строки печати, и обучающие (`training`): `CCBot` числится в списке
   `http-bad-user-agent` хаба CrowdSec, и без allowlist edge забанит бота, которого `robots.txt`
   пускает. При `allow-search-deny-training` группа называет обучающих, при `deny-all` — ещё и
@@ -466,7 +488,8 @@ accessLog:
   (`configs/crowdsec/ai-bots.sources`), а не данные VPS: репо сайта на VPS нет, а в образе реестр — часть
   серверной сборки. Файл обновляет сессия в `<org>/infra`, когда строка `AI-BOTS` handoff релиза
   называет другую политику или другую версию реестра; еженедельное задание на VPS читает из него
-  `ip_list_url`, сверяет токены с именной группой живого `robots.txt` и обновляет `cscli allowlists`.
+  `ip_list_url`, сверяет токены с именной группой `robots.txt` сервиса и обновляет
+  `cscli allowlists`.
 
 ### 1.6 Остальные файлы репозитория
 
@@ -475,8 +498,8 @@ accessLog:
 | `.env.example` | секция `# ───── profile site (индексируемый сайт) ─────`: `SITE_TAG`, `ROBOTS_POLICY`, `SITE_LOG_LEVEL`, `SITE_SENTRY_DSN`, `SITE_INDEXNOW_KEY`, `SITE_FORM_DELIVERY`, `SITE_SMTP_URL`, `SITE_FORM_TO`, `SITE_FORM_FROM`, `SITE_FORM_BACKEND_URL`, `SITE_EDGE_EXTRA_MW`, `STAGING_BASIC_AUTH_USERS` — у каждой комментарий «как получить», иначе `make validate` красный; в подсказке `COMPOSE_PROFILES` появляется `site` |
 | `Makefile` → `bump` | `up -d --no-deps --force-recreate` получает `--wait --wait-timeout 90`: без него верб «успешен» и на битом образе |
 | `scripts/deploy.sh` → `ROLE_FILES[edge]` | дописать `compose/site.yml` (список ролей перечислен явно, glob только у `all`) |
-| `scripts/preflight-dns.sh` | при активном профиле `site` добавить в `hosts` `www.$DOMAIN` — иначе LE-сертификат на www молча не выпустится, а роутер `site-www` есть |
-| `scripts/tools/smoke.d/90-site.sh` | **новый** drop-in (контракт — в шапке `scripts/tools/smoke-run.sh`): блок `-- site --`, read-only, self `exit 0`, проблема — строкой `ATTENTION:` в колонке 0. Проверяет: liveness `docker exec site wget -qO- http://127.0.0.1:3000/healthz`; `/` — 200 и TTFB (на не-прод ожидается 401 — замок стоит); `/robots.txt` — на проде группа `*` с `Allow: /` и абсолютный `Sitemap:`, на не-прод `Disallow: /`; `/sitemap.xml` — непустой список `<loc>`, все URL на своём домене и по https; `X-Robots-Tag: noindex` — на не-прод есть, на проде нет |
+| `scripts/preflight-dns.sh` | при активном профиле `site` добавить в `hosts` `www.$DOMAIN` — иначе LE-сертификат на www молча не выпустится, а роутер `site-www` есть; у среды на поддомене имени `www` обычно нет — проверка предупреждает, а не отказывает (1.1) |
+| `scripts/tools/smoke.d/90-site.sh` | **новый** drop-in (контракт — в шапке `scripts/tools/smoke-run.sh`): блок `-- site --`, read-only, self `exit 0`, проблема — строкой `ATTENTION:` в колонке 0. Проверяет: liveness `docker exec site wget -qO- http://127.0.0.1:3000/healthz`; через edge — статус и заголовки: `/` — 200 и TTFB, на не-прод — 401 (замок стоит) и `X-Robots-Tag: noindex`, на проде заголовка нет; содержимое — у контейнера тем же `docker exec site wget` (на не-прод edge без пароля отвечает 401 на всё): `/robots.txt` — на проде группа `*` с `Allow: /` и абсолютный `Sitemap:`, на не-прод `Disallow: /`; `/sitemap.xml` — непустой список `<loc>`, все URL на своём домене и по https |
 | `compose/landing.yml` | заглушка на корне остаётся до первого разворота сайта: она держит выпуск LE-сертификата на `${DOMAIN}`. После разворота `compose/landing.yml` + `configs/landing/` удаляются (сам роутер сайта её и так перебивает приоритетом) |
 | `.claude/rules/traefik-routing.md` | раздел «Корневой домен и www»: корень — задокументированное исключение из сабдоменного канона; www — отдельный роутер с `redirectRegex`; `${1}` переживает envsubst; в цепочке публичного сайта, в отличие от API, есть `compress`; в таблице chain'ов `secure-headers@file` — HSTS, nosniff, `Referrer-Policy`, `Permissions-Policy` (камера, микрофон и геолокация закрыты), без XSS-filter: состав из 1.3, он общий для всех публичных роутеров |
 | `.claude/rules/compose-and-services.md` | абзац «Node-сервисы с рендером»: `init: true`; `read_only` **несовместим** со штамповкой origin; `stop_grace_period` ↔ `SHUTDOWN_TIMEOUT_MS`; `mem_limit` ↔ `NODE_OPTIONS --max-old-space-size` (≈ 75 %); `deploy.resources` не использовать; `replicas` несовместимы с `container_name` |
@@ -495,7 +518,8 @@ accessLog:
 3. `make ps` — `site` healthy; `make logs SVC=site` — строка
    `[entrypoint] stamped https://__site_origin__ -> https://<domain> in /app/dist/client`
    и ни одной ошибки.
-4. curl по живому домену:
+4. curl по живому домену; `<страница>` — путь любой страницы из `sitemap.xml` сайта (страницы у
+   проекта свои), `<раздел>/<страница>` — путь из двух сегментов:
 
 ```bash
 curl -sI  https://<domain>/                    # 200, без X-Robots-Tag: noindex
@@ -505,10 +529,10 @@ curl -sI  https://<domain>/net-takogo          # 404 (не 200 и не реди�
 curl -sI  http://<domain>/                     # ровно один 301/308 на https
 curl -sI  https://www.<domain>/                # ровно один 301 на apex
 curl -sI  https://<domain>/index.html          # 301 на / — форму адреса приводит приложение
-curl -sI  https://<domain>/about/index.html    # 301 на /about, одним хопом
-curl -sI  https://<domain>/<любая-страница>/   # 301 без слеша (хвостовой слеш срезается)
-curl -sI  https://<domain>/en%2Fabout          # 404: закодированный слеш edge не раскодирует
-curl -s   https://<domain>//about | grep -o '<link rel="canonical"[^>]*>'   # двойной слеш схлопывает edge: страница, canonical — https://<domain>/about
+curl -sI  https://<domain>/<страница>/index.html   # 301 на /<страница>, одним хопом
+curl -sI  https://<domain>/<страница>/             # 301 без слеша (хвостовой слеш срезается)
+curl -sI  https://<domain>/<раздел>%2F<страница>   # 404: закодированный слеш edge не раскодирует
+curl -s   https://<domain>//<страница> | grep -o '<link rel="canonical"[^>]*>'   # двойной слеш схлопывает edge: страница, canonical — https://<domain>/<страница>
 curl -sI  https://<domain>/healthz             # 200, Cache-Control: no-store
 curl -sI 'https://<domain>/_image?href=/og-default.png&f=webp'   # 403 на edge (без него — 404 приложения)
 curl -s   https://<domain>/ | grep -c __site_origin__      # 0 — плейсхолдер проштампован
@@ -526,11 +550,16 @@ done
 6. CrowdSec: `cscli decisions list` — ни верифицированных поисковых ботов, ни адресов из
    списков вендоров ИИ-ботов среди забаненных нет; `cscli allowlists list` — списки вендоров на
    месте (при политике сайта `allow-all` — с сетями обучающих ботов); `cscli metrics` показывает
-   непустой источник acquisition; в записи access-log есть `request_User-Agent`.
+   непустой источник acquisition; в записи access-log есть `request_User-Agent`; адрес под
+   решением (`cscli decisions add --ip <свой адрес> --duration 2m`; прежний вердикт bouncer держит
+   в кеше до минуты) получает от edge 429, а не 403.
 7. Лимит формы: серия POST на `/api/contact` упирается в **429**, а не в 403 и не в
    принятую заявку.
-8. На не-прод VPS: `/` отвечает 401 (basicAuth), в ответе `X-Robots-Tag: noindex,
-   nofollow, noarchive`, `robots.txt` = `Disallow: /`.
+8. На не-прод VPS через edge без пароля `/` отвечает 401 (basicAuth), и уже этот отказ несёт
+   `X-Robots-Tag: noindex, nofollow, noarchive` — порядок контура из 1.3. Содержимое без пароля
+   edge не отдаёт: `robots.txt` = `Disallow: /` читается с паролем (`curl -su <user>:<pass>
+   https://<domain>/robots.txt`) или у контейнера (`docker exec site wget -qO-
+   http://127.0.0.1:3000/robots.txt`).
 9. Дренаж: `docker stop site` укладывается в `stop_grace_period` без `SIGKILL`.
 10. В `<org>/site`: `/seo-audit` по прод-домену — чистый. Он же гоняет полный набор
     проверок выдачи и печатает, что чинить.
@@ -580,7 +609,6 @@ done
 
 | вопрос | варианты | что предлагает этот контракт |
 |---|---|---|
-| Источник CrowdSec acquisition | A — файл access-log в общем volume; B — docker-источник через сокет | B проще в эксплуатации (нет файла и ротации), A — меньше прав у контейнера |
 | Включение staging-контура | переменная `SITE_EDGE_EXTRA_MW` в `.env` среды; отдельный compose-оверрайд | переменная: не плодит файлов и проходит `make validate` |
 | Судьба заглушки на корне | прунить `compose/landing.yml` при развороте сайта; переименовать сервис в `placeholder`, чтобы имя не путали с продуктовым лендингом | прунить; переименование трогает скрипты и доки инфры |
 | Профиль памяти `site` | 512 МБ / `--max-old-space-size=384`; 768 МБ / 576 при рендере с кешем процесса | 512 МБ: картинки оптимизируются на сборке, рантайм отдаёт готовый HTML |
