@@ -190,6 +190,9 @@
     "dist/client/index.html: /old — адрес из redirects.yaml, ведите на конечный",
     "dist/client/index.html: /about?old=1&utm=x — адрес из redirects.yaml, ведите на конечный",
     "dist/client/index.html: about — относительная ссылка, нужен корневой путь",
+    "dist/client/index.html: //contacts — без схемы это другой хост: свой адрес — с одним слешем, чужой — со схемой",
+    "dist/client/index.html: /\\contacts — без схемы это другой хост: свой адрес — с одним слешем, чужой — со схемой",
+    "dist/client/index.html: //about — неканоническая форма адреса (лишний редирект или дубль)",
     "dist/client/index.html: /net.png — не существует"
   ],
   "content": [

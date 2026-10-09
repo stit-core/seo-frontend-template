@@ -24,6 +24,9 @@
     <a href="/about?old=1&amp;utm=x">адрес из redirects.yaml с его параметром</a>
     <a href="/about?utm=x">тот же путь с другим параметром — страница</a>
     <a href="about">относительная</a>
+    <a href="//contacts">путь склеен с лишним слешем — без схемы это другой хост</a>
+    <a href="/\contacts">обратный слеш браузер читает как прямой — тот же другой хост</a>
+    <a href="https://__site_origin__//about">двойной слеш в пути абсолютного URL своего сайта</a>
     <img src="/favicon.ico" srcset="/favicon.ico 1x, /net.png 2x" alt="" width="1" height="1" />
   </body>
 </html>

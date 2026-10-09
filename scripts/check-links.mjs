@@ -2,8 +2,9 @@
 // корневой путь или абсолютный URL своего сайта (canonical, hreflang, RSS в <head>) — существует
 // как файл или страница (<path>/index.html при build.format 'directory') либо является on-demand
 // маршрутом; ссылок с хвостовым слешем, на .html, в неканонической форме (двойной слеш в пути,
-// буква процентами) и на адреса из content/redirects.yaml нет — каждая ссылка ведёт сразу на
-// конечный документ и называет его единственным адресом.
+// буква процентами), на адреса из content/redirects.yaml и без схемы на другой хост (`//contacts`)
+// нет — каждая ссылка ведёт сразу на конечный документ и называет его единственным адресом.
+// Ссылку гейт читает как браузер (разбор URL от своего origin): путь — тот, что уйдёт в запросе.
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { relative, resolve, sep } from 'node:path'
 import { load } from 'js-yaml'
@@ -30,10 +31,9 @@ const redirects = buildRedirectTable(
 )
 
 const ATTR_RE = /\b(href|src|srcset)=("([^"]*)"|'([^']*)')/gi
+const SCHEME = /^[a-z][a-z0-9+.-]*:/i
 // Свой origin в сборке — плейсхолдер; абсолютный URL на нём — внутренняя ссылка.
 const OWN_ORIGIN = new URL(SITE_ORIGIN_PLACEHOLDER).origin
-const ownPath = (url) =>
-  url === OWN_ORIGIN ? '/' : url.startsWith(`${OWN_ORIGIN}/`) ? url.slice(OWN_ORIGIN.length) : url
 
 function targets(html) {
   const out = []
@@ -46,7 +46,7 @@ function targets(html) {
       }
     } else out.push(value)
   }
-  return out.map(ownPath)
+  return out
 }
 
 // Файл лежит под именем буквами, а в запросе путь придёт процентами: существование сверяется в
@@ -67,29 +67,39 @@ if (pages.length === 0) {
 }
 for (const file of pages) {
   const where = relative(root, file).split(sep).join('/')
-  for (const url of targets(readFileSync(file, 'utf8'))) {
-    if (/^(#|mailto:|tel:|data:)/i.test(url)) continue
-    if (/^[a-z][a-z0-9+.-]*:/i.test(url) || url.startsWith('//')) continue
+  for (const written of targets(readFileSync(file, 'utf8'))) {
+    if (/^(#|mailto:|tel:|data:)/i.test(written)) continue
+    const absolute = SCHEME.test(written)
+    const link = URL.parse(written, OWN_ORIGIN)
+    const own = link?.origin === OWN_ORIGIN
+    if (absolute && !own) continue
     checked++
-    if (!url.startsWith('/')) {
+    // В сообщении ссылка — как записана; свой абсолютный URL — путём от корня.
+    const url = absolute ? `${link.pathname}${link.search}${link.hash}` : written
+    // `//contacts` — так склеивается путь с лишним слешем — и `/\contacts` браузер прочтёт как хост.
+    if (!own) {
+      errors.push(
+        `${where}: ${url} — без схемы это другой хост: свой адрес — с одним слешем, чужой — со схемой`,
+      )
+      continue
+    }
+    if (!absolute && !written.startsWith('/')) {
       errors.push(`${where}: ${url} — относительная ссылка, нужен корневой путь`)
       continue
     }
-    const path = url.replace(/[?#].*$/, '')
-    const search = /\?[^#]*/.exec(url)?.[0] ?? ''
-    // Путь, каким его запросит браузер: кириллицу и пробел он запишет процентами, сегменты `.` и
-    // `..` уберёт сам — такая ссылка приходит на сервер канонической.
-    const requested = URL.parse(path, OWN_ORIGIN)?.pathname
-    if (path !== '/' && path.endsWith('/'))
+    // Путь запроса: кириллицу и пробел браузер запишет процентами, сегменты `.` и `..` уберёт сам —
+    // такая ссылка приходит на сервер канонической.
+    const { pathname, search } = link
+    if (pathname !== '/' && pathname.endsWith('/'))
       errors.push(`${where}: ${url} — хвостовой слеш (лишний редирект)`)
-    else if (path.endsWith('.html')) errors.push(`${where}: ${url} — .html (дубль маршрута)`)
+    else if (pathname.endsWith('.html')) errors.push(`${where}: ${url} — .html (дубль маршрута)`)
     // Двойной слеш в пути и буква, записанная процентами, дойдут до сервера как есть: процесс
     // ответит 301, а за edge, который приводит такой путь сам, это второй адрес той же страницы.
-    else if (requested === undefined || canonicalPath(requested) !== requested)
+    else if (canonicalPath(pathname) !== pathname)
       errors.push(`${where}: ${url} — неканоническая форма адреса (лишний редирект или дубль)`)
-    else if (redirects.find(canonicalPath(path) ?? path, search))
+    else if (redirects.find(pathname, search))
       errors.push(`${where}: ${url} — адрес из redirects.yaml, ведите на конечный`)
-    else if (!onDemand.has(path) && !existsAsFileOrPage(requested))
+    else if (!onDemand.has(pathname) && !existsAsFileOrPage(pathname))
       errors.push(`${where}: ${url} — не существует`)
   }
 }
