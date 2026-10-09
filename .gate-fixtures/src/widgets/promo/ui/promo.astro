@@ -10,13 +10,17 @@ import Badge from './badge.astro'
 const promo = process.env.PROMO === '1'
 const { PUBLIC_PROMO } = import.meta.env
 const size = 'text-body'
+const WIDTHS = { 'text-body': 'w-[37px]' }
 console.log(promo, getRuntimeConfig().RELEASE, config.SITE_NAME, import.meta.env.SECRET_KEY)
 ---
 
 <!-- Нарушения: сырой <img> мимо <Picture>, client:* без фреймворка островов, инлайн-style, сырой
-цвет в классе (литералом и в шаблонной строке), в атрибуте SVG и в <style>; значение мимо роли —
-числовая утилита, произвольный размер и кегль в скобках, интерлиньяж и скругление ключевым словом,
-переменная ДС в классе, в атрибуте SVG и в <style>. -->
+цвет в классе (литералом и в шаблонной строке), в атрибуте SVG (hex и словом) и в <style> (hex и
+словом); значение мимо роли — числовая утилита, произвольный размер и кегль в скобках, ключевое
+слово со своим значением (интерлиньяж, скругление, обводка, кольцо, фильтр — и ключом объекта),
+переменная ДС в классе, в атрибуте SVG и в <style> (заглавными), размер числом и @apply
+произвольного значения в <style>; класс из переменной — в атрибуте, в шаблонной строке, по
+ключу карты и вычисляемым ключом; своя color-scheme — утилитой и в <style>. -->
 <section class="promo">
   <img src="/promo.png" alt="Промо" width="10" height="10" />
   <Badge client:load />
@@ -32,11 +36,27 @@ console.log(promo, getRuntimeConfig().RELEASE, config.SITE_NAME, import.meta.env
   <svg viewBox="0 0 1 1" aria-hidden="true">
     <path fill="var(--primitive-color-red-700)" d="M0 0h1v1H0z" />
   </svg>
+  <svg viewBox="0 0 1 1" aria-hidden="true"><path stroke="tomato" d="M0 0h1v1H0z" /></svg>
+  <p class="outline inset-ring backdrop-grayscale">Обводка, кольцо, фильтр</p>
+  <p class:list={[{ ring: promo }]}>Ключевое слово ключом объекта</p>
+  <p class={size}>Класс из переменной</p>
+  <p class:list={['mt-md', WIDTHS[size], { [size]: promo }]}>Класс по ключу карты</p>
+  <p class="scheme-dark">Своя тема</p>
 </section>
 
 <style>
   .promo {
     color: #e11d48;
     margin-top: var(--space-md);
+    font-size: 22px;
+    color-scheme: dark;
+    @apply mt-[13px];
+  }
+</style>
+<!-- Другим письмом: цвет словом и переменная ДС заглавными. -->
+<style>
+  .promo {
+    border-color: tomato;
+    padding: VAR(--space-md);
   }
 </style>

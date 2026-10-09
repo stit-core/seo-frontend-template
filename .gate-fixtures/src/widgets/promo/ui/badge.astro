@@ -1,6 +1,20 @@
+---
+interface Props {
+  class?: string | undefined
+  wide?: boolean
+}
+
+const { class: className, wide = false } = Astro.props
+const kind = wide ? 'wide' : 'narrow'
+---
+
 <!-- Законный канон без находок: url(#fade) — ссылка на градиент, #add — id-селектор из hex-букв;
-утилиты роли с цифрой в имени шага, счёт, порядок и ноль (и скругление rounded-none) — не числовая
-утилита и не значение мимо роли. -->
+утилиты роли с цифрой в имени шага, счёт, порядок, место в сетке и ноль (и скругление rounded-none)
+— не числовая утилита и не значение мимо роли; число варианта (nth-2:) и условие по атрибуту в
+скобках — не значение; маркеры group и peer; обводка и кольцо без своей толщины (outline-focus,
+ring-inset), линия между детьми толщиной по умолчанию (divide-y); класс — пропом class и условием
+class:list (литерал условия — не класс); цвет SVG и <style> — ключевым словом без своего цвета,
+в <style> — раскладка и сброс. -->
 <span
   id="add"
   class="mt-2xl grid grid-cols-2 gap-x-3xs text-page-title-lg focus:z-10 -order-1 inset-0 rounded-none"
@@ -12,10 +26,35 @@
     </defs>
     <path fill="url(#fade)" d="M0 0h1v1H0z" />
   </svg>
+  <span
+    class:list={[
+      'group peer col-start-2 row-start-1 grow-2 columns-2 divide-y outline-focus ring-inset',
+      'nth-2:mt-md aria-[current=page]:text-primary group-data-[state=open]:flex',
+      kind === 'wide' && 'text-secondary',
+      wide ? `gap-lg` : 'gap-md',
+      { hidden: wide, 'text-lead': kind !== 'narrow' },
+      className,
+    ]}
+  >
+    <svg viewBox="0 0 1 1" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M0 0h1v1H0z" />
+    </svg>
+  </span>
 </span>
 
 <style>
   #add {
     display: inline-grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 1px;
+    margin: 0 auto;
+    padding: 0;
+    border: 0;
+    color: inherit;
+    fill: none;
+  }
+
+  .stroke:hover {
+    stroke: currentColor;
   }
 </style>

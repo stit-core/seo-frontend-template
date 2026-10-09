@@ -33,10 +33,11 @@ UI-киты и их токены не подключаются: импорт л�
   `--border-color-*`, `--outline-color-*`, `--text-decoration-color-*`), а не общее `--color-*`:
   роль фона не становится цветом текста, а имя ключа не совпадает с переменной ДС — одноимённая
   пара в `@theme inline` дала бы ссылку переменной на себя
-- Роли цвета: `bg-canvas`, `bg-surface`, `bg-subtle`, `bg-accent`, `bg-accent-solid`, `bg-danger`,
-  `text-primary`, `text-secondary`, `text-on-accent`, `text-accent`, `text-danger`,
-  `border-subtle` (декоративный разделитель), `border-strong` (граница поля — не ниже 3:1 к
-  фону), `border-accent`, `border-danger`, `decoration-accent`, `outline-focus-ring`
+- Роли цвета: `bg-canvas`, `bg-surface`, `bg-subtle`, `bg-accent`, `bg-accent-solid`,
+  `bg-accent-solid-hover`, `bg-danger`, `text-primary`, `text-secondary`, `text-on-accent`,
+  `text-accent`, `text-danger`, `border-subtle` (декоративный разделитель), `border-strong`
+  (граница поля — не ниже 3:1 к фону), `border-accent`, `border-danger`, `border-focus-ring`
+  (граница поля в фокусе), `decoration-accent`, `outline-focus-ring`
 - Роль текста `type.<роль>` — одна утилита `text-<роль>`: кегль, интерлиньяж, насыщенность и
   трекинг вместе, отдельными утилитами они не задаются. `text-page-title` (на главной от границы
   `tablet` — `text-page-title-lg`), `text-section`, `text-card-title`, `text-lead`, `text-body`
@@ -58,12 +59,26 @@ UI-киты и их токены не подключаются: импорт л�
   `.prose` (тело markdown)
 - ❌ значение мимо роли в компоненте; нужна новая семантика — роль в файле токенов и строка
   слоя. ESLint в `.astro` валит инлайн-`style`; в классе — скобки (произвольное значение
-  `w-[37px]`, `bg-[#18181b]` и переменную `bg-(--…)`) и числовую утилиту (`px-6`, `mt-1.5`,
-  `w-1/2`, `h-px`; число — только счёт и порядок: `grid-cols-2`, `col-span-2`, `order-1`, `z-10`,
-  `flex-1`, `line-clamp-3` — и ноль), `leading-none` и `rounded-full` (интерлиньяж несёт роль
-  текста, скругление — роль радиуса); `var(--…)` — в любом атрибуте и в `<style>`; литерал цвета
-  (`#…`, `rgb(…)`, `oklch(…)`) — в цветовом атрибуте SVG (`fill`, `stroke`) и в `<style>`.
-  Гарнитуры текста и кода страница получает от базовых стилей (роли `font.*`)
+  `w-[37px]`, `bg-[#18181b]`, вариант `[&>a]:` и переменную `bg-(--…)`; условие по атрибуту —
+  `aria-[current=page]:`, `data-[state=open]:` — значения не несёт и законно), числовую утилиту
+  (`px-6`, `mt-1.5`, `w-1/2`, `h-px`; число — только счёт, порядок и место в сетке:
+  `grid-cols-2`, `col-span-2`, `col-start-2`, `order-1`, `z-10`, `flex-1`, `grow-2`,
+  `columns-2`, `line-clamp-3`, вариант `nth-2:` — и ноль) и ключевое слово со своим значением —
+  `leading-none`, `rounded-full`, `outline`, `ring`, `inset-ring`, `grayscale`, `invert`,
+  `sepia` (интерлиньяж несёт роль текста, скругление — роль радиуса, обводку — `outline-focus`);
+  `var(--…)` — в любом атрибуте и в `<style>`; цвет литералом (`#…`, `rgb(…)`, `oklch(…)`) и
+  словом (`tomato`) — в цветовом атрибуте SVG (`fill`, `stroke`: только `currentColor`, `none`,
+  `url(#…)`) и в `<style>`. Гарнитуры текста и кода страница получает от базовых стилей (роли
+  `font.*`)
+- Строка класса пишется в атрибуте `class` и `class:list` — литералом, вариант — условием
+  (`{ 'text-lead': wide }`, `wide && '…'`, `wide ? '…' : '…'`): там её читают канон и тест
+  токен-слоя. Класс из переменной, карты или вызова (`class={loose}`, `WIDTHS[width]`) — ошибка
+  ESLint; чужой класс компонент получает пропом `class` (`const { class: className } =
+  Astro.props`)
+- Пределы канона: перечень ключевых слов сверен с Tailwind 4.3 (утилиты без числа в имени,
+  которые при выключенной теме дают литерал) — новое слово новой версии в него не попадает само;
+  локальная константа с именем `className` и атрибуты через spread читаются как проп (инлайн-
+  `style` при этом блокирует CSP — краснеет браузерный набор)
 - Тест токен-слоя `app/styles/index.server.test.ts` держит на компиляторе Tailwind: выключенную
   тему по умолчанию; утилиту роли — только у своего свойства; у каждой роли текста — кегль,
   интерлиньяж, насыщенность и трекинг; границы раскладки слоя — равными `breakpoint.*` файла;
@@ -108,7 +123,12 @@ UI-киты и их токены не подключаются: импорт л�
 ## Scoped `<style>`
 
 Только для layout (grid, позиционирование, показ/скрытие); значения — утилитами в разметке.
-Цвета, типографика и размеры в scoped-CSS не задаются: литерал цвета и `var(--…)` валит ESLint.
+Цвета, типографика и отступы в scoped-CSS не задаются — ESLint валит цвет литералом и словом
+(законны `currentColor`, `inherit`, `transparent`, `none`), `var(--…)`, число в объявлении
+типографики, отступа, радиуса и линии (`font-size`, `font-weight`, `line-height`, `margin`,
+`padding`, `gap`, `border`, `outline`; ноль — сброс), `@apply` значения мимо роли и свою
+`color-scheme`. Размер раскладки числом (`width`, `inset`, `grid-template-columns`) машина от
+значения облика не отличает — его держит только это правило.
 Стиль компонента, который стоит не на каждой странице, Astro может инлайнить только в его
 страницы, а CSP у prerendered-страниц одна на все — rule `render-safety` § Конфиг.
 
