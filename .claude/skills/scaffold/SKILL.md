@@ -64,8 +64,7 @@ src/pages/en/<path>.astro             en-обёртка: locale = 'en'
   (`labelledby` — id своего `<Heading>`, заголовок страницы — `id="page-title"`); ширину, фон и
   шаг задают её пропсы, класс ширины в странице — ошибка ESLint (rule `shared-ui`)
 - **тест обязателен**: строка на каждую локаль в `src/pages/_tests/pages.astro.test.ts` — язык,
-  self-canonical или `noindex`, hreflang пары, типы JSON-LD, один `h1`, страница — из секций;
-  индексируемая — ещё и адрес в ожидаемой карте `src/pages/_tests/endpoints.server.test.ts`
+  self-canonical или `noindex`, hreflang пары, типы JSON-LD, один `h1`, страница — из секций
 
 Не нужно: править e2e — цели HTTP- и браузерного наборов (`e2e/site.ts`) выводятся из
 `dist/client`, `src/pages` и контента, и новая страница попадает в них сама.
@@ -104,8 +103,7 @@ src/entities/<name>/
   через `vi.hoisted`, фильтр черновиков и локали, сортировка, перевод — в обоих режимах `DEV`
 - записи коллекции — строкой в `COLLECTIONS` общих фикстур `src/pages/_tests/fixtures.ts` (без
   неё — ошибка typecheck); страницы списка и записи — строки в
-  `src/pages/_tests/pages.astro.test.ts`, их адреса — в ожидаемой карте
-  `src/pages/_tests/endpoints.server.test.ts`
+  `src/pages/_tests/pages.astro.test.ts`
 
 ## feature
 

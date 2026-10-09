@@ -105,8 +105,7 @@ import NamePageEn from '../en/<path>.astro'
 ['/en/<path>', NamePageEn, pair('/<path>', '/en/<path>'), ['BreadcrumbList']],
 ```
 
-Без перевода вместо `pair(…)` — `{}`. Индексируемая — ещё и адреса `${ORIGIN}/<path>`,
-`${ORIGIN}/en/<path>` в ожидаемом списке карты `src/pages/_tests/endpoints.server.test.ts`.
+Без перевода вместо `pair(…)` — `{}`.
 
 ---
 
@@ -213,7 +212,7 @@ it('title — 25…65 знаков', () => {
 `src/pages/_tests/fixtures.ts` — массив `readonly CollectionEntry<'<name>'>[]` и строка в
 `COLLECTIONS` (мок `astro:content` отдаёт записи по имени коллекции; коллекция без строки —
 ошибка typecheck); страницы списка и записи — строки в
-`pages.astro.test.ts` (как у page), их адреса — в ожидаемой карте `endpoints.server.test.ts`.
+`pages.astro.test.ts` (как у page).
 
 ---
 
