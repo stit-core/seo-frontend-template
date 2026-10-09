@@ -245,15 +245,29 @@ blocked-by: —
   знак после запятой теряется, и строка — 1/64 px).
 
 ## Где мы сейчас
-Этап A сделан: S1–S3 — файл токенов и слой сопоставления, цвет, типографика, отступы, размеры, радиусы и границы
-раскладки на ролях, тема на `data-theme` и поле `THEME`, канон UI и тест токен-слоя держат ДС под машиной. Следующий
-шаг — валидатор этапа A, затем этап B (S4 — оболочка и секции). Исполнителю этапа B:
-- DTCG ДС шаблона — `M/p4a/ds/docs/projects/site-template/design/system.tokens.json`; пересборка —
+Этап A (S1–S3) сделан и принят валидатором (`M/validation-adopt-design-system-A.md` — PASS). Его неблокирующие
+замечания закрыты коммитами `fix`: N1 — `6aa23af` (`tokens.css` — сборка `ds_build` 0.2.1, равна эталону
+`M/s021/site-ds/docs/projects/site-template/design/system.tokens.css`), N2 — `6bac7f9`, N3 и N4 — `abacfe7`, N5, N6 и
+N8 — `a48c6b9`, N10 — `efcf6ff`; N7 — число AC3, список ролей rule `shared-ui` и имя набора теста поправлены, описания
+ролей в DTCG — в копии шага S4; N9 не взято (гарнитура роли — S9). Воспроизведения валидатора на этом коде —
+`M/p4b/n_mutations.py`, прогон `M/p4b/n1/`: 26 красных и 9 зелёных, все по ожиданию.
+
+Этап B не закрыт: S4 начат и не закоммичен, S5 не начат. Следующий шаг — S4, затем S5 и валидатор этапа B.
+Исполнителю этапа B:
+- Задел S4 — `git stash` «p4b: S4 в работе…»: примитивы `shared/ui/section` (контейнер ширины и секция с фоном, ритмом
+  и подписью лендмарка), `heading` и `term-list`; `<main>` без ширины; шапка, подвал и reference-страницы на секциях;
+  роль `size.container-wide` и ключи слоя `--max-width-*`. В нём нет: правила канона «ширина контейнера вне секции» с
+  фикстурой (T-12), тестов примитивов и страниц, скелетов `/scaffold`, прозы rules, снимков «после». Замысел и остаток
+  работы — `M/p4b/notes.md`; DTCG с новой ролью — `M/p4b/ds-s4/system.tokens.json`.
+- Снимки — `M/p4b/shots/shoot.mjs`: шаблоны страниц в обеих темах на 1280, 390 и 320, состояния, цели касания, текст
+  200 %, forced-colors (факты — `facts.json`, сводка — `facts.txt`); кадры перед S4 — `M/p4b/shots/before/`.
+- DTCG ДС шаблона — `M/p4a/ds/docs/projects/site-template/design/system.tokens.json` (равен `tokens.css`); пересборка —
   `~/.cache/design-deep-dive/venv/bin/python <strategy>/.claude/skills/design-deep-dive/scripts/project/ds_build.py
   build site-template --repo M/p4a/ds`, затем `system.tokens.css` → `src/app/styles/tokens.css` (сверка — `cmp`);
   варианты и сценарий «замена ДС» — `M/p4a/variants.py` и `scenario.py`.
 - Новая роль — строка DTCG и строка слоя (ключ — не именем переменной ДС: одноимённая пара ссылается на себя); новая
   пара «роль на роли» в разметке — строка `PAIRS` теста токен-слоя.
-- Мутации: эталон — `M/p4a/mutations.py` (якоря — `anchors.py`), шагов — `M/p4a/s{1,2,3}_mutations.py`, прогон —
-  `M/p4a/mutate2.py`; кадры и вычисленные стили — `M/p4a/shots2/{shoot,compare}.mjs`. `prettier --write` на `.astro`
-  склеивает текст и тег на переносе строки: пробел перед инлайн-тегом — в той же строке.
+- Мутации: эталон — `M/p4a/mutations.py` (якоря — `anchors.py`; копию этапа завести в `M/p4b/`), прогон —
+  `M/p4b/mutate.py` в worktree `M/wt-p4b` (перенос правки дерева — `sync-wt.sh`, браузерный набор — `e2e.sh`).
+  `prettier --write` на `.astro` склеивает текст и тег на переносе строки: пробел перед инлайн-тегом — в той же строке.
+- S13: текст страницы `/now` называет карту сайта и фиды on-demand маршрутами — сверить с картой `rendering.md`.
