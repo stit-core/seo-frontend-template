@@ -165,6 +165,10 @@ const SCHEME = String.raw`(?<![\w-])scheme-[a-z-]+(?![\w-])`
 const CONTAINER_WIDTH = String.raw`(?<![\w@-])(?:container|max-w-(?!(?:none|full|fit|min|max|screen|[sld]vw|0)(?![\w-]))[\w-]+)(?![\w-])`
 const CSS_CONTAINER_WIDTH = `${property('max-(?:width|inline-size)')}${String.raw`[^;{}]*\d(?![\d.]*%)`}`
 const DS_VARIABLE = String.raw`var\(\s*--`
+// Тему компонент не знает: цвет темы несёт роль файла токенов, состояние кнопки — `aria-pressed`.
+// Своё условие темы — в `<style>` или вариантом класса — разошлось бы с выбором посетителя.
+const CSS_THEME = String.raw`prefers-color-scheme|data-theme|light-dark\(`
+const THEME_VARIANT = String.raw`(?<!\w)dark:|data-\[theme\b`
 const CLASS = "JSXAttribute:matches([name.name='class'], [name.namespace.name='class'])"
 const STYLE = "JSXElement[openingElement.name.name='style'] > AstroRawText"
 // Строка разметки — литерал, кусок шаблонной строки или ключ-имя объекта `class:list`.
@@ -232,6 +236,11 @@ const astroSyntax = [
   {
     selector: `${CLASS} ${text(SCHEME)}, ${STYLE}[value=/${CSS_COLOR_SCHEME}/i]`,
     message: 'UI: color-scheme объявляет только файл токенов — тему компонент не знает',
+  },
+  {
+    selector: `${STYLE}[value=/${CSS_THEME}/i], ${CLASS} ${text(THEME_VARIANT)}`,
+    message:
+      'UI: компонент не знает тему (prefers-color-scheme, data-theme, light-dark(), dark:) — цвет темы несёт роль файла токенов, состояние кнопки — aria-pressed',
   },
   {
     selector: `JSXAttribute ${text(DS_VARIABLE)}`,

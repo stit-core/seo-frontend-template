@@ -118,7 +118,8 @@ const themesOfSite = (site: Site) =>
   site.default === 'system' || site.switcher ? ['light', 'dark'] : [site.default]
 
 // Пары «что — на чём», как их кладёт разметка сайта. Текст — 4,5:1 (WCAG 1.4.3); граница поля,
-// заливка действия и кольцо фокуса — 3:1 (WCAG 1.4.11).
+// заливка действия, черта состояния (текущий раздел, нажатая кнопка) и кольцо фокуса — 3:1
+// (WCAG 1.4.11).
 const PAIRS = [
   ['text-primary', 'bg-canvas', 4.5],
   ['text-primary', 'bg-surface', 4.5],
@@ -140,6 +141,7 @@ const PAIRS = [
   ['border-danger', 'bg-canvas', 3],
   ['border-danger', 'bg-surface', 3],
   ['bg-accent-solid', 'bg-canvas', 3],
+  ['decoration-accent', 'bg-canvas', 3],
   ['bg-accent-solid-hover', 'bg-canvas', 3],
   ['outline-focus-ring', 'bg-canvas', 3],
   ['outline-focus-ring', 'bg-surface', 3],
@@ -279,6 +281,12 @@ it('правила слоя не берут ширину контейнера', 
       /(?<![\w-])(?:max-w-[\w-]+|max-(?:width|inline-size)\s*:[^;{}]*|container(?![\w-]))/g,
     ),
   ).toBeNull()
+})
+
+// Тему переключает файл токенов: своё условие темы в правиле слоя разошлось бы с выбором
+// посетителя и с темами дизайн-системы.
+it('правила слоя не знают тему', () => {
+  expect(source.match(/prefers-color-scheme|data-theme|light-dark\(|(?<!\w)dark:/g)).toBeNull()
 })
 
 // Без правила слоя выделение получает `bolder` браузера и становится тяжелее подзаголовка.

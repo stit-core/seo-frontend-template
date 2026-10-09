@@ -1,7 +1,7 @@
 ---
 import '@/app/styles/index.css'
 import Metrika from '@/app/analytics/metrika.astro'
-import { ThemeInit } from '@/features/theme'
+import { PreferencesInit } from '@/features/preferences'
 import { THEME } from '@/shared/config'
 import { type Locale, t } from '@/shared/i18n'
 import { type JsonLd, JsonLdScript, type OgImage, SeoHead } from '@/shared/seo'
@@ -67,7 +67,7 @@ const theme = THEME.default === 'system' ? undefined : THEME.default
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    {THEME.switcher && <ThemeInit />}
+    {THEME.switcher && <PreferencesInit />}
     <Metrika />
     <slot name="head" />
   </head>

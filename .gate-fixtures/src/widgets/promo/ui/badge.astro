@@ -16,7 +16,8 @@ ring-inset), линия между детьми толщиной по умолч
 class:list (литерал условия — не класс); цвет SVG и <style> — ключевым словом без своего цвета,
 в <style> — раскладка и сброс; контейнер запросов (@container) и его условие, условие @media,
 max-width долей родителя и ключевым словом без длины (max-w-none, max-w-full, max-w-fit) — не ширина
-контейнера; autofocus у объявления об отказе (role="alert"). -->
+контейнера; autofocus у объявления об отказе (role="alert"); состояние кнопки — вариантами
+aria-pressed (и у группы, и у родителя), а не темой. -->
 <span
   id="add"
   class="mt-2xl grid grid-cols-2 gap-x-3xs text-page-title-lg focus:z-10 -order-1 inset-0 rounded-none"
@@ -33,6 +34,7 @@ max-width долей родителя и ключевым словом без д
       'group peer @container col-start-2 row-start-1 grow-2 columns-2 divide-y outline-focus ring-inset',
       'nth-2:mt-md aria-[current=page]:text-primary group-data-[state=open]:flex',
       'max-w-none max-w-full tablet:max-w-fit',
+      'aria-pressed:text-primary group-aria-pressed:hidden has-aria-pressed:flex aria-[pressed]:flex',
       kind === 'wide' && 'text-secondary',
       wide ? `gap-lg` : 'gap-md',
       { hidden: wide, 'text-lead': kind !== 'narrow' },

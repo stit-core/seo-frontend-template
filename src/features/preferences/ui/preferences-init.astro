@@ -1,0 +1,34 @@
+---
+// Остров предпочтений целиком — скрипт в <head>. Выбор темы и движения (localStorage: ключи и
+// значения — как у атрибутов ДС `data-theme` и `data-motion`) встаёт на <html> до первой
+// отрисовки. Кнопки `[data-preference]` обслуживает делегирование; их состояние (`aria-pressed`)
+// объявляется каждый кадр, пока документ разбирается, и когда он разобран: кнопка получает его
+// раньше своей отрисовки.
+// При `reduced` видео-петли (`video[loop]`) стоят, с возвратом движения — идут. Тело уезжает в
+// <head> страницы как есть: плотное, без комментариев и прагм; хеш тела — строка ISLANDS.
+---
+
+<script is:inline data-island="preferences">{const d=document,s=d.documentElement.dataset,K={theme:/^(light|dark)$/,motion:/^(reduced|full)$/},D=matchMedia('(prefers-color-scheme:dark)'),R=matchMedia('(prefers-reduced-motion:reduce)')
+const dark=()=>s.theme?s.theme==='dark':D.matches
+const still=()=>s.motion?s.motion==='reduced':R.matches
+let w=false,S=0
+const show=()=>{for(const b of d.querySelectorAll('[data-preference]'))b.setAttribute('aria-pressed',b.dataset.preference==='theme'?dark():b.value===(s.motion||''))
+const m=still()
+for(const v of d.querySelectorAll('video[loop]')){if(m)v.pause()
+else if(w)v.play()?.catch(()=>{})}
+w=m}
+const tick=()=>{show()
+if(d.readyState==='loading')requestAnimationFrame(tick)}
+const load=()=>{try{S=localStorage
+for(const k in K){const v=S.getItem(k)
+if(K[k].test(v))s[k]=v}}catch{S=0}tick()}
+const set=(k,v)=>{if(v)s[k]=v
+else delete s[k]
+try{if(v)S.setItem(k,v)
+else S.removeItem(k)}catch{S=0}show()}
+load()
+for(const q of[D,R])q.addEventListener?.('change',show)
+d.addEventListener('readystatechange',show)
+addEventListener('pageshow',e=>{if(e.persisted)load()})
+d.addEventListener('click',e=>{const b=e.target.closest?.('[data-preference]'),k=b?.dataset.preference
+if(k)set(k,k==='theme'?dark()?'light':'dark':b.value)})}</script>

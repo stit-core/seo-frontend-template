@@ -20,8 +20,9 @@ export const TAG_INDEX_MIN_POSTS = 3
 // и изменение исполняемого кода сайта видно в диффе политики. `on` — печатает ли остров сайт
 // (по умолчанию — да), `sources` — чужие origin острова по директивам CSP.
 export const ISLANDS = {
-  // Остров темы — только с кнопкой выбора: без неё тему даёт файл токенов, без скрипта.
-  theme: { hash: 'sha256-8+CG27AgsskVr1qr5R4F7PxE9bcwBPNnKPwCKcnajC4=', on: THEME.switcher },
+  // Остров предпочтений (тема и движение) — только с кнопкой выбора: без неё тему и движение
+  // дают файл токенов и настройки системы, без скрипта.
+  preferences: { hash: 'sha256-BRdwgwRh483d/F0eQ6EvNd+iXckfZRBomGNnvx/B9Ak=', on: THEME.switcher },
   // Счётчик — только с идентификатором; tag.js, хиты и пиксель — с его origin. Вебвизору, карте
   // кликов и региональным доменам нужно больше — список Яндекса:
   // https://yandex.ru/support/metrica/code/install-counter-csp.html

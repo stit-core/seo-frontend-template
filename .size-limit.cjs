@@ -21,8 +21,8 @@ const postHtml = heaviestPost
   ? [{ name: 'HTML поста (самого тяжёлого)', path: heaviestPost, limit: '25 KB', gzip: true }]
   : []
 
-// Остров темы инлайнится в <head> каждой страницы, файла в dist у него нет: его байты входят
-// в бюджеты HTML ниже, а сам он меряется один раз — в theme-init.astro.test.ts.
+// Остров предпочтений инлайнится в <head> каждой страницы, файла в dist у него нет: его байты
+// входят в бюджеты HTML ниже, а сам он меряется один раз — в preferences-init.astro.test.ts.
 module.exports = [
   ...islands,
   { name: 'CSS (одна таблица)', path: 'dist/client/_astro/*.css', limit: '15 KB', gzip: true },

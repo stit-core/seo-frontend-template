@@ -120,9 +120,9 @@
 `Типографика, отступы и размеры`, `Бюджет`, `Generates`.
 
 **Generates**: `src/app/styles/{tokens,index}.css`, бюджеты CSS/HTML в `.size-limit.cjs`,
-`src/features/theme/**`.
+`src/features/preferences/**`.
 
-**Cross-kind**: веб-шрифт ⇒ строка веса в `dependencies.md § Бюджеты`; остров темы ⇒
+**Cross-kind**: веб-шрифт ⇒ строка веса в `dependencies.md § Бюджеты`; остров предпочтений ⇒
 строка в `rendering.md § Интерактивность`.
 
 **Anti-patterns**: сырой цвет или размер в компоненте вместо токена; цвета в scoped-CSS;

@@ -16,7 +16,7 @@
     { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-imports" },
     { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-properties" },
     { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-console" },
-    { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-syntax", "count": 41 },
+    { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-syntax", "count": 46 },
     { "file": "src/shared/ui/button/index.ts", "rule": "no-restricted-syntax" }
   ],
   "steiger": [
@@ -131,8 +131,8 @@
     "dist/client/resursy/index.html: @font-face с font-display по умолчанию (auto): текст невидим, пока грузится шрифт",
     "dist/client/skripty/index.html: <script> вне списка островов ISLANDS (scripts/lib/site-policy.mjs)",
     "dist/client/skripty/index.html: внешний <script src=\"/_astro/x.js\">: островов из файла нет",
-    "dist/client/skripty/index.html: остров theme дважды",
-    "dist/client/skripty/index.html: <script data-island=\"theme\"> в <body>: остров живёт в <head>",
+    "dist/client/skripty/index.html: остров preferences дважды",
+    "dist/client/skripty/index.html: <script data-island=\"preferences\"> в <body>: остров живёт в <head>",
     "dist/client/skripty/index.html: обработчик onclick в разметке: скрипт вне островов ISLANDS (scripts/lib/site-policy.mjs)",
     "dist/client/skripty/index.html: javascript:-адрес в разметке: скрипт вне островов ISLANDS (scripts/lib/site-policy.mjs)",
     "dist/client/skripty/index.html: JSON-LD в <body>: разметка — только в <head>",

@@ -69,10 +69,6 @@
     {
       "includes": ["src/app/styles/tokens.css"],
       "formatter": { "enabled": false }
-    },
-    {
-      "includes": ["src/features/theme/ui/theme-init.astro"],
-      "linter": { "rules": { "suspicious": { "noDocumentCookie": "off" } } }
     }
   ]
 }

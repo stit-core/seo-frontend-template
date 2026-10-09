@@ -6,8 +6,8 @@
 (Content Layer `glob`, Zod 4-схема) / i18n `ru` + `en` / SEO-слой `shared/seo` (canonical,
 hreflang, OG, JSON-LD; `robots.txt` on-demand на runtime origin, `sitemap.xml` и `rss.xml` — файлы
 сборки) /
-форма обратной связи без JS (PRG, антиспам-лестница, один канал доставки) / острова — тема и
-счётчик при заданном `METRIKA_ID` / картинки `astro:assets` / FSD под линтером
+форма обратной связи без JS (PRG, антиспам-лестница, один канал доставки) / острова — предпочтения
+(тема и движение) и счётчик при заданном `METRIKA_ID` / картинки `astro:assets` / FSD под линтером
 (ESLint 10 `boundaries` + `no-restricted-imports`; Steiger — структура) / Biome 2 + Prettier
 (только `*.astro`) / Vitest 5 (Container API) + Playwright на prod-сборке (HTTP-набор в гейте,
 браузер — в `/release`) / size-limit / pnpm 10 / lefthook. Один Node-образ на все среды:
@@ -128,8 +128,8 @@ origin штампуется при старте.
   `https://__site_origin__`, `docker/entrypoint.sh` штампует `dist/client` при старте
 - Границы FSD держит `pnpm lint` (ESLint с резолвером) вместе с `.gate-fixtures/`; Steiger —
   структура
-- 0 JS на контентных страницах, кроме островов: тема (инлайн-`<script>` в `<head>`) и счётчик при
-  заданном `METRIKA_ID`; острова, служебные `noindex`, чужие ресурсы и типы JSON-LD — только по
+- 0 JS на контентных страницах, кроме островов: предпочтения посетителя — тема и движение
+  (инлайн-`<script>` в `<head>`) и счётчик при заданном `METRIKA_ID`; острова, служебные `noindex`, чужие ресурсы и типы JSON-LD — только по
   списку `scripts/lib/site-policy.mjs`; из него же CSP каждой страницы (остров — по хешу тела)
 - Контент — Markdown в `src/entities/<name>/content/<locale>/`; `draft: true` виден только в
   `astro dev`

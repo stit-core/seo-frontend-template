@@ -1,0 +1,39 @@
+---
+import { type DictKey, type Locale, t } from '@/shared/i18n'
+
+interface Props {
+  locale: Locale
+  class?: string | undefined
+}
+
+const { locale, class: className } = Astro.props
+// Значение кнопки остров пишет в `data-motion` на <html>; пустое — как в системе, без атрибута.
+const options: ReadonlyArray<{ value: '' | 'reduced' | 'full'; key: DictKey }> = [
+  { value: '', key: 'motion.system' },
+  { value: 'reduced', key: 'motion.reduced' },
+  { value: 'full', key: 'motion.full' },
+]
+---
+
+{/* Группа видна, когда остров предпочтений объявил состояние её кнопок: нажата ровно одна. */}
+<fieldset
+  aria-labelledby="motion-toggle-label"
+  class:list={[
+    'hidden min-w-0 flex-wrap items-center gap-x-md text-helper has-aria-pressed:flex',
+    className,
+  ]}
+>
+  <span id="motion-toggle-label" class="text-secondary">
+    {t(locale, 'motion.label')}
+  </span>
+  {options.map((option) => (
+    <button
+      type="button"
+      data-preference="motion"
+      value={option.value}
+      class="touch-target text-secondary hover:text-primary aria-pressed:text-primary aria-pressed:underline aria-pressed:decoration-accent aria-pressed:decoration-thick aria-pressed:underline-offset-marker"
+    >
+      {t(locale, option.key)}
+    </button>
+  ))}
+</fieldset>

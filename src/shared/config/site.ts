@@ -16,7 +16,7 @@ export const SITE_LOGO_PATH = '/icon-512.png'
 
 // Редакция текста политики обработки ПДн: её показывает /legal/privacy и она же уезжает
 // с заявкой как доказательство того, на какую версию человек согласился.
-export const PRIVACY_POLICY_VERSION = '2026-09-17'
+export const PRIVACY_POLICY_VERSION = '2026-10-10'
 
 // Публичные per-site идентификаторы живут здесь, а не в env: prerendered-страница печатается
 // на сборке, а образ собирается без env — runtime-значение до неё не доходит. /de-template
@@ -49,8 +49,8 @@ export const CLEAN_PARAMS: readonly string[] = ['yclid', 'gclid', 'fbclid', 'ope
 
 // Тема сайта — решение проекта (блок `themes` брифа strategy); значения тем — файл токенов ДС
 // src/app/styles/tokens.css. `default`: `system` — по настройке системы, иначе одна тема атрибутом
-// `data-theme`; `switcher` — кнопка выбора в шапке и остров темы. Темы поля есть у файла токенов
-// (кнопке и теме по системе нужны обе): расхождение называет тест токен-слоя.
+// `data-theme`; `switcher` — кнопка выбора в шапке и остров предпочтений. Темы поля есть у файла
+// токенов (кнопке и теме по системе нужны обе): расхождение называет тест токен-слоя.
 export const THEME: {
   readonly default: 'system' | 'light' | 'dark'
   readonly switcher: boolean

@@ -36,8 +36,8 @@ status: draft
 |---|---|
 | темы | блоки файла токенов; поле `THEME` (`shared/config/site.ts`) — тема по умолчанию и кнопка выбора |
 | системная | блок `prefers-color-scheme` файла токенов — без JS |
-| явный выбор | `data-theme="light\|dark"` на `<html>`, хранится в cookie `scheme` |
-| остров | один инлайн-`<script>` в `<head>` (`features/theme`) — применяет выбор до первой отрисовки; печатается при `THEME.switcher` |
+| явный выбор | `data-theme="light\|dark"` на `<html>`, хранится в `localStorage` (ключ `theme`; движение — `data-motion` и ключ `motion`) |
+| остров | один инлайн-`<script>` в `<head>` (`features/preferences`) — ставит выбор темы и движения до первой отрисовки; печатается при `THEME.switcher` |
 | оси помимо схемы | _нет_ (`data-brand`, `data-density` — по потребности) |
 
 ## Шрифты
@@ -77,7 +77,7 @@ Astro Fonts API (`subsets: ['cyrillic','latin']`) — способ его под
 - `src/app/styles/index.css` — слой сопоставления, классы-компоненты
 - `astro.config.ts` — плагин Tailwind
 - `.size-limit.cjs` — бюджеты CSS и HTML
-- `src/features/theme/**` — остров темы и переключатель (если тема нужна)
+- `src/features/preferences/**` — остров предпочтений и кнопки выбора темы и движения
 
 ## Открытые вопросы
 

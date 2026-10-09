@@ -28,14 +28,14 @@ async function render(site: typeof theme) {
   return {
     root: document.documentElement,
     main: document.querySelector('main'),
-    island: document.head.querySelector('script[data-island="theme"]'),
-    toggle: document.body.querySelector('[data-theme-toggle]'),
+    island: document.head.querySelector('script[data-island="preferences"]'),
+    toggle: document.body.querySelector('[data-preference="theme"]'),
     colorScheme: document.querySelector('meta[name="color-scheme"]'),
   }
 }
 
 describe('DocumentLayout', () => {
-  it('тема по системе: атрибута темы на <html> нет, кнопка выбора и остров темы есть', async () => {
+  it('тема по системе: атрибута темы на <html> нет, кнопка выбора и остров предпочтений есть', async () => {
     const page = await render({ default: 'system', switcher: true })
     expect(page.root.hasAttribute('data-theme')).toBe(false)
     expect(page.island).not.toBeNull()

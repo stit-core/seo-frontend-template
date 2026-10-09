@@ -95,7 +95,8 @@ src/pages/        роутинг Astro = слой pages: index, about, contacts/
                   api/contact (on-demand); секции страниц — _blog/, _about/, _contacts/;
                   тесты маршрутов и страниц — _tests/
 src/widgets/      site-header, site-footer, post-list, breadcrumbs (видимые крошки)
-src/features/     contact-form (форма без JS и её обработчик), theme (остров темы)
+src/features/     contact-form (форма без JS и её обработчик), preferences (остров предпочтений:
+                  тема и движение)
 src/entities/     post: content/{ru,en}/*.md + covers/, model, api, lib, ui; company: реквизиты
                   оператора для «О компании» и LocalBusiness; author: реестр авторов (в шаблоне
                   пуст) и подпись под заголовком записи
@@ -183,8 +184,8 @@ shutdown под Traefik и отказывается стартовать, есл
 блоками `data-theme` и `prefers-color-scheme`), роли компонентам раздаёт слой сопоставления
 «утилита → роль» в `src/app/styles/index.css` (Tailwind v4 `@theme inline`); вендорных UI-китов
 нет. Ни одна страница не грузит внешних
-скриптов: из JavaScript в шаблоне только острова — тема (инлайн-`<script>` в `<head>`, который
-применяет выбор до первой отрисовки и обслуживает переключатель) и счётчик при заданном
+скриптов: из JavaScript в шаблоне только острова — предпочтения посетителя (инлайн-`<script>` в
+`<head>`: ставит выбор темы и движения до первой отрисовки и обслуживает кнопки) и счётчик при заданном
 `METRIKA_ID`; CSP каждой страницы пропускает только их — по хешу тела. Картинки —
 `astro:assets` (`<Picture>`: AVIF/WebP с фолбэком, размеры заданы, обложка записи грузится с
 приоритетом). Скрипты, чужие ресурсы, размеры картинок и приоритет LCP каждой страницы проверяет

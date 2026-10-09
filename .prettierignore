@@ -7,6 +7,6 @@ dist/
 .astro/
 .gate-fixtures/
 
-# Тело инлайн-острова темы уезжает в <head> каждой страницы как есть: отступы и переносы
+# Тело инлайн-острова предпочтений уезжает в <head> каждой страницы как есть: отступы и переносы
 # форматтера — это байты в каждом документе. Что делает скрипт, описано в его frontmatter.
-src/features/theme/ui/theme-init.astro
+src/features/preferences/ui/preferences-init.astro
