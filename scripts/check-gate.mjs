@@ -5,10 +5,13 @@
 // ослабленная проверка скрипта) остаётся незамеченной: прогон зелёный, а держать нечем. Пустая или
 // урезанная секция expected.json — тоже деградация: её ловит точное совпадение. Периметр — так же:
 // guard-хук Claude Code обязан отказать каждому обходу из .gate-fixtures/guard.json и пропустить
-// работу.
-import { spawnSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
-import { isAbsolute, relative, resolve } from 'node:path'
+// работу. Скрипт релиза indexnow — сценариями на локальной заглушке: исходы — те же строки
+// expected.json.
+import { spawn, spawnSync } from 'node:child_process'
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { createServer } from 'node:http'
+import { tmpdir } from 'node:os'
+import { isAbsolute, join, relative, resolve } from 'node:path'
 
 const root = resolve(import.meta.dirname, '..')
 const fixtures = resolve(root, '.gate-fixtures')
@@ -119,6 +122,99 @@ if (plans.status !== 1) {
 want.plans = expected.plans ?? []
 found.plans = plans.stdout.split('\n').filter((line) => /^[EW] /.test(line))
 
+// IndexNow (scripts/indexnow.mjs) ходит по сети: сайт — карта и файл ключа — и приёмник адресов
+// здесь один локальный сервер, наружу гейт не ходит. Карты фикстуры несут плейсхолдер origin,
+// заглушка ставит в них свой адрес — как контейнер при старте. Исход сценария — код выхода, адреса,
+// которые скрипт назвал изменёнными, и то, что дошло до приёмника.
+const INDEXNOW_KEY = 'gate-indexnow-key-0123'
+const ORIGIN_PLACEHOLDER = 'https://__site_origin__'
+
+function run(args) {
+  return new Promise((done) => {
+    const child = spawn(process.execPath, args, { stdio: ['ignore', 'pipe', 'ignore'] })
+    let stdout = ''
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk
+    })
+    // Срок: зависший скрипт роняет сценарий, а не подвешивает гейт.
+    const timer = setTimeout(() => child.kill(), 30_000)
+    child.on('close', (code) => {
+      clearTimeout(timer)
+      done({ code, stdout })
+    })
+  })
+}
+
+async function indexNowOutcomes() {
+  const map = (name) => readFileSync(resolve(fixtures, 'indexnow', name), 'utf8')
+  let live = ''
+  let posts = []
+  const server = createServer((request, response) => {
+    const origin = `http://${request.headers.host}`
+    if (request.method === 'POST' && request.url === '/indexnow') {
+      let body = ''
+      request.on('data', (chunk) => {
+        body += chunk
+      })
+      request.on('end', () => {
+        posts.push(JSON.parse(body))
+        response.writeHead(200).end()
+      })
+    } else if (request.url === '/sitemap.xml') {
+      response.end(live.replaceAll(ORIGIN_PLACEHOLDER, origin))
+    } else if (request.url === `/${INDEXNOW_KEY}.txt`) response.end(INDEXNOW_KEY)
+    else response.writeHead(404).end('Not found')
+  })
+  await new Promise((done) => server.listen(0, '127.0.0.1', done))
+  const origin = `http://127.0.0.1:${server.address().port}`
+  const temp = mkdtempSync(join(tmpdir(), 'gate-indexnow-'))
+  const before = join(temp, 'before.xml')
+  writeFileSync(before, map('before.xml').replaceAll(ORIGIN_PLACEHOLDER, origin))
+
+  const lines = []
+  const scenario = async (name, liveMap, args) => {
+    live = map(liveMap)
+    posts = []
+    const { code, stdout } = await run([
+      resolve(root, 'scripts/indexnow.mjs'),
+      origin,
+      ...args,
+      '--endpoint',
+      `${origin}/indexnow`,
+    ])
+    lines.push(`${name}: код ${code}`)
+    for (const line of stdout.split('\n').filter((text) => /^ {2}[+~-] /.test(text))) {
+      lines.push(`${name}: ${line.trim().replace(origin, '')}`)
+    }
+    for (const post of posts) {
+      const own =
+        post.host === new URL(origin).host &&
+        post.key === INDEXNOW_KEY &&
+        post.keyLocation === `${origin}/${INDEXNOW_KEY}.txt`
+      lines.push(`${name}: запрос приёмнику — host, key и keyLocation ${own ? 'сайта' : 'ЧУЖИЕ'}`)
+      for (const url of post.urlList) lines.push(`${name}: → ${url.replace(origin, '')}`)
+    }
+  }
+  const key = ['--key', INDEXNOW_KEY]
+  await scenario('отправка', 'after.xml', [before, ...key, '--send'])
+  await scenario('сухой прогон', 'after.xml', [before, ...key])
+  await scenario('без ключа', 'after.xml', [before, '--send'])
+  await scenario('чужой ключ', 'after.xml', [before, '--key', 'another-key-0123456789', '--send'])
+  await scenario('карта не изменилась', 'before.xml', [before, ...key, '--send'])
+  await scenario('первый выкат', 'before.xml', [...key, '--send'])
+  // Карта «до» с плейсхолдером — снятая с другого origin.
+  await scenario('карта «до» с другого сайта', 'after.xml', [
+    resolve(fixtures, 'indexnow/before.xml'),
+    ...key,
+    '--send',
+  ])
+  server.close()
+  rmSync(temp, { recursive: true, force: true })
+  return lines
+}
+want.indexnow = expected.indexnow ?? []
+found.indexnow = await indexNowOutcomes()
+
 // Guard-хук: отказ — код 2 (так Claude Code блокирует вызов), пропуск — 0.
 const guard = JSON.parse(readFileSync(resolve(fixtures, 'guard.json'), 'utf8'))
 const guardCode = (command) =>
@@ -143,7 +239,7 @@ console.info(
     ? `✓ guard: обходов ${guard.block.length} — отказ, обычных команд ${guard.allow?.length ?? 0} — пропуск`
     : `✗ guard:\n${guardLines.join('\n')}`,
 )
-for (const section of [...LINTERS, ...Object.keys(SCRIPTS), 'plans']) {
+for (const section of [...LINTERS, ...Object.keys(SCRIPTS), 'plans', 'indexnow']) {
   if (want[section].length === 0) {
     console.error(`✗ ${section}: секция expected.json пуста — гейт на гейт выключен`)
     problems++
@@ -160,9 +256,10 @@ for (const section of [...LINTERS, ...Object.keys(SCRIPTS), 'plans']) {
     if (!wanted.has(key)) lines.push(`  ✗ ${key} — нет в expected.json (×${count})`)
   }
   problems += lines.length
+  const noun = section === 'indexnow' ? 'исходов' : 'нарушений'
   console.info(
     lines.length === 0
-      ? `✓ ${section}: нарушений ${want[section].length} — ровно ожидаемые`
+      ? `✓ ${section}: ${noun} ${want[section].length} — ровно ожидаемые`
       : `✗ ${section}:\n${lines.join('\n')}`,
   )
 }

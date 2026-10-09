@@ -77,13 +77,14 @@ origin штампуется при старте.
 | `pnpm test:http` | HTTP-набор `e2e/http/` после build: prod-сервер как контейнер (копия сборки, `entrypoint.sh` + `server.mjs`) на свободных портах, профили прод и staging |
 | `pnpm test:e2e` | build + браузерный набор `e2e/browser/`: axe в двух темах, тема, форма без JS — обязательный шаг `/release` |
 | `pnpm steiger` | структурный линтер FSD |
-| `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome и свои скрипты гейта (`seo:check`, `check:links`, `check:content`, `plan:check`) — ровно нарушениями из `expected.json`; guard-хук — отказ каждому обходу из `guard.json` |
+| `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome и свои скрипты гейта (`seo:check`, `check:links`, `check:content`, `plan:check`) — ровно нарушениями из `expected.json`, скрипт релиза `indexnow` — ровно его исходами на локальной заглушке; guard-хук — отказ каждому обходу из `guard.json` |
 | `pnpm check:content` | контент-гейт до build: схема каждого `.md`, тело, переводы, ссылки, `content/redirects.yaml`, строка карты `rendering.md` у каждого on-demand маршрута |
 | `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` (и абсолютные URL своего сайта) существуют и записаны канонической формой адреса |
 | `pnpm seo:check` | после build: у каждой страницы `dist/client` title/description (уникальные, в бюджетах, не общие), self-canonical, `lang`, один h1, OG с картинкой, первая иконка — PNG от 48 px, hreflang у каждой пары переводов, JSON-LD = видимое, организация одна (`@id`, имя), карта сайта = индексируемые страницы сборки; `noindex`, острова, чужие ресурсы и типы JSON-LD — только по списку `scripts/lib/site-policy.mjs`, теги индексируются от порога записей |
 | `pnpm size` | бюджеты `.size-limit.cjs` (CSS, HTML главной и поста) |
 | `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
 | `pnpm ttfb <origin> <path…>` | TTFB запущенного сервера: медиана/p90 20 запросов (`scripts/ttfb.mjs`) |
+| `pnpm indexnow <origin> [карта-до.xml] --key <ключ>` | после выката: адреса, которые изменил релиз, — новые, изменённые и удалённые против карты до выката; ключ сверяется с живым `/<ключ>.txt`; сухой прогон, отправка — `--send` (`scripts/indexnow.mjs`, шаг `/release`) |
 | `pnpm accept:image <image>` | приёмка собранного образа до пуша: отказ без `SITE_URL` за 20 с, штамповка (страницы, карта, фиды), статусы, canonical, robots, одна форма адреса, отказ 400 без падения на `TRACE`, staging, дренаж по SIGTERM быстрее `SHUTDOWN_TIMEOUT_MS`; TTFB — печать без порога |
 | `pnpm check` | **gate**: шаги по порядку до первого красного — состав и что держит каждый: rule `tests-pipeline` § Gate |
 

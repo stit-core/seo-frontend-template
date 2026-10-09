@@ -65,6 +65,7 @@ import {
   TAG_INDEX_MIN_POSTS,
   TITLE_BUDGET,
 } from './lib/site-policy.mjs'
+import { sitemapUrls } from './lib/sitemap.mjs'
 
 // Корень проекта; другой корень — негативные фикстуры check:gate (`.gate-fixtures/<скрипт>`).
 const root = resolve(process.argv[2] ?? resolve(import.meta.dirname, '..'))
@@ -763,12 +764,11 @@ const sitemap = 'dist/client/sitemap.xml'
 if (!fileInDist('/sitemap.xml')) fail(sitemap, 'карты сайта нет в сборке')
 else {
   const listed = new Map()
-  for (const [, loc = '', lastmod] of readFileSync(resolve(client, 'sitemap.xml'), 'utf8').matchAll(
-    /<url><loc>([^<]*)<\/loc>(?:<lastmod>([^<]*)<\/lastmod>)?<\/url>/g,
+  for (const { loc, lastmod } of sitemapUrls(
+    readFileSync(resolve(client, 'sitemap.xml'), 'utf8'),
   )) {
-    const url = decode(loc)
-    if (listed.has(url)) fail(sitemap, `${url} — в карте дважды`)
-    listed.set(url, lastmod)
+    if (listed.has(loc)) fail(sitemap, `${loc} — в карте дважды`)
+    listed.set(loc, lastmod)
   }
   const own = new Set()
   for (const [path, page] of pages) {

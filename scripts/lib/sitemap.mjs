@@ -7,8 +7,18 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { buildSitemap } from '../../src/shared/seo/sitemap.ts'
-import { headTags, isNoindex } from './html.mjs'
+import { decode, headTags, isNoindex } from './html.mjs'
 import { walk } from './routes.mjs'
+
+/**
+ * Адреса карты сайта с датой последнего изменения — в порядке файла, дубли не схлопываются.
+ * @param {string} xml
+ * @returns {{ loc: string, lastmod: string | undefined }[]}
+ */
+export const sitemapUrls = (xml) =>
+  [...xml.matchAll(/<url><loc>([^<]*)<\/loc>(?:<lastmod>([^<]*)<\/lastmod>)?<\/url>/g)].map(
+    ([, loc = '', lastmod]) => ({ loc: decode(loc), lastmod }),
+  )
 
 /**
  * @param {string} clientDir

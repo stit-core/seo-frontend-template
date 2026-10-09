@@ -242,4 +242,5 @@ DIST_DIR=dist SITE_URL=http://localhost:3000 sh docker/entrypoint.sh pnpm start
 CI-runner'а в экосистеме нет: аудит прод-зависимостей, сборку, приёмку (`pnpm accept:image`), тег и
 пуш образа делает разработчик по `/release` (`.claude/skills/release/SKILL.md`). Выкатку выполняет
 `<org>/infra` — `make bump SVC=site TAG=vX.Y.Z` (правит `SITE_TAG` в `.env` VPS + force-recreate);
-отсюда деплой-команды не запускаются.
+отсюда деплой-команды не запускаются. После выката — `/seo-audit` по домену и `pnpm indexnow`:
+поисковикам уходят адреса, которые изменил релиз.
