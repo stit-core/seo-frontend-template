@@ -147,9 +147,10 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 `LocalBusiness` на «О компании» — одна организация с `@id` `<origin>/#org`, на неё ссылаются сайт
 и записи; `BreadcrumbList` на вложенных (из того же массива, что видимые крошки
 `widgets/breadcrumbs`), `BlogPosting` у записи — с автором `Person`, когда у записи есть автор
-из реестра и подпись; в `<body>` ни одного `<script>`. `robots.txt` (`ROBOTS_POLICY`; политика
-ИИ-ботов — поле сборки `AI_BOTS_POLICY`, группы — из реестра ботов базы strategy) и
-`/<INDEXNOW_KEY>.txt` — on-demand на runtime `SITE_URL`; `sitemap.xml` (сборка пишет его по
+из реестра и подпись; в `<body>` ни одного `<script>`. Первая иконка в `<head>` — PNG 192×192:
+её берёт выдача. `robots.txt` (`ROBOTS_POLICY`; политика ИИ-ботов — поле сборки `AI_BOTS_POLICY`,
+группы — из реестра ботов базы strategy; `Clean-param` Яндексу — служебные параметры адреса
+`CLEAN_PARAMS`) и `/<INDEXNOW_KEY>.txt` — on-demand на runtime `SITE_URL`; `sitemap.xml` (сборка пишет его по
 страницам `dist/client`: ровно страницы без `noindex`, `lastmod` — дата правки или публикации
 записи) и фиды `rss.xml`/`en/rss.xml` — файлы сборки, origin в них штампуется при старте
 контейнера. Гейты: `pnpm seo:check` и HTTP-набор

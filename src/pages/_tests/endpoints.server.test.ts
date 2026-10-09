@@ -1,5 +1,6 @@
 import type { APIContext, APIRoute } from 'astro'
 import type * as SharedConfig from '@/shared/config'
+import { CLEAN_PARAMS } from '@/shared/config'
 import { ALL as imageEndpoint } from '../_image.ts'
 import { GET as indexNowKey } from '../[key].txt.ts'
 import { GET as feedEn } from '../en/rss.xml.ts'
@@ -45,10 +46,10 @@ describe('robots.txt', () => {
     expectTypeOf<typeof SharedConfig.AI_BOTS_POLICY>().toEqualTypeOf<SharedConfig.AiBotsPolicy>()
   })
 
-  it('прод: сайт открыт, абсолютная строка Sitemap; сам файл — не страница выдачи', async () => {
+  it('прод: сайт открыт, Clean-param со служебными параметрами сайта, абсолютная строка Sitemap; сам файл — не страница выдачи', async () => {
     const response = await get(robotsTxt)
     expect(await response.text()).toBe(
-      `User-agent: *\nAllow: /\n\nSitemap: ${ORIGIN}/sitemap.xml\n`,
+      `User-agent: *\nAllow: /\n\nClean-param: ${CLEAN_PARAMS.join('&')}\n\nSitemap: ${ORIGIN}/sitemap.xml\n`,
     )
     expect(response.headers.get('cache-control')).toBe('public, max-age=300')
     expect(response.headers.get('x-robots-tag')).toBe('noindex')
@@ -65,7 +66,7 @@ describe('robots.txt', () => {
     expect(groups[0]).toBe('User-agent: *\nAllow: /')
     expect(groups[1]).toMatch(/^User-agent: GPTBot\n(User-agent: \S+\n)+Disallow: \/$/)
     expect(groups[1]).not.toContain('OAI-SearchBot')
-    expect(groups[2]).toBe(`Sitemap: ${ORIGIN}/sitemap.xml`)
+    expect(groups.at(-1)).toBe(`Sitemap: ${ORIGIN}/sitemap.xml`)
 
     site.aiBots = 'deny-all'
     expect(await (await get(robotsTxt)).text()).toContain('User-agent: OAI-SearchBot\n')

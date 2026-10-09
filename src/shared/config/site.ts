@@ -41,6 +41,11 @@ export const SITE_VERIFICATION: { readonly google: string; readonly yandex: stri
 export type AiBotsPolicy = 'allow-all' | 'allow-search-deny-training' | 'deny-all'
 export const AI_BOTS_POLICY: AiBotsPolicy = 'allow-all'
 
+// Служебные параметры адреса для Яндекса (Clean-param в robots.txt): метки кликов рекламных систем
+// страницу не меняют, а каждый клик рождал бы адрес-дубль. `utm_*`, `ysclid` и `yrclid` Яндекс
+// срезает сам; свои параметры проекта (сессия, `ref`) дописываются сюда.
+export const CLEAN_PARAMS: readonly string[] = ['yclid', 'gclid', 'fbclid', 'openstat', '_openstat']
+
 // Социальная карточка по умолчанию, 1200×630 (public/og-default.png); у записи с обложкой —
 // её обложка.
 export const OG_DEFAULT_IMAGE = {

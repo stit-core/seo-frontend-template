@@ -98,6 +98,7 @@ git grep -lF '@stit/ssr-frontend-template' -- ':!.claude' ':!docs/research' \
 | `METRIKA_ID` | id счётчика из `analytics.md`; нет счётчика — пустая строка |
 | `SITE_VERIFICATION` | токены Search Console и Вебмастера; нет — пустые строки |
 | `AI_BOTS_POLICY` | политика ИИ-ботов из `seo.md § robots-политика`; решения нет — остаётся `allow-all` |
+| `CLEAN_PARAMS` | к меткам кликов рекламы — служебные параметры проекта из `seo.md § robots-политика` (сессия, `ref`); своих нет — список как есть |
 | `OG_DEFAULT_IMAGE.alt` | описание своей социальной карточки на обеих локалях |
 
 ### A.3 Политика ПДн → `src/pages/legal/privacy.astro`
@@ -121,7 +122,8 @@ git grep -lF '@stit/ssr-frontend-template' -- ':!.claude' ':!docs/research' \
 
 ### A.5 Социальная карточка и иконки → `public/`
 
-`og-default.png` 1200×630 — свой; `favicon.ico`, `icon.svg`, `icon-512.png`,
+`og-default.png` 1200×630 — свой; `icon-192.png` (первая иконка в `<head>`: её берёт выдача
+Google, файл — PNG ровно 192×192), `favicon.ico`, `icon.svg`, `icon-512.png`,
 `apple-touch-icon.png`, `manifest.webmanifest` — свои имя и цвета. Файлы бинарные:
 скилл их не рисует — назови юзеру список и размеры, дождись подмены.
 

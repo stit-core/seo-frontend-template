@@ -102,6 +102,10 @@ export function contentSecurityPolicy() {
   }
 }
 
+// Иконку сайта в выдаче поисковик берёт с главной из первого <link rel="icon">: растр (SVG Google
+// не читает) со стороной не мельче этой — иначе в выдаче она мутная или её нет.
+export const ICON_MIN_SIDE = 48
+
 // Типы JSON-LD, которые печатает сайт; остальные — ошибка. FAQPage, HowTo и SearchAction не
 // размечаются вовсе (rich results сняты) — ни типом блока, ни вложенно.
 export const JSON_LD_TYPES = [

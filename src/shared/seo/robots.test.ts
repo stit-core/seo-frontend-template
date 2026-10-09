@@ -1,9 +1,11 @@
-import type { AiBotsPolicy } from '@/shared/config'
+import { type AiBotsPolicy, CLEAN_PARAMS } from '@/shared/config'
 import crawlers from './crawlers.yaml'
 import { buildRobotsTxt } from './robots'
 
 const sitemapUrl = 'https://demo.example/sitemap.xml'
-const robots = (aiBots: AiBotsPolicy) => buildRobotsTxt({ policy: 'index', aiBots, sitemapUrl })
+const cleanParams = ['yclid', 'gclid']
+const robots = (aiBots: AiBotsPolicy) =>
+  buildRobotsTxt({ policy: 'index', aiBots, cleanParams, sitemapUrl })
 
 // Бот реестра — как его описывает база: кому служит и как читает robots.txt.
 interface Bot {
@@ -68,28 +70,46 @@ function allows(body: string, bot: Bot, path: string): boolean {
 }
 
 describe('seo/robots', () => {
-  it('прод, allow-all: всё разрешено, абсолютная строка Sitemap, без мёртвых директив Яндекса', () => {
+  it('прод, allow-all: всё разрешено, Clean-param Яндексу, абсолютная строка Sitemap, без мёртвых директив', () => {
     const body = robots('allow-all')
-    expect(body).toBe('User-agent: *\nAllow: /\n\nSitemap: https://demo.example/sitemap.xml\n')
+    expect(body).toBe(
+      'User-agent: *\nAllow: /\n\nClean-param: yclid&gclid\n\nSitemap: https://demo.example/sitemap.xml\n',
+    )
     expect(body).not.toMatch(/Host:|Crawl-delay:|GPTBot/)
   })
 
-  it('staging: Disallow: / для всех и без Sitemap — при любой политике ИИ-ботов', () => {
+  it('staging: Disallow: / для всех, без Sitemap и Clean-param — при любой политике ИИ-ботов', () => {
     for (const aiBots of POLICIES) {
-      expect(buildRobotsTxt({ policy: 'noindex', aiBots, sitemapUrl })).toBe(
+      expect(buildRobotsTxt({ policy: 'noindex', aiBots, cleanParams, sitemapUrl })).toBe(
         'User-agent: *\nDisallow: /\n',
       )
     }
   })
 
-  it('политика с запретом: одна именная группа между открытой `*` и картой сайта', () => {
+  it('политика с запретом: одна именная группа между открытой `*` и строками Clean-param и Sitemap', () => {
     for (const aiBots of ['allow-search-deny-training', 'deny-all'] as const) {
-      const groups = robots(aiBots).trim().split('\n\n')
-      expect(groups).toHaveLength(3)
-      expect(groups[0]).toBe('User-agent: *\nAllow: /')
-      expect(groups[1]).toMatch(/^(User-agent: \S+\n)+Disallow: \/$/)
-      expect(groups[2]).toBe(`Sitemap: ${sitemapUrl}`)
+      const blocks = robots(aiBots).trim().split('\n\n')
+      expect(blocks).toHaveLength(4)
+      expect(blocks[0]).toBe('User-agent: *\nAllow: /')
+      expect(blocks[1]).toMatch(/^(User-agent: \S+\n)+Disallow: \/$/)
+      expect(blocks[2]).toBe('Clean-param: yclid&gclid')
+      expect(blocks[3]).toBe(`Sitemap: ${sitemapUrl}`)
     }
+  })
+
+  it('без служебных параметров строки Clean-param нет', () => {
+    expect(
+      buildRobotsTxt({ policy: 'index', aiBots: 'allow-all', cleanParams: [], sitemapUrl }),
+    ).toBe('User-agent: *\nAllow: /\n\nSitemap: https://demo.example/sitemap.xml\n')
+  })
+
+  // Правило Clean-param — одна строка до 500 символов, имена — через `&`: разделитель или пробел в
+  // имени ломает директиву молча. Метки кликов Директа и Google Ads — умолчание шаблона.
+  it('служебные параметры сайта: метки кликов рекламы на месте, имена — без разделителей, правило — до 500 символов', () => {
+    expect(CLEAN_PARAMS).toEqual(expect.arrayContaining(['yclid', 'gclid', 'fbclid']))
+    for (const name of CLEAN_PARAMS) expect(name, name).toMatch(/^[\w.-]+$/)
+    expect(new Set(CLEAN_PARAMS).size).toBe(CLEAN_PARAMS.length)
+    expect(`Clean-param: ${CLEAN_PARAMS.join('&')}`.length).toBeLessThanOrEqual(500)
   })
 
   // Ожидания — не из группы, которую печатает сайт: назначение бота (`purpose`) и список

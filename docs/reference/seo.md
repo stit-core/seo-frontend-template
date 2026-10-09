@@ -22,13 +22,17 @@
 | `robots.txt` и файл ключа IndexNow на runtime origin; фиды `rss.xml` — prerendered | `src/pages/*.ts` + `shared/seo` |
 | `sitemap.xml` — файл сборки: ровно страницы без `noindex`, адрес — canonical, `lastmod` — дата правки или публикации записи | интеграция `sitemap-from-build` (`astro.config.ts`) + `scripts/lib/sitemap.mjs` |
 | политика ИИ-ботов: три режима, именная группа `robots.txt` и мета `deny-all` — из реестра ботов базы strategy | `AI_BOTS_POLICY` (`shared/config/site.ts`) + `shared/seo/{ai-bots.ts,crawlers.yaml}` |
+| Яндекс: `Clean-param` в прод-`robots.txt` — метки кликов рекламы и параметры проекта не плодят адреса-дубли | `CLEAN_PARAMS` (`shared/config/site.ts`) + `shared/seo/robots.ts` |
+| иконка сайта в выдаче: первой — PNG 192×192 (SVG выдача Google не читает) | `app/layouts/document.astro` + `public/icon-192.png` |
 | теги без тонких страниц в индексе: страница тега индексируется от трёх записей локали, ниже — `noindex`, вне карты и hreflang | `entities/post/lib/tags.ts` + порог `TAG_INDEX_MIN_POSTS` политики сборки |
 | честные статусы: 404, 410, 500 (404 и 410 — на языке префикса пути); у адреса одна форма — на любую другую и на адрес старого сайта (заглавные, кириллица, `?query`, слеш) процесс отвечает одним 301 сразу на конечный адрес; что из этого за edge до процесса не доходит и чем закрыто — `rendering.md § Нормализация URL` | `shared/redirects` + `content/redirects.yaml`, обёртка `docker/server.mjs` и `app/middleware` |
 | абсолютные URL на реальном домене в любом контуре | штамповка `SITE_URL` при старте контейнера |
 
 Решение проекта (шаблон не угадывает): бренд и описание, канонический хост, дефолтная
-OG-картинка, набор локалей, политика ИИ-ботов, токены верификации, ключ IndexNow.
-Все они — в `docs/stack/seo.md` и подставляются `/de-template`.
+OG-картинка, набор локалей, политика ИИ-ботов, свои служебные параметры адреса, токены
+верификации, ключ IndexNow. Все они — в `docs/stack/seo.md` и подставляются `/de-template`;
+кабинеты поисковиков (Вебмастер, Яндекс Бизнес, Search Console, Bing) — раздел «Кабинеты» там же
+и чек-лист `/release`.
 
 ## Чек-лист новой страницы
 
@@ -86,13 +90,13 @@ hreflang, `og:image`, JSON-LD, крошки, `h1`, размеры и LCP кар�
 
 | уровень | что ловит |
 |---|---|
-| unit `shared/seo/*.test.ts` | `absoluteUrl`, `alternates`, `buildRobotsTxt` и матрица доступа «политика ИИ-ботов × бот реестра» по RFC 9309, `buildSitemap` и генератор карты по страницам каталога, `buildFeed`, фабрики JSON-LD (их выход проходит Zod-схему) |
+| unit `shared/seo/*.test.ts` | `absoluteUrl`, `alternates`, `buildRobotsTxt` (строка `Clean-param` — в проде, не в staging) и матрица доступа «политика ИИ-ботов × бот реестра» по RFC 9309, `buildSitemap` и генератор карты по страницам каталога, `buildFeed`, фабрики JSON-LD (их выход проходит Zod-схему) |
 | Container API | `seo-head.astro`, `json-ld.astro` — разметка `<head>`; `widgets/breadcrumbs` — разметка и axe |
-| `pnpm seo:check` (в `pnpm check`) | каждая страница `dist/client`, и страница ошибки `500.html`: один `<title>` и `<h1>`, description, self-canonical, `lang`, OG с существующей картинкой, сниппет уникальный, в бюджетах и не общий, полные пары hreflang на своём origin, разметка = видимое (скрытый текст не в счёт), организация одна (`@id`, имя), автор-человек подписан на странице, блок JSON-LD читается при любых атрибутах тега, микроданных нет; `noindex` в любой форме, острова (и обработчики `on*=`), чужие ресурсы и типы JSON-LD — по списку `scripts/lib/site-policy.mjs`; порог индексации тегов — в обе стороны; картинки с размерами, LCP не lazy; страница у каждой опубликованной записи и маршрута `src/pages`, черновиков нет, hreflang только у сверенных пар; карта сайта — ровно индексируемые страницы сборки, `lastmod` — дата записи из frontmatter |
+| `pnpm seo:check` (в `pnpm check`) | каждая страница `dist/client`, и страница ошибки `500.html`: один `<title>` и `<h1>`, description, self-canonical, `lang`, OG с существующей картинкой, сниппет уникальный, в бюджетах и не общий, первая иконка — PNG от 48 px с файлом того же размера, полные пары hreflang на своём origin, разметка = видимое (скрытый текст не в счёт), организация одна (`@id`, имя), автор-человек подписан на странице, блок JSON-LD читается при любых атрибутах тега, микроданных нет; `noindex` в любой форме, острова (и обработчики `on*=`), чужие ресурсы и типы JSON-LD — по списку `scripts/lib/site-policy.mjs`; порог индексации тегов — в обе стороны; картинки с размерами, LCP не lazy; страница у каждой опубликованной записи и маршрута `src/pages`, черновиков нет, hreflang только у сверенных пар; карта сайта — ровно индексируемые страницы сборки, `lastmod` — дата записи из frontmatter |
 | `pnpm check:gate` | сам `seo:check`, `check:links` и `check:content` на негативных мини-проектах `.gate-fixtures/{seo,links,content}` — ровно ожидаемые нарушения |
 | `pnpm check:links` | каждый внутренний `href`/`src`/`srcset` сборки существует и записан канонической формой адреса |
 | `pnpm check:content` | бюджеты и уникальность полей записей, ссылки в теле, `redirects.yaml` |
-| HTTP-набор `e2e/http/` (в `pnpm check`) | сырой HTML prod-сервера, в т.ч. под Googlebot; шаблоны страниц, on-demand маршруты, 404, адреса `redirects.yaml` и неканоническая форма адреса под UA каждого бота реестра — тот же ответ: статус, тело, заголовки; `/llms.txt` — 404 `text/plain`; статусы и заголовки, штамповка origin, HTML on-demand маршрутов — только `noindex` и только острова политики, `robots.txt` (прод и staging), проштампованные карта сайта (= индексируемые страницы `dist/client`, все 200) и фиды, ключ IndexNow, вес HTML; staging — `X-Robots-Tag: noindex, nofollow` на каждом ответе, от страниц сборки и PNG до редиректов |
+| HTTP-набор `e2e/http/` (в `pnpm check`) | сырой HTML prod-сервера, в т.ч. под Googlebot; шаблоны страниц, on-demand маршруты, 404, адреса `redirects.yaml` и неканоническая форма адреса под UA каждого бота реестра — тот же ответ: статус, тело, заголовки; `/llms.txt` — 404 `text/plain`; статусы и заголовки, штамповка origin, HTML on-demand маршрутов — только `noindex` и только острова политики, `robots.txt` (прод — со строкой `Clean-param`, staging — без неё), проштампованные карта сайта (= индексируемые страницы `dist/client`, все 200) и фиды, ключ IndexNow, вес HTML; staging — `X-Robots-Tag: noindex, nofollow` на каждом ответе, от страниц сборки и PNG до редиректов |
 | `/seo-audit` | сборка, `seo:check`, `check:links`, HTTP-набор + curl по живому домену + внешние валидаторы |
 
 Ручное — раз на релиз: Rich Results Test, validator.schema.org, валидатор микроразметки

@@ -35,6 +35,8 @@ const {
   article,
   jsonLd = [],
 } = Astro.props
+// Порядок иконок: первой — PNG 192×192. Иконку сайта для выдачи Google берёт из первого
+// <link rel="icon"> с подходящим форматом: SVG он не читает, а ICO 32×32 мельче его 48 px.
 ---
 
 <!doctype html>
@@ -56,6 +58,7 @@ const {
       <JsonLdScript data={data} />
     ))}
     <meta name="color-scheme" content="light dark" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />

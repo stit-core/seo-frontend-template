@@ -97,14 +97,15 @@
 ## seo
 
 **Секции**: `Идентичность сайта`, `Социальные карточки`, `Структурированные данные`,
-`Локали и hreflang`, `robots-политика`, `Sitemap и фиды`, `Верификация`, `Generates`.
+`Локали и hreflang`, `robots-политика`, `Sitemap и фиды`, `Верификация`, `Кабинеты`, `Generates`.
 
 **Generates**: `src/shared/config/site.ts`, `src/shared/seo/*`, маршруты `robots.txt`, фидов и
 ключа IndexNow, карта сайта из сборки (`scripts/lib/sitemap.mjs`), `e2e/http/seo.spec.ts`.
 
 **Cross-kind**: канонический хост ↔ `service.md § Домены` ↔ `SITE_URL` в `config.md`;
 `ROBOTS_POLICY`, `INDEXNOW_KEY` — в `config.md`; политика ИИ-ботов — поле `AI_BOTS_POLICY` в
-`site.ts`, не env; набор локалей ↔ `content.md`.
+`site.ts`, не env; служебные параметры адреса — `CLEAN_PARAMS` там же (рекламные метки проекта ↔
+`analytics.md`); набор локалей ↔ `content.md`.
 
 **Anti-patterns**: `<meta name="keywords">`; canonical на другой домен; `FAQPage`/`HowTo`/
 `SearchAction` «ради rich results»; hreflang на несуществующий перевод; verification-токен
@@ -149,7 +150,7 @@
 
 ## analytics (условный)
 
-**Секции**: `Счётчики`, `Что не работает в РФ`, `Согласие`, `Бюджет`, `Generates`.
+**Секции**: `Счётчики`, `Что не работает в РФ`, `ИИ-рефереры`, `Согласие`, `Бюджет`, `Generates`.
 
 **Generates**: `src/app/analytics/*`, идентификаторы в `site.ts`, баннер согласия и его
 строка бюджета, остров в `ISLANDS` (имя, хеш тела и origin счётчика — их пропускает CSP) и

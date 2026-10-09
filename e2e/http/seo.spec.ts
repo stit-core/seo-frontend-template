@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test'
 import { SITE_ORIGIN_PLACEHOLDER } from '../../src/shared/config/runtime.ts'
-import { AI_BOTS_POLICY } from '../../src/shared/config/site.ts'
+import { AI_BOTS_POLICY, CLEAN_PARAMS } from '../../src/shared/config/site.ts'
 import { localeOf } from '../../src/shared/i18n/locale.ts'
 import { E2E_INDEXNOW_KEY, entries, feedPaths, indexablePaths } from '../site'
 
 const PLACEHOLDER = new URL(SITE_ORIGIN_PLACEHOLDER).hostname
 
 test.describe('robots.txt, sitemap.xml, фиды, IndexNow', () => {
-  test('robots.txt прод-профиля: группа `*` открыта, абсолютный Sitemap, без мёртвых директив', async ({
+  test('robots.txt прод-профиля: группа `*` открыта, Clean-param Яндексу, абсолютный Sitemap, без мёртвых директив', async ({
     request,
     baseURL,
   }) => {
@@ -19,6 +19,8 @@ test.describe('robots.txt, sitemap.xml, фиды, IndexNow', () => {
     // Политика ИИ-ботов сайта закрывает только свою именную группу — между `*` и картой.
     expect(body.startsWith('User-agent: *\nAllow: /\n\n'), body).toBe(true)
     expect(body.endsWith(`\nSitemap: ${baseURL}/sitemap.xml\n`), body).toBe(true)
+    // Служебные параметры адреса — отдельной строкой вне групп: Яндекс склеивает по ним дубли.
+    expect(body, body).toContain(`\n\nClean-param: ${CLEAN_PARAMS.join('&')}\n\n`)
     if (AI_BOTS_POLICY === 'allow-all') expect(body).not.toContain('Disallow')
     expect(body).not.toMatch(/Host:|Crawl-delay:/)
   })

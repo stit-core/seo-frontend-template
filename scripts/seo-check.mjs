@@ -2,6 +2,8 @@
 // - head: ровно один <title> и один <h1>, description с непустым content, self-canonical
 //   абсолютным URL на плейсхолдере origin (один образ на все среды), lang по локали пути, полный
 //   OG с существующей картинкой, без keywords; title и description уникальны среди всех страниц;
+// - иконка сайта: первая <link rel="icon"> — PNG не мельче ICON_MIN_SIDE, файл в сборке того же
+//   размера; на главных она обязательна;
 // - сниппет индексируемой страницы в бюджетах и не общий; noindex (в любой форме) — только у
 //   служебных маршрутов из списка политики (scripts/lib/site-policy.mjs) и у страницы тега ниже
 //   порога записей (а от порога тег обязан индексироваться), и тогда без canonical, OG и hreflang;
@@ -53,6 +55,7 @@ import { pageRoutes, walk } from './lib/routes.mjs'
 import {
   DESCRIPTION_BUDGET,
   GENERIC_TITLE,
+  ICON_MIN_SIDE,
   JSON_LD_FORBIDDEN,
   JSON_LD_TYPES,
   NOINDEX_ROUTES,
@@ -93,6 +96,40 @@ const isLocaleHome = (path) =>
 const routeOf = (path) => {
   const locale = localeOf(path)
   return locale === DEFAULT_LOCALE ? path : path.slice(locale.length + 1) || '/'
+}
+
+// Сторона PNG из заголовка файла (IHDR); не PNG или не квадрат — undefined.
+function pngSide(path) {
+  const head = readFileSync(resolve(client, `.${path}`)).subarray(0, 24)
+  const png = head.length === 24 && head.readUInt32BE(0) === 0x89504e47
+  const [width, height] = png ? [head.readUInt32BE(16), head.readUInt32BE(20)] : []
+  return width === height ? width : undefined
+}
+
+// Иконку сайта для выдачи поисковик берёт из первого <link rel="icon">: формат и размер первой
+// решают, покажет ли он её. Остальные иконки — браузерам (ICO, SVG) — идут следом.
+function checkIcon(where, tags, home) {
+  const icon = tags.find(
+    (item) => item.tag === 'link' && (item.rel ?? '').toLowerCase().split(/\s+/).includes('icon'),
+  )
+  if (icon === undefined) {
+    if (home)
+      fail(where, 'нет <link rel="icon">: иконку сайта для выдачи поисковик берёт с главной')
+    return
+  }
+  const href = icon.href ?? ''
+  const side = Number(/^(\d+)x\1$/i.exec(icon.sizes ?? '')?.[1])
+  if (icon.type !== 'image/png') {
+    fail(where, `первая иконка ${href} — не PNG: SVG выдача Google не читает, ICO 32×32 ей мал`)
+  } else if (!(side >= ICON_MIN_SIDE)) {
+    fail(
+      where,
+      `первая иконка ${href}: sizes «${icon.sizes ?? ''}» — нужен квадрат от ${ICON_MIN_SIDE} px`,
+    )
+  } else if (!fileInDist(href)) fail(where, `первая иконка ${href}: файла нет в dist/client`)
+  else if (pngSide(href) !== side) {
+    fail(where, `первая иконка ${href}: файл — не PNG ${side}×${side}, как обещает sizes`)
+  }
 }
 
 // Видимые крошки и data block — из одного массива на странице; здесь — форма списка: позиции
@@ -462,6 +499,7 @@ for (const file of walk(client)) {
   // директивы не смешиваются. Кому noindex положен, решается ниже, когда прочитан источник.
   const noindex = isNoindex(tags)
   if (meta('keywords').length > 0) fail(where, 'meta keywords не используется никогда')
+  checkIcon(where, tags, isLocaleHome(path))
 
   const canonicalTags = tags.filter((item) => item.tag === 'link' && item.rel === 'canonical')
   const canonical = noindex ? undefined : single(canonicalTags, 'canonical')?.href

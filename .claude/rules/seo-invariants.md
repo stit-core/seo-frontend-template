@@ -58,6 +58,10 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   ИИ-ботов (§ robots.txt)
 - `<meta name="keywords">` — никогда; RSS autodiscovery `<link rel="alternate"
   type="application/rss+xml">` — на каждой странице, фид своей локали
+- Иконки сайта печатает layout, первой — PNG 192×192 (`public/icon-192.png`), следом ICO и SVG
+  браузерам: иконку для выдачи Google берёт из первого `<link rel="icon">`, SVG не читает, а растр
+  ждёт от 48 px. `seo:check`: первая иконка страницы — PNG не мельче `ICON_MIN_SIDE` политики
+  сборки, файл в сборке — того же размера, что обещает `sizes`; на главных иконка обязательна
 
 ## JSON-LD
 
@@ -112,8 +116,13 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   `Sitemap:`; отдельные `noindex`-страницы (`/now`, 404) в нём не закрываются — иначе мета не будет
   прочитана. `ROBOTS_POLICY=noindex` — контур staging целиком: `User-agent: *` / `Disallow: /` без
   Sitemap; реальный замок staging — Traefik `basicAuth`, `Disallow: /` и `X-Robots-Tag` — второй и
-  третий контуры. `Host`/`Crawl-delay` не выводятся; `Clean-param` — строкой в `buildRobotsTxt`,
-  когда появятся проектные трекинг-параметры (`utm_*`, `ysclid`, `yrclid` Яндекс срезает сам)
+  третий контуры. `Host`/`Crawl-delay` не выводятся
+- `Clean-param` — строка прод-`robots.txt` вне групп (директива межсекционная, читает её только
+  Яндекс; Google склеивает адреса с параметрами по canonical): служебные параметры адреса
+  `CLEAN_PARAMS` (`shared/config/site.ts`) — метки кликов рекламы `yclid`, `gclid`, `fbclid`,
+  `openstat`, `_openstat` и параметры проекта (сессия, `ref`). `utm_*`, `ysclid`, `yrclid` Яндекс
+  срезает сам; в staging строки нет. Правило параметров живёт в коде, «Настройка GET-параметров»
+  Вебмастера — сверка: параметр, который нашёл робот, дописывается в `CLEAN_PARAMS`
 - Политика ИИ-ботов — поле сборки `AI_BOTS_POLICY` (`shared/config/site.ts`), не env: решение
   ревьюится в git, одно на все среды и доходит до `<head>` prerendered-страниц. `allow-all`
   (умолчание) — именных групп нет; `allow-search-deny-training` и `deny-all` — одна именная группа
@@ -152,7 +161,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
 
 - `pnpm seo:check` (после `build`, внутри `pnpm check`): по `dist/client` — один `<title>` и
   `<h1>`, description с непустым `content`, self-canonical, `lang` по локали пути, OG с
-  существующей картинкой, уникальность title/description; hreflang — полный взаимный набор у
+  существующей картинкой, уникальность title/description, иконка сайта (первая — PNG от 48 px с
+  файлом того же размера, на главных обязательна); hreflang — полный взаимный набор у
   каждой пары переводов (главные, списки и индексируемые теги под обоими префиксами локалей; записи — twin по
   `translationKey` из frontmatter, реестр коллекций `scripts/lib/content.mjs`) и ни одной ссылки
   на отсутствующую страницу; JSON-LD (любой блок этого типа; типы, `Organization`/`WebSite` только
@@ -192,8 +202,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   на форму адреса и её отказ); HTML on-demand маршрута —
   только с `noindex` (мета или заголовок), его скрипты — острова политики; у адреса одна форма —
   неканоническая (слеш, `//`, `/index.html`, точки, проценты) и адрес `redirects.yaml` в любой
-  форме отвечают одним 301 сразу на конечный адрес, `%2F` и заглавные своего адреса — 404; `robots.txt` (прод и
-  staging), проштампованные карта (ровно индексируемые страницы `dist/client`, все 200, `lastmod` у
+  форме отвечают одним 301 сразу на конечный адрес, `%2F` и заглавные своего адреса — 404; `robots.txt` (прод —
+  со строкой `Clean-param`, staging — без неё), проштампованные карта (ровно индексируемые страницы `dist/client`, все 200, `lastmod` у
   каждой записи) и фиды, ключ IndexNow; размер HTML
   < 300 КБ. Парсер `<head>` и `decode` сущностей один — `scripts/lib/html.mjs` (он же в
   `seo:check` и `check:links`)

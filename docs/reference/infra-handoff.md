@@ -488,7 +488,7 @@ accessLog:
 
 ```bash
 curl -sI  https://<domain>/                    # 200, без X-Robots-Tag: noindex
-curl -s   https://<domain>/robots.txt          # группа * — Allow: /, абсолютный Sitemap:; именная группа — по политике ИИ-ботов сайта
+curl -s   https://<domain>/robots.txt          # группа * — Allow: /, строка Clean-param, абсолютный Sitemap:; именная группа — по политике ИИ-ботов сайта
 curl -s   https://<domain>/sitemap.xml | grep -c '<loc>'   # ожидаемое число, все URL — https и свой домен
 curl -sI  https://<domain>/net-takogo          # 404 (не 200 и не редирект на главную)
 curl -sI  http://<domain>/                     # ровно один 301/308 на https
