@@ -301,6 +301,25 @@
     @apply rounded-control bg-subtle p-md text-code;
   }
 
+  /* Таблица: слова в ячейках целые. Колонке у́же себя она не рвёт слова и не раздвигает страницу,
+   * а прокручивается сама — как блок кода. */
+  .prose table {
+    display: block;
+    overflow-x: auto;
+    overflow-wrap: normal;
+  }
+
+  .prose th,
+  .prose td {
+    text-align: start;
+    vertical-align: top;
+    @apply border-b border-subtle py-xs pr-md;
+  }
+
+  .prose th {
+    @apply font-strong;
+  }
+
   .prose blockquote {
     @apply border-l-thick border-accent pl-md text-secondary;
   }
