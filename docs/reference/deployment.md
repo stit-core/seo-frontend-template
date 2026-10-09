@@ -217,7 +217,10 @@ prerendered-страница печатается на сборке, а обра
   только прокси
 - Staging закрывается и там: `basicAuth` + `customResponseHeaders: X-Robots-Tag` — независимо
   от `ROBOTS_POLICY` контейнера; `www` → apex и `http` → `https`, `compress`,
-  `secure-headers@file`. Форму пути (`/index.html`, слеши) edge не трогает — её приводит приложение
+  `secure-headers@file`. Правил на путь у edge нет: хвостовой слеш, `/index.html` и адреса таблицы
+  переездов приводит приложение. Двойной слеш, сегменты `.` и `..` и букву процентами Traefik
+  приводит сам до проксирования (`sanitizePath` — не выключается): по такому адресу за edge
+  отвечает страница, дубль закрывает её canonical (`rendering.md § Нормализация URL`)
 
 Готовый `compose/site.yml`, роутеры и middleware Traefik, CrowdSec и приёмка первого
 деплоя — [`infra-handoff.md`](./infra-handoff.md): рабочее задание для сессии в `<org>/infra`.
