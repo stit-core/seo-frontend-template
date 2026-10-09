@@ -86,6 +86,28 @@ test.describe('ответ ботам реестра', () => {
   }
 })
 
+// Язык выбирает человек ссылкой, а не сервер заголовком: робот без Accept-Language и браузер с
+// любым получают одну страницу — ни редиректа на «свою» локаль, ни другой версии.
+test('Accept-Language не меняет ответ: шаблоны страниц и адрес без страницы', async ({
+  request,
+}) => {
+  const templates = pageTemplates()
+  for (const path of [...templates, UNKNOWN]) {
+    const get = (headers: Record<string, string>) => request.get(path, { headers, maxRedirects: 0 })
+    const plain = await get({})
+    if (templates.includes(path)) expect(plain.status(), path).toBe(200)
+    const body = await plain.text()
+    for (const language of ['en-US,en;q=0.9', 'ru-RU,ru;q=0.9', 'de']) {
+      const response = await get({ 'accept-language': language })
+      expect(response.status(), `${path} · ${language}`).toBe(plain.status())
+      expect(comparable(response.headers()), `${path} · ${language}`).toEqual(
+        comparable(plain.headers()),
+      )
+      expect(await response.text(), `${path} · ${language}`).toBe(body)
+    }
+  }
+})
+
 // llms.txt сайт не публикует: читателей среди поисковых и ИИ-ботов у файла нет. Адрес отвечает
 // честным 404 текстом — не HTML-заглушкой и не ошибкой сервера.
 test('/llms.txt и /llms-full.txt — 404 text/plain', async ({ request }) => {
