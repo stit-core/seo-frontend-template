@@ -74,7 +74,7 @@ strategy: слоя страницы, пакета дизайна и `ready.yaml`
 | P1 | site | Страховочная сетка: покрытие и тесты страниц, HTTP-e2e в гейте, гейт на гейт, зеркала e2e в `seo:check`, FSD-линт, периметр хуков, правда прозы | ≥ 42/45 мутаций, ≥ 24/27 нарушений, покрытие ≥ 90 % | `harden-gate.md` | done |
 | P2 | site | Прод и стек: пакет `docker/*`, CSP, `/_image`, pnpm без corepack, `pnpm audit`, политика обновлений | атаки и опечатки env аудита — красные; `accept:image` зелёный | `harden-runtime.md` | done |
 | P3 | site | SEO и GEO: сущность с `@id`, авторы, политика ИИ-ботов, карта и фиды из сборки, теги, Яндекс, редиректы миграции, `geo_probe` в `/seo-audit` | SEO- и GEO-мутации аудита ловит гейт | `seo-geo-layer.md` | done |
-| P4 | site | Облик под ДС: оболочка и секции, токены и тема ДС, остров предпочтений и бюджеты островов, Fonts API, медиа по манифесту, доступность | тема ДС переключается; ворота strategy без B на reference-страницах | `adopt-design-system.md` | todo |
+| P4 | site | Облик под ДС: оболочка и секции, токены и тема ДС, остров предпочтений и бюджеты островов, Fonts API, медиа по манифесту, доступность | тема ДС переключается; ворота strategy семейств облика без B на reference-страницах | `adopt-design-system.md` | in-progress |
 | P5 | site | Модель страницы: блоки каталога, тексты-данные, форма-движок, согласие и цели, JSON-LD по head-kit, i18n на 1…N локалях, коллекции модулем | reference-страницы собраны из блоков и текстов-данных | `blocks-content-model.md` | todo |
 | P6 | strategy | Контракт strategy → сайт: дефекты CON-31…44, снимок с локом, строка контракта сайта, свежесть базы | контракт выполним сайтом без обходов | по обвязке strategy | done |
 | P7 | infra | Сервис site в infra-шаблоне: compose и smoke, заголовки безопасности, allowlist ИИ-ботов в CrowdSec, User-Agent в access-log, `/_image` на edge, канон экосистемы | `make bump SVC=site` проходит на стенде шаблона | `../project-infra-template-compose/.claude/plans/add-site-service.md` | in-progress |
@@ -193,6 +193,9 @@ strategy: слоя страницы, пакета дизайна и `ready.yaml`
     G-04 — объяснённые); эталон гоняется по копии `M/p3c/mutations.py`: вместо MUT-11 — равносильная MUT-11′
     («`lastmod` только из правки»); мутация «дата в будущем» — от послезавтра; SEO-M2 держит `seo:check`, X4 —
     `test` и `seo:check`: карта выводится из сборки.
+- Критерий P4 «ворота strategy без B» — по семействам облика (PERF, WEIGHT, A11Y, MOB, слой движения): строки
+  SG-LEGAL-05 (реквизиты — факты), SG-CONTENT-05 (демо-почта) и SG-CONTENT-07 (призыв первого экрана — блоки)
+  закрывают P5 и P8, когда у страниц появляются блоки и данные снимка.
 
 ## Handoff
 - `spa-frontend-template`: нейминг токенов ДС strategy (`data-theme`, DTCG, `@theme inline`), чтение `design/` и
@@ -215,7 +218,7 @@ P1 `harden-gate`, P2 `harden-runtime`, P3 `seo-geo-layer` и P6 (strategy 0.2.0)
 нарушения аудита; образ отказывает на env вне формата и не падает от враждебного запроса; слой вокруг страницы —
 одна организация и авторы, политика ИИ-ботов из реестра базы, карта и фиды из сборки, теги от порога, одна форма
 адреса, Яндекс и IndexNow, GEO-шаг `/seo-audit` — собирается из данных и держится гейтом; контракт strategy → сайт
-исполним кодом. Следующий шаг — S5: план P4 `adopt-design-system` (готовая к коммиту копия —
-`M/plans/adopt-design-system.final.md`, покрытие — `M/plans/adopt-design-system.coverage.md`), затем его этап A;
-параллельно идёт P7 в infra-шаблоне — этап A (план —
-`../project-infra-template-compose/.claude/plans/add-site-service.md`).
+исполним кодом. Идёт S5 — P4 `adopt-design-system`: план в репо (14 шагов, этапы A–F; покрытие находок и набор
+мутаций приёмки — `M/plans/adopt-design-system.coverage.md`), следующий шаг — его этап A (S1 — отдельным
+исполнителем, затем S2–S3), затем валидатор. Параллельно идёт P7 в infra-шаблоне: этап A сделан и проверяется
+валидатором (план — `../project-infra-template-compose/.claude/plans/add-site-service.md`).
