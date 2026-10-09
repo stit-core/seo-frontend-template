@@ -120,17 +120,26 @@ const importMetaEnv = {
   message: 'env: из import.meta.env — только DEV; конфигурация среды — getRuntimeConfig()',
 }
 
-// Цвет — только токен src/app/styles/index.css: литерал цвета в разметке компонента — сырой цвет.
+// Значение разметки — только роль слоя сопоставления src/app/styles/index.css. Мимо него ведут
+// литерал цвета, число в утилите (шкала Tailwind или пиксели), скобки в классе (произвольное
+// значение и `(--переменная)`) и `var()` — переменная ДС напрямую.
 // `url(#id)` — ссылка на градиент или маску SVG, а не цвет.
 const FUNCTION_COLOR = String.raw`\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(`
 const HEX = String.raw`(?<!url\(['"]?)#[0-9a-f]{3,8}\b`
 const COLOR = `${HEX}|${FUNCTION_COLOR}`
 // В CSS hex-цвет — значение объявления: за ним `;` или `}` раньше `{`; `#add {` — id-селектор.
 const CSS_COLOR = `${HEX}[^{};]*[;}]|${FUNCTION_COLOR}`
+// Числовая утилита — число или `px` на месте значения (`px-6`, `-mt-1.5`, `w-1/2`, `h-px`). Счёт и
+// порядок — не значение облика, ноль — сброс: `grid-cols-2`, `z-10` и `inset-0` законны.
+const COUNT = 'flex|order|z|grid-cols|grid-rows|col-span|row-span|line-clamp'
+const NUMERIC = String.raw`(?<![\w-])-?(?!(?:${COUNT})-\d+(?![\w.\/-]))[a-z][a-z-]*-(?!0(?![\w.\/]))(?:px|\d+(?:[.\/]\d+)?)(?![\w-])`
+const ARBITRARY = String.raw`[\[\]()]`
+const DS_VARIABLE = String.raw`var\(\s*--`
 const CLASS = "JSXAttribute:matches([name.name='class'], [name.namespace.name='class'])"
+const STYLE = "JSXElement[openingElement.name.name='style'] > AstroRawText"
 // Строка разметки — литерал или кусок шаблонной строки.
-const colorIn = (attribute) =>
-  `${attribute} :matches(Literal[value=/${COLOR}/i], TemplateElement[value.raw=/${COLOR}/i])`
+const text = (pattern) =>
+  `:matches(Literal[value=/${pattern}/i], TemplateElement[value.raw=/${pattern}/i])`
 // Канон разметки .astro (rules shared-ui, render-safety).
 const astroSyntax = [
   {
@@ -146,15 +155,28 @@ const astroSyntax = [
     message: 'UI: инлайн-style — значения через утилиты токен-слоя src/app/styles/index.css',
   },
   {
-    selector: colorIn(CLASS),
-    message: 'UI: сырой цвет в классе — семантическая утилита токен-слоя',
+    selector: `${CLASS} ${text(ARBITRARY)}`,
+    message: 'UI: произвольное значение в классе ([…], (--…)) — утилита роли слоя сопоставления',
   },
   {
-    selector: `JSXElement[openingElement.name.name='style'] > AstroRawText[value=/${CSS_COLOR}/i]`,
+    selector: `${CLASS} ${text(NUMERIC)}`,
+    message:
+      'UI: числовая утилита в классе — шаг или роль слоя сопоставления (mt-md); число — счёт и ноль',
+  },
+  {
+    selector: `JSXAttribute ${text(DS_VARIABLE)}`,
+    message: 'UI: переменная ДС в разметке — роль берёт утилита слоя сопоставления',
+  },
+  {
+    selector: `${STYLE}[value=/${DS_VARIABLE}/]`,
+    message: 'UI: переменная ДС в <style> — роль берёт утилита слоя сопоставления',
+  },
+  {
+    selector: `${STYLE}[value=/${CSS_COLOR}/i]`,
     message: 'UI: сырой цвет в <style> — токен src/app/styles/index.css',
   },
   {
-    selector: colorIn('JSXAttribute[name.name=/^(fill|stroke|color|stop-color|flood-color)$/]'),
+    selector: `JSXAttribute[name.name=/^(fill|stroke|color|stop-color|flood-color)$/] ${text(COLOR)}`,
     message: 'UI: сырой цвет в атрибуте — currentColor или токен',
   },
   {

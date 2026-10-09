@@ -1,8 +1,11 @@
+import { readdirSync, readFileSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { createRequire } from 'node:module'
-import { dirname, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { parseForESLint } from 'astro-eslint-parser'
 import { compile } from 'tailwindcss'
+import tseslint from 'typescript-eslint'
 import { THEME } from '@/shared/config'
 
 // Токен-слой компилируется, как на сборке, и классы проверяются выводом компилятора, а не CSS
@@ -12,18 +15,23 @@ const entry = fileURLToPath(new URL('./index.css', import.meta.url))
 const layer = await readFile(entry, 'utf8')
 const tokens = await readFile(fileURLToPath(new URL('./tokens.css', import.meta.url)), 'utf8')
 const require = createRequire(import.meta.url)
-const compiler = await compile(layer, {
-  base: dirname(entry),
-  loadStylesheet: async (id, base) => {
-    const path = id === 'tailwindcss' ? require.resolve('tailwindcss/index.css') : resolve(base, id)
-    return { path, base: dirname(path), content: await readFile(path, 'utf8') }
-  },
-})
+const compileLayer = () =>
+  compile(layer, {
+    base: dirname(entry),
+    loadStylesheet: async (id, base) => {
+      const path =
+        id === 'tailwindcss' ? require.resolve('tailwindcss/index.css') : resolve(base, id)
+      return { path, base: dirname(path), content: await readFile(path, 'utf8') }
+    },
+  })
+const compiler = await compileLayer()
 // Компилятор копит классы всех вызовов: «класс не дал CSS» — вывод равен выводу до него.
 const adds = (classes: string[]) => compiler.build([]) !== compiler.build(classes)
 // Объявления, которые утилита даёт своему классу.
 const rule = (utility: string) =>
   new RegExp(`\\.${utility}\\s*\\{([^}]*)\\}`).exec(compiler.build([utility]))?.[1] ?? ''
+// Переменная ДС, которую утилита роли кладёт в своё свойство.
+const roleOf = (utility: string) => /var\((--[\w-]+)\)/.exec(rule(utility))?.[1] ?? utility
 
 const declared = (source: string) => new Set(source.match(/--[\w-]+(?=\s*:)/g))
 const referenced = (source: string) =>
@@ -31,6 +39,138 @@ const referenced = (source: string) =>
 // Значения объявлений color-scheme; `prefers-color-scheme` медиа-условия — не объявление.
 const colorSchemes = (source: string) =>
   Array.from(source.matchAll(/(?<![\w-])color-scheme:\s*([^;{}]+)/g), ([, value = '']) => value)
+
+type Values = Map<string, string>
+type Theme = readonly [name: string, values: Values]
+type Site = { readonly default: string; readonly switcher: boolean }
+
+// Блоки файла токенов в форме ds_build: условие @media, селектор и объявления.
+const blocksOf = (css: string) =>
+  Array.from(
+    css
+      .replace(/\/\*[\s\S]*?\*\//g, '')
+      .matchAll(/(?:@media\s*([^{]+?)\s*\{\s*)?([^{}@]+?)\s*\{([^{}]*)\}/g),
+    ([, media = '', selector = '', body = '']) => ({
+      media,
+      selector: selector.trim(),
+      values: new Map(
+        Array.from(
+          body.matchAll(/([\w-]+)\s*:\s*([^;]+);/g),
+          ([, name = '', value = '']) => [name, value.trim()] as const,
+        ),
+      ),
+    }),
+  )
+
+// Темы файла токенов — `color-scheme` блока `:root`: первая — тема значений, парную включают
+// система (без выбора) и атрибут `data-theme` (выбор). `themes` — имя и значения переменных каждой
+// темы, `faults` — чем блоки тем расходятся с этой формой.
+function themesOf(css: string) {
+  const blocks = blocksOf(css)
+  const find = (media: string, selector: string) =>
+    blocks.find((block) => block.media === media && block.selector === selector)?.values
+  const root = find('', ':root') ?? new Map<string, string>()
+  const [base = '', ...pairs] = (root.get('color-scheme') ?? '').split(' ')
+  const byAttribute = (theme: string) => find('', `:root[data-theme="${theme}"]`)
+  const bySystem = (theme: string) =>
+    find(`(prefers-color-scheme: ${theme})`, `:root:not([data-theme="${base}"])`)
+  const known = new Set([
+    byAttribute(base),
+    ...pairs.flatMap((pair) => [byAttribute(pair), bySystem(pair)]),
+  ])
+  const faults = [
+    ...(base === '' ? ['у :root нет color-scheme'] : []),
+    ...blocks
+      .filter(({ media, selector }) => /prefers-color-scheme|data-theme/.test(media + selector))
+      .filter(({ values }) => !known.has(values))
+      .map(({ media, selector }) =>
+        `блок темы вне color-scheme :root: ${media} ${selector}`.replace(/ +/g, ' '),
+      ),
+    ...pairs.flatMap((pair) => {
+      const [attribute, system] = [byAttribute(pair), bySystem(pair)]
+      if (!attribute || !system) return [`тема ${pair}: нет блока по атрибуту или по системе`]
+      return [...new Set([...attribute.keys(), ...system.keys()])]
+        .filter((name) => attribute.get(name) !== system.get(name))
+        .map(
+          (name) =>
+            `тема ${pair}, ${name}: по атрибуту ${attribute.get(name)}, по системе ${system.get(name)}`,
+        )
+    }),
+    ...pairs
+      .filter((pair) => byAttribute(pair) && byAttribute(pair)?.get('color-scheme') !== pair)
+      .map((pair) => `блок :root[data-theme="${pair}"] не объявляет color-scheme ${pair}`),
+  ]
+  const themes: [Theme, ...Theme[]] = [
+    [base, root],
+    ...pairs.map((pair) => [pair, new Map([...root, ...(byAttribute(pair) ?? [])])] as const),
+  ]
+  return { themes, faults }
+}
+
+// Темы, которые сайт берёт у дизайн-системы: кнопка выбора и тема по системе — это обе темы.
+const themesOfSite = (site: Site) =>
+  site.default === 'system' || site.switcher ? ['light', 'dark'] : [site.default]
+
+// Пары «что — на чём», как их кладёт разметка сайта. Текст — 4,5:1 (WCAG 1.4.3); граница поля,
+// заливка действия и кольцо фокуса — 3:1 (WCAG 1.4.11).
+const PAIRS = [
+  ['text-primary', 'bg-canvas', 4.5],
+  ['text-primary', 'bg-surface', 4.5],
+  ['text-primary', 'bg-subtle', 4.5],
+  ['text-primary', 'bg-accent', 4.5],
+  ['text-primary', 'bg-danger', 4.5],
+  ['text-secondary', 'bg-canvas', 4.5],
+  ['text-secondary', 'bg-surface', 4.5],
+  ['text-secondary', 'bg-subtle', 4.5],
+  ['text-accent', 'bg-canvas', 4.5],
+  ['text-accent', 'bg-accent', 4.5],
+  ['text-accent', 'bg-danger', 4.5],
+  ['text-on-accent', 'bg-accent-solid', 4.5],
+  ['text-on-accent', 'bg-accent-solid-hover', 4.5],
+  ['text-danger', 'bg-canvas', 4.5],
+  ['text-danger', 'bg-accent', 4.5],
+  ['border-strong', 'bg-canvas', 3],
+  ['border-strong', 'bg-surface', 3],
+  ['border-danger', 'bg-canvas', 3],
+  ['border-danger', 'bg-surface', 3],
+  ['bg-accent-solid', 'bg-canvas', 3],
+  ['outline-focus-ring', 'bg-canvas', 3],
+  ['outline-focus-ring', 'bg-surface', 3],
+  ['outline-focus-ring', 'bg-accent', 3],
+  ['outline-focus-ring', 'bg-danger', 3],
+] as const
+
+// Относительная яркость цвета sRGB и контраст пары (WCAG 2.2).
+const luminance = (hex: string) => {
+  const [red = 0, green = 0, blue = 0] = [1, 3, 5]
+    .map((at) => Number.parseInt(hex.slice(at, at + 2), 16) / 255)
+    .map((channel) => (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4))
+  return 0.2126 * red + 0.7152 * green + 0.0722 * blue
+}
+const contrast = (front: string, back: string) => {
+  const [light = 0, dark = 0] = [luminance(front), luminance(back)].sort((a, b) => b - a)
+  return (light + 0.05) / (dark + 0.05)
+}
+
+// Пары ниже порога в каждой теме. Значение не в `#rrggbb` контраст не даёт — оно тоже названо.
+const contrastFaults = (
+  themes: readonly Theme[],
+  pairs: ReadonlyArray<readonly [string, string, number]>,
+  variable = (name: string) => name,
+) =>
+  themes.flatMap(([theme, values]) =>
+    pairs.flatMap(([front, back, least]) => {
+      const colors = [front, back].map((name) => values.get(variable(name)) ?? 'нет значения')
+      const [above = '', below = ''] = colors
+      if (!colors.every((color) => /^#[\da-f]{6}$/i.test(color))) {
+        return [`${theme}: ${front} на ${back} — не #rrggbb (${above} на ${below})`]
+      }
+      const ratio = contrast(above, below)
+      return ratio < least
+        ? [`${theme}: ${front} на ${back} — ${ratio.toFixed(2)}:1, порог ${least}:1`]
+        : []
+    }),
+  )
 
 it('тема Tailwind по умолчанию выключена: её классы не дают CSS, утилита роли — даёт', () => {
   const closed = [
@@ -88,20 +228,210 @@ it('границы раскладки слоя — breakpoint.* файла то�
   )
 })
 
-// Замена файла токенов дизайн-системой с другим набором ролей: тест называет каждую переменную,
-// которой в файле нет, — её строка слоя сопоставления ведёт в пустоту.
-it('каждая роль, на которую ссылается слой сопоставления, объявлена в файле токенов', () => {
-  const own = declared(layer)
-  const roles = declared(tokens)
-  expect([...referenced(layer)].filter((name) => !own.has(name) && !roles.has(name))).toEqual([])
-})
-
-it('темы поля THEME — ровно темы файла токенов', () => {
-  const [ofRoot = ''] = colorSchemes(tokens)
-  const ofSite = THEME.default === 'system' || THEME.switcher ? ['dark', 'light'] : [THEME.default]
-  expect(ofSite).toEqual(ofRoot.split(' ').sort())
-})
-
 it('color-scheme объявляет только файл токенов', () => {
   expect(colorSchemes(compiler.build([]))).toEqual(colorSchemes(tokens))
+})
+
+// Файл токенов в форме ds_build из тем: тема значений — блоком `:root`, отличия парных от неё —
+// блоком по системе и блоком по атрибуту.
+const render = ([base, values]: Theme, pairs: readonly Theme[] = []) => {
+  const print = (entries: Iterable<readonly [string, string]>) =>
+    Array.from(entries, ([name, value]) => `  ${name}: ${value};`).join('\n')
+  const root = new Map(values).set('color-scheme', [base, ...pairs.map(([pair]) => pair)].join(' '))
+  return [
+    `:root {\n${print(root)}\n}`,
+    ...pairs.flatMap(([pair, theirs]) => {
+      const own = print([
+        ['color-scheme', pair],
+        ...[...theirs].filter(
+          ([name, value]) => name !== 'color-scheme' && values.get(name) !== value,
+        ),
+      ])
+      return [
+        `@media (prefers-color-scheme: ${pair}) {\n:root:not([data-theme="${base}"]) {\n${own}\n}\n}`,
+        `:root[data-theme="${pair}"] {\n${own}\n}`,
+      ]
+    }),
+  ].join('\n\n')
+}
+
+// Проверки не знают значений и тем ДС шаблона: они идут по её файлу и по тем же ролям в других
+// формах ds_build — с парной темой в значениях `:root` и с одной темой, под которую стоит поле THEME.
+const [ofValues, ...ofPairs] = themesOf(tokens).themes
+const DS: Array<{ ds: string; css: string; site: Site }> = [
+  { ds: 'ДС шаблона', css: tokens, site: THEME },
+  ...ofPairs.map((pair) => ({
+    ds: `ДС шаблона, тема значений — ${pair[0]}`,
+    css: render(pair, [ofValues]),
+    site: THEME,
+  })),
+  {
+    ds: 'ДС шаблона с одной темой',
+    css: render(ofValues),
+    site: { default: ofValues[0], switcher: false },
+  },
+]
+describe.each(DS)('$ds', ({ css, site }) => {
+  const { themes, faults } = themesOf(css)
+  const names = themes.map(([name]) => name)
+
+  // Замена файла токенов дизайн-системой с другим набором ролей: тест называет каждую
+  // переменную, которой в файле нет, — её строка слоя сопоставления ведёт в пустоту.
+  it('каждая роль, на которую ссылается слой сопоставления, объявлена в файле токенов', () => {
+    const own = declared(layer)
+    const roles = declared(css)
+    expect([...referenced(layer)].filter((name) => !own.has(name) && !roles.has(name))).toEqual([])
+  })
+
+  it('парную тему система и атрибут включают одними значениями, блоков вне тем файла нет', () => {
+    expect(faults).toEqual([])
+  })
+
+  // Подмножество, а не равенство: сайту одной темы годится ДС с двумя (правило R-COV-010 strategy).
+  it('темы поля THEME есть у файла токенов', () => {
+    expect(themesOfSite(site).filter((theme) => !names.includes(theme))).toEqual([])
+  })
+
+  it('пары контраста ролей не ниже порогов в каждой теме', () => {
+    expect(contrastFaults(themes, PAIRS, roleOf)).toEqual([])
+  })
+})
+
+// Выбор темы атрибутом обязан нести и её color-scheme — иначе системные элементы (флажок, полосы
+// прокрутки) остаются в теме системы. У темы значений блока по атрибуту форма ds_build может не
+// нести: тест включается, когда блок в файле токенов есть.
+const chosen = (theme: string) =>
+  blocksOf(tokens).find(
+    ({ media, selector }) => `${media}${selector}` === `:root[data-theme="${theme}"]`,
+  )
+it.skipIf(!chosen(ofValues[0]))('выбор темы атрибутом несёт её color-scheme', () => {
+  const names = themesOf(tokens).themes.map(([name]) => name)
+  expect(names.map((theme) => chosen(theme)?.values.get('color-scheme'))).toEqual(names)
+})
+
+describe('проверки файла токенов называют нарушение', () => {
+  const INK = '--ink: #eeeeee; --paper: #111111;'
+  const TWO = [
+    ':root { color-scheme: light dark; --ink: #222222; --paper: #ffffff; }',
+    `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark; ${INK} } }`,
+    `:root[data-theme="dark"] { color-scheme: dark; ${INK} }`,
+  ]
+  const [root = '', bySystem = '', byAttribute = ''] = TWO
+  const ONE = root.replace('light dark', 'light')
+
+  it('согласованный файл — без замечаний, темы — из color-scheme блока :root', () => {
+    expect(themesOf(TWO.join('\n')).faults).toEqual([])
+    expect(themesOf(TWO.join('\n')).themes.map(([name]) => name)).toEqual(['light', 'dark'])
+    expect(themesOf(ONE).themes.map(([name]) => name)).toEqual(['light'])
+  })
+
+  it('блок темы по атрибуту расходится с блоком по системе или один из них потерян', () => {
+    const drifted = byAttribute.replace('#eeeeee', '#777777')
+    expect(themesOf([root, bySystem, drifted].join('\n')).faults).toEqual([
+      'тема dark, --ink: по атрибуту #777777, по системе #eeeeee',
+    ])
+    expect(themesOf([root, bySystem].join('\n')).faults).toEqual([
+      'тема dark: нет блока по атрибуту или по системе',
+    ])
+    const schemeless = [bySystem, byAttribute].map((block) =>
+      block.replace('color-scheme: dark; ', ''),
+    )
+    expect(themesOf([root, ...schemeless].join('\n')).faults).toEqual([
+      'блок :root[data-theme="dark"] не объявляет color-scheme dark',
+    ])
+  })
+
+  it('блок темы, которой нет в color-scheme блока :root', () => {
+    expect(themesOf([ONE, bySystem, byAttribute].join('\n')).faults).toEqual([
+      'блок темы вне color-scheme :root: (prefers-color-scheme: dark) :root:not([data-theme="light"])',
+      'блок темы вне color-scheme :root: :root[data-theme="dark"]',
+    ])
+  })
+
+  it('кнопка выбора и тема по системе при одной теме файла; тема, которой у файла нет', () => {
+    const names = themesOf(ONE).themes.map(([name]) => name)
+    const lacking = (site: Site) => themesOfSite(site).filter((theme) => !names.includes(theme))
+    expect(lacking({ default: 'system', switcher: false })).toEqual(['dark'])
+    expect(lacking({ default: 'light', switcher: true })).toEqual(['dark'])
+    expect(lacking({ default: 'dark', switcher: false })).toEqual(['dark'])
+    expect(lacking({ default: 'light', switcher: false })).toEqual([])
+  })
+
+  it('пара ниже порога — в той теме, где она ниже; значение не в #rrggbb', () => {
+    const pair = [['--ink', '--paper', 4.5]] as const
+    const dim = themesOf(TWO.join('\n').replaceAll('#eeeeee', '#555555')).themes
+    expect(contrastFaults(dim, pair)).toEqual(['dark: --ink на --paper — 2.53:1, порог 4.5:1'])
+    const translucent = themesOf(ONE.replace('#222222', 'rgb(0 0 0 / 0.5)')).themes
+    expect(contrastFaults(translucent, pair)).toEqual([
+      'light: --ink на --paper — не #rrggbb (rgb(0 0 0 / 0.5) на #ffffff)',
+    ])
+  })
+})
+
+// Разметка сайта — как её видит линтер (тот же AST): слова строк в атрибутах `class` и
+// `class:list` и классы своего <style> у каждого .astro.
+type Node = { type: string; [key: string]: unknown }
+const isNode = (value: unknown): value is Node =>
+  typeof value === 'object' && value !== null && typeof (value as Node).type === 'string'
+const read = (node: unknown, ...path: string[]) =>
+  path.reduce<unknown>(
+    (value, key) =>
+      typeof value === 'object' ? (value as Partial<Node> | null)?.[key] : undefined,
+    node,
+  )
+function* nodesOf(node: Node, inside: Node[] = []): Generator<[node: Node, inside: Node[]]> {
+  yield [node, inside]
+  for (const [key, value] of Object.entries(node)) {
+    const children: unknown[] = key === 'parent' ? [] : Array.isArray(value) ? value : [value]
+    for (const child of children) if (isNode(child)) yield* nodesOf(child, [...inside, node])
+  }
+}
+const isClass = (node: Node) =>
+  node.type === 'JSXAttribute' &&
+  (read(node, 'name', 'namespace', 'name') ?? read(node, 'name', 'name')) === 'class'
+
+const SRC = fileURLToPath(new URL('../..', import.meta.url))
+const selectors = (css: string) => new Set(css.match(/\.[a-z_][\w-]*/gi))
+const components = readdirSync(SRC, { recursive: true, encoding: 'utf8' })
+  .filter((path) => path.endsWith('.astro'))
+  .map((path) => {
+    const classes = new Set<string>()
+    const styles: unknown[] = []
+    const { ast } = parseForESLint(readFileSync(join(SRC, path), 'utf8'), {
+      parser: tseslint.parser,
+    })
+    for (const [node, inside] of nodesOf(ast as unknown as Node)) {
+      const inStyle = read(inside.at(-1), 'openingElement', 'name', 'name') === 'style'
+      if (node.type === 'AstroRawText' && inStyle) styles.push(node.value)
+      if (!inside.some(isClass)) continue
+      const words = node.type === 'TemplateElement' ? read(node, 'value', 'raw') : node.value
+      if (typeof words === 'string') for (const word of words.split(/\s+/)) classes.add(word)
+    }
+    return { path, classes: [...classes].filter(Boolean), own: selectors(styles.join('\n')) }
+  })
+
+// Строка слоя, которую берёт только разметка, удалена или класс написан мимо слоя — у класса нет
+// ни байта CSS, и сборка об этом молчит.
+it('каждый класс разметки даёт CSS: утилита слоя, класс-компонент слоя или класс своего <style>', async () => {
+  // Свежий компилятор: он копит классы, и «класс дал CSS» видно только при первом вызове.
+  const fresh = await compileLayer()
+  let css = fresh.build([])
+  const ofLayer = selectors(css)
+  const given = new Map<string, boolean>()
+  const gives = (name: string) => {
+    if (!given.has(name)) {
+      const next = fresh.build([name])
+      given.set(name, next !== css)
+      css = next
+    }
+    return given.get(name) === true
+  }
+  expect(components.length).toBeGreaterThan(0)
+  expect(
+    components.flatMap(({ path, classes, own }) =>
+      classes
+        .filter((name) => !gives(name) && !ofLayer.has(`.${name}`) && !own.has(`.${name}`))
+        .map((name) => `${path}: ${name}`),
+    ),
+  ).toEqual([])
 })

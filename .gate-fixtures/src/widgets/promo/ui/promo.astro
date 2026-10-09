@@ -9,23 +9,33 @@ import Badge from './badge.astro'
 
 const promo = process.env.PROMO === '1'
 const { PUBLIC_PROMO } = import.meta.env
-const size = 'text-body-md'
+const size = 'text-body'
 console.log(promo, getRuntimeConfig().RELEASE, config.SITE_NAME, import.meta.env.SECRET_KEY)
 ---
 
 <!-- Нарушения: сырой <img> мимо <Picture>, client:* без фреймворка островов, инлайн-style, сырой
-цвет в классе (литералом и в шаблонной строке), в атрибуте SVG и в <style>. -->
+цвет в классе (литералом и в шаблонной строке), в атрибуте SVG и в <style>; значение мимо роли —
+числовая утилита, произвольный размер и кегль в скобках, переменная ДС в классе, в атрибуте SVG и
+в <style>. -->
 <section class="promo">
   <img src="/promo.png" alt="Промо" width="10" height="10" />
   <Badge client:load />
   <p style="margin-top: 1rem">Акция</p>
-  <p class:list={['mt-4', 'text-[#e11d48]']}>Скидка</p>
+  <p class:list={['mt-md', 'text-[#e11d48]']}>Скидка</p>
   <p class={`text-[#e11d48] ${size}`}>{PUBLIC_PROMO}</p>
   <svg viewBox="0 0 1 1" aria-hidden="true"><path fill="#e11d48" d="M0 0h1v1H0z" /></svg>
+  <p class:list={['px-6', '-mt-1.5', 'tablet:w-1/2', 'h-px']}>Числа</p>
+  <p class="grid-cols-[8rem_1fr] text-[22px]">Скобки</p>
+  <p class="bg-(--primitive-color-accent-700)">Примитив</p>
+  <p class={`text-[var(--color-text-primary)] ${size}`}>Роль мимо слоя</p>
+  <svg viewBox="0 0 1 1" aria-hidden="true">
+    <path fill="var(--primitive-color-red-700)" d="M0 0h1v1H0z" />
+  </svg>
 </section>
 
 <style>
   .promo {
     color: #e11d48;
+    margin-top: var(--space-md);
   }
 </style>

@@ -49,8 +49,8 @@ export const CLEAN_PARAMS: readonly string[] = ['yclid', 'gclid', 'fbclid', 'ope
 
 // Тема сайта — решение проекта (блок `themes` брифа strategy); значения тем — файл токенов ДС
 // src/app/styles/tokens.css. `default`: `system` — по настройке системы, иначе одна тема атрибутом
-// `data-theme`; `switcher` — кнопка выбора в шапке и остров темы. Темы поля — ровно темы файла
-// токенов: расхождение называет тест токен-слоя.
+// `data-theme`; `switcher` — кнопка выбора в шапке и остров темы. Темы поля есть у файла токенов
+// (кнопке и теме по системе нужны обе): расхождение называет тест токен-слоя.
 export const THEME: {
   readonly default: 'system' | 'light' | 'dark'
   readonly switcher: boolean
