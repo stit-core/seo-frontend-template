@@ -19,9 +19,9 @@ const { locale, posts, pagination } = Astro.props
 ---
 
 {posts.length === 0 ? (
-  <p class="text-body-md text-secondary">{t(locale, 'blog.empty')}</p>
+  <p class="text-body text-secondary">{t(locale, 'blog.empty')}</p>
 ) : (
-  <div class="flex flex-col gap-8">
+  <div class="flex flex-col gap-xl">
     {posts.map((post) => (
       <PostCard post={post} />
     ))}
@@ -30,7 +30,7 @@ const { locale, posts, pagination } = Astro.props
 {pagination && pagination.last > 1 && (
   <nav
     aria-label={t(locale, 'blog.pagination')}
-    class="mt-10 flex items-center justify-between gap-6 text-body-sm"
+    class="mt-2xl flex items-center justify-between gap-lg text-helper"
   >
     <span>
       {pagination.newerHref && (

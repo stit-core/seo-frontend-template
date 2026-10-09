@@ -16,12 +16,12 @@ const { locale } = Astro.props
   description={t(locale, 'thanks.lead')}
   noindex
 >
-  <h1 class="text-heading-xl font-semibold tracking-tight">{t(locale, 'thanks.title')}</h1>
-  <p class="mt-4 text-body-lg text-secondary">{t(locale, 'thanks.lead')}</p>
-  <p class="mt-8">
+  <h1 class="text-page-title">{t(locale, 'thanks.title')}</h1>
+  <p class="mt-stack-display text-lead text-secondary">{t(locale, 'thanks.lead')}</p>
+  <p class="mt-xl">
     <a class="button" href={localePath(locale, '/contacts')}>
       {t(locale, 'thanks.back')}
     </a>
   </p>
-  <CompanyContacts locale={locale} class="mt-12 border-t border-subtle pt-8" />
+  <CompanyContacts locale={locale} class="mt-section-s border-t border-subtle pt-xl" />
 </DocumentLayout>

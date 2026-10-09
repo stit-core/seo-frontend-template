@@ -10,10 +10,10 @@
  * ДС (одноимённая пара — ссылка на себя). `inline`: утилита несёт ссылку на роль, и блок темы
  * файла токенов переключает её значение. */
 @theme inline {
-  /* Палитра и гарнитуры Tailwind по умолчанию выключены: `text-zinc-500` и `font-mono` не дают
-   * ни байта CSS (держит index.server.test.ts). */
-  --color-*: initial;
-  --font-*: initial;
+  /* Тема Tailwind по умолчанию выключена целиком: значение есть только у роли. Палитра, гарнитуры,
+   * кегли, числовая шкала отступов, радиусы, контейнеры и границы по умолчанию не дают ни байта
+   * CSS (держит index.server.test.ts). */
+  --*: initial;
 
   --background-color-canvas: var(--color-bg-canvas);
   --background-color-surface: var(--color-bg-surface);
@@ -40,37 +40,111 @@
   /* Гарнитуры текста и кода страница получает от базовых стилей Tailwind. */
   --default-font-family: var(--font-text);
   --default-mono-font-family: var(--font-mono);
-}
 
-@theme {
-  --text-body-sm: 0.8125rem;
-  --text-body-sm--line-height: 1.25rem;
-  --text-body-md: 1rem;
-  --text-body-md--line-height: 1.625rem;
-  --text-body-lg: 1.1875rem;
-  --text-body-lg--line-height: 1.8125rem;
-  --text-heading-md: 1.375rem;
-  --text-heading-md--line-height: 1.75rem;
-  --text-heading-lg: 1.75rem;
-  --text-heading-lg--line-height: 2.125rem;
-  --text-heading-xl: 2.125rem;
-  --text-heading-xl--line-height: 2.5rem;
-  --text-display: 2.75rem;
-  --text-display--line-height: 3rem;
+  /* Роль текста — одна утилита: кегль, интерлиньяж, насыщенность и трекинг. */
+  --text-page-title-lg: var(--type-page-title-lg-size);
+  --text-page-title-lg--line-height: var(--type-page-title-lg-leading);
+  --text-page-title-lg--font-weight: var(--type-page-title-lg-weight);
+  --text-page-title-lg--letter-spacing: var(--type-page-title-lg-tracking);
+  --text-page-title: var(--type-page-title-size);
+  --text-page-title--line-height: var(--type-page-title-leading);
+  --text-page-title--font-weight: var(--type-page-title-weight);
+  --text-page-title--letter-spacing: var(--type-page-title-tracking);
+  --text-section: var(--type-section-size);
+  --text-section--line-height: var(--type-section-leading);
+  --text-section--font-weight: var(--type-section-weight);
+  --text-section--letter-spacing: var(--type-section-tracking);
+  --text-card-title: var(--type-card-title-size);
+  --text-card-title--line-height: var(--type-card-title-leading);
+  --text-card-title--font-weight: var(--type-card-title-weight);
+  --text-card-title--letter-spacing: var(--type-card-title-tracking);
+  --text-lead: var(--type-lead-size);
+  --text-lead--line-height: var(--type-lead-leading);
+  --text-lead--font-weight: var(--type-lead-weight);
+  --text-lead--letter-spacing: var(--type-lead-tracking);
+  --text-body: var(--type-body-size);
+  --text-body--line-height: var(--type-body-leading);
+  --text-body--font-weight: var(--type-body-weight);
+  --text-body--letter-spacing: var(--type-body-tracking);
+  --text-body-long: var(--type-body-long-size);
+  --text-body-long--line-height: var(--type-body-long-leading);
+  --text-body-long--font-weight: var(--type-body-long-weight);
+  --text-body-long--letter-spacing: var(--type-body-long-tracking);
+  --text-body-strong: var(--type-body-strong-size);
+  --text-body-strong--line-height: var(--type-body-strong-leading);
+  --text-body-strong--font-weight: var(--type-body-strong-weight);
+  --text-body-strong--letter-spacing: var(--type-body-strong-tracking);
+  --text-label: var(--type-label-size);
+  --text-label--line-height: var(--type-label-leading);
+  --text-label--font-weight: var(--type-label-weight);
+  --text-label--letter-spacing: var(--type-label-tracking);
+  --text-helper: var(--type-helper-size);
+  --text-helper--line-height: var(--type-helper-leading);
+  --text-helper--font-weight: var(--type-helper-weight);
+  --text-helper--letter-spacing: var(--type-helper-tracking);
+  --text-button: var(--type-button-size);
+  --text-button--line-height: var(--type-button-leading);
+  --text-button--font-weight: var(--type-button-weight);
+  --text-button--letter-spacing: var(--type-button-tracking);
+  --text-code: var(--type-code-size);
+  --text-code--line-height: var(--type-code-leading);
+  --text-code--font-weight: var(--type-code-weight);
+  --text-code--letter-spacing: var(--type-code-tracking);
 
-  --radius-control: 0.5rem;
-  --radius-panel: 0.875rem;
+  /* Отступы и размеры — шаг шкалы `space.*`; числовой шкалы нет, ноль — сброс, а не значение. */
+  --spacing-0: 0;
+  --spacing-3xs: var(--space-3xs);
+  --spacing-2xs: var(--space-2xs);
+  --spacing-xs: var(--space-xs);
+  --spacing-sm: var(--space-sm);
+  --spacing-md: var(--space-md);
+  --spacing-lg: var(--space-lg);
+  --spacing-xl: var(--space-xl);
+  --spacing-2xl: var(--space-2xl);
+  --spacing-3xl: var(--space-3xl);
+  --spacing-4xl: var(--space-4xl);
+  --spacing-5xl: var(--space-5xl);
 
-  /* Колонка чтения ≈ 72 знака; каркас сайта (шапка, подвал) чуть шире — он обрамляет её. */
-  --container-content: 40rem;
-  --container-page: 48rem;
+  /* Ритм страницы: поля, шаг между разделами, отступ под заголовком. */
+  --spacing-page-x: var(--rhythm-page-x);
+  --spacing-section-s: var(--rhythm-section-s);
+  --spacing-section-m: var(--rhythm-section-m);
+  --spacing-section-l: var(--rhythm-section-l);
+  --spacing-stack-display: var(--rhythm-stack-display);
+
+  --spacing-control-md: var(--size-control-md);
+  --spacing-icon-md: var(--size-icon-md);
+  --spacing-thumbnail: var(--size-thumbnail);
+  --container-measure: var(--size-measure);
+  --container-container: var(--size-container);
+  --grid-template-columns-terms: var(--size-term) minmax(0, 1fr);
+
+  /* Имя ключа — назначение: шаги шкалы (`--radius-md`) заняты переменными ДС. */
+  --radius-focus: var(--radius-xs);
+  --radius-code: var(--radius-sm);
+  --radius-control: var(--radius-md);
+  --radius-panel: var(--radius-lg);
+
+  --default-border-width: var(--border-width-default);
+  --border-width-thick: var(--border-width-strong);
+  --outline-width-focus: var(--border-width-focus);
+  --outline-offset-focus: var(--border-offset-focus);
+  --text-decoration-thickness-thin: var(--border-width-default);
+  --text-decoration-thickness-thick: var(--border-width-strong);
+  --text-underline-offset-link: var(--border-offset-underline);
+  --text-underline-offset-marker: var(--space-xs);
+
+  /* Границы раскладки — значениями: в условии @media `var()` не работает. Равенство с
+   * `breakpoint.*` файла токенов держит index.server.test.ts. */
+  --breakpoint-tablet: 40rem;
+  --breakpoint-desktop: 60rem;
 }
 
 @layer base {
   body {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    @apply bg-canvas text-primary;
+    @apply bg-canvas text-body text-primary;
   }
 
   /* Даты и числа в мета-строках не должны «прыгать» по ширине. */
@@ -80,21 +154,15 @@
   }
 
   a {
-    text-decoration: underline;
-    text-decoration-thickness: 1px;
-    text-underline-offset: 0.2em;
-    @apply text-accent;
+    @apply text-accent underline decoration-thin underline-offset-link;
   }
 
   a:hover {
-    text-decoration-thickness: 2px;
+    @apply decoration-thick;
   }
 
   :focus-visible {
-    outline: 2px solid;
-    outline-offset: 2px;
-    border-radius: 2px;
-    @apply outline-focus-ring;
+    @apply rounded-focus outline-focus outline-offset-focus outline-focus-ring;
   }
 
   ::selection {
@@ -107,24 +175,14 @@
   .section-title::before {
     content: "";
     display: block;
-    width: 2rem;
-    height: 2px;
-    margin-bottom: 0.75rem;
-    border-radius: 1px;
-    @apply bg-accent-solid;
+    @apply mb-sm w-xl border-t-thick border-accent;
   }
 
   /* Поля формы: одна геометрия на input, textarea и select. */
   .field {
     display: block;
     width: 100%;
-    padding: 0.625rem 0.75rem;
-    border: 1px solid;
-    border-radius: var(--radius-control);
-    font-family: inherit;
-    font-size: var(--text-body-md);
-    line-height: var(--text-body-md--line-height);
-    @apply border-strong bg-surface text-primary;
+    @apply min-h-control-md rounded-control border border-strong bg-surface px-sm py-xs text-body text-primary;
   }
 
   .field::placeholder {
@@ -132,9 +190,7 @@
   }
 
   .field:focus-visible {
-    outline: 2px solid;
-    outline-offset: 1px;
-    @apply border-focus-ring outline-focus-ring;
+    @apply border-focus-ring;
   }
 
   .field[aria-invalid="true"] {
@@ -146,14 +202,9 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-height: 2.75rem;
-    padding: 0.625rem 1.25rem;
-    border-radius: var(--radius-control);
-    font-size: var(--text-body-md);
-    font-weight: 600;
     text-decoration: none;
     cursor: pointer;
-    @apply bg-accent-solid text-on-accent;
+    @apply min-h-control-md rounded-control bg-accent-solid px-lg py-xs text-button text-on-accent;
   }
 
   .button:hover {
@@ -168,12 +219,7 @@
 
   /* Врезка рядом с формой и на юридических страницах: тон вместо рамки-коробки. */
   .note {
-    border-left: 2px solid;
-    border-radius: 0 var(--radius-control) var(--radius-control) 0;
-    padding: 0.875rem 1rem;
-    font-size: var(--text-body-sm);
-    line-height: 1.5rem;
-    @apply border-accent bg-accent;
+    @apply rounded-r-control border-l-thick border-accent bg-accent p-md text-helper;
   }
 }
 
@@ -181,35 +227,24 @@
  * поэтому единственный класс `prose` собран из тех же ролей. */
 @layer components {
   .prose {
-    font-size: var(--text-body-md);
-    line-height: 1.75;
+    @apply text-body-long;
   }
 
   .prose > * + * {
-    margin-top: 1.1em;
-  }
-
-  .prose h2,
-  .prose h3 {
-    font-weight: 600;
-    letter-spacing: -0.01em;
+    @apply mt-md;
   }
 
   .prose h2 {
-    margin-top: 2em;
-    font-size: var(--text-heading-md);
-    line-height: var(--text-heading-md--line-height);
+    @apply mt-2xl text-section;
   }
 
   .prose h3 {
-    margin-top: 1.5em;
-    font-size: var(--text-body-lg);
-    line-height: var(--text-body-lg--line-height);
+    @apply mt-xl text-body-strong;
   }
 
   .prose ul,
   .prose ol {
-    padding-left: 1.5rem;
+    @apply pl-lg;
   }
 
   .prose ul {
@@ -225,48 +260,27 @@
   }
 
   .prose li + li {
-    margin-top: 0.375em;
+    @apply mt-xs;
   }
 
-  .prose strong {
-    font-weight: 600;
-  }
-
-  .prose code {
-    font-size: 0.9em;
-    border-radius: 0.25rem;
-    padding: 0.1em 0.35em;
-    @apply bg-subtle;
+  .prose :not(pre) > code {
+    @apply rounded-code bg-subtle px-2xs py-3xs text-code;
   }
 
   .prose pre {
-    border-radius: var(--radius-control);
-    padding: 1rem;
     overflow-x: auto;
-    @apply bg-subtle;
-  }
-
-  .prose pre code {
-    background: none;
-    padding: 0;
-    font-size: var(--text-body-sm);
+    @apply rounded-control bg-subtle p-md text-code;
   }
 
   .prose blockquote {
-    border-left: 2px solid;
-    padding-left: 1rem;
-    @apply border-accent text-secondary;
+    @apply border-l-thick border-accent pl-md text-secondary;
   }
 
   .prose img {
-    max-width: 100%;
-    height: auto;
-    border-radius: var(--radius-panel);
+    @apply rounded-panel;
   }
 
   .prose hr {
-    border: 0;
-    border-top: 1px solid;
-    @apply border-subtle;
+    @apply border-t border-subtle;
   }
 }

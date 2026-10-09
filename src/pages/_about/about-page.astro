@@ -73,22 +73,22 @@ const address = COMPANY.address[locale]
     breadcrumbList(crumbs),
   ]}
 >
-  <Breadcrumbs locale={locale} items={crumbs} class="mb-4" />
-  <h1 class="text-heading-xl font-semibold tracking-tight">{heading}</h1>
-  <p class="mt-4 text-body-lg text-secondary">{copy.lead}</p>
+  <Breadcrumbs locale={locale} items={crumbs} class="mb-md" />
+  <h1 class="text-page-title">{heading}</h1>
+  <p class="mt-stack-display text-lead text-secondary">{copy.lead}</p>
 
-  <h2 class="section-title mt-12 text-heading-md font-semibold">{copy.work}</h2>
-  <ul class="mt-6 grid gap-4 text-body-md">
+  <h2 class="section-title mt-section-s text-section">{copy.work}</h2>
+  <ul class="mt-lg grid gap-md text-body">
     {copy.works.map((item) => (
-      <li class="border-l-2 border-subtle pl-4">{item}</li>
+      <li class="border-l-thick border-subtle pl-md">{item}</li>
     ))}
   </ul>
 
-  <h2 class="section-title mt-14 text-heading-md font-semibold">{copy.details}</h2>
-  <dl class="mt-6 grid gap-x-8 gap-y-3 text-body-md sm:grid-cols-[9rem_minmax(0,1fr)]">
+  <h2 class="section-title mt-section-s text-section">{copy.details}</h2>
+  <dl class="mt-lg grid gap-x-xl gap-y-sm text-body tablet:grid-cols-terms">
     <dt class="text-secondary">{copy.legalNameLabel}</dt>
     <dd>{COMPANY.legalName}</dd>
   </dl>
-  <CompanyContacts locale={locale} class="mt-3" />
-  <p class="note mt-8">{copy.note}</p>
+  <CompanyContacts locale={locale} class="mt-sm" />
+  <p class="note mt-xl">{copy.note}</p>
 </DocumentLayout>

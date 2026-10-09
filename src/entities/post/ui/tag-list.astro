@@ -13,7 +13,7 @@ const { locale, tags, class: className } = Astro.props
 
 {tags.length > 0 && (
   <ul
-    class:list={['flex flex-wrap gap-x-3 gap-y-1 text-body-sm', className]}
+    class:list={['flex flex-wrap gap-x-sm gap-y-2xs text-helper', className]}
     aria-label={t(locale, 'blog.tags')}
   >
     {tags.map((tag) => (

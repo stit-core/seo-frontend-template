@@ -57,12 +57,12 @@ const crumbs = [
   noindex={noindex}
   jsonLd={noindex ? [] : [breadcrumbList(crumbs)]}
 >
-  <Breadcrumbs locale={locale} items={crumbs} class="mb-4" />
-  <h1 class="text-heading-xl font-semibold tracking-tight">{copy.title}</h1>
-  <p class="mt-4 text-body-lg text-secondary">{copy.lead}</p>
+  <Breadcrumbs locale={locale} items={crumbs} class="mb-md" />
+  <h1 class="text-page-title">{copy.title}</h1>
+  <p class="mt-stack-display text-lead text-secondary">{copy.lead}</p>
 
-  <h2 class="section-title mt-12 text-heading-md font-semibold">{copy.form}</h2>
-  <div class="mt-6">
+  <h2 class="section-title mt-section-s text-section">{copy.form}</h2>
+  <div class="mt-lg">
     <ContactForm
       locale={locale}
       action="/api/contact"
@@ -73,7 +73,7 @@ const crumbs = [
     />
   </div>
 
-  <h2 class="section-title mt-14 text-heading-md font-semibold">{copy.other}</h2>
-  <CompanyContacts locale={locale} class="mt-6" />
-  <p class="note mt-8">{copy.note}</p>
+  <h2 class="section-title mt-section-s text-section">{copy.other}</h2>
+  <CompanyContacts locale={locale} class="mt-lg" />
+  <p class="note mt-xl">{copy.note}</p>
 </DocumentLayout>

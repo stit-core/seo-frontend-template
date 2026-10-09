@@ -44,11 +44,11 @@ const describedBy = (id: string, failed: boolean): string | undefined =>
 {(failures.length > 0 || notice) && (
   <div
     role="alert"
-    class="mb-6 rounded-control border-l-2 border-danger bg-danger px-4 py-3 text-body-md"
+    class="mb-lg rounded-control border-l-thick border-danger bg-danger px-md py-sm text-body"
   >
     <p>{notice ? t(locale, notice) : t(locale, 'form.summary')}</p>
     {failures.length > 0 && (
-      <ul class="mt-2 list-disc space-y-1 pl-5 text-body-sm">
+      <ul class="mt-xs list-disc space-y-2xs pl-lg text-helper">
         {failures.map((failure) => (
           <li>
             <a href={`#${failure.id}`}>{t(locale, failure.key)}</a>
@@ -59,15 +59,15 @@ const describedBy = (id: string, failed: boolean): string | undefined =>
   </div>
 )}
 
-<form method="post" action={action} class="grid gap-5">
+<form method="post" action={action} class="grid gap-lg">
   <input type="hidden" name={LOCALE_FIELD} value={locale} />
 
   <div>
-    <label class="block text-body-sm font-medium" for="contact-name">
+    <label class="block text-label" for="contact-name">
       {t(locale, 'form.name')}
     </label>
     <input
-      class="field mt-1.5"
+      class="field mt-xs"
       id="contact-name"
       name="name"
       type="text"
@@ -80,18 +80,18 @@ const describedBy = (id: string, failed: boolean): string | undefined =>
       aria-describedby={describedBy('contact-name', errors.name !== undefined)}
     />
     {errors.name && (
-      <p class="mt-1.5 text-body-sm text-danger" id="contact-name-error">
+      <p class="mt-xs text-helper text-danger" id="contact-name-error">
         {t(locale, errors.name)}
       </p>
     )}
   </div>
 
   <div>
-    <label class="block text-body-sm font-medium" for="contact-email">
+    <label class="block text-label" for="contact-email">
       {t(locale, 'form.email')}
     </label>
     <input
-      class="field mt-1.5"
+      class="field mt-xs"
       id="contact-email"
       name="email"
       type="email"
@@ -103,18 +103,18 @@ const describedBy = (id: string, failed: boolean): string | undefined =>
       aria-describedby={describedBy('contact-email', errors.email !== undefined)}
     />
     {errors.email && (
-      <p class="mt-1.5 text-body-sm text-danger" id="contact-email-error">
+      <p class="mt-xs text-helper text-danger" id="contact-email-error">
         {t(locale, errors.email)}
       </p>
     )}
   </div>
 
   <div>
-    <label class="block text-body-sm font-medium" for="contact-message">
+    <label class="block text-label" for="contact-message">
       {t(locale, 'form.message')}
     </label>
     <textarea
-      class="field mt-1.5 resize-y"
+      class="field mt-xs resize-y"
       id="contact-message"
       name="message"
       rows="6"
@@ -125,7 +125,7 @@ const describedBy = (id: string, failed: boolean): string | undefined =>
       aria-describedby={describedBy('contact-message', errors.message !== undefined)}
     >{values.message}</textarea>
     {errors.message && (
-      <p class="mt-1.5 text-body-sm text-danger" id="contact-message-error">
+      <p class="mt-xs text-helper text-danger" id="contact-message-error">
         {t(locale, errors.message)}
       </p>
     )}
@@ -143,9 +143,9 @@ const describedBy = (id: string, failed: boolean): string | undefined =>
   </div>
 
   <div class="note">
-    <label class="flex items-start gap-3" for="contact-consent">
+    <label class="flex items-start gap-sm" for="contact-consent">
       <input
-        class="mt-0.5 size-4 shrink-0"
+        class="mt-3xs size-md shrink-0"
         id="contact-consent"
         name="consent"
         type="checkbox"
@@ -160,7 +160,7 @@ const describedBy = (id: string, failed: boolean): string | undefined =>
       </span>
     </label>
     {errors.consent && (
-      <p class="mt-2 text-body-sm text-danger" id="contact-consent-error">
+      <p class="mt-xs text-helper text-danger" id="contact-consent-error">
         {t(locale, errors.consent)}
       </p>
     )}

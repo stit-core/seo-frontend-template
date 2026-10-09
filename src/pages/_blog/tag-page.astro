@@ -24,9 +24,9 @@ const model = await tagPageModel(locale, tag)
   description={model.description}
   jsonLd={model.jsonLd}
 >
-  <Breadcrumbs locale={locale} items={model.crumbs} class="mb-4" />
-  <h1 class="text-heading-xl font-semibold tracking-tight">{model.heading}</h1>
-  <div class="mt-10">
+  <Breadcrumbs locale={locale} items={model.crumbs} class="mb-md" />
+  <h1 class="text-page-title">{model.heading}</h1>
+  <div class="mt-2xl">
     <PostList locale={locale} posts={posts} />
   </div>
 </DocumentLayout>

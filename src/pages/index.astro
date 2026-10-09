@@ -39,39 +39,37 @@ const facts = [
   description="Static-first шаблон сайта на Astro 7: prerender по умолчанию, ноль JavaScript на контентных страницах, один Docker-образ на все среды."
   jsonLd={[organization(), webSite()]}
 >
-  <h1 class="text-heading-xl font-semibold tracking-tight sm:text-display">
-    Шаблон индексируемого сайта
-  </h1>
-  <p class="mt-5 text-body-lg text-secondary">
+  <h1 class="text-page-title tablet:text-page-title-lg">Шаблон индексируемого сайта</h1>
+  <p class="mt-stack-display text-lead text-secondary">
     Страницы собираются заранее и отдаются Node-процессом как файлы. Серверный рендер включается
     там, где без запроса не обойтись: редиректы, robots.txt, форма.
   </p>
-  <p class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+  <p class="mt-xl flex flex-wrap items-center gap-x-lg gap-y-sm">
     <a class="button" href={blogPath(locale)}>
       {t(locale, 'blog.all')}
     </a>
     <a href={localePath(locale, '/contacts')}>{t(locale, 'nav.contacts')}</a>
   </p>
 
-  <h2 class="section-title mt-16 text-heading-md font-semibold">Что внутри</h2>
-  <dl class="mt-6 grid gap-x-8 gap-y-5 text-body-md sm:grid-cols-[8rem_minmax(0,1fr)]">
+  <h2 class="section-title mt-section-m text-section">Что внутри</h2>
+  <dl class="mt-lg grid gap-x-xl gap-y-md text-body tablet:grid-cols-terms">
     {facts.map((fact) => (
       <Fragment>
-        <dt class="font-medium text-primary">{fact.term}</dt>
+        <dt class="text-body-strong text-primary">{fact.term}</dt>
         <dd class="text-secondary">{fact.text}</dd>
       </Fragment>
     ))}
   </dl>
 
-  <h2 class="section-title mt-16 text-heading-md font-semibold">{t(locale, 'blog.latest')}</h2>
-  <div class="mt-6">
+  <h2 class="section-title mt-section-m text-section">{t(locale, 'blog.latest')}</h2>
+  <div class="mt-lg">
     <PostList locale={locale} posts={latest} />
   </div>
-  <p class="mt-8">
+  <p class="mt-xl">
     <a href={blogPath(locale)}>{t(locale, 'blog.all')}</a>
   </p>
 
-  <p class="note mt-16">
+  <p class="note mt-section-m">
     Это стартовая страница шаблона: замените текст и записи своими. Команды, структура репозитория и
     путь потребителя описаны в README.
   </p>

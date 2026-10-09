@@ -52,13 +52,17 @@ status: draft
 сабсет кириллицы, preload не больше одного файла активной локали, бюджет ≤ 60 КБ.
 Astro Fonts API (`subsets: ['cyrillic','latin']`) — способ его подключить.
 
-## Типографика и колонки
+## Типографика, отступы и размеры
 
 | поле | значение |
 |---|---|
-| шкала | `text-body-sm/md/lg`, `text-heading-md/lg/xl` |
-| колонка чтения | `max-w-content` (≈ 72 знака) |
-| каркас страницы | `max-w-page` |
+| роли текста | `--type-<роль>-{size,leading,weight,tracking}` → одна утилита `text-<роль>`: `page-title`, `page-title-lg`, `section`, `card-title`, `lead`, `body`, `body-long`, `body-strong`, `label`, `helper`, `button`, `code` |
+| отступы | шкала `--space-3xs…5xl` (`mt-md`, `gap-x-lg`) и ритм страницы `--rhythm-page-x`, `--rhythm-section-s\|m\|l`, `--rhythm-stack-display`; числовой шкалы Tailwind нет |
+| размеры и радиусы | `--size-control-md`, `--size-icon-md`, `--size-thumbnail`, `--size-term`; `--radius-xs…lg` → `rounded-focus\|code\|control\|panel` |
+| линии | `--border-width-default\|strong\|focus`, `--border-offset-focus\|underline` |
+| колонка чтения | `--size-measure` → `max-w-measure` (≈ 72 знака) |
+| каркас страницы | `--size-container` → `max-w-container` |
+| границы раскладки | `--breakpoint-tablet` (40rem), `--breakpoint-desktop` (60rem) → варианты `tablet:`, `desktop:` |
 | scoped `<style>` | только layout (grid, позиционирование); цвета и типографика — утилитами |
 
 ## Бюджет

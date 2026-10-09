@@ -11,7 +11,7 @@ const { locale, class: className } = Astro.props
 const address = COMPANY.address[locale]
 ---
 
-<dl class:list={['grid gap-x-8 gap-y-3 text-body-md sm:grid-cols-[9rem_minmax(0,1fr)]', className]}>
+<dl class:list={['grid gap-x-xl gap-y-sm text-body tablet:grid-cols-terms', className]}>
   <dt class="text-secondary">{t(locale, 'company.email')}</dt>
   <dd>
     <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>

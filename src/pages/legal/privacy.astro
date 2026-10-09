@@ -29,16 +29,16 @@ const revision = formatDate(locale, new Date(PRIVACY_POLICY_VERSION))
   description={description}
   jsonLd={[breadcrumbList(crumbs)]}
 >
-  <Breadcrumbs locale={locale} items={crumbs} class="mb-4" />
-  <h1 class="text-heading-xl font-semibold tracking-tight">{title}</h1>
-  <p class="mt-4 text-body-sm text-secondary">Редакция от {revision}</p>
+  <Breadcrumbs locale={locale} items={crumbs} class="mb-md" />
+  <h1 class="text-page-title">{title}</h1>
+  <p class="mt-stack-display text-helper text-secondary">Редакция от {revision}</p>
 
-  <p class="note mt-8">
+  <p class="note mt-xl">
     Это заготовка шаблона: подставьте реквизиты оператора вместо плейсхолдеров и покажите текст
     юристу — формулировки на живом сайте отвечают за реальные процессы, а не за пример.
   </p>
 
-  <div class="prose mt-8">
+  <div class="prose mt-xl">
     <h2>1. Оператор</h2>
     <p>
       Персональные данные посетителей сайта {SITE_NAME} обрабатывает {OPERATOR.name}, ИНН{' '}

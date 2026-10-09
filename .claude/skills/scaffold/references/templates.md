@@ -47,9 +47,9 @@ const crumbs = [
   alternatePath="/<path>"
   jsonLd={[breadcrumbList(crumbs)]}
 >
-  <Breadcrumbs locale={locale} items={crumbs} class="mb-4" />
-  <h1 class="text-heading-xl font-semibold tracking-tight">{copy.title}</h1>
-  <p class="mt-4 text-body-lg text-secondary">{copy.lead}</p>
+  <Breadcrumbs locale={locale} items={crumbs} class="mb-md" />
+  <h1 class="text-page-title">{copy.title}</h1>
+  <p class="mt-stack-display text-lead text-secondary">{copy.lead}</p>
 </DocumentLayout>
 ```
 
@@ -276,7 +276,7 @@ Astro.response.headers.set('cache-control', 'private, no-store')
 ---
 
 <DocumentLayout locale={locale} title="Заголовок" description="Описание." noindex>
-  <h1 class="text-heading-xl font-semibold tracking-tight">Заголовок</h1>
+  <h1 class="text-page-title">Заголовок</h1>
 </DocumentLayout>
 ```
 

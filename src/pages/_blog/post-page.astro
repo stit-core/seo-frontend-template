@@ -25,7 +25,7 @@ const model = await postPageModel(post)
   article={model.article}
   jsonLd={model.jsonLd}
 >
-  <Breadcrumbs locale={locale} items={model.crumbs} class="mb-4" />
+  <Breadcrumbs locale={locale} items={model.crumbs} class="mb-md" />
   <PostArticle post={post}>
     {model.author && (
       <AuthorByline

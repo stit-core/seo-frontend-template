@@ -19,22 +19,22 @@ Astro.response.headers.set('cache-control', 'private, no-store')
   description="Служебная on-demand страница: время сервера на момент запроса."
   noindex
 >
-  <h1 class="text-heading-xl font-semibold tracking-tight">Время сервера</h1>
-  <p class="mt-4 text-body-lg">
+  <h1 class="text-page-title">Время сервера</h1>
+  <p class="mt-stack-display text-lead">
     <time datetime={now.toISOString()}>{formatDateTime(locale, now)}</time>
   </p>
-  <p class="mt-2 text-body-sm text-secondary">
+  <p class="mt-xs text-helper text-secondary">
     ISO 8601: <code>{now.toISOString()}</code>
   </p>
 
-  <h2 class="mt-10 text-heading-md font-semibold">Что такое on-demand в этом шаблоне</h2>
-  <p class="mt-4 text-body-md">
+  <h2 class="mt-2xl text-section">Что такое on-demand в этом шаблоне</h2>
+  <p class="mt-md text-body">
     Почти все страницы собираются один раз на сборке и отдаются Node-процессом как файлы. Эта —
     исключение: у неё стоит <code>export const prerender = false</code>, и она рендерится на каждый
     запрос, поэтому время выше — свежее. Так же устроены только служебные маршруты: проверка живости
     процесса, страница 404, robots.txt, карта сайта, фиды, обработчик формы.
   </p>
-  <p class="mt-4 text-body-md">
+  <p class="mt-md text-body">
     Ответ уходит с <code>Cache-Control: private, no-store</code> и <code>noindex</code>: живая
     страница не для общих кешей и не для поиска. JavaScript здесь, как и на остальных страницах,
     нет.

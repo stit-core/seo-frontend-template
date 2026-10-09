@@ -22,11 +22,11 @@ const model = await blogListPageModel(locale, page)
   description={model.description}
   jsonLd={model.jsonLd}
 >
-  <Breadcrumbs locale={locale} items={model.crumbs} class="mb-4" />
-  <h1 class="text-heading-xl font-semibold tracking-tight">{model.heading}</h1>
-  <p class="mt-4 text-body-lg text-secondary">{t(locale, 'blog.lead')}</p>
-  <TagList locale={locale} tags={model.tags} class="mt-6" />
-  <div class="mt-10">
+  <Breadcrumbs locale={locale} items={model.crumbs} class="mb-md" />
+  <h1 class="text-page-title">{model.heading}</h1>
+  <p class="mt-stack-display text-lead text-secondary">{t(locale, 'blog.lead')}</p>
+  <TagList locale={locale} tags={model.tags} class="mt-lg" />
+  <div class="mt-2xl">
     <PostList locale={locale} posts={page.items} pagination={model.pagination} />
   </div>
 </DocumentLayout>

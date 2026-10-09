@@ -15,11 +15,11 @@ const { locale, items, class: className } = Astro.props
 
 <nav
   aria-label={t(locale, 'nav.breadcrumbs')}
-  class:list={['text-body-sm text-secondary', className]}
+  class:list={['text-helper text-secondary', className]}
 >
-  <ol class="flex flex-wrap items-center gap-x-2">
+  <ol class="flex flex-wrap items-center gap-x-xs">
     {items.map((item, index) => (
-      <li class="flex items-center gap-x-2">
+      <li class="flex items-center gap-x-xs">
         {index > 0 && <span aria-hidden="true">›</span>}
         {item.href ? (
           <a href={item.href}>{item.name}</a>

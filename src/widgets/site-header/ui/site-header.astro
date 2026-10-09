@@ -25,16 +25,16 @@ const isCurrent = (route: string): boolean => {
 ---
 
 <header class="border-b border-subtle">
-  <div class="mx-auto flex max-w-page flex-wrap items-center justify-between gap-x-8 gap-y-3 px-6 py-4">
+  <div class="mx-auto flex max-w-container flex-wrap items-center justify-between gap-x-xl gap-y-sm px-page-x py-md">
     <a
       href={localePath(locale, '/')}
-      class="font-semibold tracking-tight text-primary no-underline hover:text-accent"
+      class="text-body-strong text-primary no-underline hover:text-accent"
     >
       {SITE_NAME}
     </a>
-    <nav aria-label={t(locale, 'nav.label')} class="w-full sm:w-auto">
+    <nav aria-label={t(locale, 'nav.label')} class="w-full tablet:w-auto">
       {/* На узком экране навигация занимает вторую строку целиком и расходится по краям. */}
-      <ul class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 text-body-sm sm:justify-end sm:gap-x-6">
+      <ul class="flex flex-wrap items-center justify-between gap-x-md gap-y-xs text-helper tablet:justify-end tablet:gap-x-lg">
         {items.map((item) => (
           <li>
             <a
@@ -43,7 +43,7 @@ const isCurrent = (route: string): boolean => {
               class:list={[
                 'no-underline hover:text-primary',
                 isCurrent(item.route)
-                  ? 'text-primary underline decoration-accent decoration-2 underline-offset-8'
+                  ? 'text-primary underline decoration-accent decoration-thick underline-offset-marker'
                   : 'text-secondary',
               ]}
             >

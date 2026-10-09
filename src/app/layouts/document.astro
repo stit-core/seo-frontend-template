@@ -74,12 +74,12 @@ const theme = THEME.default === 'system' ? undefined : THEME.default
   <body class="flex min-h-dvh flex-col">
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-10 focus:rounded-control focus:bg-accent-solid focus:px-4 focus:py-2 focus:text-on-accent"
+      class="sr-only focus:not-sr-only focus:fixed focus:top-md focus:left-md focus:z-10 focus:rounded-control focus:bg-accent-solid focus:px-md focus:py-xs focus:text-on-accent"
     >
       {t(locale, 'nav.skip')}
     </a>
     <SiteHeader locale={locale} alternatePath={alternatePath} />
-    <main id="main" class="mx-auto w-full max-w-content flex-1 px-6 py-12">
+    <main id="main" class="mx-auto w-full max-w-measure flex-1 px-page-x py-section-s">
       <slot />
     </main>
     <SiteFooter locale={locale} />
