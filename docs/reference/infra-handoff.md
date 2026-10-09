@@ -432,12 +432,23 @@ accessLog:
   (`cscli allowlists`, CrowdSec ≥ 1.6.8) и обновляются по расписанию, раз в неделю: вендоры
   меняют адреса. Источник — реестр ботов сайта `src/shared/seo/crawlers.yaml` (копия
   `crawlers.yaml` базы strategy): у записи `bots[]` поле `ip_list_url` — список сетей вендора,
-  `rdns_suffix` — суффиксы обратного DNS. Печать источников в `<org>/site` на теге релиза —
-  поисковые, user-fetch и обучающие боты, у каждого назначение, токен и оба поля:
+  `rdns_suffix` — суффиксы обратного DNS. Печать источников — команда пакета сайта, в `<org>/site`
+  на теге релиза:
 
   ```bash
-  node -e "const {load}=require('js-yaml');const {bots}=load(require('fs').readFileSync('src/shared/seo/crawlers.yaml','utf8'));for(const b of bots)if(b.kind!=='control-token'&&['search','user_fetch','training'].includes(b.purpose))console.log(b.purpose,b.user_agent_token,b.ip_list_url??'—',(b.rdns_suffix??[]).join(',')||'—')"
+  pnpm -s bots:sources
+  # crawlers.yaml sha256:<64 знака>
+  search YandexBot — yandex.ru,yandex.net,yandex.com
+  search OAI-SearchBot https://openai.com/searchbot.json —
+  training meta-externalagent — —
   ```
+
+  Первая строка — версия реестра: sha256 копии, закреплённый в политике сборки сайта (его первые
+  12 знаков называет строка `AI-BOTS` handoff релиза). Дальше — по строке на бота, который ходит в
+  сеть за поиском, по запросу человека или за обучением; в строке четыре поля через пробел:
+  назначение (`search` | `user_fetch` | `training`), токен `User-Agent`, `ip_list_url` или `—`,
+  суффиксы `rdns_suffix` через запятую или `—`. Формат держит тест сайта — своей копии команды хаб
+  не носит.
 
   Строка с `ip_list_url` — сети в `cscli allowlists`. Строка только с `rdns_suffix` (Яндекс) —
   суффиксы в rDNS-whitelist (`seo-bots-whitelist` и локальная страховка выше): `cscli allowlists`
@@ -451,8 +462,8 @@ accessLog:
   `http-bad-user-agent` хаба CrowdSec, и без allowlist edge забанит бота, которого `robots.txt`
   пускает. При `allow-search-deny-training` группа называет обучающих, при `deny-all` — ещё и
   ИИ-поиск с загрузками по запросу человека: остаются классические поисковики.
-- **Где живёт список.** Строки печати — файл репо инфры (`configs/crowdsec/ai-bots.sources`, первой
-  строкой — версия реестра), а не данные VPS: репо сайта на VPS нет, а в образе реестр — часть
+- **Где живёт список.** Вывод `pnpm -s bots:sources` как есть — файл репо инфры
+  (`configs/crowdsec/ai-bots.sources`), а не данные VPS: репо сайта на VPS нет, а в образе реестр — часть
   серверной сборки. Файл обновляет сессия в `<org>/infra`, когда строка `AI-BOTS` handoff релиза
   называет другую политику или другую версию реестра; еженедельное задание на VPS читает из него
   `ip_list_url`, сверяет токены с именной группой живого `robots.txt` и обновляет `cscli allowlists`.

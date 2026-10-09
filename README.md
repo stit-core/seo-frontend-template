@@ -70,6 +70,7 @@ pnpm kin:diff         # сверка обвязки с ../spa-frontend-template 
 pnpm ttfb <origin> …  # TTFB запущенного сервера: медиана/p90 20 запросов
 pnpm indexnow <origin> [карта-до.xml] --key <ключ>   # IndexNow после выката: адреса, которые изменил релиз
 pnpm geo:probe <origin>     # GEO-шаг /seo-audit: проба соседнего strategy по шаблонам страниц (advisory)
+pnpm bots:sources           # источники сетей ботов реестра — файл allowlist для <org>/infra
 pnpm accept:image <image>   # приёмка собранного образа до пуша в registry
 pnpm check            # gate — состав: .claude/rules/tests-pipeline.md § Gate
 ```
@@ -105,7 +106,7 @@ src/{content.config,middleware,env.d}.ts   навязанные Astro entry — 
 docker/           Dockerfile (3 стадии), entrypoint.sh + stamp.mjs (штамповка SITE_URL), server.mjs
 e2e/              Playwright на prod-сборке: http/ — в гейте, browser/ — в /release
 scripts/          гейты (check-gate, check-content, check-links, seo-check, lib/), validate-plan,
-                  pre-push, kin-diff, ttfb, indexnow, geo-probe, accept-image
+                  pre-push, kin-diff, ttfb, indexnow, geo-probe, bot-sources, accept-image
 docs/stack/       формы платформенных артефактов (12 kinds) — заполняет /stack-deep-dive
 .claude/          правила (path-scoped) и скиллы (init-service, scaffold, content, release…)
 ```
