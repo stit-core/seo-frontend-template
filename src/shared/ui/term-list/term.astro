@@ -7,6 +7,7 @@ const { name } = Astro.props
 ---
 
 <dt class="text-secondary">{name}</dt>
-<dd>
+{/* На таче строка описания — высотой цели касания: пары со ссылкой и с текстом идут одним ритмом. */}
+<dd class="pointer-coarse:min-h-control-md pointer-coarse:content-center">
   <slot />
 </dd>
