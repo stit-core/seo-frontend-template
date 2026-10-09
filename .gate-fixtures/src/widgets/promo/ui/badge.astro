@@ -14,8 +14,9 @@ const kind = wide ? 'wide' : 'narrow'
 скобках — не значение; маркеры group и peer; обводка и кольцо без своей толщины (outline-focus,
 ring-inset), линия между детьми толщиной по умолчанию (divide-y); класс — пропом class и условием
 class:list (литерал условия — не класс); цвет SVG и <style> — ключевым словом без своего цвета,
-в <style> — раскладка и сброс; контейнер запросов (@container) и max-width долей родителя — не
-ширина контейнера. -->
+в <style> — раскладка и сброс; контейнер запросов (@container) и его условие, условие @media,
+max-width долей родителя и ключевым словом без длины (max-w-none, max-w-full, max-w-fit) — не ширина
+контейнера. -->
 <span
   id="add"
   class="mt-2xl grid grid-cols-2 gap-x-3xs text-page-title-lg focus:z-10 -order-1 inset-0 rounded-none"
@@ -31,6 +32,7 @@ class:list (литерал условия — не класс); цвет SVG и 
     class:list={[
       'group peer @container col-start-2 row-start-1 grow-2 columns-2 divide-y outline-focus ring-inset',
       'nth-2:mt-md aria-[current=page]:text-primary group-data-[state=open]:flex',
+      'max-w-none max-w-full tablet:max-w-fit',
       kind === 'wide' && 'text-secondary',
       wide ? `gap-lg` : 'gap-md',
       { hidden: wide, 'text-lead': kind !== 'narrow' },
@@ -58,5 +60,17 @@ class:list (литерал условия — не класс); цвет SVG и 
 
   .stroke:hover {
     stroke: currentColor;
+  }
+
+  @container (max-width: 30rem) {
+    #add {
+      display: grid;
+    }
+  }
+
+  @media (max-width: 39.99rem) {
+    .stroke {
+      display: none;
+    }
   }
 </style>

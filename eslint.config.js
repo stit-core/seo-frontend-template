@@ -133,8 +133,9 @@ const CSS_COLOR = `${HEX}[^{};]*[;}]|${FUNCTION_COLOR}`
 const NO_COLOR = 'currentcolor|inherit|transparent|none|auto|initial|unset|revert'
 const SVG_COLOR = 'fill|stroke|color|stop-color|flood-color|lighting-color'
 const NAMED_COLOR = `^(?!(?:${NO_COLOR}|context-fill|context-stroke|freeze|remove)$)[a-z-]+$`
-// Имя свойства в CSS: не хвост другого имени и не класс или id селектора (`.stroke:hover`).
-const property = (names) => String.raw`(?<![\w.#-])(?:${names})\s*:`
+// Имя свойства в CSS: не хвост другого имени, не класс или id селектора (`.stroke:hover`) и не
+// условие `@media`, `@container` (`(max-width: 30rem)` — граница, а не объявление).
+const property = (names) => String.raw`(?<![\w.#(-])(?:${names})\s*:`
 const CSS_NAMED_COLOR = `${property(
   'color|background-color|border(?:-[a-z-]+)?-color|outline-color|text-decoration-color|fill|stroke|caret-color|accent-color',
 )}${String.raw`\s*(?!(?:${NO_COLOR})\b)[a-z]+(?![\w(-])`}`
@@ -159,9 +160,9 @@ const KEYWORD = String.raw`(?<![\w-])(?:leading-none|rounded(?:-[a-z]{1,2})?-ful
 const ARBITRARY = String.raw`(?<!(?:aria|data)-)\[|\](?!:)|[()]`
 const SCHEME = String.raw`(?<![\w-])scheme-[a-z-]+(?![\w-])`
 // Ширина контейнера: роль `max-w-*` и `container` Tailwind (границы раскладки значениями); в CSS —
-// `max-width` длиной (процент — доля родителя, страницу он не сужает). `@container` — контейнер
-// запросов, а не ширина.
-const CONTAINER_WIDTH = String.raw`(?<![\w@-])(?:container|max-w-[\w-]+)(?![\w-])`
+// `max-width` длиной (процент — доля родителя, страницу он не сужает). Ключевое слово без длины
+// (`max-w-none`, `max-w-full`, `max-w-fit`) страницу не сужает, `@container` — контейнер запросов.
+const CONTAINER_WIDTH = String.raw`(?<![\w@-])(?:container|max-w-(?!(?:none|full|fit|min|max|screen|[sld]vw|0)(?![\w-]))[\w-]+)(?![\w-])`
 const CSS_CONTAINER_WIDTH = `${property('max-(?:width|inline-size)')}${String.raw`[^;{}]*\d(?![\d.]*%)`}`
 const DS_VARIABLE = String.raw`var\(\s*--`
 const CLASS = "JSXAttribute:matches([name.name='class'], [name.namespace.name='class'])"
