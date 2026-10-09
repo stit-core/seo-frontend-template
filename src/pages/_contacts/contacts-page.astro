@@ -44,7 +44,11 @@ const COPY = {
 const copy = COPY[locale]
 // Сниппет контактов — где компания: город и адрес из реквизитов, h1 и крошка — короткие.
 const address = COMPANY.address[locale]
-const title = `${copy.title} — ${address.locality}, ${address.street}`
+const place = `${copy.title} — ${address.locality}, ${address.street}`
+// Ответ с ошибками называет отказ первым словом заголовка окна: вкладка и чтец экрана сообщают о
+// нём раньше текста страницы.
+const failed = errors !== undefined || notice !== undefined
+const title = failed ? `${t(locale, 'form.failed')}: ${place}` : place
 const crumbs = [
   { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
   { name: copy.title },

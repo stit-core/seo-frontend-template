@@ -9,6 +9,20 @@ const render = async (extra: Record<string, unknown> = {}) => {
   return container.renderToString(ContactForm, { props: { ...props, ...extra } })
 }
 
+// Сводка ошибок — объявление, подписанное своим заголовком, с фокусом при загрузке: без JS его
+// даёт `autofocus` на элементе с `tabindex="-1"`.
+function summaryOf(html: string) {
+  const box = parseHtml(html).querySelector('[role="alert"]')
+  const title = box?.querySelector('h1, h2, h3, h4')
+  return {
+    box,
+    title:
+      title?.id === box?.getAttribute('aria-labelledby') ? title?.textContent?.trim() : undefined,
+    focused: box?.getAttribute('tabindex') === '-1' && box.hasAttribute('autofocus'),
+    links: [...(box?.querySelectorAll('a') ?? [])].map((link) => link.getAttribute('href')),
+  }
+}
+
 describe('ContactForm', () => {
   it('нативная форма: POST, подписанные поля, ловушка и согласие со ссылкой на политику', async () => {
     const html = await render()
@@ -28,9 +42,12 @@ describe('ContactForm', () => {
     expect(html).toContain('required')
     // Форма работает без JS: ни одного скрипта в разметке.
     expect(html).not.toContain('<script')
+    // Пустая форма фокус не забирает: сводки нет, автофокуса — ни у одного элемента.
+    expect(summaryOf(html).box).toBeNull()
+    expect(parseHtml(html).querySelector('[autofocus]')).toBeNull()
   })
 
-  it('с ошибками: сводка, разметка полей и сохранённые значения', async () => {
+  it('с ошибками: сводка с заголовком и фокусом, ссылки на поля, разметка полей и значения', async () => {
     const html = await render({
       values: { name: 'М', email: 'not-an-email', message: 'коротко', consent: false },
       errors: {
@@ -39,9 +56,10 @@ describe('ContactForm', () => {
         consent: 'form.error.consent',
       },
     })
-    expect(html).toContain('role="alert"')
-    expect(html).toContain('Заявка не отправлена')
-    expect(html).toContain('href="#contact-name"')
+    const summary = summaryOf(html)
+    expect(summary.title).toBe('Заявка не отправлена')
+    expect(summary.focused).toBe(true)
+    expect(summary.links).toEqual(['#contact-name', '#contact-email', '#contact-consent'])
     expect(html).toContain('aria-invalid="true"')
     expect(html).toContain('aria-describedby="contact-email-error"')
     expect(html).toContain('id="contact-consent-error"')
@@ -49,11 +67,12 @@ describe('ContactForm', () => {
     expect(html).toContain('>коротко</textarea>')
   })
 
-  it('сбой доставки показывается сводкой вместо ошибок полей', async () => {
-    const html = await render({ notice: 'form.error.delivery' })
-    expect(html).toContain('role="alert"')
-    expect(html).toContain('сбой доставки')
-    expect(html).not.toContain('href="#contact-name"')
+  it('сбой доставки показывается той же сводкой — с заголовком и фокусом, без ссылок на поля', async () => {
+    const summary = summaryOf(await render({ notice: 'form.error.delivery' }))
+    expect(summary.title).toBe('Заявка не отправлена')
+    expect(summary.focused).toBe(true)
+    expect(summary.box?.textContent).toContain('сбой доставки')
+    expect(summary.links).toEqual([])
   })
 
   it('не имеет нарушений доступности — и пустая, и с ошибками', async () => {

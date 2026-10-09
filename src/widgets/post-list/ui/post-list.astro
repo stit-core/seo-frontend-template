@@ -34,7 +34,7 @@ const { locale, posts, pagination } = Astro.props
   >
     <span>
       {pagination.newerHref && (
-        <a href={pagination.newerHref} rel="prev">
+        <a class="touch-target" href={pagination.newerHref} rel="prev">
           ← {t(locale, 'blog.newer')}
         </a>
       )}
@@ -44,7 +44,7 @@ const { locale, posts, pagination } = Astro.props
     </span>
     <span>
       {pagination.olderHref && (
-        <a href={pagination.olderHref} rel="next">
+        <a class="touch-target" href={pagination.olderHref} rel="next">
           {t(locale, 'blog.older')} →
         </a>
       )}

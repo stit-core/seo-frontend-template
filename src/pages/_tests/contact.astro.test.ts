@@ -2,6 +2,7 @@ import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { t } from '@/shared/i18n'
 import { parseHtml } from '@/shared/lib/testing'
 import Contact from '../api/contact.astro'
+import Contacts from '../contacts/index.astro'
 
 const ORIGIN = 'https://demo.example'
 
@@ -96,6 +97,8 @@ describe('/api/contact', () => {
     expect(doc.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex')
     expect(html).toContain('role="alert"')
     expect(html).toContain('value="Мария"')
+    // Отказ — первое слово заголовка окна: вкладка и чтец экрана называют его раньше страницы.
+    expect(doc.title).toMatch(/^Error: Contacts — /)
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
@@ -105,9 +108,17 @@ describe('/api/contact', () => {
     expect(response.status).toBe(500)
     expect(response.headers.get('cache-control')).toBe('private, no-store')
     const html = await response.text()
+    const doc = parseHtml(html)
     expect(html).toContain(t('ru', 'form.error.delivery'))
-    expect(parseHtml(html).querySelector('meta[name="robots"]')?.getAttribute('content')).toBe(
-      'noindex',
-    )
+    expect(doc.title).toMatch(/^Ошибка: Контакты — /)
+    expect(doc.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex')
+  })
+
+  it('страница с формой до отправки — заголовок окна без слова об ошибке', async () => {
+    const html = await container.renderToString(Contacts, {
+      request: new Request(`${ORIGIN}/contacts`),
+      partial: false,
+    })
+    expect(parseHtml(html).title).toMatch(/^Контакты — /)
   })
 })

@@ -32,7 +32,7 @@ const isCurrent = (route: string): boolean => {
   >
     <a
       href={localePath(locale, '/')}
-      class="text-body-strong text-primary no-underline hover:text-accent"
+      class="touch-target text-body-strong text-primary no-underline hover:text-accent"
     >
       {SITE_NAME}
     </a>
@@ -45,7 +45,7 @@ const isCurrent = (route: string): boolean => {
               href={localePath(locale, item.route)}
               aria-current={isCurrent(item.route) ? 'page' : undefined}
               class:list={[
-                'no-underline hover:text-primary',
+                'touch-target no-underline hover:text-primary',
                 isCurrent(item.route)
                   ? 'text-primary underline decoration-accent decoration-thick underline-offset-marker'
                   : 'text-secondary',
@@ -62,7 +62,7 @@ const isCurrent = (route: string): boolean => {
               hreflang={other}
               lang={other}
               rel="alternate"
-              class="text-secondary no-underline hover:text-primary"
+              class="touch-target text-secondary no-underline hover:text-primary"
             >
               {t(other, 'lang.name')}
             </a>

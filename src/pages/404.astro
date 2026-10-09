@@ -24,7 +24,9 @@ const locale = localeOf(Astro.url.pathname)
     </Heading>
     <p class="mt-stack-display text-lead text-secondary">{t(locale, 'notFound.lead')}</p>
     <p class="mt-xl text-body">
-      <a href={localePath(locale, '/')}>{t(locale, 'notFound.home')}</a>
+      <a class="touch-target" href={localePath(locale, '/')}>
+        {t(locale, 'notFound.home')}
+      </a>
     </p>
   </Section>
 </DocumentLayout>

@@ -14,10 +14,14 @@ const address = COMPANY.address[locale]
 
 <TermList class={className}>
   <Term name={t(locale, 'company.email')}>
-    <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>
+    <a class="touch-target" href={`mailto:${COMPANY.email}`}>
+      {COMPANY.email}
+    </a>
   </Term>
   <Term name={t(locale, 'company.phone')}>
-    <a href={`tel:${COMPANY.phoneHref}`}>{COMPANY.phone}</a>
+    <a class="touch-target" href={`tel:${COMPANY.phoneHref}`}>
+      {COMPANY.phone}
+    </a>
   </Term>
   <Term name={t(locale, 'company.address')}>
     <address class="not-italic">

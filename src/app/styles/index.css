@@ -152,6 +152,10 @@
   body {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    /* Слово длиннее строки переносится, а не раздвигает страницу: крупный текст на узком окне.
+     * `anywhere`, а не `break-word`: место переноса сужает и элемент flex или grid — без него
+     * длинное слово держит минимальную ширину колонки. */
+    overflow-wrap: anywhere;
     @apply bg-canvas text-body text-primary;
   }
 
@@ -211,14 +215,15 @@
     @apply border-danger;
   }
 
-  /* Главное действие страницы: единственная заливка акцентом. */
+  /* Главное действие страницы: единственная заливка акцентом. Рамка прозрачна: в режиме высокой
+   * контрастности заливки нет, и границу кнопки рисует она. */
   .button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     text-decoration: none;
     cursor: pointer;
-    @apply min-h-control-md rounded-control bg-accent-solid px-lg py-xs text-button text-on-accent;
+    @apply min-h-control-md rounded-control border border-transparent bg-accent-solid px-lg py-xs text-button text-on-accent;
   }
 
   .button:hover {
@@ -228,6 +233,16 @@
   @media (prefers-reduced-motion: no-preference) {
     .button {
       transition: background-color 0.15s ease-out;
+    }
+  }
+
+  /* Цель касания: на таче ссылка вне строки текста, кнопка-иконка и флажок занимают не меньше
+   * высоты элемента управления — палец попадает в неё, а не в соседа. У мыши размер свой. */
+  @media (pointer: coarse) {
+    .touch-target {
+      display: inline-flex;
+      align-items: center;
+      @apply min-h-control-md min-w-control-md;
     }
   }
 

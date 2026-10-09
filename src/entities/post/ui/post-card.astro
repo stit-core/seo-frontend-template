@@ -20,7 +20,10 @@ const cover = data.cover && data.coverAlt ? data.cover : undefined
 <article class="flex items-start justify-between gap-lg border-b border-subtle pb-xl">
   <div class="min-w-0">
     <Heading level={2} kind="card">
-      <a href={postPath(locale, slug)} class="text-primary no-underline hover:text-accent">
+      <a
+        href={postPath(locale, slug)}
+        class="touch-target text-primary no-underline hover:text-accent"
+      >
         {data.title}
       </a>
     </Heading>

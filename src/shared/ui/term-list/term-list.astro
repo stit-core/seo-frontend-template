@@ -6,6 +6,8 @@ interface Props {
 const { class: className } = Astro.props
 ---
 
-<dl class:list={['grid gap-x-xl gap-y-sm text-body tablet:grid-cols-terms', className]}>
+<dl
+  class:list={['grid items-baseline gap-x-xl gap-y-sm text-body tablet:grid-cols-terms', className]}
+>
   <slot />
 </dl>

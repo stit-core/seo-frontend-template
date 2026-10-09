@@ -41,17 +41,27 @@ const describedBy = (id: string, failed: boolean): string | undefined =>
   failed ? `${id}-error` : undefined
 ---
 
+{/* Сводка получает фокус при загрузке ответа, без JS: чтец экрана и клавиатура начинают с
+отказа, а не с начала страницы; `role="alert"` при загрузке объявляют не все чтецы. */}
 {(failures.length > 0 || notice) && (
   <div
     role="alert"
+    aria-labelledby="contact-summary-title"
+    tabindex="-1"
+    autofocus
     class="mb-lg rounded-control border-l-thick border-danger bg-danger px-md py-sm text-body"
   >
-    <p>{notice ? t(locale, notice) : t(locale, 'form.summary')}</p>
+    <h3 id="contact-summary-title" class="text-body-strong">
+      {t(locale, 'form.summary')}
+    </h3>
+    {notice && <p class="mt-xs">{t(locale, notice)}</p>}
     {failures.length > 0 && (
       <ul class="mt-xs list-disc space-y-2xs pl-lg text-helper">
         {failures.map((failure) => (
           <li>
-            <a href={`#${failure.id}`}>{t(locale, failure.key)}</a>
+            <a class="touch-target" href={`#${failure.id}`}>
+              {t(locale, failure.key)}
+            </a>
           </li>
         ))}
       </ul>
@@ -145,7 +155,7 @@ const describedBy = (id: string, failed: boolean): string | undefined =>
   <div class="note">
     <label class="flex items-start gap-sm" for="contact-consent">
       <input
-        class="mt-3xs size-md shrink-0"
+        class="touch-target mt-3xs size-md shrink-0"
         id="contact-consent"
         name="consent"
         type="checkbox"

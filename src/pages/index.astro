@@ -57,7 +57,9 @@ const facts = [
       <a class="button" href={blogPath(locale)}>
         {t(locale, 'blog.all')}
       </a>
-      <a href={localePath(locale, '/contacts')}>{t(locale, 'nav.contacts')}</a>
+      <a class="touch-target" href={localePath(locale, '/contacts')}>
+        {t(locale, 'nav.contacts')}
+      </a>
     </p>
   </Section>
 
@@ -83,7 +85,9 @@ const facts = [
       <PostList locale={locale} posts={latest} />
     </div>
     <p class="mt-xl">
-      <a href={blogPath(locale)}>{t(locale, 'blog.all')}</a>
+      <a class="touch-target" href={blogPath(locale)}>
+        {t(locale, 'blog.all')}
+      </a>
     </p>
   </Section>
 

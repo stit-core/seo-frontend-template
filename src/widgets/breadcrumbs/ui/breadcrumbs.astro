@@ -22,7 +22,9 @@ const { locale, items, class: className } = Astro.props
       <li class="flex items-center gap-x-xs">
         {index > 0 && <span aria-hidden="true">›</span>}
         {item.href ? (
-          <a href={item.href}>{item.name}</a>
+          <a class="touch-target" href={item.href}>
+            {item.name}
+          </a>
         ) : (
           <span aria-current="page">{item.name}</span>
         )}

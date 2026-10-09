@@ -16,7 +16,7 @@ const foreignLocale = locale === DEFAULT_LOCALE ? undefined : DEFAULT_LOCALE
 <footer class="border-t border-subtle">
   <Container
     width="page"
-    class="flex flex-col gap-lg py-xl text-helper text-secondary tablet:flex-row tablet:items-start tablet:justify-between"
+    class="flex flex-col gap-lg py-xl text-helper text-secondary tablet:flex-row tablet:items-baseline tablet:justify-between"
   >
     <p>
       © {year} {SITE_NAME}
@@ -27,7 +27,7 @@ const foreignLocale = locale === DEFAULT_LOCALE ? undefined : DEFAULT_LOCALE
       <ul class="flex flex-wrap gap-x-lg gap-y-xs tablet:justify-end">
         <li>
           <a
-            class="text-secondary no-underline hover:underline"
+            class="touch-target text-secondary no-underline hover:underline"
             href={localePath(locale, '/contacts')}
           >
             {t(locale, 'nav.contacts')}
@@ -36,7 +36,7 @@ const foreignLocale = locale === DEFAULT_LOCALE ? undefined : DEFAULT_LOCALE
         <li>
           {/* Политика обработки ПДн опубликована по-русски: это документ российского оператора. */}
           <a
-            class="text-secondary no-underline hover:underline"
+            class="touch-target text-secondary no-underline hover:underline"
             href="/legal/privacy"
             hreflang={foreignLocale}
           >
@@ -45,7 +45,7 @@ const foreignLocale = locale === DEFAULT_LOCALE ? undefined : DEFAULT_LOCALE
         </li>
         <li>
           <a
-            class="text-secondary no-underline hover:underline"
+            class="touch-target text-secondary no-underline hover:underline"
             href={localePath(locale, '/rss.xml')}
           >
             {t(locale, 'footer.rss')}
@@ -53,7 +53,7 @@ const foreignLocale = locale === DEFAULT_LOCALE ? undefined : DEFAULT_LOCALE
         </li>
         <li>
           <a
-            class="text-secondary no-underline hover:underline"
+            class="touch-target text-secondary no-underline hover:underline"
             href="/now"
             hreflang={foreignLocale}
           >

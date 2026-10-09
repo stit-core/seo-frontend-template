@@ -237,6 +237,8 @@ const { locale, class: className } = Astro.props
 ```
 
 Виджет — содержимое секции: ширину, фон и подпись лендмарка ему даёт `<Section>` страницы.
+Ссылка вне строки текста и кнопка-иконка несут класс `touch-target` — цель касания на таче
+(rule `shared-ui`).
 
 ```ts
 export { default as <Name> } from './ui/<name>.astro'
