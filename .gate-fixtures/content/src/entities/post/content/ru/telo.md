@@ -45,3 +45,6 @@ translationKey: telo
 ```html
 <div hidden class="x" style="display:none">в коде можно</div>
 ```
+
+Файл с кириллицей в имени — буквами и процентами: [цены](/цены.txt),
+[цены из адресной строки](/%D1%86%D0%B5%D0%BD%D1%8B.txt).

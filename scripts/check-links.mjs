@@ -49,8 +49,10 @@ function targets(html) {
   return out.map(ownPath)
 }
 
-function existsAsFileOrPage(path) {
-  const fsPath = resolve(client, `.${path}`)
+// Файл лежит под именем буквами, а в запросе путь придёт процентами: существование сверяется в
+// записи файла.
+function existsAsFileOrPage(pathname) {
+  const fsPath = resolve(client, `.${decodeURIComponent(pathname)}`)
   if (fsPath !== client && !fsPath.startsWith(client + sep)) return false
   if (existsSync(fsPath) && statSync(fsPath).isFile()) return true
   return existsSync(resolve(fsPath, 'index.html'))
@@ -87,7 +89,7 @@ for (const file of pages) {
       errors.push(`${where}: ${url} — неканоническая форма адреса (лишний редирект или дубль)`)
     else if (redirects.find(canonicalPath(path) ?? path, search))
       errors.push(`${where}: ${url} — адрес из redirects.yaml, ведите на конечный`)
-    else if (!onDemand.has(path) && !existsAsFileOrPage(path))
+    else if (!onDemand.has(path) && !existsAsFileOrPage(requested))
       errors.push(`${where}: ${url} — не существует`)
   }
 }

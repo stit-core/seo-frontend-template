@@ -280,8 +280,19 @@ for (const collection of collections) {
   }
 }
 
-for (const { where, url } of internalLinks) {
+// Маршруты и файлы public/ названы буквами, а ссылка на файл с кириллицей в имени бывает записана
+// и процентами (так её отдаёт адресная строка): путь сверяется в записи маршрута.
+function routeOf(url) {
   const path = url.replace(/[?#].*$/, '')
+  try {
+    return decodeURIComponent(path)
+  } catch {
+    return path
+  }
+}
+
+for (const { where, url } of internalLinks) {
+  const path = routeOf(url)
   if (path !== '/' && path.endsWith('/'))
     fail(where, `${url}: хвостовой слеш — это лишний редирект`)
   else if (path.endsWith('.html')) fail(where, `${url}: .html — дубль маршрута`)
