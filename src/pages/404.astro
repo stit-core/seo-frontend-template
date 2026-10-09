@@ -5,6 +5,8 @@ export const prerender = false
 
 import DocumentLayout from '@/app/layouts/document.astro'
 import { localeOf, localePath, t } from '@/shared/i18n'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
 
 // Язык страницы — по префиксу запрошенного пути: под `/en/…` человек читал английскую версию.
 const locale = localeOf(Astro.url.pathname)
@@ -16,9 +18,13 @@ const locale = localeOf(Astro.url.pathname)
   description={t(locale, 'notFound.lead')}
   noindex
 >
-  <h1 class="text-page-title">{t(locale, 'notFound.title')}</h1>
-  <p class="mt-stack-display text-lead text-secondary">{t(locale, 'notFound.lead')}</p>
-  <p class="mt-xl text-body">
-    <a href={localePath(locale, '/')}>{t(locale, 'notFound.home')}</a>
-  </p>
+  <Section labelledby="page-title">
+    <Heading id="page-title" level={1}>
+      {t(locale, 'notFound.title')}
+    </Heading>
+    <p class="mt-stack-display text-lead text-secondary">{t(locale, 'notFound.lead')}</p>
+    <p class="mt-xl text-body">
+      <a href={localePath(locale, '/')}>{t(locale, 'notFound.home')}</a>
+    </p>
+  </Section>
 </DocumentLayout>

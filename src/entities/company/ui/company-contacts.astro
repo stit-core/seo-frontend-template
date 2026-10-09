@@ -1,5 +1,6 @@
 ---
 import { type Locale, t } from '@/shared/i18n'
+import { Term, TermList } from '@/shared/ui/term-list'
 import { COMPANY } from '../model/company'
 
 interface Props {
@@ -11,24 +12,17 @@ const { locale, class: className } = Astro.props
 const address = COMPANY.address[locale]
 ---
 
-<dl class:list={['grid gap-x-xl gap-y-sm text-body tablet:grid-cols-terms', className]}>
-  <dt class="text-secondary">{t(locale, 'company.email')}</dt>
-  <dd>
+<TermList class={className}>
+  <Term name={t(locale, 'company.email')}>
     <a href={`mailto:${COMPANY.email}`}>{COMPANY.email}</a>
-  </dd>
-
-  <dt class="text-secondary">{t(locale, 'company.phone')}</dt>
-  <dd>
+  </Term>
+  <Term name={t(locale, 'company.phone')}>
     <a href={`tel:${COMPANY.phoneHref}`}>{COMPANY.phone}</a>
-  </dd>
-
-  <dt class="text-secondary">{t(locale, 'company.address')}</dt>
-  <dd>
+  </Term>
+  <Term name={t(locale, 'company.address')}>
     <address class="not-italic">
       {address.postalCode}, {address.locality}, {address.street}
     </address>
-  </dd>
-
-  <dt class="text-secondary">{t(locale, 'company.hours')}</dt>
-  <dd>{COMPANY.hours[locale]}</dd>
-</dl>
+  </Term>
+  <Term name={t(locale, 'company.hours')}>{COMPANY.hours[locale]}</Term>
+</TermList>

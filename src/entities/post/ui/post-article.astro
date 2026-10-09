@@ -1,15 +1,18 @@
 ---
 import { Picture } from 'astro:assets'
 import { formatDate, isoDate, t } from '@/shared/i18n'
+import { Heading } from '@/shared/ui/heading'
 import type { Post } from '../api/queries'
 import DraftBadge from './draft-badge.astro'
 import TagList from './tag-list.astro'
 
 interface Props {
   post: Post
+  // id заголовка записи: им страница подписывает свою секцию.
+  titleId?: string | undefined
 }
 
-const { post } = Astro.props
+const { post, titleId } = Astro.props
 const { locale, data } = post
 // Обложка — LCP-элемент записи: грузится сразу и с приоритетом, размеры заданы.
 const cover = data.cover && data.coverAlt ? { src: data.cover, alt: data.coverAlt } : undefined
@@ -30,7 +33,9 @@ const cover = data.cover && data.coverAlt ? { src: data.cover, alt: data.coverAl
     />
   )}
   <header class="border-b border-subtle pb-lg">
-    <h1 class="text-page-title">{data.title}</h1>
+    <Heading level={1} id={titleId}>
+      {data.title}
+    </Heading>
     <p class="mt-stack-display text-lead text-secondary">{data.description}</p>
     {/* Подпись автора ставит страница: реестр авторов — соседний слайс. */}
     <slot name="byline" />

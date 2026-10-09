@@ -4,6 +4,8 @@ import { COMPANY, CompanyContacts } from '@/entities/company'
 import { type ContactErrors, ContactForm, type ContactValues } from '@/features/contact-form'
 import { type DictKey, type Locale, localePath, t } from '@/shared/i18n'
 import { breadcrumbList } from '@/shared/seo'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
 import { Breadcrumbs } from '@/widgets/breadcrumbs'
 
 interface Props {
@@ -57,23 +59,35 @@ const crumbs = [
   noindex={noindex}
   jsonLd={noindex ? [] : [breadcrumbList(crumbs)]}
 >
-  <Breadcrumbs locale={locale} items={crumbs} class="mb-md" />
-  <h1 class="text-page-title">{copy.title}</h1>
-  <p class="mt-stack-display text-lead text-secondary">{copy.lead}</p>
+  <Section labelledby="page-title">
+    <Breadcrumbs locale={locale} items={crumbs} class="mb-md" />
+    <Heading id="page-title" level={1}>
+      {copy.title}
+    </Heading>
+    <p class="mt-stack-display text-lead text-secondary">{copy.lead}</p>
+  </Section>
 
-  <h2 class="section-title mt-section-s text-section">{copy.form}</h2>
-  <div class="mt-lg">
-    <ContactForm
-      locale={locale}
-      action="/api/contact"
-      policyHref="/legal/privacy"
-      values={values}
-      errors={errors}
-      notice={notice}
-    />
-  </div>
+  <Section labelledby="request">
+    <Heading id="request" level={2}>
+      {copy.form}
+    </Heading>
+    <div class="mt-lg">
+      <ContactForm
+        locale={locale}
+        action="/api/contact"
+        policyHref="/legal/privacy"
+        values={values}
+        errors={errors}
+        notice={notice}
+      />
+    </div>
+  </Section>
 
-  <h2 class="section-title mt-section-s text-section">{copy.other}</h2>
-  <CompanyContacts locale={locale} class="mt-lg" />
-  <p class="note mt-xl">{copy.note}</p>
+  <Section labelledby="other">
+    <Heading id="other" level={2}>
+      {copy.other}
+    </Heading>
+    <CompanyContacts locale={locale} class="mt-lg" />
+    <p class="note mt-xl">{copy.note}</p>
+  </Section>
 </DocumentLayout>

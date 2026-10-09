@@ -14,7 +14,8 @@ const kind = wide ? 'wide' : 'narrow'
 скобках — не значение; маркеры group и peer; обводка и кольцо без своей толщины (outline-focus,
 ring-inset), линия между детьми толщиной по умолчанию (divide-y); класс — пропом class и условием
 class:list (литерал условия — не класс); цвет SVG и <style> — ключевым словом без своего цвета,
-в <style> — раскладка и сброс. -->
+в <style> — раскладка и сброс; контейнер запросов (@container) и max-width долей родителя — не
+ширина контейнера. -->
 <span
   id="add"
   class="mt-2xl grid grid-cols-2 gap-x-3xs text-page-title-lg focus:z-10 -order-1 inset-0 rounded-none"
@@ -28,7 +29,7 @@ class:list (литерал условия — не класс); цвет SVG и 
   </svg>
   <span
     class:list={[
-      'group peer col-start-2 row-start-1 grow-2 columns-2 divide-y outline-focus ring-inset',
+      'group peer @container col-start-2 row-start-1 grow-2 columns-2 divide-y outline-focus ring-inset',
       'nth-2:mt-md aria-[current=page]:text-primary group-data-[state=open]:flex',
       kind === 'wide' && 'text-secondary',
       wide ? `gap-lg` : 'gap-md',
@@ -47,6 +48,7 @@ class:list (литерал условия — не класс); цвет SVG и 
     display: inline-grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     width: 1px;
+    max-width: 100%;
     margin: 0 auto;
     padding: 0;
     border: 0;

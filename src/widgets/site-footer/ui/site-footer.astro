@@ -1,6 +1,7 @@
 ---
 import { SITE_NAME } from '@/shared/config'
 import { DEFAULT_LOCALE, type Locale, localePath, t } from '@/shared/i18n'
+import { Container } from '@/shared/ui/section'
 
 interface Props {
   locale: Locale
@@ -12,8 +13,11 @@ const year = new Date().getFullYear()
 const foreignLocale = locale === DEFAULT_LOCALE ? undefined : DEFAULT_LOCALE
 ---
 
-<footer class="mt-section-l border-t border-subtle">
-  <div class="mx-auto flex max-w-container flex-col gap-lg px-page-x py-xl text-helper text-secondary tablet:flex-row tablet:items-start tablet:justify-between">
+<footer class="border-t border-subtle">
+  <Container
+    width="page"
+    class="flex flex-col gap-lg py-xl text-helper text-secondary tablet:flex-row tablet:items-start tablet:justify-between"
+  >
     <p>
       © {year} {SITE_NAME}
       <br />
@@ -58,5 +62,5 @@ const foreignLocale = locale === DEFAULT_LOCALE ? undefined : DEFAULT_LOCALE
         </li>
       </ul>
     </nav>
-  </div>
+  </Container>
 </footer>

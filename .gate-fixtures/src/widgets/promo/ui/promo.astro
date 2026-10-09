@@ -20,7 +20,9 @@ console.log(promo, getRuntimeConfig().RELEASE, config.SITE_NAME, import.meta.env
 слово со своим значением (интерлиньяж, скругление, обводка, кольцо, фильтр — и ключом объекта),
 переменная ДС в классе, в атрибуте SVG и в <style> (заглавными), размер числом и @apply
 произвольного значения в <style>; класс из переменной — в атрибуте, в шаблонной строке, по
-ключу карты и вычисляемым ключом; своя color-scheme — утилитой и в <style>. -->
+ключу карты и вычисляемым ключом; своя color-scheme — утилитой и в <style>; ширина контейнера
+мимо примитива секции — утилитой max-w-*, container (ключом объекта) и в <style> (max-width длиной
+и @apply). -->
 <section class="promo">
   <img src="/promo.png" alt="Промо" width="10" height="10" />
   <Badge client:load />
@@ -42,6 +44,8 @@ console.log(promo, getRuntimeConfig().RELEASE, config.SITE_NAME, import.meta.env
   <p class={size}>Класс из переменной</p>
   <p class:list={['mt-md', WIDTHS[size], { [size]: promo }]}>Класс по ключу карты</p>
   <p class="scheme-dark">Своя тема</p>
+  <p class="max-w-measure tablet:max-w-container">Ширина контейнера</p>
+  <p class:list={['mt-md', { container: promo }]}>Контейнер Tailwind</p>
 </section>
 
 <style>
@@ -50,6 +54,7 @@ console.log(promo, getRuntimeConfig().RELEASE, config.SITE_NAME, import.meta.env
     margin-top: var(--space-md);
     font-size: 22px;
     color-scheme: dark;
+    max-width: 40rem;
     @apply mt-[13px];
   }
 </style>
@@ -58,5 +63,6 @@ console.log(promo, getRuntimeConfig().RELEASE, config.SITE_NAME, import.meta.env
   .promo {
     border-color: tomato;
     padding: VAR(--space-md);
+    @apply max-w-measure;
   }
 </style>

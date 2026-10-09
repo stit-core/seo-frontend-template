@@ -22,7 +22,7 @@ app → pages → widgets → features → entities → shared
 | `widgets/` | блоки каркаса и переиспользуемые блоки: шапка, подвал, список записей, крошки |
 | `features/` | пользовательские сценарии: форма обратной связи, переключатель темы |
 | `entities/` | доменные сущности: коллекция контента `post` (с текстами внутри слайса), реквизиты `company`, реестр авторов `author` |
-| `shared/` | инфраструктура: config, i18n, seo, redirects, observability, antispam, lib, ui |
+| `shared/` | инфраструктура: config, i18n, seo, redirects, observability, antispam, lib и примитивы страницы `ui` — секция, заголовок, сетка «термин — описание» |
 
 ### Единственный импорт вверх
 
@@ -37,8 +37,9 @@ app → pages → widgets → features → entities → shared
 (`public-api`, `no-layer-public-api`, `no-segmentless-slices`, `no-segments-on-sliced-layers`) на
 `pages` выключены.
 
-Секции одной страницы живут рядом с ней: `src/pages/_<name>/` — префикс `_` исключает
-каталог из роутинга. Widget заводится, когда блок нужен ≥ 2 страницам. Локали делят одну
+Страница — это `DocumentLayout` и секции `Section` из `@/shared/ui/section`: ширину, фон и ритм
+задаёт секция, оболочка страницу не сужает (rule `shared-ui`). Файлы одной страницы живут рядом
+с ней: `src/pages/_<name>/` — префикс `_` исключает каталог из роутинга. Widget заводится, когда блок нужен ≥ 2 страницам. Локали делят одну
 разметку: `pages/about.astro` и `pages/en/about.astro` — тонкие обёртки над
 `pages/_about/about-page.astro` с разным `locale`.
 
@@ -86,7 +87,8 @@ src/
 ├─ widgets/       site-header · site-footer · post-list · breadcrumbs
 ├─ features/      contact-form · theme
 ├─ entities/      post (content/{ru,en}/*.md + covers, model, api, lib, ui) · company · author
-└─ shared/        config · i18n · seo · redirects · observability · antispam · lib · ui
+└─ shared/        config · i18n · seo · redirects · observability · antispam · lib
+                  · ui/{section,heading,term-list}
 ```
 
 ## Сегменты слайса

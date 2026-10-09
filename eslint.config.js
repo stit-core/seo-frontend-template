@@ -158,6 +158,11 @@ const KEYWORD = String.raw`(?<![\w-])(?:leading-none|rounded(?:-[a-z]{1,2})?-ful
 // (`aria-[current=page]:`, `data-[state=open]:`) значения не несёт.
 const ARBITRARY = String.raw`(?<!(?:aria|data)-)\[|\](?!:)|[()]`
 const SCHEME = String.raw`(?<![\w-])scheme-[a-z-]+(?![\w-])`
+// Ширина контейнера: роль `max-w-*` и `container` Tailwind (границы раскладки значениями); в CSS —
+// `max-width` длиной (процент — доля родителя, страницу он не сужает). `@container` — контейнер
+// запросов, а не ширина.
+const CONTAINER_WIDTH = String.raw`(?<![\w@-])(?:container|max-w-[\w-]+)(?![\w-])`
+const CSS_CONTAINER_WIDTH = `${property('max-(?:width|inline-size)')}${String.raw`[^;{}]*\d(?![\d.]*%)`}`
 const DS_VARIABLE = String.raw`var\(\s*--`
 const CLASS = "JSXAttribute:matches([name.name='class'], [name.namespace.name='class'])"
 const STYLE = "JSXElement[openingElement.name.name='style'] > AstroRawText"
@@ -175,6 +180,13 @@ const OPAQUE_CLASS = [
   `${CLASS} LogicalExpression > ${OPAQUE}.right`,
   `${CLASS} ObjectExpression > Property[computed=true]`,
 ].join(', ')
+// Страницу собирают секции: ширину контейнера задаёт один примитив `shared/ui/section`. В другом
+// месте она сужает страницу мимо него: класс на оболочке загнал бы в колонку каждую страницу.
+const containerWidth = {
+  selector: `${CLASS} ${text(CONTAINER_WIDTH)}, ${STYLE}[value=/${CSS_CONTAINER_WIDTH}|@apply[^;{}]*${CONTAINER_WIDTH}/i]`,
+  message:
+    'UI: ширина контейнера (max-w-*, container, max-width) — только примитив секции @/shared/ui/section: страницу собирают Section, каркас — Container',
+}
 // Канон разметки .astro (rules shared-ui, render-safety).
 const astroSyntax = [
   {
@@ -295,6 +307,11 @@ export default defineConfig(
       parser: astroParser,
       parserOptions: { parser: tseslint.parser, extraFileExtensions: ['.astro'] },
     },
+    rules: { 'no-restricted-syntax': ['error', ...astroSyntax, containerWidth, importMetaEnv] },
+  },
+  {
+    // Примитив секции — единственное место, где задаётся ширина контейнера.
+    files: ['src/shared/ui/section/*.astro'],
     rules: { 'no-restricted-syntax': ['error', ...astroSyntax, importMetaEnv] },
   },
   {

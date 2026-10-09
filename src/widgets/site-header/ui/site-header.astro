@@ -2,6 +2,7 @@
 import { ThemeToggle } from '@/features/theme'
 import { SITE_NAME, THEME } from '@/shared/config'
 import { type DictKey, type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import { Container } from '@/shared/ui/section'
 
 interface Props {
   locale: Locale
@@ -25,7 +26,10 @@ const isCurrent = (route: string): boolean => {
 ---
 
 <header class="border-b border-subtle">
-  <div class="mx-auto flex max-w-container flex-wrap items-center justify-between gap-x-xl gap-y-sm px-page-x py-md">
+  <Container
+    width="page"
+    class="flex flex-wrap items-center justify-between gap-x-xl gap-y-sm py-md"
+  >
     <a
       href={localePath(locale, '/')}
       class="text-body-strong text-primary no-underline hover:text-accent"
@@ -71,5 +75,5 @@ const isCurrent = (route: string): boolean => {
         )}
       </ul>
     </nav>
-  </div>
+  </Container>
 </header>

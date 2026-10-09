@@ -79,7 +79,8 @@ const theme = THEME.default === 'system' ? undefined : THEME.default
       {t(locale, 'nav.skip')}
     </a>
     <SiteHeader locale={locale} alternatePath={alternatePath} />
-    <main id="main" class="mx-auto w-full max-w-measure flex-1 px-page-x py-section-s">
+    {/* Ширину, фон и ритм странице дают её секции (shared/ui/section): оболочка её не сужает. */}
+    <main id="main" class="flex-1">
       <slot />
     </main>
     <SiteFooter locale={locale} />

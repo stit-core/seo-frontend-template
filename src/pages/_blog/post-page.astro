@@ -2,6 +2,7 @@
 import DocumentLayout from '@/app/layouts/document.astro'
 import { AuthorByline } from '@/entities/author'
 import { type Post, PostArticle, renderPost } from '@/entities/post'
+import { Section } from '@/shared/ui/section'
 import { Breadcrumbs } from '@/widgets/breadcrumbs'
 import { postPageModel } from './sections'
 
@@ -25,16 +26,18 @@ const model = await postPageModel(post)
   article={model.article}
   jsonLd={model.jsonLd}
 >
-  <Breadcrumbs locale={locale} items={model.crumbs} class="mb-md" />
-  <PostArticle post={post}>
-    {model.author && (
-      <AuthorByline
-        slot="byline"
-        locale={locale}
-        name={model.author.name}
-        jobTitle={model.author.jobTitle}
-      />
-    )}
-    <Content />
-  </PostArticle>
+  <Section labelledby="page-title">
+    <Breadcrumbs locale={locale} items={model.crumbs} class="mb-md" />
+    <PostArticle post={post} titleId="page-title">
+      {model.author && (
+        <AuthorByline
+          slot="byline"
+          locale={locale}
+          name={model.author.name}
+          jobTitle={model.author.jobTitle}
+        />
+      )}
+      <Content />
+    </PostArticle>
+  </Section>
 </DocumentLayout>

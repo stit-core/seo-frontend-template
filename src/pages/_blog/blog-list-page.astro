@@ -2,6 +2,8 @@
 import DocumentLayout from '@/app/layouts/document.astro'
 import { type Page, type Post, TagList } from '@/entities/post'
 import { type Locale, t } from '@/shared/i18n'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
 import { Breadcrumbs } from '@/widgets/breadcrumbs'
 import { PostList } from '@/widgets/post-list'
 import { blogListPageModel } from './sections'
@@ -22,11 +24,15 @@ const model = await blogListPageModel(locale, page)
   description={model.description}
   jsonLd={model.jsonLd}
 >
-  <Breadcrumbs locale={locale} items={model.crumbs} class="mb-md" />
-  <h1 class="text-page-title">{model.heading}</h1>
-  <p class="mt-stack-display text-lead text-secondary">{t(locale, 'blog.lead')}</p>
-  <TagList locale={locale} tags={model.tags} class="mt-lg" />
-  <div class="mt-2xl">
-    <PostList locale={locale} posts={page.items} pagination={model.pagination} />
-  </div>
+  <Section labelledby="page-title">
+    <Breadcrumbs locale={locale} items={model.crumbs} class="mb-md" />
+    <Heading id="page-title" level={1}>
+      {model.heading}
+    </Heading>
+    <p class="mt-stack-display text-lead text-secondary">{t(locale, 'blog.lead')}</p>
+    <TagList locale={locale} tags={model.tags} class="mt-lg" />
+    <div class="mt-2xl">
+      <PostList locale={locale} posts={page.items} pagination={model.pagination} />
+    </div>
+  </Section>
 </DocumentLayout>

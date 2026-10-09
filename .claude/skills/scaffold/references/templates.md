@@ -12,6 +12,8 @@
 import DocumentLayout from '@/app/layouts/document.astro'
 import { type Locale, localePath, t } from '@/shared/i18n'
 import { breadcrumbList } from '@/shared/seo'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
 import { Breadcrumbs } from '@/widgets/breadcrumbs'
 
 interface Props {
@@ -47,14 +49,32 @@ const crumbs = [
   alternatePath="/<path>"
   jsonLd={[breadcrumbList(crumbs)]}
 >
-  <Breadcrumbs locale={locale} items={crumbs} class="mb-md" />
-  <h1 class="text-page-title">{copy.title}</h1>
-  <p class="mt-stack-display text-lead text-secondary">{copy.lead}</p>
+  <Section labelledby="page-title">
+    <Breadcrumbs locale={locale} items={crumbs} class="mb-md" />
+    <Heading id="page-title" level={1}>
+      {copy.title}
+    </Heading>
+    <p class="mt-stack-display text-lead text-secondary">{copy.lead}</p>
+  </Section>
 </DocumentLayout>
 ```
 
 Страница верхнего уровня — без `<Breadcrumbs>` и без `breadcrumbList`.
 Служебная — проп `noindex` вместо `alternatePath`/`jsonLd`.
+
+Страница собрана из секций: каждый раздел — свой `<Section>` с подписью лендмарка
+(`labelledby` — id своего `<Heading>`, без видимого заголовка — `label`). Ширину даёт `width`
+(`reading` — умолчание, `page`, `wide`, `full`), полосу фона — `tone`, шаг — `rhythm`; класс
+ширины (`max-w-*`) в странице или блоке — ошибка ESLint:
+
+```astro
+<Section labelledby="details">
+  <Heading id="details" level={2}>
+    {copy.details}
+  </Heading>
+  <p class="mt-lg text-body">{copy.text}</p>
+</Section>
+```
 
 ## page — обёртки локалей
 
@@ -211,10 +231,12 @@ interface Props {
 const { locale, class: className } = Astro.props
 ---
 
-<section class={className}>
+<div class={className}>
   <!-- разметка -->
-</section>
+</div>
 ```
+
+Виджет — содержимое секции: ширину, фон и подпись лендмарка ему даёт `<Section>` страницы.
 
 ```ts
 export { default as <Name> } from './ui/<name>.astro'
@@ -232,7 +254,7 @@ describe('<Name>', () => {
   it('рендерится и проходит axe', async () => {
     const container = await AstroContainer.create()
     const html = await container.renderToString(<Name>, { props: { locale: 'ru' } })
-    expect(parseHtml(html).querySelector('section')).not.toBeNull()
+    expect(parseHtml(html).querySelector('div')).not.toBeNull()
     await expectNoA11yViolations(html)
   })
 })
@@ -268,6 +290,8 @@ export const GET: APIRoute = () =>
 export const prerender = false
 
 import DocumentLayout from '@/app/layouts/document.astro'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
 
 const locale = 'ru' as const
 
@@ -276,7 +300,11 @@ Astro.response.headers.set('cache-control', 'private, no-store')
 ---
 
 <DocumentLayout locale={locale} title="Заголовок" description="Описание." noindex>
-  <h1 class="text-page-title">Заголовок</h1>
+  <Section labelledby="page-title">
+    <Heading id="page-title" level={1}>
+      Заголовок
+    </Heading>
+  </Section>
 </DocumentLayout>
 ```
 

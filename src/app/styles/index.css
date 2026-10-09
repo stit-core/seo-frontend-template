@@ -118,9 +118,14 @@
   --spacing-control-md: var(--size-control-md);
   --spacing-icon-md: var(--size-icon-md);
   --spacing-thumbnail: var(--size-thumbnail);
-  --container-measure: var(--size-measure);
-  --container-container: var(--size-container);
   --grid-template-columns-terms: var(--size-term) minmax(0, 1fr);
+
+  /* Ширина контейнера: колонка чтения, страница, широкая сетка. Ключ `--max-width-*` даёт только
+   * `max-w-*` (`--container-*` раздал бы роль ещё и `w-*`, `basis-*`): берёт её один примитив
+   * секции — канон UI. */
+  --max-width-measure: var(--size-measure);
+  --max-width-container: var(--size-container);
+  --max-width-container-wide: var(--size-container-wide);
 
   /* Имя ключа — назначение: шаги шкалы (`--radius-md`) заняты переменными ДС. */
   --radius-focus: var(--radius-xs);

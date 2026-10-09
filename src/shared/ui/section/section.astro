@@ -1,0 +1,41 @@
+---
+import type { ComponentProps } from 'astro/types'
+import Container from './container.astro'
+
+// Подпись лендмарка: id своего заголовка, а без видимого заголовка — текст.
+type Label = { labelledby: string; label?: undefined } | { label: string; labelledby?: undefined }
+
+type Props = Label & {
+  width?: ComponentProps<typeof Container>['width']
+  // Полоса фона: секция занимает всё окно, ширину держит её контейнер.
+  tone?: 'subtle' | undefined
+  rhythm?: 's' | 'm' | 'l' | undefined
+}
+
+const { labelledby, label, width, tone, rhythm = 's' } = Astro.props
+---
+
+<section
+  aria-labelledby={labelledby}
+  aria-label={label}
+  class:list={[
+    { 'bg-subtle': tone === 'subtle' },
+    // Полоса берёт отступ внутрь, секция без фона — наружу: отступы соседних секций схлопываются
+    // в один шаг ритма, а полоса примыкает к соседям.
+    tone
+      ? {
+          'py-section-s': rhythm === 's',
+          'py-section-m': rhythm === 'm',
+          'py-section-l': rhythm === 'l',
+        }
+      : {
+          'my-section-s': rhythm === 's',
+          'my-section-m': rhythm === 'm',
+          'my-section-l': rhythm === 'l',
+        },
+  ]}
+>
+  <Container width={width}>
+    <slot />
+  </Container>
+</section>

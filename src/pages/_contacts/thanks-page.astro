@@ -2,6 +2,8 @@
 import DocumentLayout from '@/app/layouts/document.astro'
 import { CompanyContacts } from '@/entities/company'
 import { type Locale, localePath, t } from '@/shared/i18n'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
 
 interface Props {
   locale: Locale
@@ -16,12 +18,16 @@ const { locale } = Astro.props
   description={t(locale, 'thanks.lead')}
   noindex
 >
-  <h1 class="text-page-title">{t(locale, 'thanks.title')}</h1>
-  <p class="mt-stack-display text-lead text-secondary">{t(locale, 'thanks.lead')}</p>
-  <p class="mt-xl">
-    <a class="button" href={localePath(locale, '/contacts')}>
-      {t(locale, 'thanks.back')}
-    </a>
-  </p>
-  <CompanyContacts locale={locale} class="mt-section-s border-t border-subtle pt-xl" />
+  <Section labelledby="page-title">
+    <Heading id="page-title" level={1}>
+      {t(locale, 'thanks.title')}
+    </Heading>
+    <p class="mt-stack-display text-lead text-secondary">{t(locale, 'thanks.lead')}</p>
+    <p class="mt-xl">
+      <a class="button" href={localePath(locale, '/contacts')}>
+        {t(locale, 'thanks.back')}
+      </a>
+    </p>
+    <CompanyContacts locale={locale} class="mt-section-s border-t border-subtle pt-xl" />
+  </Section>
 </DocumentLayout>

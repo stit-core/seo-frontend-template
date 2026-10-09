@@ -3,6 +3,8 @@ import DocumentLayout from '@/app/layouts/document.astro'
 import { blogPath, listPosts } from '@/entities/post'
 import { type Locale, localePath, t } from '@/shared/i18n'
 import { organization } from '@/shared/seo'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
 import { PostList } from '@/widgets/post-list'
 
 const locale: Locale = 'en'
@@ -30,6 +32,10 @@ const facts = [
     term: 'Architecture',
     text: 'Feature-Sliced Design under lint: ESLint guards the layer boundaries, Steiger the structure, pnpm check the rest.',
   },
+  {
+    term: 'Content',
+    text: 'Markdown in git next to the code: a frontmatter schema, snippet budgets and link checks run before the build.',
+  },
 ]
 ---
 
@@ -40,38 +46,52 @@ const facts = [
   description="Static-first site template on Astro 7: prerendered by default, zero JavaScript on content pages, one Docker image for every environment."
   jsonLd={[organization()]}
 >
-  <h1 class="text-page-title tablet:text-page-title-lg">Indexable site template</h1>
-  <p class="mt-stack-display text-lead text-secondary">
-    Pages are built ahead of time and served by the Node process as files. Server rendering turns on
-    where a request is unavoidable: redirects, robots.txt, the contact form.
-  </p>
-  <p class="mt-xl flex flex-wrap items-center gap-x-lg gap-y-sm">
-    <a class="button" href={blogPath(locale)}>
-      {t(locale, 'blog.all')}
-    </a>
-    <a href={localePath(locale, '/contacts')}>{t(locale, 'nav.contacts')}</a>
-  </p>
+  <Section width="page" rhythm="m" labelledby="page-title">
+    <Heading id="page-title" level={1} kind="display">
+      Indexable site template
+    </Heading>
+    <p class="mt-stack-display text-lead text-secondary">
+      Pages are built ahead of time and served by the Node process as files. Server rendering turns
+      on where a request is unavoidable: redirects, robots.txt, the contact form.
+    </p>
+    <p class="mt-xl flex flex-wrap items-center gap-x-lg gap-y-sm">
+      <a class="button" href={blogPath(locale)}>
+        {t(locale, 'blog.all')}
+      </a>
+      <a href={localePath(locale, '/contacts')}>{t(locale, 'nav.contacts')}</a>
+    </p>
+  </Section>
 
-  <h2 class="section-title mt-section-m text-section">What is inside</h2>
-  <dl class="mt-lg grid gap-x-xl gap-y-md text-body tablet:grid-cols-terms">
-    {facts.map((fact) => (
-      <Fragment>
-        <dt class="text-body-strong text-primary">{fact.term}</dt>
-        <dd class="text-secondary">{fact.text}</dd>
-      </Fragment>
-    ))}
-  </dl>
+  <Section width="wide" tone="subtle" rhythm="m" labelledby="inside">
+    <Heading id="inside" level={2}>
+      What is inside
+    </Heading>
+    <dl class="mt-lg grid gap-x-xl gap-y-lg tablet:grid-cols-2 desktop:grid-cols-3">
+      {facts.map((fact) => (
+        <div>
+          <dt class="text-body-strong">{fact.term}</dt>
+          <dd class="mt-2xs text-secondary">{fact.text}</dd>
+        </div>
+      ))}
+    </dl>
+  </Section>
 
-  <h2 class="section-title mt-section-m text-section">{t(locale, 'blog.latest')}</h2>
-  <div class="mt-lg">
-    <PostList locale={locale} posts={latest} />
-  </div>
-  <p class="mt-xl">
-    <a href={blogPath(locale)}>{t(locale, 'blog.all')}</a>
-  </p>
+  <Section width="page" rhythm="m" labelledby="latest">
+    <Heading id="latest" level={2}>
+      {t(locale, 'blog.latest')}
+    </Heading>
+    <div class="mt-lg">
+      <PostList locale={locale} posts={latest} />
+    </div>
+    <p class="mt-xl">
+      <a href={blogPath(locale)}>{t(locale, 'blog.all')}</a>
+    </p>
+  </Section>
 
-  <p class="note mt-section-m">
-    This is the template's starting page: replace the text and the notes with your own. Commands,
-    repository layout and the consumer path are described in the README.
-  </p>
+  <Section width="page" rhythm="m" label="About the template">
+    <p class="note">
+      This is the template's starting page: replace the text and the notes with your own. Commands,
+      repository layout and the consumer path are described in the README.
+    </p>
+  </Section>
 </DocumentLayout>

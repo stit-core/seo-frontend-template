@@ -3,6 +3,9 @@ import DocumentLayout from '@/app/layouts/document.astro'
 import { COMPANY, CompanyContacts } from '@/entities/company'
 import { type Locale, localePath, t } from '@/shared/i18n'
 import { breadcrumbList, localBusiness } from '@/shared/seo'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
+import { Term, TermList } from '@/shared/ui/term-list'
 import { Breadcrumbs } from '@/widgets/breadcrumbs'
 
 interface Props {
@@ -73,22 +76,33 @@ const address = COMPANY.address[locale]
     breadcrumbList(crumbs),
   ]}
 >
-  <Breadcrumbs locale={locale} items={crumbs} class="mb-md" />
-  <h1 class="text-page-title">{heading}</h1>
-  <p class="mt-stack-display text-lead text-secondary">{copy.lead}</p>
+  <Section labelledby="page-title">
+    <Breadcrumbs locale={locale} items={crumbs} class="mb-md" />
+    <Heading id="page-title" level={1}>
+      {heading}
+    </Heading>
+    <p class="mt-stack-display text-lead text-secondary">{copy.lead}</p>
+  </Section>
 
-  <h2 class="section-title mt-section-s text-section">{copy.work}</h2>
-  <ul class="mt-lg grid gap-md text-body">
-    {copy.works.map((item) => (
-      <li class="border-l-thick border-subtle pl-md">{item}</li>
-    ))}
-  </ul>
+  <Section labelledby="work">
+    <Heading id="work" level={2}>
+      {copy.work}
+    </Heading>
+    <ul class="mt-lg grid gap-md text-body">
+      {copy.works.map((item) => (
+        <li class="border-l-thick border-subtle pl-md">{item}</li>
+      ))}
+    </ul>
+  </Section>
 
-  <h2 class="section-title mt-section-s text-section">{copy.details}</h2>
-  <dl class="mt-lg grid gap-x-xl gap-y-sm text-body tablet:grid-cols-terms">
-    <dt class="text-secondary">{copy.legalNameLabel}</dt>
-    <dd>{COMPANY.legalName}</dd>
-  </dl>
-  <CompanyContacts locale={locale} class="mt-sm" />
-  <p class="note mt-xl">{copy.note}</p>
+  <Section labelledby="details">
+    <Heading id="details" level={2}>
+      {copy.details}
+    </Heading>
+    <TermList class="mt-lg">
+      <Term name={copy.legalNameLabel}>{COMPANY.legalName}</Term>
+    </TermList>
+    <CompanyContacts locale={locale} class="mt-sm" />
+    <p class="note mt-xl">{copy.note}</p>
+  </Section>
 </DocumentLayout>

@@ -60,9 +60,12 @@ src/pages/en/<path>.astro             en-обёртка: locale = 'en'
   `src/shared/i18n/dict.ts`
 - условия и вычисления секции (ссылка на перевод, крошки, разметка) — в `.ts`-модели рядом с
   ней (как `_blog/sections.ts`) с unit-тестом; в `.astro` — разметка
+- страница собрана из секций: каждый раздел — `<Section>` из `@/shared/ui/section` с подписью
+  (`labelledby` — id своего `<Heading>`, заголовок страницы — `id="page-title"`); ширину, фон и
+  шаг задают её пропсы, класс ширины в странице — ошибка ESLint (rule `shared-ui`)
 - **тест обязателен**: строка на каждую локаль в `src/pages/_tests/pages.astro.test.ts` — язык,
-  self-canonical или `noindex`, hreflang пары, типы JSON-LD, один `h1`; индексируемая — ещё и
-  адрес в ожидаемой карте `src/pages/_tests/endpoints.server.test.ts`
+  self-canonical или `noindex`, hreflang пары, типы JSON-LD, один `h1`, страница — из секций;
+  индексируемая — ещё и адрес в ожидаемой карте `src/pages/_tests/endpoints.server.test.ts`
 
 Не нужно: править e2e — цели HTTP- и браузерного наборов (`e2e/site.ts`) выводятся из
 `dist/client`, `src/pages` и контента, и новая страница попадает в них сама.

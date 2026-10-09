@@ -1,0 +1,27 @@
+---
+interface Props {
+  level: 1 | 2 | 3
+  // Роль текста; по умолчанию — по уровню: страница, раздел, карточка. `display` — заголовок
+  // главной: от границы tablet он крупнее.
+  kind?: 'display' | 'page' | 'section' | 'card' | undefined
+  id?: string | undefined
+}
+
+const KIND = { 1: 'page', 2: 'section', 3: 'card' } as const
+const { level, kind = KIND[level], id } = Astro.props
+const Tag = `h${level}` as const
+// Текст компонента Prettier ставит на свою строку, а пробелы слота Astro не сжимает: без обрезки
+// заголовок нёс бы в разметке перевод строки и отступ исходника.
+const content = (await Astro.slots.render('default')).trim()
+---
+
+<Tag
+  id={id}
+  class:list={{
+    'text-page-title': kind === 'page',
+    'text-page-title tablet:text-page-title-lg': kind === 'display',
+    'section-title text-section': kind === 'section',
+    'text-card-title': kind === 'card',
+  }}
+  set:html={content}
+/>

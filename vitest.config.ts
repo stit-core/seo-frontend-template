@@ -16,6 +16,7 @@ export default getViteConfig({
         // Баррели: только `export … from` — держит ESLint no-restricted-syntax.
         'src/{entities,features,widgets}/*/index.ts',
         'src/shared/*/index.ts',
+        'src/shared/{ui,lib}/*/index.ts',
         // Входы, навязанные Astro: реэкспорт, регистрация коллекций, объявление типов.
         'src/middleware.ts',
         'src/content.config.ts',

@@ -4,6 +4,8 @@
 // дефолтный: файл запроса не знает.
 import DocumentLayout from '@/app/layouts/document.astro'
 import { DEFAULT_LOCALE, localePath, t } from '@/shared/i18n'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
 
 const locale = DEFAULT_LOCALE
 ---
@@ -14,11 +16,15 @@ const locale = DEFAULT_LOCALE
   description={t(locale, 'error.lead')}
   noindex
 >
-  <h1 class="text-page-title">{t(locale, 'error.title')}</h1>
-  <p class="mt-stack-display text-lead text-secondary">{t(locale, 'error.lead')}</p>
-  <p class="mt-xl">
-    <a class="button" href={localePath(locale, '/')}>
-      {t(locale, 'notFound.home')}
-    </a>
-  </p>
+  <Section labelledby="page-title">
+    <Heading id="page-title" level={1}>
+      {t(locale, 'error.title')}
+    </Heading>
+    <p class="mt-stack-display text-lead text-secondary">{t(locale, 'error.lead')}</p>
+    <p class="mt-xl">
+      <a class="button" href={localePath(locale, '/')}>
+        {t(locale, 'notFound.home')}
+      </a>
+    </p>
+  </Section>
 </DocumentLayout>

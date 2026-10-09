@@ -45,6 +45,19 @@ afterEach(() => vi.unstubAllEnvs())
 
 const container = await AstroContainer.create()
 
+// Страницу собирают секции: ребёнок <main> — <section>, подписанный своим заголовком или текстом.
+// Всё прочее — ширина, фон или отступ мимо примитива секции.
+function outsideSections(html: string) {
+  const main = parseHtml(html).querySelector('main')
+  return [...(main?.children ?? [])]
+    .filter((child) => {
+      const title = child.querySelector(`[id="${child.getAttribute('aria-labelledby')}"]`)
+      const named = /^H[1-6]$/.test(title?.tagName ?? '') || child.getAttribute('aria-label')
+      return child.tagName !== 'SECTION' || !named
+    })
+    .map((child) => child.outerHTML.slice(0, 80))
+}
+
 // Страница целиком, как её отдаёт сборка: <head> разбирает тот же парсер, что seo:check и e2e.
 async function render(
   page: AstroComponentFactory,
@@ -69,6 +82,7 @@ async function render(
     blocks,
     jsonLd: blocks.map((block) => block['@type']),
     h1: html.match(/<h1\b/g)?.length ?? 0,
+    outsideSections: outsideSections(html),
   }
 }
 
@@ -91,7 +105,7 @@ describe('индексируемые страницы', () => {
     ['/blog', Blog, pair('/blog', '/en/blog'), ['BreadcrumbList']],
     ['/en/blog', BlogEn, pair('/blog', '/en/blog'), ['BreadcrumbList']],
   ])(
-    '%s: язык, self-canonical, hreflang пары, JSON-LD и один h1',
+    '%s: язык, self-canonical, hreflang пары, JSON-LD, один h1, страница — из секций',
     async (path, page, hreflang, jsonLd) => {
       const head = await render(page, path)
       expect(head.lang).toBe(localeOf(path))
@@ -100,6 +114,7 @@ describe('индексируемые страницы', () => {
       expect(head.hreflang).toEqual(hreflang)
       expect(head.jsonLd).toEqual(jsonLd)
       expect(head.h1).toBe(1)
+      expect(head.outsideSections).toEqual([])
     },
   )
 })
@@ -111,15 +126,19 @@ describe('служебные страницы', () => {
     ['/net-takoj-stranicy', NotFound],
     ['/en/no-such-page', NotFound],
     ['/500', ServerError],
-  ])('%s: только noindex — без canonical, hreflang и разметки', async (path, page) => {
-    const head = await render(page, path)
-    expect(head.lang).toBe(localeOf(path))
-    expect(head.robots).toBe('noindex')
-    expect(head.canonical).toBeUndefined()
-    expect(head.hreflang).toEqual({})
-    expect(head.jsonLd).toEqual([])
-    expect(head.h1).toBe(1)
-  })
+  ])(
+    '%s: только noindex — без canonical, hreflang и разметки; страница — из секций',
+    async (path, page) => {
+      const head = await render(page, path)
+      expect(head.lang).toBe(localeOf(path))
+      expect(head.robots).toBe('noindex')
+      expect(head.canonical).toBeUndefined()
+      expect(head.hreflang).toEqual({})
+      expect(head.jsonLd).toEqual([])
+      expect(head.h1).toBe(1)
+      expect(head.outsideSections).toEqual([])
+    },
+  )
 
   // Страница ошибки — на языке адреса и только на нём: второй язык в теле — шум и для человека,
   // и для определения языка страницы.
@@ -164,6 +183,7 @@ describe('служебные страницы', () => {
     const time = /<time datetime="([^"]+)"/.exec(html)?.[1] ?? ''
     expect(Math.abs(Date.parse(time) - Date.now())).toBeLessThan(60_000)
     expect(headTags(html).find((tag) => tag.name === 'robots')?.content).toBe('noindex')
+    expect(outsideSections(html)).toEqual([])
   })
 })
 
@@ -201,7 +221,7 @@ describe('маршруты с параметрами', () => {
     ['/blog/page/[page]', ListRu, ['/blog/page/2']],
     ['/en/blog/page/[page]', ListEn, []],
   ])(
-    '%s: адреса своей локали без черновиков, каждый — своя страница',
+    '%s: адреса своей локали без черновиков, каждый — своя страница из секций',
     async (route, module, expected) => {
       const { default: page, getStaticPaths } = module as DynamicRoute
       const pages = (await getStaticPaths()).map(({ params, props }) => ({
@@ -213,6 +233,7 @@ describe('маршруты с параметрами', () => {
         const head = await render(page, path, props)
         expect(head.lang, path).toBe(localeOf(path))
         expect(head.h1, path).toBe(1)
+        expect(head.outsideSections, path).toEqual([])
         if (THIN_TAGS.includes(path)) {
           expect(head.robots, path).toBe('noindex')
           expect(head.canonical, path).toBeUndefined()
