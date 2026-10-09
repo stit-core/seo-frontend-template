@@ -12,10 +12,18 @@ const RULES = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa', 'best-pra
 const violations = async (page: Page) =>
   (await new AxeBuilder({ page }).withTags(RULES).analyze()).violations
 
-// Обе темы: системная (prefers-color-scheme) и явный выбор через cookie острова.
-for (const scheme of ['light', 'dark'] as const) {
-  test.describe(`axe, тема ${scheme}`, () => {
-    test.use({ colorScheme: scheme })
+// Темы, которые сайт показывает, и путь посетителя к каждой: без темы по умолчанию её даёт
+// система, заданную полем THEME ставит разметка, остальные — выбор (cookie острова).
+const SITE_THEMES: ReadonlyArray<'light' | 'dark'> =
+  THEME.default === 'system' || THEME.switcher ? ['light', 'dark'] : [THEME.default]
+
+for (const theme of SITE_THEMES) {
+  test.describe(`axe, тема ${theme}`, () => {
+    test.use({ colorScheme: theme })
+    test.beforeEach(async ({ context, baseURL }) => {
+      if (THEME.default === 'system' || THEME.default === theme) return
+      await context.addCookies([{ name: 'scheme', value: theme, url: baseURL ?? '' }])
+    })
 
     // Каждая страница сборки и служебные on-demand: /now и 404 на языке каждой локали.
     const notFound = SUPPORTED_LOCALES.map((locale) => localePath(locale, '/net-takogo-adresa'))
@@ -49,7 +57,10 @@ test.describe('явный выбор темы', () => {
     await page.goto('/')
     const root = page.locator('html')
     await expect(root).toHaveAttribute('data-js', 'on')
-    await expect(root).not.toHaveAttribute('data-theme', /.*/)
+    // До выбора тема — из разметки: атрибут стоит только у темы по умолчанию.
+    expect(await root.getAttribute('data-theme')).toBe(
+      THEME.default === 'system' ? null : THEME.default,
+    )
     const canvas = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor)
     const system = await canvas()
 
