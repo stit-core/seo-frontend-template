@@ -27,6 +27,7 @@ async function render(site: typeof theme) {
   const document = parseHtml(html)
   return {
     root: document.documentElement,
+    main: document.querySelector('main'),
     island: document.head.querySelector('script[data-island="theme"]'),
     toggle: document.body.querySelector('[data-theme-toggle]'),
     colorScheme: document.querySelector('meta[name="color-scheme"]'),
@@ -46,6 +47,12 @@ describe('DocumentLayout', () => {
     expect(page.root.getAttribute('data-theme')).toBe('dark')
     expect(page.island).toBeNull()
     expect(page.toggle).toBeNull()
+  })
+
+  // Ширину, фон и отступы странице дают её секции: класс на <main> сузил бы каждую страницу.
+  it('оболочка страницу не сужает: у <main> — только место в колонке оболочки', async () => {
+    const page = await render({ default: 'system', switcher: true })
+    expect(page.main?.className).toBe('flex-1')
   })
 
   // color-scheme страницы объявляет файл токенов: у ДС с одной темой второй схемы нет.

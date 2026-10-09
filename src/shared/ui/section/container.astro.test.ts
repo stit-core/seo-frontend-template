@@ -14,15 +14,20 @@ async function render(props: Record<string, unknown> = {}) {
     // Граница ширины и поля страницы — роли слоя: `max-w-<роль>` и `px-page-x`.
     bounds: classes.filter((name) => name.startsWith('max-w-')),
     padded: classes.includes('px-page-x'),
+    centered: classes.includes('mx-auto'),
   }
 }
 
 describe('Container', () => {
-  it('у чтения, страницы и широкой сетки — своя граница и поля страницы; по умолчанию — чтение', async () => {
+  it('чтение, страница и широкая сетка — каждая в границе своей роли, по центру, с полями страницы; по умолчанию — чтение', async () => {
     const boxes = await Promise.all(['reading', 'page', 'wide'].map((width) => render({ width })))
-    expect(boxes.map(({ bounds }) => bounds.length)).toEqual([1, 1, 1])
-    expect(new Set(boxes.flatMap(({ bounds }) => bounds)).size).toBe(3)
+    expect(boxes.map(({ bounds }) => bounds)).toEqual([
+      ['max-w-measure'],
+      ['max-w-container'],
+      ['max-w-container-wide'],
+    ])
     expect(boxes.map(({ padded }) => padded)).toEqual([true, true, true])
+    expect(boxes.map(({ centered }) => centered)).toEqual([true, true, true])
     expect((await render()).classes).toEqual(boxes[0]?.classes)
   })
 
@@ -30,6 +35,7 @@ describe('Container', () => {
     const full = await render({ width: 'full' })
     expect(full.bounds).toEqual([])
     expect(full.padded).toBe(false)
+    expect(full.centered).toBe(false)
   })
 
   it('содержимое — внутри, класс раскладки каркаса — рядом со своими', async () => {

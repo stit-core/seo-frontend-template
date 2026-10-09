@@ -41,6 +41,17 @@ const post = (fields: Record<string, string>, headers: Record<string, string> = 
   body: new URLSearchParams(fields),
 })
 
+// Сводка ошибок подписана заголовком внутри раздела формы: первого уровня на странице ответа —
+// один, уровни идут без пропуска.
+const headingLevels = (doc: ReturnType<typeof parseHtml>) =>
+  [...doc.querySelectorAll('h1, h2, h3, h4, h5, h6')].map((heading) => Number(heading.tagName[1]))
+const outlineFaults = (levels: number[]) => [
+  ...(levels.filter((level) => level === 1).length === 1 ? [] : ['не один h1']),
+  ...levels.flatMap((level, index) =>
+    level - (levels[index - 1] ?? 0) > 1 ? [`пропуск уровня перед h${level}`] : [],
+  ),
+]
+
 const filled = {
   name: 'Мария',
   email: 'maria@example.com',
@@ -99,6 +110,7 @@ describe('/api/contact', () => {
     expect(html).toContain('value="Мария"')
     // Отказ — первое слово заголовка окна: вкладка и чтец экрана называют его раньше страницы.
     expect(doc.title).toMatch(/^Error: Contacts — /)
+    expect(outlineFaults(headingLevels(doc))).toEqual([])
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
@@ -111,6 +123,7 @@ describe('/api/contact', () => {
     const doc = parseHtml(html)
     expect(html).toContain(t('ru', 'form.error.delivery'))
     expect(doc.title).toMatch(/^Ошибка: Контакты — /)
+    expect(outlineFaults(headingLevels(doc))).toEqual([])
     expect(doc.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex')
   })
 
