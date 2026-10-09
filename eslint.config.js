@@ -133,6 +133,9 @@ const CSS_COLOR = `${HEX}[^{};]*[;}]|${FUNCTION_COLOR}`
 // порядок — не значение облика, ноль — сброс: `grid-cols-2`, `z-10` и `inset-0` законны.
 const COUNT = 'flex|order|z|grid-cols|grid-rows|col-span|row-span|line-clamp'
 const NUMERIC = String.raw`(?<![\w-])-?(?!(?:${COUNT})-\d+(?![\w.\/-]))[a-z][a-z-]*-(?!0(?![\w.\/]))(?:px|\d+(?:[.\/]\d+)?)(?![\w-])`
+// Ключевое слово со своим значением там, где значение несёт роль: интерлиньяж — у роли текста,
+// скругление — у роли радиуса.
+const KEYWORD = String.raw`(?<![\w-])(?:leading-none|rounded(?:-[a-z]{1,2})?-full)(?![\w-])`
 const ARBITRARY = String.raw`[\[\]()]`
 const DS_VARIABLE = String.raw`var\(\s*--`
 const CLASS = "JSXAttribute:matches([name.name='class'], [name.namespace.name='class'])"
@@ -162,6 +165,11 @@ const astroSyntax = [
     selector: `${CLASS} ${text(NUMERIC)}`,
     message:
       'UI: числовая утилита в классе — шаг или роль слоя сопоставления (mt-md); число — счёт и ноль',
+  },
+  {
+    selector: `${CLASS} ${text(KEYWORD)}`,
+    message:
+      'UI: leading-none и rounded-full — значение мимо роли: интерлиньяж несёт роль текста, скругление — роль радиуса',
   },
   {
     selector: `JSXAttribute ${text(DS_VARIABLE)}`,
