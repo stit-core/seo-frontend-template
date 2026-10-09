@@ -119,7 +119,7 @@ paths: ["src/**/*.test.ts", "e2e/**", "vitest.config.ts", "src/shared/lib/testin
 | `test` | Vitest с покрытием и порогами `vitest.config.ts` |
 | `steiger` | структура FSD: public API, сегменты, имена |
 | `check:gate` | гейт на гейт на `.gate-fixtures/`: линтеры, свои скрипты (и скрипт релиза `indexnow` на заглушке), guard-хук |
-| `check:content` | контент, `redirects.yaml` и карта on-demand маршрутов — до сборки |
+| `check:content` | контент (схема, даты не из будущего, тело без скрытой разметки), `redirects.yaml` и карта on-demand маршрутов — до сборки |
 | `build` | `astro build` с плейсхолдером origin |
 | `check:links` | внутренние ссылки сборки |
 | `seo:check` | head, разметка и политика сборки на каждой странице `dist/client`, карта сайта против сборки и источника |

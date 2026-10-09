@@ -1,7 +1,8 @@
-// Контентный гейт (до build): каждый .md коллекции проходит Zod-схему слайса, тело держит
-// инварианты (h1 только из title, alt у картинок, корневые ссылки на существующие маршруты),
-// переводы и content/redirects.yaml согласованы с маршрутами, у каждого on-demand маршрута —
-// строка в карте docs/reference/rendering.md. Падает раньше и понятнее сборки.
+// Контентный гейт (до build): каждый .md коллекции проходит Zod-схему слайса, дата опубликованной
+// записи — не позже дня проверки, тело держит инварианты (h1 только из title, alt у картинок,
+// корневые ссылки на существующие маршруты, ни скрытой разметки, ни своего оформления), переводы и
+// content/redirects.yaml согласованы с маршрутами, у каждого on-demand маршрута — строка в карте
+// docs/reference/rendering.md. Падает раньше и понятнее сборки.
 // YAML читает js-yaml (им же Astro читает frontmatter); TS-модули — только «листовые»
 // (без alias-импортов), их Node исполняет напрямую. Реестр коллекций — scripts/lib/content.mjs
 // проверяемого корня.
@@ -14,6 +15,7 @@ import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
 import { localePath, SUPPORTED_LOCALES } from '../src/shared/i18n/locale.ts'
 import { buildRedirectTable, isExternalTarget } from '../src/shared/redirects/table.ts'
 import { collectionsOf, splitFrontmatter } from './lib/content.mjs'
+import { attributesOf } from './lib/html.mjs'
 import { pageRoutes, walk } from './lib/routes.mjs'
 
 // Корень проекта; другой корень — негативные фикстуры check:gate (`.gate-fixtures/<скрипт>`).
@@ -28,6 +30,13 @@ const fail = (where, message) => {
   errors.push(`${where}: ${message}`)
 }
 const rel = (path) => relative(root, path).split(sep).join('/')
+
+// День проверки — календарный, по часам машины автора; дата записи — тоже календарная.
+const now = new Date()
+const TODAY = [now.getFullYear(), now.getMonth() + 1, now.getDate()]
+  .map((part) => String(part).padStart(2, '0'))
+  .join('-')
+const DATE_FIELDS = ['pubDate', 'updatedDate']
 
 // js-yaml нумерует строки от нуля внутри фрагмента; frontmatter начинается со второй строки файла.
 function yamlFailure(where, err, lineOffset) {
@@ -109,6 +118,15 @@ for (const collection of collections) {
         fail(where, `${issue.path.join('.') || 'frontmatter'}: ${issue.message}`)
       }
     }
+    // Дата из будущего — в разметке, карте сайта и фиде: поисковик читает её как признак подделки
+    // свежести. Запланированная запись ждёт своего дня черновиком.
+    for (const field of result.success && !result.data.draft ? DATE_FIELDS : []) {
+      const date = result.data[field]
+      const day = date instanceof Date ? date.toISOString().slice(0, 10) : undefined
+      if (day !== undefined && day > TODAY) {
+        fail(where, `${field} ${day} — позже дня проверки: отложенная публикация — это draft: true`)
+      }
+    }
     docs.push({
       file: where,
       dir: dirname(file),
@@ -128,6 +146,15 @@ const IMAGE_RE = /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g
 const LINK_RE = /(?<!!)\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g
 const HREF_RE = /\bhref=("([^"]*)"|'([^']*)')/gi
 const internalLinks = []
+// Атрибуты сырого HTML, которыми текст прячут от читателя или оформляют мимо стилей статьи.
+// Скрытый текст — текст только для роботов (спам для поисковика), а инлайн-стиль ещё и блокирует
+// CSP страницы: в гейте это видел бы только браузерный набор.
+const HIDING = {
+  style: 'инлайн-стиль блокирует CSP страницы, а скрытый им текст читатель не видит',
+  class: 'вид записи задаёт статья, а класс (hidden, sr-only) прячет текст от читателя',
+  hidden: 'текст, которого читатель не видит, — текст только для роботов',
+  'aria-hidden': 'текст, которого читатель не видит, — текст только для роботов',
+}
 
 const classify = (url) => {
   if (/^(#|mailto:|tel:)/i.test(url)) return 'skip'
@@ -138,8 +165,11 @@ const classify = (url) => {
 for (const doc of docs) {
   let inFence = false
   let previousLevel = 1
+  // Тело без кода, строка в строку: по нему ищутся теги — атрибут бывает и на следующей строке.
+  const clean = []
   doc.body.split('\n').forEach((line, index) => {
     const where = `${doc.file}:${doc.offset + index + 1}`
+    clean[index] = ''
     if (/^\s*(```|~~~)/.test(line)) {
       inFence = !inFence
       return
@@ -147,6 +177,7 @@ for (const doc of docs) {
     if (inFence) return
     // Inline-код — текст, а не разметка: упоминание `<img>` или `<meta http-equiv>` допустимо.
     const markup = line.replace(/`[^`]*`/g, '')
+    clean[index] = markup
 
     const heading = /^(#{1,6})\s/.exec(line)
     if (heading) {
@@ -181,6 +212,16 @@ for (const doc of docs) {
       if (kind === 'internal') internalLinks.push({ where, url })
     }
   })
+
+  const text = clean.join('\n')
+  for (const tag of text.matchAll(/<[a-z][\w:-]*\b([^>]*)>/gi)) {
+    const line = text.slice(0, tag.index).split('\n').length
+    const attributes = attributesOf(tag[1] ?? '')
+    for (const [name, reason] of Object.entries(HIDING)) {
+      if (attributes.has(name))
+        fail(`${doc.file}:${doc.offset + line}`, `атрибут ${name} в теле: ${reason}`)
+    }
+  }
 }
 
 // ---------- переводы и сниппеты ----------

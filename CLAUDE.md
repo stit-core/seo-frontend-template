@@ -59,7 +59,7 @@ origin штампуется при старте.
 | `/stack-deep-dive` | платформа: `docs/stack/*.md` волнами до `stable` |
 | `/de-template` | разворот фундамента по stable-артефактам (на каноническом репо — никогда) |
 | `/scaffold` | `page` · `collection` · `feature` · `widget` · `route` по канону |
-| `/content` | запись коллекции: frontmatter в бюджетах, перевод, `check:content` |
+| `/content` | запись коллекции: frontmatter в бюджетах, текст для поиска и ИИ-ответов, перевод, `check:content` |
 | `/seo-audit` | прогон `seo:check` + HTTP-набора + curl по домену, отчёт |
 | `/release` | аудит прод-зависимостей, образ, приёмка, тег, пуш, handoff в `<org>/infra` |
 
@@ -78,7 +78,7 @@ origin штампуется при старте.
 | `pnpm test:e2e` | build + браузерный набор `e2e/browser/`: axe в двух темах, тема, форма без JS — обязательный шаг `/release` |
 | `pnpm steiger` | структурный линтер FSD |
 | `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome и свои скрипты гейта (`seo:check`, `check:links`, `check:content`, `plan:check`) — ровно нарушениями из `expected.json`, скрипт релиза `indexnow` — ровно его исходами на локальной заглушке; guard-хук — отказ каждому обходу из `guard.json` |
-| `pnpm check:content` | контент-гейт до build: схема каждого `.md`, тело, переводы, ссылки, `content/redirects.yaml`, строка карты `rendering.md` у каждого on-demand маршрута |
+| `pnpm check:content` | контент-гейт до build: схема каждого `.md`, даты не из будущего, тело (без скрытой разметки), переводы, ссылки, `content/redirects.yaml`, строка карты `rendering.md` у каждого on-demand маршрута |
 | `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` (и абсолютные URL своего сайта) существуют и записаны канонической формой адреса |
 | `pnpm seo:check` | после build: у каждой страницы `dist/client` title/description (уникальные, в бюджетах, не общие), self-canonical, `lang`, один h1, OG с картинкой, первая иконка — PNG от 48 px, hreflang у каждой пары переводов, JSON-LD = видимое, организация одна (`@id`, имя), карта сайта = индексируемые страницы сборки; `noindex`, острова, чужие ресурсы и типы JSON-LD — только по списку `scripts/lib/site-policy.mjs`, теги индексируются от порога записей |
 | `pnpm size` | бюджеты `.size-limit.cjs` (CSS, HTML главной и поста) |
@@ -96,7 +96,7 @@ origin штампуется при старте.
 | Тема | Где |
 |---|---|
 | FSD под Astro: слои, навязанные entry, public API, server-only | rule `fsd-architecture` + `docs/reference/architecture.md` |
-| Контент: frontmatter и бюджеты, один h1, черновики, переводы, `redirects.yaml`, контент-гейты | rule `content-invariants` |
+| Контент: frontmatter и бюджеты, даты не из будущего, один h1, тело без скрытой разметки, черновики, переводы, `redirects.yaml`, контент-гейты | rule `content-invariants` |
 | env, `SITE_URL`, плейсхолдер и штамповка, что из env попадает в HTML | rule `env-local` |
 | Режимы рендера, карта маршрутов, кеш-заголовки, канон `astro.config.ts`, рецепт D | `docs/reference/rendering.md` + rule `render-safety` |
 | Тесты: два проекта Vitest, Container API, axe, Playwright, покрытие и пороги | rule `tests-pipeline` |

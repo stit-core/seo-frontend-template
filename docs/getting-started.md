@@ -83,7 +83,7 @@ DIST_DIR=dist SITE_URL=http://localhost:3000 sh docker/entrypoint.sh pnpm start
 
 ```bash
 /content              # запись по канону: бюджеты сниппета, translationKey, обложка
-pnpm check:content    # схема, тело, ссылки, переводы, redirects.yaml
+pnpm check:content    # схема, даты, тело без скрытой разметки, ссылки, переводы, redirects.yaml
 pnpm check            # полный гейт
 ```
 
