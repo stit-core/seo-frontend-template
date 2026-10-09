@@ -273,7 +273,16 @@
     "первый выкат: → /blog/pravlenaya",
     "первый выкат: → /blog/prezhnyaya",
     "первый выкат: → /blog/udalyonnaya",
-    "карта «до» с другого сайта: код 1"
+    "карта «до» с другого сайта: код 1",
+    "карта «до» без адресов: код 1",
+    "приёмник отказал: код 1",
+    "приёмник отказал: + /blog/novaya",
+    "приёмник отказал: ~ /blog/pravlenaya",
+    "приёмник отказал: - /blog/udalyonnaya",
+    "приёмник отказал: запрос приёмнику — host, key и keyLocation сайта",
+    "приёмник отказал: → /blog/novaya",
+    "приёмник отказал: → /blog/pravlenaya",
+    "приёмник отказал: → /blog/udalyonnaya"
   ],
   "plans": [
     "E .claude/plans/sub: вне модели планов — план живёт в .claude/plans/<slug>.md, бэклог в .claude/plans/backlog.md (skill /plan)",

@@ -135,6 +135,8 @@ found.plans = plans.stdout.split('\n').filter((line) => /^[EW] /.test(line))
 // заглушка ставит в них свой адрес — как контейнер при старте. Исход сценария — код выхода, адреса,
 // которые скрипт назвал изменёнными, и то, что дошло до приёмника.
 const INDEXNOW_KEY = 'gate-indexnow-key-0123'
+// Адрес приёмника, на котором заглушка отвечает 403 — как поисковик на неподтверждённый ключ.
+const REFUSING = '/indexnow/403'
 const ORIGIN_PLACEHOLDER = 'https://__site_origin__'
 
 function run(args) {
@@ -159,14 +161,14 @@ async function indexNowOutcomes() {
   let posts = []
   const server = createServer((request, response) => {
     const origin = `http://${request.headers.host}`
-    if (request.method === 'POST' && request.url === '/indexnow') {
+    if (request.method === 'POST' && request.url.startsWith('/indexnow')) {
       let body = ''
       request.on('data', (chunk) => {
         body += chunk
       })
       request.on('end', () => {
         posts.push(JSON.parse(body))
-        response.writeHead(200).end()
+        response.writeHead(request.url === REFUSING ? 403 : 200).end()
       })
     } else if (request.url === '/sitemap.xml') {
       response.end(live.replaceAll(ORIGIN_PLACEHOLDER, origin))
@@ -180,7 +182,7 @@ async function indexNowOutcomes() {
   writeFileSync(before, map('before.xml').replaceAll(ORIGIN_PLACEHOLDER, origin))
 
   const lines = []
-  const scenario = async (name, liveMap, args) => {
+  const scenario = async (name, liveMap, args, endpoint = '/indexnow') => {
     live = map(liveMap)
     posts = []
     const { code, stdout } = await run([
@@ -188,7 +190,7 @@ async function indexNowOutcomes() {
       origin,
       ...args,
       '--endpoint',
-      `${origin}/indexnow`,
+      `${origin}${endpoint}`,
     ])
     lines.push(`${name}: код ${code}`)
     for (const line of stdout.split('\n').filter((text) => /^ {2}[+~-] /.test(text))) {
@@ -216,6 +218,12 @@ async function indexNowOutcomes() {
     ...key,
     '--send',
   ])
+  await scenario('карта «до» без адресов', 'after.xml', [
+    resolve(fixtures, 'indexnow/ne-karta.html'),
+    ...key,
+    '--send',
+  ])
+  await scenario('приёмник отказал', 'after.xml', [before, ...key, '--send'], REFUSING)
   server.close()
   rmSync(temp, { recursive: true, force: true })
   return lines
