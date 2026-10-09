@@ -32,6 +32,9 @@ const rule = (utility: string) =>
   new RegExp(`\\.${utility}\\s*\\{([^}]*)\\}`).exec(compiler.build([utility]))?.[1] ?? ''
 // Переменная ДС, которую утилита роли кладёт в своё свойство.
 const roleOf = (utility: string) => /var\((--[\w-]+)\)/.exec(rule(utility))?.[1] ?? utility
+// Свойство утилита берёт у роли — какой именно, решает строка слоя, а не тест.
+const fromRole = (utility: string, property: string) =>
+  new RegExp(`(?<![\\w-])${property}: var\\(--[\\w-]+`).test(rule(utility))
 
 const declared = (source: string) => new Set(source.match(/--[\w-]+(?=\s*:)/g))
 const referenced = (source: string) =>
@@ -134,6 +137,7 @@ const PAIRS = [
   ['border-danger', 'bg-canvas', 3],
   ['border-danger', 'bg-surface', 3],
   ['bg-accent-solid', 'bg-canvas', 3],
+  ['bg-accent-solid-hover', 'bg-canvas', 3],
   ['outline-focus-ring', 'bg-canvas', 3],
   ['outline-focus-ring', 'bg-surface', 3],
   ['outline-focus-ring', 'bg-accent', 3],
@@ -180,12 +184,12 @@ it('тема Tailwind по умолчанию выключена: её клас�
     ...['rounded-md', 'max-w-prose', 'sm:hidden', 'lg:hidden', 'shadow-md'],
   ]
   expect(closed.filter((utility) => adds([utility]))).toEqual([])
-  expect(rule('text-secondary')).toContain('color: var(--color-text-secondary)')
+  expect(fromRole('text-secondary', 'color')).toBe(true)
 })
 
 it('утилита роли — только своего свойства: роль фона не красит текст', () => {
   expect(adds(['text-canvas', 'bg-secondary', 'border-canvas'])).toBe(false)
-  expect(compiler.build(['bg-canvas'])).toContain('background-color: var(--color-bg-canvas)')
+  expect(fromRole('bg-canvas', 'background-color')).toBe(true)
 })
 
 it('роль текста — одна утилита: кегль, интерлиньяж, насыщенность и трекинг', () => {
@@ -195,15 +199,12 @@ it('роль текста — одна утилита: кегль, интерл�
   )
   const parts = ['font-size', 'line-height', 'font-weight', 'letter-spacing']
   expect(roles).toContain('body')
-  expect(
-    roles.filter((role) => !parts.every((part) => rule(`text-${role}`).includes(`${part}: `))),
-  ).toEqual([])
-  expect(rule('text-lead')).toContain('font-size: var(--type-lead-size)')
+  expect(roles.filter((role) => !parts.every((part) => fromRole(`text-${role}`, part)))).toEqual([])
 })
 
 it('отступ — шаг шкалы и ритм файла токенов', () => {
-  expect(rule('mt-md')).toContain('margin-top: var(--space-md)')
-  expect(rule('px-page-x')).toContain('padding-inline: var(--rhythm-page-x)')
+  expect(fromRole('mt-md', 'margin-top')).toBe(true)
+  expect(fromRole('px-page-x', 'padding-inline')).toBe(true)
 })
 
 // Условие @media не читает var(): границу слой повторяет значением, и расхождение с файлом
@@ -232,6 +233,52 @@ it('color-scheme объявляет только файл токенов', () =>
   expect(colorSchemes(compiler.build([]))).toEqual(colorSchemes(tokens))
 })
 
+// Слой — блок `@theme inline` (строки «ключ утилиты: роль») и правила под ним: базовые стили и
+// классы-компоненты на `@apply` тех же утилит.
+const source = layer.replace(/\/\*[\s\S]*?\*\//g, '')
+const THEME_BLOCK = /@theme inline \{([^}]*)\}/
+const mapping = Array.from(
+  (THEME_BLOCK.exec(source)?.[1] ?? '').matchAll(/(--[\w*-]+):\s*([^;]+);/g),
+  ([, key = '', value = '']) => [key, value.trim()] as const,
+)
+
+// Значение, зашитое в строку слоя, замена файла токенов не переодела бы. Свои значения — у сброса
+// темы, нуля и границ раскладки (их равенство файлу держит тест выше); колонка сетки — раскладка.
+it('строка слоя сопоставления — роль файла токенов, а не значение', () => {
+  const own = /^--(?:\*|spacing-0|breakpoint-[\w-]+)$/
+  expect(mapping.length).toBeGreaterThan(0)
+  expect(
+    mapping
+      .filter(([key]) => !own.test(key))
+      .filter(([, value]) => value.replace(/var\(--[\w-]+\)|minmax\(0, 1fr\)/g, '').trim() !== '')
+      .map(([key, value]) => `${key}: ${value}`),
+  ).toEqual([])
+})
+
+// Правило слоя берёт значение утилитой роли (`@apply`): число в его объявлении — литерал мимо
+// роли. Свои числа — у ширины поля и перехода кнопки.
+it('число в правилах слоя — только названные литералы', () => {
+  const rules = source.replace(THEME_BLOCK, '').replace(/@apply[^;]*;/g, '')
+  expect(
+    Array.from(
+      rules.matchAll(/([\w-]+)\s*:\s*([^;{}]*[1-9][^;{}]*);/g),
+      ([, property = '', value = '']) => `${property}: ${value.trim()}`,
+    ),
+  ).toEqual(['width: 100%', 'transition: background-color 0.15s ease-out'])
+})
+
+// Гарнитуру страницы и кода и толщину линии базовые стили и утилиты Tailwind берут у слоя: без
+// его строки их место молча занимают стек и пиксель Tailwind.
+it('гарнитуры и толщина линии по умолчанию — роли, а не значения Tailwind', () => {
+  const families = Array.from(
+    compiler.build([]).matchAll(/(?<![\w-])font-family:\s*([^;]+);/g),
+    ([, value = '']) => value,
+  )
+  expect(families.length).toBeGreaterThan(1)
+  expect(families.filter((value) => !/^(?:var\(--[\w-]+|inherit$)/.test(value))).toEqual([])
+  expect(fromRole('border', 'border-width')).toBe(true)
+})
+
 // Файл токенов в форме ds_build из тем: тема значений — блоком `:root`, отличия парных от неё —
 // блоком по системе и блоком по атрибуту.
 const render = ([base, values]: Theme, pairs: readonly Theme[] = []) => {
@@ -255,18 +302,18 @@ const render = ([base, values]: Theme, pairs: readonly Theme[] = []) => {
   ].join('\n\n')
 }
 
-// Проверки не знают значений и тем ДС шаблона: они идут по её файлу и по тем же ролям в других
+// Проверки не знают значений и тем дизайн-системы: они идут по её файлу и по тем же ролям в других
 // формах ds_build — с парной темой в значениях `:root` и с одной темой, под которую стоит поле THEME.
 const [ofValues, ...ofPairs] = themesOf(tokens).themes
 const DS: Array<{ ds: string; css: string; site: Site }> = [
-  { ds: 'ДС шаблона', css: tokens, site: THEME },
+  { ds: 'файл токенов', css: tokens, site: THEME },
   ...ofPairs.map((pair) => ({
-    ds: `ДС шаблона, тема значений — ${pair[0]}`,
+    ds: `файл токенов, тема значений — ${pair[0]}`,
     css: render(pair, [ofValues]),
     site: THEME,
   })),
   {
-    ds: 'ДС шаблона с одной темой',
+    ds: 'файл токенов с одной темой',
     css: render(ofValues),
     site: { default: ofValues[0], switcher: false },
   },
@@ -379,40 +426,65 @@ const read = (node: unknown, ...path: string[]) =>
       typeof value === 'object' ? (value as Partial<Node> | null)?.[key] : undefined,
     node,
   )
-function* nodesOf(node: Node, inside: Node[] = []): Generator<[node: Node, inside: Node[]]> {
-  yield [node, inside]
-  for (const [key, value] of Object.entries(node)) {
-    const children: unknown[] = key === 'parent' ? [] : Array.isArray(value) ? value : [value]
-    for (const child of children) if (isNode(child)) yield* nodesOf(child, [...inside, node])
+const childrenOf = (node: Node, field: string) =>
+  ([] as unknown[]).concat(node[field]).filter(isNode)
+function* nodesOf(node: Node, parent?: Node): Generator<[node: Node, parent: Node | undefined]> {
+  yield [node, parent]
+  for (const field of Object.keys(node)) {
+    if (field !== 'parent') for (const child of childrenOf(node, field)) yield* nodesOf(child, node)
   }
 }
 const isClass = (node: Node) =>
   node.type === 'JSXAttribute' &&
   (read(node, 'name', 'namespace', 'name') ?? read(node, 'name', 'name')) === 'class'
 
-const SRC = fileURLToPath(new URL('../..', import.meta.url))
+// Строка класса — литерал на месте значения: поля узла, откуда значение доходит до атрибута.
+// Условие (проверка `? :`, левая часть `&&`, значение ключа объекта) классом не становится.
+const VALUE: Record<string, readonly string[]> = {
+  JSXAttribute: ['value'],
+  JSXExpressionContainer: ['expression'],
+  TemplateLiteral: ['quasis', 'expressions'],
+  ArrayExpression: ['elements'],
+  ObjectExpression: ['properties'],
+  Property: ['key'],
+  ConditionalExpression: ['consequent', 'alternate'],
+  LogicalExpression: ['right'],
+}
+function* classTexts(node: Node, isKey = false): Generator<unknown> {
+  if (node.type === 'Literal') yield node.value
+  if (node.type === 'TemplateElement') yield read(node, 'value', 'raw')
+  if (node.type === 'Identifier' && isKey) yield node.name
+  const own = node.type === 'Property' && node.computed === true ? [] : (VALUE[node.type] ?? [])
+  for (const field of own) {
+    for (const child of childrenOf(node, field)) yield* classTexts(child, node.type === 'Property')
+  }
+}
+
 const selectors = (css: string) => new Set(css.match(/\.[a-z_][\w-]*/gi))
+function classesOf(code: string) {
+  const classes = new Set<string>()
+  const styles: unknown[] = []
+  const { ast } = parseForESLint(code, { parser: tseslint.parser })
+  for (const [node, parent] of nodesOf(ast as unknown as Node)) {
+    const inStyle = read(parent, 'openingElement', 'name', 'name') === 'style'
+    if (node.type === 'AstroRawText' && inStyle) styles.push(node.value)
+    if (!isClass(node)) continue
+    for (const text of classTexts(node)) {
+      if (typeof text === 'string') for (const word of text.split(/\s+/)) classes.add(word)
+    }
+  }
+  return { classes: [...classes].filter(Boolean), own: selectors(styles.join('\n')) }
+}
+
+const SRC = fileURLToPath(new URL('../..', import.meta.url))
 const components = readdirSync(SRC, { recursive: true, encoding: 'utf8' })
   .filter((path) => path.endsWith('.astro'))
-  .map((path) => {
-    const classes = new Set<string>()
-    const styles: unknown[] = []
-    const { ast } = parseForESLint(readFileSync(join(SRC, path), 'utf8'), {
-      parser: tseslint.parser,
-    })
-    for (const [node, inside] of nodesOf(ast as unknown as Node)) {
-      const inStyle = read(inside.at(-1), 'openingElement', 'name', 'name') === 'style'
-      if (node.type === 'AstroRawText' && inStyle) styles.push(node.value)
-      if (!inside.some(isClass)) continue
-      const words = node.type === 'TemplateElement' ? read(node, 'value', 'raw') : node.value
-      if (typeof words === 'string') for (const word of words.split(/\s+/)) classes.add(word)
-    }
-    return { path, classes: [...classes].filter(Boolean), own: selectors(styles.join('\n')) }
-  })
+  .map((path) => ({ path, ...classesOf(readFileSync(join(SRC, path), 'utf8')) }))
 
-// Строка слоя, которую берёт только разметка, удалена или класс написан мимо слоя — у класса нет
-// ни байта CSS, и сборка об этом молчит.
-it('каждый класс разметки даёт CSS: утилита слоя, класс-компонент слоя или класс своего <style>', async () => {
+// Маркер — класс без CSS по устройству Tailwind: его читают варианты `group-*:` и `peer-*:`.
+const MARKER = /^(?:group|peer)(?:\/[\w-]+)?$/
+// Классы без CSS: не утилита слоя, не класс-компонент слоя и не класс своего <style>.
+async function withoutCss(files: ReadonlyArray<ReturnType<typeof classesOf> & { path: string }>) {
   // Свежий компилятор: он копит классы, и «класс дал CSS» видно только при первом вызове.
   const fresh = await compileLayer()
   let css = fresh.build([])
@@ -426,12 +498,46 @@ it('каждый класс разметки даёт CSS: утилита сло
     }
     return given.get(name) === true
   }
+  return files.flatMap(({ path, classes, own }) =>
+    classes
+      .filter((name) => !MARKER.test(name) && !gives(name))
+      .filter((name) => !ofLayer.has(`.${name}`) && !own.has(`.${name}`))
+      .map((name) => `${path}: ${name}`),
+  )
+}
+
+// Строка слоя, которую берёт только разметка, удалена или класс написан мимо слоя — у класса нет
+// ни байта CSS, и сборка об этом молчит.
+it('каждый класс разметки даёт CSS: утилита слоя, класс-компонент слоя или класс своего <style>', async () => {
   expect(components.length).toBeGreaterThan(0)
-  expect(
-    components.flatMap(({ path, classes, own }) =>
-      classes
-        .filter((name) => !gives(name) && !ofLayer.has(`.${name}`) && !own.has(`.${name}`))
-        .map((name) => `${path}: ${name}`),
-    ),
-  ).toEqual([])
+  expect(await withoutCss(components)).toEqual([])
+})
+
+it('слово класса — литерал на месте значения: условие и маркер — не класс, класс без CSS назван', async () => {
+  const probe = classesOf(`---
+const { class: className, locale, wide } = Astro.props
+---
+
+<p
+  class:list={[
+    'mt-md',
+    locale === 'en' && 'text-secondary',
+    { hidden: wide, 'text-lead': locale !== 'ru' },
+    wide ? \`gap-lg \${className}\` : 'gap-md',
+    className,
+  ]}
+>
+  <a class="group peer/menu mt-4 text-secondry" href="/">…</a>
+</p>
+`)
+  expect(probe.classes.toSorted()).toEqual(
+    [
+      ...['mt-md', 'text-secondary', 'hidden', 'text-lead', 'gap-lg', 'gap-md'],
+      ...['group', 'peer/menu', 'mt-4', 'text-secondry'],
+    ].toSorted(),
+  )
+  expect(await withoutCss([{ path: 'probe.astro', ...probe }])).toEqual([
+    'probe.astro: mt-4',
+    'probe.astro: text-secondry',
+  ])
 })
