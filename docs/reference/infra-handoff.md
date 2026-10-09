@@ -79,9 +79,12 @@
 Контракт полей (отклонение от любого пункта ломает сервис или SEO):
 
 - **`image`** — `${REGISTRY_HOST:-git.stit.tech}/${PROJECT_NAME}/site:${SITE_TAG}`; тег
-  живёт строго в `.env` (`SITE_TAG`), бамп — `make bump SVC=site TAG=vX.Y.Z`.
+  живёт строго в `.env` (`SITE_TAG`), ставит и меняет его `make bump SVC=site TAG=vX.Y.Z`.
 - **`profiles: [site]`** — сервис opt-in, как `backend`: без опубликованного образа
-  `compose up --wait` упал бы на pull'е.
+  `compose up --wait` упал бы на pull'е. Первый разворот — в этом порядке: профиль в
+  `COMPOSE_PROFILES`, затем `make bump` — он ставит `SITE_TAG`. Профиль без тега роняет
+  `make deploy` (`invalid reference format`), а `make bump` без профиля поднимает сервис,
+  которым `make deploy` не управляет.
 - **Никакого `read_only: true` и тома на `/app/dist/client`.** Штамповка origin перезаписывает
   выход сборки, который живёт в образе. Пустой bind или tmpfs на этом пути — отказ старта
   (`index.html` нет), именованный том после `make bump` отдал бы файлы прошлого релиза, запись
@@ -101,14 +104,25 @@
   во внутренний сервис (`FORM_DELIVERY=backend`). `depends_on` на backend не ставится:
   падение бэкенда не должно мешать сайту подняться и отдать страницы.
 - **`healthcheck`** на `/healthz` — контейнерный (у образа свой, compose-уровневый нужен
-  правилу `compose-and-services`) и **Traefik-side** на сервисе: docker-healthcheck
-  Traefik не читает, и без собственной проверки он при force-recreate отправит трафик в
-  ещё не слушающий процесс.
+  правилу `compose-and-services`) с `start_interval: 1s` и **Traefik-side** на сервисе.
+  Docker-провайдер Traefik строит роутеры контейнера после первой удачной пробы его healthcheck
+  и снимает их при `unhealthy`: пока контейнер в состоянии `starting`, роутеров сайта нет, и
+  частая проба на старте сокращает это окно при пересоздании (`make bump`) с ~5 до ~2 с. В окне
+  на адресах сайта отвечает заглушка корня, пока она в стеке (1.6): `/` — её страница с кодом
+  200, остальные пути — её 404; без заглушки — 404 Traefik. Проверка на стороне Traefik снимает
+  с балансировки зависший процесс за секунды, не дожидаясь трёх провалов healthcheck контейнера.
+- **Docker Engine ≥ 25 на VPS** — его требует ключ `start_interval`: на движке старше compose
+  контейнер не создаёт, а плагин compose до v2.20.2 не разбирает сам файл — тогда падает любой
+  верб. Версию называет `make doctor`.
 - **`user:` не задавать** — образ уже не root; чужой uid сломает штамповку (файлы
   `dist/` принадлежат `node`).
 - **`logging:` не задавать** — ротация json-file (10 МБ × 3) уже настроена на хосте
   ролью `ansible/roles/docker`. Регулятор объёма — `LOG_LEVEL`.
-- **Роутер `site-www` — для apex-домена.** У среды на поддомене (`staging.<domain>`) имени
+- **Роутер `site-www` только редиректит — сервиса сайта у него нет.** Его сервис —
+  `noop@internal`, а не `site`: в цепочке этого роутера нет ни лимитов, ни запрета `/_image`,
+  ни контура не-прод, поэтому запрос, на котором редирект не сработал, получает 418 от Traefik,
+  а не сайт. Механизм и требование к записям `Host` — 1.3.
+- **`site-www` — роутер apex-домена.** У среды на поддомене (`staging.<domain>`) имени
   `www.staging.<domain>` обычно нет: сертификат на него не выпускается, Traefik пишет ошибку
   ACME, а preflight DNS (1.6) предупреждает на каждом деплое. Это шум, а не отказ; его снимает
   DNS-запись `www.<поддомен>` (или wildcard).
@@ -119,19 +133,25 @@ services:
     image: ${REGISTRY_HOST:-git.stit.tech}/${PROJECT_NAME}/site:${SITE_TAG}
     container_name: site
     restart: unless-stopped
+    # Opt-in: COMPOSE_PROFILES=site. Без опубликованного образа `compose up --wait`
+    # упадёт на pull'е — первый тег ставит `make bump SVC=site TAG=<tag>`.
     profiles: [site]
-
-    # read_only НЕ ставим: entrypoint штампует SITE_URL в /app/dist/client при старте.
+    # При старте entrypoint штампует SITE_URL в выход сборки внутри образа
+    # (/app/dist/client), поэтому здесь нет read_only, тома на этом пути и user:
+    # (файлы принадлежат node — чужой uid ломает штамповку).
     init: true
-    # SHUTDOWN_TIMEOUT_MS образа — 15 с; grace period обязан быть больше.
+    # Больше SHUTDOWN_TIMEOUT_MS образа (15 с): меньше — SIGKILL посреди дренажа.
     stop_grace_period: 20s
-
+    # Ключи формы и наблюдаемости — с умолчаниями (.env.example § profile site):
+    # обязательная переменная выключенного профиля уронила бы `compose config` всего стека.
     environment:
-      # Канонический origin: без него контейнер не стартует. Без хвостового слеша.
+      # Канонический origin, без хвостового слеша. Смена домена — пересоздание
+      # контейнера (make recreate), не restart: origin уже проштампован в файлы.
       SITE_URL: https://${DOMAIN}
       ROBOTS_POLICY: ${ROBOTS_POLICY:-index}
       RELEASE: ${SITE_TAG}
       LOG_LEVEL: ${SITE_LOG_LEVEL:-info}
+      # ≈ 75 % mem_limit: без потолка GC узнаёт о лимите поздно — OOM-kill вместо сборки мусора.
       NODE_OPTIONS: --max-old-space-size=384
       INDEXNOW_KEY: ${SITE_INDEXNOW_KEY:-}
       FORM_DELIVERY: ${SITE_FORM_DELIVERY:-smtp}
@@ -141,46 +161,51 @@ services:
       FORM_BACKEND_URL: ${SITE_FORM_BACKEND_URL:-}
       SENTRY_DSN: ${SITE_SENTRY_DSN:-}
       SENTRY_ENVIRONMENT: ${ENV}
-
     mem_limit: 512m
     cpus: 1.0
-
-    networks: [proxy]
-
+    # Порт наружу не публикуется: чужой Host до сервиса не пускает только роутинг edge.
+    networks:
+      - proxy
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/healthz"]
       interval: 10s
       timeout: 3s
       retries: 3
       start_period: 15s
-
+      # Роутеры контейнера в состоянии starting Traefik не строит: при пересоздании
+      # запросы уходят мимо сайта до первой удачной пробы — на старте она частая.
+      # Ключу нужен Docker Engine ≥ 25: версию называет make doctor.
+      start_interval: 1s
     labels:
       traefik.enable: "true"
       traefik.docker.network: proxy
 
-      # Корневой домен — задокументированное исключение из сабдоменного канона.
-      # Заглушку на корне перебивает приоритетом (у неё priority=1).
-      # Только GET и HEAD: статик-хендлер отдаёт файл на любой метод, а POST у сайта один — форма.
+      # Корень ${DOMAIN} — исключение из сабдоменного канона; заглушку (priority 1)
+      # роутер перебивает приоритетом. Только GET и HEAD: статик-хендлер отдаёт файл
+      # на любой метод, а POST у сайта один — форма.
       traefik.http.routers.site.rule: Host(`${DOMAIN}`) && (Method(`GET`) || Method(`HEAD`))
       traefik.http.routers.site.entrypoints: websecure
       traefik.http.routers.site.tls: "true"
       traefik.http.routers.site.tls.certresolver: letsencrypt
-      traefik.http.routers.site.middlewares: crowdsec@file,rate-limit@file,secure-headers@file,compress@file,retry@file${SITE_EDGE_EXTRA_MW:-}
+      # Хвост цепочки — контур не-прод среды, и включает его сам пароль: пока задан
+      # STAGING_BASIC_AUTH_USERS, роутеры site и site-form закрыты цепочкой staging@file.
+      traefik.http.routers.site.middlewares: crowdsec@file,rate-limit@file,secure-headers@file,compress@file,retry@file${STAGING_BASIC_AUTH_USERS:+,staging@file}
 
-      # Публичный POST формы: свой лимит частоты и лимит тела.
+      # Публичный POST формы: свой лимит частоты и тела; без retry (повтор — вторая
+      # заявка) и без compress.
       traefik.http.routers.site-form.rule: Host(`${DOMAIN}`) && Path(`/api/contact`) && Method(`POST`)
       traefik.http.routers.site-form.priority: "100"
       traefik.http.routers.site-form.entrypoints: websecure
       traefik.http.routers.site-form.tls: "true"
       traefik.http.routers.site-form.tls.certresolver: letsencrypt
-      traefik.http.routers.site-form.middlewares: crowdsec@file,form-rate-limit@file,form-body-limit@file,secure-headers@file${SITE_EDGE_EXTRA_MW:-}
+      traefik.http.routers.site-form.middlewares: crowdsec@file,form-rate-limit@file,form-body-limit@file,secure-headers@file${STAGING_BASIC_AUTH_USERS:+,staging@file}
       traefik.http.routers.site-form.service: site
 
-      # /_image — endpoint изображений Astro: приложение отвечает 404 (картинки готовит сборка),
-      # а запрос на трансформацию не должен доходить до процесса — sharp на запрос это CPU и RAM.
-      # Маршрут и его подпути, а не префикс имени: public/_images/… сайта правило не задевает.
-      # Приоритет по умолчанию у Traefik — длина правила, у site она растёт с доменом: 1000 выше её
-      # при любом домене (253 символа — длина 298).
+      # /_image — endpoint изображений Astro: картинки готовит сборка, и запрос на
+      # трансформацию (sharp — CPU и RAM) не должен доходить до процесса. Маршрут и
+      # его подпути, а не префикс имени: public/_images/… правило не задевает.
+      # Приоритет по умолчанию — длина правила, у site она растёт с доменом: 1000
+      # выше её при любом домене.
       traefik.http.routers.site-image.rule: Host(`${DOMAIN}`) && (Path(`/_image`) || PathPrefix(`/_image/`))
       traefik.http.routers.site-image.priority: "1000"
       traefik.http.routers.site-image.entrypoints: websecure
@@ -189,17 +214,19 @@ services:
       traefik.http.routers.site-image.middlewares: crowdsec@file,deny-all@file
       traefik.http.routers.site-image.service: site
 
-      # www → apex одним 301, отдельным роутером: regexp не гоняется на apex-запросах.
+      # www → apex одним 301, отдельным роутером: regexp не гоняется на запросах apex.
+      # Роутер не проксирует — сервис noop@internal: запрос, на котором редирект не
+      # сработал, получает 418 от Traefik, а не сайт в обход цепочек роутеров apex.
       traefik.http.routers.site-www.rule: Host(`www.${DOMAIN}`)
       traefik.http.routers.site-www.entrypoints: websecure
       traefik.http.routers.site-www.tls: "true"
       traefik.http.routers.site-www.tls.certresolver: letsencrypt
       traefik.http.routers.site-www.middlewares: crowdsec@file,www-to-apex@file
-      traefik.http.routers.site-www.service: site
+      traefik.http.routers.site-www.service: noop@internal
 
       traefik.http.services.site.loadbalancer.server.port: "3000"
-      # Traefik не читает docker healthcheck — свой нужен, чтобы при force-recreate
-      # трафик не уходил в ещё не слушающий процесс.
+      # Проверка на стороне Traefik снимает сервер с балансировки, когда процесс
+      # перестал отвечать, не дожидаясь трёх провалов healthcheck контейнера.
       traefik.http.services.site.loadbalancer.healthcheck.path: /healthz
       traefik.http.services.site.loadbalancer.healthcheck.interval: 5s
       traefik.http.services.site.loadbalancer.healthcheck.timeout: 2s
@@ -212,8 +239,8 @@ services:
 
 | ключ `.env` VPS | env контейнера | значение | обязателен |
 |---|---|---|---|
-| `SITE_TAG` | `RELEASE` | тег образа, он же версия в логах и Sentry | да |
-| — | `SITE_URL` | `https://${DOMAIN}` — канонический origin, **без хвостового слеша** | да |
+| `SITE_TAG` | `RELEASE` | тег образа, он же версия в логах и Sentry; ставит `make bump` (1.1) | да |
+| — | `SITE_URL` | `https://${DOMAIN}` — канонический origin, **без хвостового слеша**; хост — в нижнем регистре, IDN — в punycode: другая запись `DOMAIN` — отказ старта | да |
 | `ROBOTS_POLICY` | то же | `index` на проде — умолчание compose, `noindex` на любой не-прод среде | на не-прод |
 | `SITE_LOG_LEVEL` | `LOG_LEVEL` | `debug \| info \| warn \| error`, дефолт `info` | нет |
 | `SITE_SENTRY_DSN` | `SENTRY_DSN` | пусто — SDK не грузится вовсе; DSN public by design | нет |
@@ -223,6 +250,7 @@ services:
 | `SITE_SMTP_URL` | `SMTP_URL` | `smtps://user:pass@host` — **секрет** | при `smtp` |
 | `SITE_FORM_TO` / `SITE_FORM_FROM` | `FORM_TO` / `FORM_FROM` | адреса письма с заявкой | при `smtp` |
 | `SITE_FORM_BACKEND_URL` | `FORM_BACKEND_URL` | адрес внутреннего приёмника заявки | при `backend` |
+| `STAGING_BASIC_AUTH_USERS` | — | замок не-прод среды, `'user:hash'`; в контейнер не уходит — хвост цепочек роутеров и пользователь `staging-auth` (1.3) | на не-прод |
 
 Из образа уже приходят `NODE_ENV=production`, `HOST=0.0.0.0`, `PORT=3000` — в compose их
 не дублируем. `KEEP_ALIVE_TIMEOUT_MS` (65 000) и `SHUTDOWN_TIMEOUT_MS` (15 000) заданы
@@ -260,6 +288,8 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
 его нет, `http → https` делает redirection на entrypoint `web`), `frameDeny` не добавляется:
 
 ```yaml
+    # Состав общий для всех публичных роутеров. Content-Security-Policy ставит приложение;
+    # X-Frame-Options и X-XSS-Protection не ставит никто.
     secure-headers:
       headers:
         forceSTSHeader: true
@@ -267,8 +297,8 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
         stsIncludeSubdomains: true
         contentTypeNosniff: true
         referrerPolicy: "strict-origin-when-cross-origin"
-        # Сервису проекта, которому нужны камера или геолокация, — свой middleware, а не
-        # послабление здесь.
+        # Сервису, которому нужны камера, микрофон или геолокация, — свой middleware,
+        # а не послабление здесь.
         permissionsPolicy: "camera=(), microphone=(), geolocation=()"
 ```
 
@@ -278,8 +308,8 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
     crowdsec:
       plugin:
         crowdsec-bouncer:
-          # Отказ WAF — «приходи позже», а не «страницы нет»: бот под баном сценария получает
-          # 429 и возвращается после срока бана.
+          # Отказ WAF — 429, как у лимита частоты: краулер читает его как «приходи позже»,
+          # а 403 — как «страницы нет». До сервиса запрос не доходит при любом коде.
           remediationStatusCode: 429
 ```
 
@@ -288,18 +318,20 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
 ```yaml
     compress:
       compress:
-        # zstd не включаем: выигрыша над br на HTML нет, а зоопарк кодировок дороже.
+        # zstd не включаем: выигрыша над br на HTML нет.
         encodings: [br, gzip]
         minResponseBodyBytes: 1024
 
     www-to-apex:
       redirectRegex:
-        # ${1} переживает envsubst: это не валидный идентификатор.
-        regex: "^https?://www\\.${DOMAIN}/(.*)"
+        # Хост regexp не называет: его уже выбрал роутер, а Host с портом, заглавными
+        # или точкой в конце правило Host() принимает — названный здесь хост на такой
+        # записи не совпал бы. ${1} переживает envsubst: это не имя переменной.
+        regex: "^https?://[^/]+/(.*)"
         replacement: "https://${DOMAIN}/${1}"
         permanent: true
 
-    # Публичный POST формы: одна заявка = одно письмо.
+    # Публичный POST формы: одна принятая заявка — одно письмо.
     form-rate-limit:
       rateLimit:
         average: 10
@@ -308,33 +340,42 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
 
     form-body-limit:
       buffering:
-        # Приложение отвечает 413 на Content-Length выше 64 КиБ; тело без длины (chunked) оно
-        # читает до лимита адаптера (1 МиБ) — 64 КиБ для него держит только эта буферизация.
+        # Тело без Content-Length (chunked) приложение читает до 1 МиБ — 64 КиБ для него
+        # держит только эта буферизация.
         maxRequestBodyBytes: 65536
         memRequestBodyBytes: 65536
 
+    # Только для идемпотентных роутеров: повтор POST — вторая заявка.
     retry:
       retry:
         attempts: 2
         initialInterval: 100ms
 
-    # Путь без внешнего доступа (/_image): 403 на edge, до процесса.
+    # Путь без внешнего доступа: 403 на edge, до процесса.
     deny-all:
       ipAllowList:
         sourceRange: ["127.0.0.1/32"]
 
-    # Не-прод контур: подключается через SITE_EDGE_EXTRA_MW в .env среды; в цепочке
-    # staging-noindex стоит перед staging-auth.
-    staging-auth:
-      basicAuth:
-        # usersFile, а не users: в dynamic-файле нет удвоения `$`.
-        usersFile: /etc/traefik/dynamic/staging.htpasswd
-        realm: "staging"
+    # Не-прод контур — одна цепочка: состав и порядок заданы здесь, а не значением .env.
+    # staging-noindex стоит перед staging-auth, иначе ответ 401 уходит без X-Robots-Tag.
+    # Роутеры сайта получают цепочку, пока задан STAGING_BASIC_AUTH_USERS (compose/site.yml).
+    staging:
+      chain:
+        middlewares: [staging-noindex, staging-auth]
 
     staging-noindex:
       headers:
         customResponseHeaders:
           X-Robots-Tag: "noindex, nofollow, noarchive"
+
+    staging-auth:
+      basicAuth:
+        # users, а не usersFile: смена пароля меняет этот файл, и Traefik пересобирает
+        # цепочку сам; правка отдельного файла пользователей пересборку не вызывает, и
+        # прежний пароль жил бы до рестарта. Форму значения держит scripts/preflight-env.sh.
+        users:
+          - '${STAGING_BASIC_AUTH_USERS}'
+        realm: "staging"
 ```
 
 Требования, которые легко потерять:
@@ -351,6 +392,20 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
   Такой запрос до сервиса не доходит только благодаря Host-роутингу edge; catch-all роутер или
   опубликованный порт эту защиту снимают. `X-Forwarded-*` приложение не читает: схему и origin
   оно берёт из `SITE_URL`.
+- **Ни одна запись `Host` не даёт запросу обойти цепочку edge.** До процесса запрос доходит
+  только через `site` и `site-form` — с их цепочками целиком. Правило `Host()` Traefik
+  сопоставляет с приведённым хостом — без порта, в нижнем регистре, точку в конце прощает, —
+  поэтому `Host: <domain>:443`, хост заглавными и `<domain>.` попадают в роутеры apex, те же
+  записи `www` — в `site-www`, а чужой хост — ни в один (404 edge).
+- **Роутер, который только редиректит, — с `service: noop@internal`.** `redirectRegex`
+  сопоставляет regexp с адресом, собранным из сырого `Host`, и запрос, на котором regexp не
+  сработал, отдаёт сервису роутера. Regexp с именем хоста (`^https?://www\.${DOMAIN}/(.*)`) не
+  срабатывает на `Host: www.<domain>:443`, `WWW.<domain>` и `www.<domain>.`, которые правило
+  `Host()` принимает: при сервисе `site` такой запрос проходит в сайт мимо замка не-прод,
+  лимитов формы, запрета `/_image` и ограничения методов — DNS-записи `www` для этого не нужно,
+  хватает адреса сервера. Поэтому `www-to-apex` хост не называет — его уже выбрал роутер, — а
+  сам роутер проксировать не может: несработавший редирект — 418 от Traefik. Regexp — не граница
+  безопасности.
 - **Методы — `GET` и `HEAD` на `site`, `POST` — только `site-form`.** Статик-хендлер адаптера
   отдаёт файл на любой метод (`POST /` — 200 со страницей), на `TRACE` процесс отвечает 400.
 - **429, а не 403, — и у лимита, и у WAF.** Лимит частоты Traefik отдаёт 429 — это сигнал
@@ -363,7 +418,7 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
   выше), а боты, которых пускает политика сайта, до WAF-решения не доходят вовсе — allowlist
   (1.5).
 - **Порядок цепочки**: `crowdsec` (дешёвый отказ) → лимит → `secure-headers` → `compress` →
-  `retry`.
+  `retry`; контур не-прод `staging` — хвостом, и его отказ 401 уходит с заголовками edge.
 - **Правил приведения пути у edge нет, `sanitizePath` остаётся включённым.** Хвостовой слеш, `/index.html`
   и адреса таблицы переездов приложение приводит само — один 301 сразу на конечный адрес;
   `redirectRegex` на путь в Traefik дал бы второй хоп перед таблицей. Двойной слеш и сегменты `.` и
@@ -380,21 +435,36 @@ CSP приложения; `X-XSS-Protection` — фильтра в соврем�
   force-recreate, но повтор уже отправленного POST — это вторая заявка.
 - **`compress` — не для POST формы**: в цепочке `site-form` его нет, он там бесполезен.
 
-Staging-контур включается не отдельным файлом, а переменной среды: в `.env` не-прод VPS
-`SITE_EDGE_EXTRA_MW=,staging-noindex@file,staging-auth@file` (ведущая запятая обязательна)
-и `ROBOTS_POLICY=noindex`. На проде переменная пустая. Порядок — часть контракта: отказ замка
-(401) рождается в `staging-auth`, и `X-Robots-Tag` на нём ставит только звено, которое стоит в
-цепочке раньше. При порядке «замок, заголовок» ответ 401 уходит без `X-Robots-Tag` (Traefik
-v3.6.16: с паролем заголовок есть при любом порядке, без пароля — только при этом).
+Staging-контур включает сам пароль: в `.env` не-прод VPS `STAGING_BASIC_AUTH_USERS='user:hash'` и
+`ROBOTS_POLICY=noindex`, на проде ключ замка пуст. Пока значение задано, роутеры `site` и
+`site-form` получают хвостом цепочку `staging@file` (1.1). Отдельной переменной включения нет:
+замок, названный в цепочке при пустом списке пользователей, роняет edge — Traefik v3.6.16
+паникует в `basicAuth` без пользователей, применение dynamic-конфига рвётся, и после рестарта
+Traefik 404 отвечают все роутеры. Нет и файла замка: пользователь задан в самом
+dynamic-конфиге. Состав и порядок контура заданы цепочкой `staging` шаблона, а не значением
+`.env`: `staging-noindex` перед `staging-auth`. Отказ замка (401) рождается в `staging-auth`, и
+`X-Robots-Tag` на нём ставит только звено, которое стоит в цепочке раньше: при порядке «замок,
+заголовок» ответ 401 уходит без `X-Robots-Tag` (Traefik v3.6.16: с паролем заголовок есть при
+любом порядке, без пароля — только при этом).
 
-Файл замка — `configs/traefik/dynamic/staging.htpasswd.tpl` с одной строкой
-`${STAGING_BASIC_AUTH_USERS}`; его рендерит `scripts/render-configs.sh` вместе с
-остальными `.tpl`. Две ловушки самого значения:
+Значение замка — одна строка `'user:hash'` в одинарных кавычках: так `$` хеша одинаково читают
+шелл рендера (`. ./.env`) и compose. Хеш — bcrypt (`htpasswd -nbB <user> '<пароль>'`) как самый
+стойкий из тех, что принимает `basicAuth`. Замок держат три правила:
 
-- в `.env` оно пишется **в одинарных кавычках** — скрипт рендера делает `. ./.env`, и
-  незакавыченные `$` развернёт шелл;
-- хеши — **bcrypt** (`$2y$…`). `envsubst` не трогает `$2y` (имя не может начинаться с
-  цифры), а вот `$apr1$…` он съест как переменную `apr1`.
+- **Битое значение — отказ до деплоя.** Строку без `:`, с пробелом или кавычкой `basicAuth` не
+  разбирает, и роутеры сайта с замком не собираются — на его адресах отвечает заглушка. Значение
+  другой формы отвергают `make render`, `make deploy` (до `compose up`) и `make doctor`
+  (`scripts/preflight-env.sh`). Неполная пара контуров при профиле `site` — `noindex` без замка
+  или замок без `noindex` — предупреждение тех же вербов.
+- **Пустое значение рендерится пользователем, под которым не войти** — `nobody:*`
+  (`scripts/render-configs.sh`). Снятие замка рендерится раньше, чем compose пересоздаёт сайт без
+  цепочки `staging`: с пустым пользователем `basicAuth` не собирается
+  (`error parsing BasicUser`), и до пересоздания на адресах сайта отвечала бы заглушка; с
+  `nobody:*` роутер эти секунды остаётся закрытым.
+- **Смена пароля — `make deploy`, без рестарта Traefik.** Пользователь задан в самом
+  dynamic-конфиге (`users`): его правку Traefik подхватывает и пересобирает цепочку. Отдельный
+  файл пользователей (`usersFile`) он читает только при сборке цепочки: правку файла не
+  замечает, и прежний пароль жил бы до рестарта.
 
 ### 1.4 `configs/traefik/traefik.yml.tpl` — access-log
 
@@ -495,26 +565,27 @@ CrowdSec (1.5) и отчёт сайта «бот × статус».
 
 | файл | что сделать |
 |---|---|
-| `.env.example` | секция `# ───── profile site (индексируемый сайт) ─────`: `SITE_TAG`, `ROBOTS_POLICY`, `SITE_LOG_LEVEL`, `SITE_SENTRY_DSN`, `SITE_INDEXNOW_KEY`, `SITE_FORM_DELIVERY`, `SITE_SMTP_URL`, `SITE_FORM_TO`, `SITE_FORM_FROM`, `SITE_FORM_BACKEND_URL`, `SITE_EDGE_EXTRA_MW`, `STAGING_BASIC_AUTH_USERS` — у каждой комментарий «как получить», иначе `make validate` красный; в подсказке `COMPOSE_PROFILES` появляется `site` |
-| `Makefile` → `bump` | `up -d --no-deps --force-recreate` получает `--wait --wait-timeout 90`: без него верб «успешен» и на битом образе |
+| `.env.example` | секция `# ───── profile site (индексируемый сайт на корне DOMAIN, www → корень) ─────`: `SITE_TAG`, `ROBOTS_POLICY`, `SITE_LOG_LEVEL`, `SITE_SENTRY_DSN`, `SITE_INDEXNOW_KEY`, `SITE_FORM_DELIVERY`, `SITE_SMTP_URL`, `SITE_FORM_TO`, `SITE_FORM_FROM`, `SITE_FORM_BACKEND_URL`, `STAGING_BASIC_AUTH_USERS` — у каждой комментарий «как получить», иначе `make validate` красный; `ROBOTS_POLICY` ставит `make new-env` по `ENV`: `prod` — `index`, любая другая среда — `noindex`; в подсказке `COMPOSE_PROFILES` появляется `site` |
+| `Makefile` → `bump` | `up -d --no-deps --force-recreate` получает `--wait --wait-timeout 90`: без него верб «успешен» и на битом образе; при отказе верб возвращает прежний тег в `.env` и поднимает сервис на нём, код верба ≠ 0: несостоявшийся тег в `.env` роняет следующий `make deploy`, а неподнявшийся контейнер оставляет на адресах сайта заглушку. У первого тега прежнего нет — он остаётся в `.env` |
 | `scripts/deploy.sh` → `ROLE_FILES[edge]` | дописать `compose/site.yml` (список ролей перечислен явно, glob только у `all`) |
 | `scripts/preflight-dns.sh` | при активном профиле `site` добавить в `hosts` `www.$DOMAIN` — иначе LE-сертификат на www молча не выпустится, а роутер `site-www` есть; у среды на поддомене имени `www` обычно нет — проверка предупреждает, а не отказывает (1.1) |
 | `scripts/tools/smoke.d/90-site.sh` | **новый** drop-in (контракт — в шапке `scripts/tools/smoke-run.sh`): блок `-- site --`, read-only, self `exit 0`, проблема — строкой `ATTENTION:` в колонке 0. Проверяет: liveness `docker exec site wget -qO- http://127.0.0.1:3000/healthz`; через edge — статус и заголовки: `/` — 200 и TTFB, на не-прод — 401 (замок стоит) и `X-Robots-Tag: noindex`, на проде заголовка нет; содержимое — у контейнера тем же `docker exec site wget` (на не-прод edge без пароля отвечает 401 на всё): `/robots.txt` — на проде группа `*` с `Allow: /` и абсолютный `Sitemap:`, на не-прод `Disallow: /`; `/sitemap.xml` — непустой список `<loc>`, все URL на своём домене и по https |
-| `compose/landing.yml` | заглушка на корне остаётся до первого разворота сайта: она держит выпуск LE-сертификата на `${DOMAIN}`. После разворота `compose/landing.yml` + `configs/landing/` удаляются (сам роутер сайта её и так перебивает приоритетом) |
-| `.claude/rules/traefik-routing.md` | раздел «Корневой домен и www»: корень — задокументированное исключение из сабдоменного канона; www — отдельный роутер с `redirectRegex`; `${1}` переживает envsubst; в цепочке публичного сайта, в отличие от API, есть `compress`; в таблице chain'ов `secure-headers@file` — HSTS, nosniff, `Referrer-Policy`, `Permissions-Policy` (камера, микрофон и геолокация закрыты), без XSS-filter: состав из 1.3, он общий для всех публичных роутеров |
-| `.claude/rules/compose-and-services.md` | абзац «Node-сервисы с рендером»: `init: true`; `read_only` **несовместим** со штамповкой origin; `stop_grace_period` ↔ `SHUTDOWN_TIMEOUT_MS`; `mem_limit` ↔ `NODE_OPTIONS --max-old-space-size` (≈ 75 %); `deploy.resources` не использовать; `replicas` несовместимы с `container_name` |
+| `compose/landing.yml` | заглушка на корне остаётся до первого разворота сайта: она держит выпуск LE-сертификата на `${DOMAIN}`. После разворота `compose/landing.yml` + `configs/landing/` удаляются (сам роутер сайта её и так перебивает приоритетом): пока заглушка в стеке, на адресах сайта она отвечает всякий раз, когда его роутеров нет, — в окне пересоздания при выкате (1.1) и пока контейнер не healthy: `/` — её страница с кодом 200, остальные пути — её 404 |
+| `.claude/rules/traefik-routing.md` | раздел «Корневой домен и www»: корень — задокументированное исключение из сабдоменного канона; www — отдельный роутер с `redirectRegex` и сервисом `noop@internal` (роутер, который только редиректит, не проксирует); `${1}` переживает envsubst; в цепочке публичного сайта, в отличие от API, есть `compress`; в таблице chain'ов `secure-headers@file` — HSTS, nosniff, `Referrer-Policy`, `Permissions-Policy` (камера, микрофон и геолокация закрыты), без XSS-filter: состав из 1.3, он общий для всех публичных роутеров; `staging@file` — контур не-прод одной цепочкой, хвостом роутеров сайта |
+| `.claude/rules/compose-and-services.md` | абзац «Node-сервисы с рендером»: `init: true`; `read_only` **несовместим** со штамповкой origin; `stop_grace_period` ↔ `SHUTDOWN_TIMEOUT_MS`; `mem_limit` ↔ `NODE_OPTIONS --max-old-space-size` (≈ 75 %); `deploy.resources` не использовать; `replicas` несовместимы с `container_name`; `healthcheck.start_interval` — Docker Engine ≥ 25 |
 | `docs/reference/architecture.md` | `site` переезжает из «Что НЕ в шаблоне (overlay-services)» в основную схему слоёв (корень `${DOMAIN}`, рядом с backend на `api.`); в таблице ролей multi-host у `edge` появляется `site` |
 | `docs/project/README.md` § «Generates → инфра» | строка для `frontend` (`hosting: here`): индексируемый сайт → профиль `site` → `compose/site.yml`; текущая формулировка «— (always-on landing)» верна только для статической заглушки |
 | `docs/project/_templates/service.md` | в подсказках `Hosting`/`Route` — вариант Node-сервиса на корневом домене: профиль `site`, порт 3000, healthcheck `/healthz`, www-редирект |
-| `.claude/skills/add-service/SKILL.md` | вариант «Node-сервис на корневом домене»: два роутера (apex + www), Traefik-side healthcheck на сервисе, `init: true`, запрет `read_only`, обязательный env (`SITE_URL`), лимит частоты на публичный POST; публичный сервис, которому нужны камера, микрофон или геолокация (видеосвязь, карта «рядом со мной»), получает свой headers-middleware вместо `secure-headers@file` — с тем же составом и своим `permissionsPolicy`, а не послабление общего: иначе браузер молча отвечает `NotAllowedError`, в логах ничего |
+| `.claude/skills/add-service/SKILL.md` | вариант «Node-сервис на корневом домене»: два роутера (apex + www; www только редиректит — сервис `noop@internal`), Traefik-side healthcheck на сервисе, `init: true`, запрет `read_only`, обязательный env (`SITE_URL`), лимит частоты на публичный POST; публичный сервис, которому нужны камера, микрофон или геолокация (видеосвязь, карта «рядом со мной»), получает свой headers-middleware вместо `secure-headers@file` — с тем же составом и своим `permissionsPolicy`, а не послабление общего: иначе браузер молча отвечает `NotAllowedError`, в логах ничего |
 | `.claude/skills/de-template/SKILL.md` | в списке always-on (`traefik`, `crowdsec`, `landing`) оговорить: при сайте на корне `landing` прунится вместе с `configs/landing/` |
 
 ### 1.7 Приёмка первого деплоя
 
 1. `make validate` зелёный, `make ship MSG="feat(site): add site service"` → на VPS
    `make deploy`.
-2. `.env` VPS: `COMPOSE_PROFILES` содержит `site`, `SITE_TAG` заполнен, секреты канала
-   доставки заполнены. Затем `make bump SVC=site TAG=vX.Y.Z`.
+2. `.env` VPS: `COMPOSE_PROFILES` содержит `site`, секреты канала доставки заполнены; на не-прод
+   среде — ещё `ROBOTS_POLICY=noindex` и замок (1.3). Затем `make bump SVC=site TAG=vX.Y.Z` — он
+   ставит `SITE_TAG`.
 3. `make ps` — `site` healthy; `make logs SVC=site` — строка
    `[entrypoint] stamped https://__site_origin__ -> https://<domain> in /app/dist/client`
    и ни одной ошибки.
@@ -528,6 +599,10 @@ curl -s   https://<domain>/sitemap.xml | grep -c '<loc>'   # ожидаемое 
 curl -sI  https://<domain>/net-takogo          # 404 (не 200 и не редирект на главную)
 curl -sI  http://<domain>/                     # ровно один 301/308 на https
 curl -sI  https://www.<domain>/                # ровно один 301 на apex
+# Запись Host редирект www не обходит: с портом, заглавными и точкой в конце — тот же 301 на https://<domain>/<страница>, а не страница
+for host in 'www.<domain>:443' 'WWW.<domain>' 'www.<domain>.'; do
+  curl -s -o /dev/null -w "$host %{http_code} %{redirect_url}\n" -H "Host: $host" https://www.<domain>/<страница>
+done
 curl -sI  https://<domain>/index.html          # 301 на / — форму адреса приводит приложение
 curl -sI  https://<domain>/<страница>/index.html   # 301 на /<страница>, одним хопом
 curl -sI  https://<domain>/<страница>/             # 301 без слеша (хвостовой слеш срезается)
@@ -546,7 +621,9 @@ done
 5. Заголовки — по списку 1.3: от edge `Strict-Transport-Security`, `X-Content-Type-Options:
    nosniff`, `Referrer-Policy`, `Permissions-Policy`; от приложения `Content-Security-Policy` с
    `frame-ancestors 'none'`; `X-Frame-Options` и `X-XSS-Protection` нет; `Content-Encoding: br`
-   на HTML; `curl -X POST https://<domain>/` и `curl -X TRACE https://<domain>/` — не 200.
+   на HTML — у ответа на GET (`curl -s -o /dev/null -D - -H 'Accept-Encoding: br'
+   https://<domain>/`): на HEAD Traefik не сжимает, `curl -sI` заголовка не покажет;
+   `curl -X POST https://<domain>/` и `curl -X TRACE https://<domain>/` — не 200.
 6. CrowdSec: `cscli decisions list` — ни верифицированных поисковых ботов, ни адресов из
    списков вендоров ИИ-ботов среди забаненных нет; `cscli allowlists list` — списки вендоров на
    месте (при политике сайта `allow-all` — с сетями обучающих ботов); `cscli metrics` показывает
@@ -556,10 +633,12 @@ done
 7. Лимит формы: серия POST на `/api/contact` упирается в **429**, а не в 403 и не в
    принятую заявку.
 8. На не-прод VPS через edge без пароля `/` отвечает 401 (basicAuth), и уже этот отказ несёт
-   `X-Robots-Tag: noindex, nofollow, noarchive` — порядок контура из 1.3. Содержимое без пароля
-   edge не отдаёт: `robots.txt` = `Disallow: /` читается с паролем (`curl -su <user>:<pass>
-   https://<domain>/robots.txt`) или у контейнера (`docker exec site wget -qO-
-   http://127.0.0.1:3000/robots.txt`).
+   `X-Robots-Tag: noindex, nofollow, noarchive` — порядок цепочки `staging` из 1.3. Запись `Host`
+   замок не обходит: цикл по записям `www` из п. 4 без пароля даёт те же 301 на apex, а не
+   страницу, apex в тех же записях (`-H 'Host: <domain>:443'`, заглавными, с точкой в конце) —
+   401. Содержимое без пароля edge не отдаёт: `robots.txt` = `Disallow: /` читается с паролем
+   (`curl -su <user>:<pass> https://<domain>/robots.txt`) или у контейнера (`docker exec site
+   wget -qO- http://127.0.0.1:3000/robots.txt`).
 9. Дренаж: `docker stop site` укладывается в `stop_grace_period` без `SIGKILL`.
 10. В `<org>/site`: `/seo-audit` по прод-домену — чистый. Он же гоняет полный набор
     проверок выдачи и печатает, что чинить.
@@ -609,6 +688,6 @@ done
 
 | вопрос | варианты | что предлагает этот контракт |
 |---|---|---|
-| Включение staging-контура | переменная `SITE_EDGE_EXTRA_MW` в `.env` среды; отдельный compose-оверрайд | переменная: не плодит файлов и проходит `make validate` |
-| Судьба заглушки на корне | прунить `compose/landing.yml` при развороте сайта; переименовать сервис в `placeholder`, чтобы имя не путали с продуктовым лендингом | прунить; переименование трогает скрипты и доки инфры |
+| Включение staging-контура | паролем `STAGING_BASIC_AUTH_USERS` в `.env` среды; отдельный compose-оверрайд | паролем: не плодит файлов, проходит `make validate`, а замок без пользователей и другой порядок звеньев не становятся состояниями `.env` |
+| Судьба заглушки на корне | прунить `compose/landing.yml` при развороте сайта; переименовать сервис в `placeholder`, чтобы имя не путали с продуктовым лендингом | прунить: пока она в стеке, при выкате и неподнявшемся контейнере на адресах сайта отвечает она — с кодом 200 на `/`; переименование трогает скрипты и доки инфры |
 | Профиль памяти `site` | 512 МБ / `--max-old-space-size=384`; 768 МБ / 576 при рендере с кешем процесса | 512 МБ: картинки оптимизируются на сборке, рантайм отдаёт готовый HTML |

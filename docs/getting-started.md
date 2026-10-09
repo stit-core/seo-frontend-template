@@ -98,7 +98,9 @@ pnpm check            # полный гейт
 ```
 
 Сайт живёт за Traefik в `<org>/infra`; что ему нужно от прокси (rate-limit на форму, строгий
-`Host` и методы, закрытый staging) — `docs/reference/deployment.md`.
+`Host` и методы, закрытый staging) — `docs/reference/deployment.md`. Первый релиз там — профиль
+`site` в `.env` VPS, затем `make bump SVC=site TAG=vX.Y.Z`: тег образа ставит он
+(`docs/reference/infra-handoff.md § 1.7`).
 
 ## Гейт перед push
 
