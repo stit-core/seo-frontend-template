@@ -82,7 +82,7 @@ export default defineConfig({
     // Директивы и хеши островов — политика сборки (scripts/lib/site-policy.mjs).
     csp: contentSecurityPolicy(),
   },
-  // Форма адреса — одна настройка: по ней же обёртка процесса отвечает на неканоническую форму.
+  // Та же форма — без хвостового слеша — у канона пути, по которому отвечает обёртка процесса.
   trailingSlash: TRAILING_SLASH,
   // 'file' + node-адаптер = 404 на /blog и /en (статик-хендлер видит каталог); только 'directory'.
   build: { format: 'directory' },

@@ -72,8 +72,8 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 
 `astro.config.ts`: `output: 'static'`, `build.format: 'directory'` (`'file'` с node-адаптером
 отдаёт 404 на `/blog` и `/en`), `trailingSlash` — из `TRAILING_SLASH` (`shared/redirects/table.ts`:
-форма адреса — одна настройка и для Astro, и для канона пути обёртки), `session: false` (fs-драйвер сессий
-пишет в cacheDir), `prefetch: false` и без `<ClientRouter/>` (без островов — ни байта JS),
+рядом с каноном пути обёртки, который срезает слеш сам, — другая форма меняет оба места, их
+согласие держит тест таблицы), `session: false` (fs-драйвер сессий пишет в cacheDir), `prefetch: false` и без `<ClientRouter/>` (без островов — ни байта JS),
 `experimentalDisableStreaming: true`, `markdown.syntaxHighlight: false` (Shiki инлайнит сырые
 цвета мимо токен-слоя), Vite-плагины `yaml-modules` (`content/*.yaml` и реестр ботов `shared/seo/crawlers.yaml` → данные на сборке) и
 `wrapper-entries` (модули приложения, которые `docker/*` берут по имени файла: схема env

@@ -72,6 +72,15 @@ describe('app/middleware', () => {
     expect(console.info).not.toHaveBeenCalled()
   })
 
+  // В `astro dev` страница сборки — тоже prerendered-маршрут: правило на её пути там не проверить,
+  // его отдаёт обёртка процесса и держит HTTP-набор.
+  it('prerendered-маршрут таблицу адресов не читает: правило с query на пути страницы — мимо', async () => {
+    const next = vi.fn(page)
+    const response = await run('/?p=123', next, { prerendered: true })
+    expect(next).toHaveBeenCalledOnce()
+    expect(response.status).toBe(200)
+  })
+
   it('on-demand HTML без Cache-Control получает no-cache; rid принимается из запроса', async () => {
     const response = await run('/xx', notFound, { headers: { 'x-request-id': 'rid-1' } })
     expect(response.status).toBe(404)
@@ -130,7 +139,8 @@ describe('app/middleware', () => {
     expect(goneEn.status).toBe(410)
     expect(await goneEn.text()).toContain('<html lang="en">')
 
-    // В образе неканоническую форму раньше отдаёт обёртка процесса; в `astro dev` — middleware.
+    // В образе неканоническую форму раньше отдаёт обёртка процесса; запросу, который дошёл до
+    // middleware, оно отвечает тем же.
     const slashed = await run('/now/?x=1', next)
     expect(slashed.status).toBe(301)
     expect(slashed.headers.get('location')).toBe('/now?x=1')

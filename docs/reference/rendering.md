@@ -127,8 +127,9 @@ Prerender происходит на сборке, а канонический or
   и статик-хендлер читают такой путь по-разному, адреса с ним у сайта нет
 - Регистр не нормализуется: `/Blog` — другой адрес, 404. `/about.html` → 404
   (`build.format: 'directory'`); `www` → apex и `http` → `https` — Traefik
-- Форма слеша — одна настройка `TRAILING_SLASH` (`shared/redirects/table.ts`): её получает и
-  `trailingSlash` Astro, и канон пути
+- Форма слеша — без хвостового: `TRAILING_SLASH` (`shared/redirects/table.ts`) получает
+  `trailingSlash` Astro, а канон пути срезает слеш сам. Другая форма — правка и настройки, и
+  канона; их согласие держит тест таблицы
 
 ## Заголовки
 

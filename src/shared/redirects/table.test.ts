@@ -4,6 +4,7 @@ import {
   isExternalTarget,
   redirectLocation,
   resolveRedirect,
+  TRAILING_SLASH,
 } from './table'
 
 describe('canonicalPath', () => {
@@ -56,6 +57,13 @@ describe('canonicalPath', () => {
       const canonical = canonicalPath(path) ?? ''
       expect(canonicalPath(canonical), path).toBe(canonical)
     }
+  })
+
+  // Настройку читает только Astro, канон срезает слеш сам: другое значение без правки канона —
+  // редирект на адрес, который Astro не отдаёт.
+  it('форма слеша у Astro и у канона пути одна — без хвостового', () => {
+    expect(TRAILING_SLASH).toBe('never')
+    expect(canonicalPath('/blog/')).toBe('/blog')
   })
 
   it('спрятанный разделитель и битая кодировка — канонического вида нет', () => {
@@ -339,6 +347,21 @@ describe('resolveRedirect', () => {
     for (const url of ['/blog%2Fzapis', '/%2F%2Fexample.com/', '/a%5Cb', '/a\\b', '/%E0%A4%A']) {
       expect(resolve(url), url).toEqual({ status: 404 })
     }
+  })
+
+  // Один хоп — у адресов таблицы. Параметр правила с query, пришедший на адрес другого правила,
+  // переезжает как любой другой — и на цели отвечает уже своё правило.
+  it('пары правила с query на адресе другого правила — переезжают с ним, второй хоп — у цели', () => {
+    const chained = buildRedirectTable([
+      { from: '/old-home', to: '/', status: 301 },
+      { from: '/?p=123', to: '/blog', status: 301 },
+    ])
+    expect(resolveRedirect(chained, '/old-home')).toEqual({ status: 301, location: '/' })
+    expect(resolveRedirect(chained, '/old-home?p=123')).toEqual({
+      status: 301,
+      location: '/?p=123',
+    })
+    expect(resolveRedirect(chained, '/?p=123')).toEqual({ status: 301, location: '/blog' })
   })
 
   it('цель запроса не от корня (absolute-form, `*`) — не адрес страницы', () => {
