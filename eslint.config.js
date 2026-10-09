@@ -203,6 +203,14 @@ const astroSyntax = [
     message: 'UI: инлайн-style — значения через утилиты токен-слоя src/app/styles/index.css',
   },
   {
+    // Фокус при загрузке получает только объявление об отказе — сводка ошибок ответа формы. Biome
+    // (`noAutofocus`) строчный атрибут внутри выражения шаблона не узнаёт.
+    selector:
+      "JSXOpeningElement:not(:has(> JSXAttribute[name.name='role'][value.value='alert'])) > JSXAttribute[name.name=/^autofocus$/i]",
+    message:
+      'UI: autofocus забирает фокус при загрузке страницы — он только у объявления об отказе (role="alert"): сводка ошибок ответа формы',
+  },
+  {
     selector: OPAQUE_CLASS,
     message:
       'UI: класс из переменной, карты или вызова — строка класса пишется в атрибуте, вариант — условием class:list; чужой класс — проп class (className)',

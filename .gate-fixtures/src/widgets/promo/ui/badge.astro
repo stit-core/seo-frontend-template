@@ -16,7 +16,7 @@ ring-inset), линия между детьми толщиной по умолч
 class:list (литерал условия — не класс); цвет SVG и <style> — ключевым словом без своего цвета,
 в <style> — раскладка и сброс; контейнер запросов (@container) и его условие, условие @media,
 max-width долей родителя и ключевым словом без длины (max-w-none, max-w-full, max-w-fit) — не ширина
-контейнера. -->
+контейнера; autofocus у объявления об отказе (role="alert"). -->
 <span
   id="add"
   class="mt-2xl grid grid-cols-2 gap-x-3xs text-page-title-lg focus:z-10 -order-1 inset-0 rounded-none"
@@ -43,6 +43,7 @@ max-width долей родителя и ключевым словом без д
       <path d="M0 0h1v1H0z" />
     </svg>
   </span>
+  {wide && <span role="alert" tabindex="-1" autofocus>Отказ</span>}
 </span>
 
 <style>
