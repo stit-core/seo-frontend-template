@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import type { Page } from '@playwright/test'
+import { THEME } from '../../src/shared/config/site.ts'
 import { t } from '../../src/shared/i18n/dict.ts'
 import { localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
 import { prerenderedPaths } from '../site'
@@ -39,6 +40,8 @@ for (const scheme of ['light', 'dark'] as const) {
 }
 
 test.describe('явный выбор темы', () => {
+  test.skip(!THEME.switcher, 'кнопки выбора нет: тему задаёт поле THEME')
+
   test('переключатель ставит data-theme и cookie, выбор переживает перезагрузку', async ({
     page,
     context,
