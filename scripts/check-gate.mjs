@@ -86,11 +86,19 @@ const expectedKey = (line, keys) =>
   keys.find((key) => key.endsWith('…') && line.startsWith(key.slice(0, -1))) ?? line
 
 // Скрипты гейта: свой корень у каждого, код выхода 1, строки нарушений — те, что под заголовком.
+// Часы у фикстур свои (clock.mjs), пояс — позади UTC: «день проверки» дат записей не зависит ни
+// от дня прогона, ни от пояса машины — запись с датой дня, который на Земле уже начался, законна и
+// там, где по местным часам ещё вчера.
 for (const [section, script] of Object.entries(SCRIPTS)) {
   const result = spawnSync(
     process.execPath,
-    [resolve(root, 'scripts', script), resolve(fixtures, section)],
-    { encoding: 'utf8' },
+    [
+      '--import',
+      resolve(fixtures, 'clock.mjs'),
+      resolve(root, 'scripts', script),
+      resolve(fixtures, section),
+    ],
+    { encoding: 'utf8', env: { ...process.env, TZ: 'America/New_York' } },
   )
   if (result.error) throw result.error
   if (result.status !== 1) {

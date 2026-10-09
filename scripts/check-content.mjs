@@ -31,11 +31,9 @@ const fail = (where, message) => {
 }
 const rel = (path) => relative(root, path).split(sep).join('/')
 
-// День проверки — календарный, по часам машины автора; дата записи — тоже календарная.
-const now = new Date()
-const TODAY = [now.getFullYear(), now.getMonth() + 1, now.getDate()]
-  .map((part) => String(part).padStart(2, '0'))
-  .join('-')
+// День проверки — самый поздний календарный день, который уже наступил где-то на Земле (пояс
+// UTC+14): ответ один на любой машине, а сегодняшняя дата автора из любого пояса — не будущее.
+const TODAY = new Date(Date.now() + 14 * 3_600_000).toISOString().slice(0, 10)
 const DATE_FIELDS = ['pubDate', 'updatedDate']
 
 // js-yaml нумерует строки от нуля внутри фрагмента; frontmatter начинается со второй строки файла.

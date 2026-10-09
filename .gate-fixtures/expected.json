@@ -202,6 +202,7 @@
     "src/entities/post/content/ru/bez-frontmatter.md: нет frontmatter между строками ---",
     "src/entities/post/content/ru/budushchee.md: pubDate 2999-01-01 — позже дня проверки: отложенная публикация — это draft: true",
     "src/entities/post/content/ru/budushchee.md: updatedDate 2999-02-01 — позже дня проверки: отложенная публикация — это draft: true",
+    "src/entities/post/content/ru/den-proverki.md: updatedDate 2026-10-11 — позже дня проверки: отложенная публикация — это draft: true",
     "src/entities/post/content/ru/front.md: frontmatter: …",
     "src/entities/post/content/ru/telo.md:30: литерал плейсхолдера __site_origin__ — описывайте словами",
     "src/entities/post/content/ru/vlozhennaya/zapis.md: путь должен быть <locale>/<slug>.md, локали: ru, en",
