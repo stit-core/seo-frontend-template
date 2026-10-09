@@ -168,7 +168,9 @@ async function indexNowOutcomes() {
       })
       request.on('end', () => {
         posts.push(JSON.parse(body))
-        response.writeHead(request.url === REFUSING ? 403 : 200).end()
+        // Приёмник протокола читает только JSON: запрос без этого Content-Type он отклоняет.
+        const json = /^application\/json\b/.test(request.headers['content-type'] ?? '')
+        response.writeHead(request.url === REFUSING ? 403 : json ? 200 : 400).end()
       })
     } else if (request.url === '/sitemap.xml') {
       response.end(live.replaceAll(ORIGIN_PLACEHOLDER, origin))
