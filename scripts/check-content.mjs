@@ -200,6 +200,9 @@ for (const doc of docs) {
       if (kind === 'internal') internalLinks.push({ where, url: src })
     } else if (node.type === 'link' || node.type === 'linkReference') {
       link(node.url ?? definitions.get(node.identifier))
+    } else if (node.type === 'table' && node.align.some(Boolean)) {
+      // Выравнивание колонки (`:--`, `:-:`, `--:`) сборка печатает атрибутом style у каждой ячейки.
+      fail(where, 'выравнивание колонок таблицы — инлайн-стиль, его блокирует CSP страницы')
     } else if (node.type === 'html') {
       for (const { tagName, properties = {} } of nodesOf(
         htmlToHast(node.value, { fragment: true }),

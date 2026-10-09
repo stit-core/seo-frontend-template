@@ -230,6 +230,7 @@
     "src/entities/post/content/ru/telo.md:84: h1 в теле — заголовок страницы берётся из title",
     "src/entities/post/content/ru/telo.md:87: картинка ./kartinka.png без alt",
     "src/entities/post/content/ru/telo.md:92: ссылка ./sosed.md: относительная, нужен корневой путь",
+    "src/entities/post/content/ru/telo.md:94: выравнивание колонок таблицы — инлайн-стиль, его блокирует CSP страницы",
     "src/entities/post/content/ru/telo.md: translationKey «telo» уже у src/entities/post/content/ru/dubl.md",
     "src/entities/post/content/ru/telo.md: title совпадает с src/entities/post/content/ru/dubl.md",
     "src/entities/post/content/ru/telo.md: description совпадает с src/entities/post/content/ru/dubl.md",
