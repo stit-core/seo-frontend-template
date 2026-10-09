@@ -91,6 +91,9 @@
   --text-code--font-weight: var(--type-code-weight);
   --text-code--letter-spacing: var(--type-code-tracking);
 
+  /* Выделение в строке — насыщенность роли: кегль и интерлиньяж оно берёт у своего текста. */
+  --font-weight-strong: var(--type-body-strong-weight);
+
   /* Отступы и размеры — шаг шкалы `space.*`; числовой шкалы нет, ноль — сброс, а не значение. */
   --spacing-0: 0;
   --spacing-3xs: var(--space-3xs);
@@ -159,6 +162,12 @@
 
   a:hover {
     @apply decoration-thick;
+  }
+
+  /* Насыщенность выделения — роль, а не `bolder` браузера: иначе оно тяжелее подзаголовка. */
+  b,
+  strong {
+    @apply font-strong;
   }
 
   :focus-visible {

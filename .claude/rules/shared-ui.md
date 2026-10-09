@@ -42,7 +42,9 @@ UI-киты и их токены не подключаются: импорт л�
   трекинг вместе, отдельными утилитами они не задаются. `text-page-title` (на главной от границы
   `tablet` — `text-page-title-lg`), `text-section`, `text-card-title`, `text-lead`, `text-body`
   (умолчание страницы), `text-body-long` (тело записи), `text-body-strong`, `text-label`,
-  `text-helper`, `text-button`, `text-code`
+  `text-helper`, `text-button`, `text-code`. Выделение в строке (`b`, `strong`) базовые стили
+  красят насыщенностью роли `body-strong` (`font-strong`), а не `bolder` браузера: кегль и
+  интерлиньяж оно берёт у своего текста
 - Отступы и размеры — шаг шкалы `space.*` (`mt-md`, `gap-x-lg`, `size-md`; числовой шкалы нет,
   `0` — сброс) и ритм страницы `rhythm.*`: поля `px-page-x`, шаг между разделами
   `mt-section-s|m|l`, отступ под заголовком страницы `mt-stack-display`. Размеры `size.*` —
