@@ -1,7 +1,7 @@
 // GEO-шаг /seo-audit: доступность страниц для поисковых и ИИ-ботов глазами базы соседнего strategy.
 // Её утилита geo_probe.py с UA-пробой идёт по шаблонам страниц сборки, реестр ботов — копия сайта;
-// серьёзность флага — таблица checks её head-kit.yaml: B и S — чинить, D — к сведению. Флаг,
-// который даёт решение самого сайта (страница закрыта сборкой, политика deny-all), — не дефект.
+// флаги разбирает scripts/lib/geo-flags.mjs: B и S таблицы checks её head-kit.yaml — чинить, кроме
+// тех, что даёт решение самого сайта (страница закрыта сборкой, политика deny-all).
 // Заодно копия реестра ботов сверяется с файлом базы. Шаг внешний (Python соседа, сеть) и в гейт не
 // входит: соседа или окружения его утилит нет — строка пропуска и код 0.
 // usage: pnpm geo:probe <origin> [strategy-path]
@@ -12,15 +12,12 @@ import { homedir, tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { load } from 'js-yaml'
 import { AI_BOTS_POLICY } from '../src/shared/config/site.ts'
+import { flagGroups, policyMeta } from './lib/geo-flags.mjs'
 import { headTags, isNoindex } from './lib/html.mjs'
 import { pageTemplates } from './lib/routes.mjs'
 
 const root = resolve(import.meta.dirname, '..')
 const KB = 'kb/site/07-seo-geo-performance-analytics'
-// Классический поиск и реклама: политика ИИ-ботов не закрывает их ни в одном режиме.
-const NEVER_CLOSED = ['google-googlebot', 'yandex-yandexbot', 'microsoft-bingbot', 'google-adsbot']
-// Мета `bingbot noarchive` и `applebot nosnippet` политики deny-all.
-const DENY_ALL_META = ['noarchive-or-nocache', 'nosnippet']
 
 const [origin, strategyArg] = process.argv.slice(2)
 if (origin === undefined || !URL.canParse(origin)) {
@@ -93,23 +90,11 @@ if (run.status !== 0) {
   process.exit(1)
 }
 
-// Шаблоны флагов базы: `page-status-*`, `ua-<бот>-status-<код>`.
-const { checks } = load(readFileSync(join(base, KB, 'head-kit.yaml'), 'utf8'))
-const severityOf = (flag) =>
-  checks.find(({ flag: pattern }) =>
-    new RegExp(
-      `^${pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*|<[^>]+>/g, '.+')}$`,
-    ).test(flag),
-  )?.severity
-
-function expected(flag, page) {
-  if (page.noindex && (flag === 'noindex' || flag === 'no-canonical')) {
-    return 'страница закрыта сборкой'
-  }
-  const blocked = flag.startsWith('blocked-') ? flag.slice('blocked-'.length) : undefined
-  const byPolicy =
-    blocked === undefined ? DENY_ALL_META.includes(flag) : !NEVER_CLOSED.includes(blocked)
-  return AI_BOTS_POLICY === 'deny-all' && byPolicy ? 'политика deny-all' : undefined
+// Чем сайт читает флаги: его политика ИИ-ботов, её мета по реестру и серьёзность по таблице базы.
+const rules = {
+  policy: AI_BOTS_POLICY,
+  meta: policyMeta(load(readFileSync(registry, 'utf8')), AI_BOTS_POLICY),
+  checks: load(readFileSync(join(base, KB, 'head-kit.yaml'), 'utf8')).checks,
 }
 
 for (const page of pages) {
@@ -121,14 +106,7 @@ for (const page of pages) {
     console.info(`  ${page.path} — чинить: проба не прошла (${error})`)
     continue
   }
-  const groups = { чинить: [], ожидаемо: [], 'к сведению': [] }
-  for (const flag of result.flags) {
-    const reason = expected(flag, page)
-    const severity = severityOf(flag)
-    if (reason !== undefined) groups.ожидаемо.push(`${flag} (${reason})`)
-    else if (severity === 'B' || severity === 'S') groups.чинить.push(`${severity} ${flag}`)
-    else groups['к сведению'].push(`${severity ?? '·'} ${flag}`)
-  }
+  const groups = flagGroups(result, page, rules)
   fix += groups.чинить.length
   const line = Object.entries(groups)
     .filter(([, flags]) => flags.length > 0)
