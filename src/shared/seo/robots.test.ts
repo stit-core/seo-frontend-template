@@ -104,9 +104,10 @@ describe('seo/robots', () => {
   })
 
   // Правило Clean-param — одна строка до 500 символов, имена — через `&`: разделитель или пробел в
-  // имени ломает директиву молча. Метки кликов Директа и Google Ads — умолчание шаблона.
+  // имени ломает директиву молча. Метки кликов Директа (и его разметки Openstat), Google Ads и
+  // Meta — умолчание шаблона.
   it('служебные параметры сайта: метки кликов рекламы на месте, имена — без разделителей, правило — до 500 символов', () => {
-    expect(CLEAN_PARAMS).toEqual(expect.arrayContaining(['yclid', 'gclid', 'fbclid']))
+    expect(CLEAN_PARAMS).toEqual(expect.arrayContaining(['yclid', 'gclid', 'fbclid', '_openstat']))
     for (const name of CLEAN_PARAMS) expect(name, name).toMatch(/^[\w.-]+$/)
     expect(new Set(CLEAN_PARAMS).size).toBe(CLEAN_PARAMS.length)
     expect(`Clean-param: ${CLEAN_PARAMS.join('&')}`.length).toBeLessThanOrEqual(500)
