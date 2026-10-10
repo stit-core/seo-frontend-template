@@ -90,7 +90,8 @@ export default defineConfig({
   image: { responsiveStyles: true, layout: 'constrained' },
   // fs-драйвер сессий адаптера пишет в cacheDir и ломает read-only контейнер.
   session: false,
-  // Без островов — ни байта JS; prefetch и <ClientRouter/> не включать.
+  // Без островов — ни байта JS; prefetch и <ClientRouter/> не включать: переход между страницами
+  // рисует браузер (CSS View Transitions в app/styles/index.css).
   prefetch: false,
   // Подсветка кода инлайнит сырые цвета темы Shiki мимо токен-слоя (и не знает про
   // light/dark); контент-сайту она не обязательна. Нужна — `shikiConfig` с темой

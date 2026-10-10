@@ -17,7 +17,10 @@ class:list (литерал условия — не класс); цвет SVG и 
 в <style> — раскладка и сброс; контейнер запросов (@container) и его условие, условие @media,
 max-width долей родителя и ключевым словом без длины (max-w-none, max-w-full, max-w-fit) — не ширина
 контейнера; autofocus у объявления об отказе (role="alert"); состояние кнопки — вариантами
-aria-pressed (и у группы, и у родителя), а не темой. -->
+aria-pressed (и у группы, и у родителя), а не темой; движение под вариантом motion: (и после другого
+варианта) с ролями длительности и кривой, отклик без смещения (transition-colors,
+transition-opacity) и снятие движения (transition-none, animate-none) — без него; имя снимка
+перехода между страницами в <style>. -->
 <span
   id="add"
   class="mt-2xl grid grid-cols-2 gap-x-3xs text-page-title-lg focus:z-10 -order-1 inset-0 rounded-none"
@@ -35,6 +38,8 @@ aria-pressed (и у группы, и у родителя), а не темой. -
       'nth-2:mt-md aria-[current=page]:text-primary group-data-[state=open]:flex',
       'max-w-none max-w-full tablet:max-w-fit',
       'aria-pressed:text-primary group-aria-pressed:hidden has-aria-pressed:flex aria-[pressed]:flex',
+      'motion:transition-transform motion:duration-page motion:ease-in-out hover:motion:animate-pulse',
+      'transition-colors transition-opacity duration-hover ease-out transition-none animate-none',
       kind === 'wide' && 'text-secondary',
       wide ? `gap-lg` : 'gap-md',
       { hidden: wide, 'text-lead': kind !== 'narrow' },
@@ -63,6 +68,7 @@ aria-pressed (и у группы, и у родителя), а не темой. -
 
   .stroke:hover {
     stroke: currentColor;
+    view-transition-name: badge;
   }
 
   @container (max-width: 30rem) {

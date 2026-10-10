@@ -16,7 +16,7 @@
     { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-imports" },
     { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-properties" },
     { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-console" },
-    { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-syntax", "count": 46 },
+    { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-syntax", "count": 55 },
     { "file": "src/shared/ui/button/index.ts", "rule": "no-restricted-syntax" }
   ],
   "steiger": [

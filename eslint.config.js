@@ -152,9 +152,10 @@ const COUNT =
   'flex|order|z|grid-cols|grid-rows|col-span|row-span|col-start|col-end|row-start|row-end|grow|shrink|columns|line-clamp'
 const NUMERIC = String.raw`(?<![\w-])-?(?!(?:${COUNT})-\d+(?![\w.\/-]))[a-z][a-z-]*-(?!0(?![\w.\/]))(?:px|\d+(?:[.\/]\d+)?)(?![\w:-])`
 // Ключевое слово со своим значением там, где значение несёт роль: интерлиньяж — у роли текста,
-// скругление — у роли радиуса, линия обводки и кольца — у `border.*`, фильтр — без роли вовсе.
+// скругление — у роли радиуса, линия обводки и кольца — у `border.*`, кривая перехода — у роли
+// `motion.*`, фильтр — без роли вовсе.
 // Перечень — утилиты Tailwind без числа в имени, которые при выключенной теме дают литерал.
-const KEYWORD = String.raw`(?<![\w-])(?:leading-none|rounded(?:-[a-z]{1,2})?-full|outline|(?:inset-)?ring|(?:backdrop-)?(?:grayscale|invert|sepia))(?![\w-])`
+const KEYWORD = String.raw`(?<![\w-])(?:leading-none|rounded(?:-[a-z]{1,2})?-full|outline|(?:inset-)?ring|(?:backdrop-)?(?:grayscale|invert|sepia)|ease-linear)(?![\w-])`
 // Скобки — произвольное значение, свойство, вариант и `(--переменная)`. Условие по атрибуту
 // (`aria-[current=page]:`, `data-[state=open]:`) значения не несёт.
 const ARBITRARY = String.raw`(?<!(?:aria|data)-)\[|\](?!:)|[()]`
@@ -169,6 +170,13 @@ const DS_VARIABLE = String.raw`var\(\s*--`
 // Своё условие темы — в `<style>` или вариантом класса — разошлось бы с выбором посетителя.
 const CSS_THEME = String.raw`prefers-color-scheme|data-theme|light-dark\(`
 const THEME_VARIANT = String.raw`(?<!\w)dark:|data-\[theme\b`
+// Движение — анимация, переход размера и положения, плавная прокрутка — объявляется под вариантом
+// `motion:` слоя сопоставления: он знает и настройку системы, и выбор посетителя (`data-motion`).
+// Отклик без смещения — `transition-colors`, `transition-opacity` — остаётся при любом выборе.
+// `motion-safe:` и `motion-reduce:` читают только систему и расходятся с выбором.
+const MOTION = String.raw`(?<![\w:-])(?:(?!motion:)[^\s:]+:)*(?:animate-(?!none(?![\w-]))[\w-]+|transition(?!-(?:colors|opacity|none)(?![\w-]))(?:-[\w-]+)?|scroll-smooth)(?![\w-])|(?<![\w-])motion-(?:safe|reduce):`
+// В `<style>` движения нет: анимацию и её роли объявляет слой, компонент берёт её утилитой.
+const CSS_MOTION = `${property('transition(?:-[a-z-]+)?|animation(?:-[a-z-]+)?|scroll-behavior')}|@keyframes|prefers-reduced-motion|data-motion`
 const CLASS = "JSXAttribute:matches([name.name='class'], [name.namespace.name='class'])"
 const STYLE = "JSXElement[openingElement.name.name='style'] > AstroRawText"
 // Строка разметки — литерал, кусок шаблонной строки или ключ-имя объекта `class:list`.
@@ -231,7 +239,7 @@ const astroSyntax = [
   {
     selector: `${CLASS} ${text(KEYWORD)}`,
     message:
-      'UI: ключевое слово со своим значением (leading-none, rounded-full, outline, ring, grayscale) — мимо роли: интерлиньяж несёт роль текста, скругление и линию — роли радиуса и border',
+      'UI: ключевое слово со своим значением (leading-none, rounded-full, outline, ring, grayscale, ease-linear) — мимо роли: интерлиньяж несёт роль текста, скругление и линию — роли радиуса и border, кривую перехода — роль движения',
   },
   {
     selector: `${CLASS} ${text(SCHEME)}, ${STYLE}[value=/${CSS_COLOR_SCHEME}/i]`,
@@ -241,6 +249,11 @@ const astroSyntax = [
     selector: `${STYLE}[value=/${CSS_THEME}/i], ${CLASS} ${text(THEME_VARIANT)}`,
     message:
       'UI: компонент не знает тему (prefers-color-scheme, data-theme, light-dark(), dark:) — цвет темы несёт роль файла токенов, состояние кнопки — aria-pressed',
+  },
+  {
+    selector: `${CLASS} ${text(MOTION)}, ${STYLE}[value=/${CSS_MOTION}|@apply[^;{}]*(?:${MOTION})/i]`,
+    message:
+      'UI: движение (animate-*, transition-transform, transition-all, scroll-smooth; transition, animation и @keyframes в <style>) — только утилитой под вариантом motion: он знает систему и выбор посетителя; отклик без смещения — transition-colors, transition-opacity',
   },
   {
     selector: `JSXAttribute ${text(DS_VARIABLE)}`,

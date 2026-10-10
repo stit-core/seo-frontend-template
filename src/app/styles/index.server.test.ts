@@ -187,6 +187,7 @@ it('тема Tailwind по умолчанию выключена: её клас�
     ...['text-xl', 'font-semibold', 'tracking-tight', 'leading-tight'],
     ...['mt-4', 'px-6', 'gap-x-8', 'w-40', 'size-4', '-mr-2'],
     ...['rounded-md', 'max-w-prose', 'sm:hidden', 'lg:hidden', 'shadow-md'],
+    ...['ease-in', 'animate-spin'],
   ]
   expect(closed.filter((utility) => adds([utility]))).toEqual([])
   expect(fromRole('text-secondary', 'color')).toBe(true)
@@ -210,6 +211,33 @@ it('роль текста — одна утилита: кегль, интерл�
 it('отступ — шаг шкалы и ритм файла токенов', () => {
   expect(fromRole('mt-md', 'margin-top')).toBe(true)
   expect(fromRole('px-page-x', 'padding-inline')).toBe(true)
+})
+
+it('длительность и кривая перехода — роли движения файла токенов', () => {
+  for (const duration of ['duration-hover', 'duration-page']) {
+    expect(fromRole(duration, 'transition-duration'), duration).toBe(true)
+  }
+  for (const curve of ['ease-out', 'ease-in-out']) {
+    expect(fromRole(curve, 'transition-timing-function'), curve).toBe(true)
+  }
+})
+
+// Условие варианта — норма эффекта motion-toggle базы strategy: движение идёт, когда система не
+// просит его сократить и посетитель не выбрал «меньше», и когда он выбрал «полное» вопреки системе.
+it('вариант motion: движение разрешено системой без выбора «меньше» или выбором «полное»', () => {
+  const css = compiler.build(['motion:hidden']).replace(/\s+/g, ' ')
+  const reduced = String.raw`\[data-motion="reduced"\]`
+  const full = String.raw`\[data-motion="full"\]`
+  const own = String.raw`\.motion\\:hidden`
+  expect(css).toMatch(
+    new RegExp(
+      String.raw`@media \(prefers-reduced-motion: no-preference\) \{ ${own}:not\(:where\(${reduced}, ${reduced} \*\)\) \{ display: none; \} \}`,
+    ),
+  )
+  expect(css).toMatch(
+    new RegExp(String.raw`\} ${own}:where\(${full}, ${full} \*\) \{ display: none; \}`),
+  )
+  expect(css.match(new RegExp(own, 'g'))).toHaveLength(2)
 })
 
 // Условие @media не читает var(): границу слой повторяет значением, и расхождение с файлом
@@ -261,7 +289,7 @@ it('строка слоя сопоставления — роль файла т�
 })
 
 // Правило слоя берёт значение утилитой роли (`@apply`): число в его объявлении — литерал мимо
-// роли. Свои числа — у ширины поля и перехода кнопки.
+// роли. Своё число — у ширины поля.
 it('число в правилах слоя — только названные литералы', () => {
   const rules = source.replace(THEME_BLOCK, '').replace(/@apply[^;]*;/g, '')
   expect(
@@ -269,7 +297,64 @@ it('число в правилах слоя — только названные 
       rules.matchAll(/([\w-]+)\s*:\s*([^;{}]*[1-9][^;{}]*);/g),
       ([, property = '', value = '']) => `${property}: ${value.trim()}`,
     ),
-  ).toEqual(['width: 100%', 'transition: background-color 0.15s ease-out'])
+  ).toEqual(['width: 100%'])
+})
+
+// Правила слоя без блоков варианта `motion` — то, что действует при любом выборе движения.
+function withoutMotion(css: string) {
+  let rest = ''
+  let from = 0
+  for (const { index, 0: opener } of css.matchAll(/@(?:custom-)?variant motion\s*\{/g)) {
+    if (index < from) continue
+    let end = index + opener.length
+    for (let depth = 1; depth > 0 && end < css.length; end += 1) {
+      if (css[end] === '{') depth += 1
+      else if (css[end] === '}') depth -= 1
+    }
+    rest += css.slice(from, index)
+    from = end
+  }
+  return rest + css.slice(from)
+}
+
+// Движение правило слоя объявляет «от статики» — под вариантом `motion` (блок `@variant motion`,
+// утилита `motion:` в `@apply`): вне его остаются статика и отклик без смещения — переход цвета и
+// прозрачности. Правило мимо варианта двигалось бы и у посетителя, который просил движение
+// сократить; сокращённая запись `transition` несла бы длительность мимо роли.
+it('движение в правилах слоя — только под вариантом motion', () => {
+  const rules = withoutMotion(source.replace(THEME_BLOCK, ''))
+  const still = /^(?:(?:background-|border-|outline-|text-decoration-)?color|fill|stroke|opacity)$/
+  const moves = new Map<string, (value: string) => boolean>([
+    ['animation', (value) => value !== 'none'],
+    ['animation-name', (value) => value !== 'none'],
+    ['transition', () => true],
+    ['transition-property', (value) => !value.split(/\s*,\s*/).every((name) => still.test(name))],
+    ['scroll-behavior', (value) => value !== 'auto'],
+    ['view-transition-name', (value) => value !== 'none'],
+  ])
+  const declared = Array.from(
+    rules.matchAll(/(?<![\w-])([a-z-]+)\s*:\s*([^;{}]+);/g),
+    ([, property = '', value = '']) => [property, value.trim()] as const,
+  ).filter(([property, value]) => moves.get(property)?.(value))
+  const moving = /^(?:animate-(?!none$)|transition(?!-(?:colors|opacity|none)$)|scroll-smooth$)/
+  const applied = Array.from(rules.matchAll(/@apply\s+([^;]+);/g), ([, list = '']) => list)
+    .flatMap((list) => list.split(/\s+/))
+    .filter((word) => {
+      const [utility = '', ...variants] = word.split(':').reverse()
+      return moving.test(utility) && !variants.includes('motion')
+    })
+  expect([...declared.map((pair) => pair.join(': ')), ...applied]).toEqual([])
+  // Статика по умолчанию: без этой строки снимок страницы для перехода браузер делает всегда.
+  expect(rules).toMatch(/:root \{\s*view-transition-name: none;/)
+})
+
+// Переход между страницами рисует браузер; длительность и кривую его кадрам дают роли движения.
+it('переход между страницами — CSS View Transitions на ролях движения', () => {
+  const css = compiler.build([]).replace(/\s+/g, ' ')
+  expect(css).toContain('@view-transition { navigation: auto; }')
+  const frames = /::view-transition-group\(\*\)[^{]*\{([^}]*)\}/.exec(css)?.[1] ?? ''
+  expect(frames).toMatch(/animation-duration: var\(--[\w-]+\);/)
+  expect(frames).toMatch(/animation-timing-function: var\(--[\w-]+\);/)
 })
 
 // Ширину контейнера берёт один примитив секции. Класс-компонент слоя с ней дал бы её любому

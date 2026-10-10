@@ -23,7 +23,10 @@ console.log(promo, getRuntimeConfig().RELEASE, config.SITE_NAME, import.meta.env
 ключу карты и вычисляемым ключом; своя color-scheme — утилитой и в <style>; ширина контейнера
 мимо примитива секции — утилитой max-w-*, container (ключом объекта) и в <style> (max-width длиной
 и @apply); autofocus у поля внутри выражения шаблона; своё знание темы — вариантом класса (dark:,
-data-[theme=…]) и в <style> (prefers-color-scheme, data-theme, light-dark() — в трёх блоках). -->
+data-[theme=…]) и в <style> (prefers-color-scheme, data-theme, light-dark() — в трёх блоках);
+движение без условия — утилитой (transition-transform), ключом объекта (transition), под
+вариантами системы (motion-safe:, motion-reduce:), кривая литералом (ease-linear) и в <style>
+(transition, @apply, условие системы, @keyframes с animation — в четырёх блоках). -->
 <section class="promo">
   <img src="/promo.png" alt="Промо" width="10" height="10" />
   <Badge client:load />
@@ -50,6 +53,11 @@ data-[theme=…]) и в <style> (prefers-color-scheme, data-theme, light-dark() 
   {promo && <input type="search" name="q" aria-label="Поиск" autofocus />}
   <p class="dark:hidden">Тема вариантом класса</p>
   <p class="in-data-[theme=dark]:hidden">Тема условием по атрибуту</p>
+  <p class="transition-transform duration-page">Движение без условия</p>
+  <p class:list={[{ transition: promo }]}>Движение ключом объекта</p>
+  <p class="motion-safe:animate-none hover:motion-safe:transition-all">Движение по одной системе</p>
+  <p class="motion-reduce:hidden">Статика по одной системе</p>
+  <p class="transition-colors ease-linear">Кривая литералом</p>
 </section>
 
 <style>
@@ -59,6 +67,7 @@ data-[theme=…]) и в <style> (prefers-color-scheme, data-theme, light-dark() 
     font-size: 22px;
     color-scheme: dark;
     max-width: 40rem;
+    transition: transform 0.2s ease-out;
     @apply mt-[13px];
   }
 
@@ -74,15 +83,34 @@ data-[theme=…]) и в <style> (prefers-color-scheme, data-theme, light-dark() 
     border-color: tomato;
     padding: VAR(--space-md);
     @apply max-w-measure;
+    @apply hover:animate-spin;
   }
 
   :global(html[data-theme='dark']) .promo {
     display: none;
   }
 </style>
-<!-- Третьим письмом: тема функцией light-dark(). -->
+<!-- Третьим письмом: тема функцией light-dark() и условие движения по одной системе. -->
 <style>
   .promo {
     fill: light-dark(none, currentColor);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .promo {
+      display: block;
+    }
+  }
+</style>
+<!-- Четвёртым письмом: своя анимация мимо слоя. -->
+<style>
+  @keyframes promo-pulse {
+    to {
+      opacity: 0;
+    }
+  }
+
+  .promo {
+    animation: promo-pulse 1s infinite;
   }
 </style>

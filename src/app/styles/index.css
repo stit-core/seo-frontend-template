@@ -142,13 +142,60 @@
   --text-underline-offset-link: var(--border-offset-underline);
   --text-underline-offset-marker: var(--space-xs);
 
+  /* Движение — длительность и кривая ролей `motion.*`: отклик на наведение (`duration-hover` с
+   * `ease-out`) и переход между страницами (`duration-page` с `ease-in-out`). */
+  --transition-duration-hover: var(--motion-marketing-duration-hover);
+  --transition-duration-page: var(--motion-marketing-duration-page);
+  --ease-out: var(--motion-marketing-easing-out);
+  --ease-in-out: var(--motion-marketing-easing-in-out);
+
   /* Границы раскладки — значениями: в условии @media `var()` не работает. Равенство с
    * `breakpoint.*` файла токенов держит index.server.test.ts. */
   --breakpoint-tablet: 40rem;
   --breakpoint-desktop: 60rem;
 }
 
+/* Движение разрешено, когда система не просит его сократить и посетитель не выбрал «меньше», —
+ * или он выбрал «полное» вопреки системе (атрибут ДС `data-motion` на <html>). Анимацию, переход
+ * размера и положения, плавную прокрутку компонент и правила ниже объявляют только под этим
+ * вариантом — «от статики». Отклик без смещения (смена цвета и прозрачности) движением не
+ * считается: он остаётся при любом выборе. */
+@custom-variant motion {
+  @media (prefers-reduced-motion: no-preference) {
+    &:not(:where([data-motion="reduced"], [data-motion="reduced"] *)) {
+      @slot;
+    }
+  }
+
+  &:where([data-motion="full"], [data-motion="full"] *) {
+    @slot;
+  }
+}
+
+/* Переход между страницами рисует браузер (CSS View Transitions): снимок старой страницы плавно
+ * сменяется новой — без скрипта; браузер без поддержки переходит как обычно. */
+@view-transition {
+  navigation: auto;
+}
+
 @layer base {
+  /* Снимать страницу для перехода браузеру нечего, пока движение не разрешено: имя снимка корень
+   * получает только под вариантом `motion`, без него новая страница встаёт сразу. */
+  :root {
+    view-transition-name: none;
+
+    @variant motion {
+      view-transition-name: root;
+    }
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: --theme(--transition-duration-page);
+    animation-timing-function: --theme(--ease-in-out);
+  }
+
   body {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
@@ -216,24 +263,20 @@
   }
 
   /* Главное действие страницы: единственная заливка акцентом. Рамка прозрачна: в режиме высокой
-   * контрастности заливки нет, и границу кнопки рисует она. */
+   * контрастности заливки нет, и границу кнопки рисует она. Смена заливки под указателем —
+   * отклик без смещения: он остаётся и при сокращённом движении. */
   .button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     text-decoration: none;
     cursor: pointer;
-    @apply min-h-control-md rounded-control border border-transparent bg-accent-solid px-lg py-xs text-button text-on-accent;
+    transition-property: background-color;
+    @apply min-h-control-md rounded-control border border-transparent bg-accent-solid px-lg py-xs text-button text-on-accent duration-hover ease-out;
   }
 
   .button:hover {
     @apply bg-accent-solid-hover;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    .button {
-      transition: background-color 0.15s ease-out;
-    }
   }
 
   /* Цель касания: на таче ссылка вне строки текста, кнопка-иконка и флажок занимают не меньше
