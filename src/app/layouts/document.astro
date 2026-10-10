@@ -7,6 +7,7 @@ import { type Locale, t } from '@/shared/i18n'
 import { type JsonLd, JsonLdScript, type OgImage, SeoHead } from '@/shared/seo'
 import { SiteFooter } from '@/widgets/site-footer'
 import { SiteHeader } from '@/widgets/site-header'
+import { ISLANDS, standsOn } from '../../../scripts/lib/site-policy.mjs'
 
 interface Props {
   locale: Locale
@@ -39,6 +40,9 @@ const {
 // Тема без выбора — системная: её включает блок prefers-color-scheme файла токенов; заданную
 // полем THEME ставит атрибут ДС. Своего color-scheme у оболочки нет — его объявляет файл токенов.
 const theme = THEME.default === 'system' ? undefined : THEME.default
+// Где стоит остров предпочтений, решает его строка реестра: с кнопкой темы — весь сайт, без неё —
+// страницы с переключателем движения.
+const preferences = standsOn(ISLANDS.preferences, Astro.url.pathname)
 // Порядок иконок: первой — PNG 192×192. Какую из нескольких иконок возьмёт выдача Google, его
 // справка не говорит, поэтому первой стоит та, что ему подходит: растр (SVG в списке его форматов
 // нет) крупнее рекомендованных 48 px — ICO 32×32 мельче.
@@ -67,7 +71,7 @@ const theme = THEME.default === 'system' ? undefined : THEME.default
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    {THEME.switcher && <PreferencesInit />}
+    {preferences && <PreferencesInit />}
     <Metrika />
     <slot name="head" />
   </head>

@@ -35,7 +35,8 @@ Reference-набор шаблона — **живой образец**, а не �
    `src/entities/post/content/covers/*.png`
 2. Написать свои — `/content` (минимум по одной записи на локаль, иначе списки пусты)
 3. `content/redirects.yaml` — демо-записи убрать, вписать адреса своего старого сайта
-4. Проверить бюджет «HTML поста» в `.size-limit.cjs`: своя вёрстка записи может весить иначе
+4. Проверить бюджет HTML в `.size-limit.cjs` (`pnpm size`): он меряет самую тяжёлую страницу
+   сборки, а своя вёрстка записи может весить иначе
 5. Переименовать коллекцию под свой домен (`post` → `article`, `case`, `vacancy`) — если
    переименовываешь: каталог слайса, `src/content.config.ts`, реестр `scripts/lib/content.mjs`,
    импорты `@/entities/post`, маршруты `src/pages/blog/**`
@@ -71,7 +72,6 @@ src/shared/seo/rss.ts  src/shared/seo/rss.test.ts
 | `src/shared/seo/index.ts` | убрать реэкспорт `buildFeed` |
 | `src/shared/seo/seo-head.astro.test.ts` | убрать ожидания RSS-ссылки |
 | `src/shared/i18n/dict.ts` | убрать ключи `blog.*`, `post.*`, `author.*`, `footer.rss` в обеих локалях |
-| `.size-limit.cjs` | убрать бюджет «HTML поста» и вычисление самой тяжёлой записи |
 | `content/redirects.yaml` | демо-записи (их цель `/blog` уходит вместе с блогом — `check:content` это поймает) |
 | `src/app/middleware/redirects.test.ts` | если таблица пустая — условие «непуста» меняется на «строится» |
 | `src/app/middleware/index.server.test.ts` | кейс «адреса … до роутинга» ходит по демо-адресам `/old`, `/blog/staraya-zametka` и `/en/blog/old-note` — заменить своими из `redirects.yaml` (нет `410` — убрать его половину кейса) |

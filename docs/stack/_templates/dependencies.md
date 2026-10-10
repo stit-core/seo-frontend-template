@@ -112,10 +112,9 @@ typescript-eslint объявляет peer `<6.1` — с 7 падают `typechec
 
 | что | лимит | где держится |
 |---|---|---|
-| CSS всего сайта | 15 КБ gzip | `.size-limit.cjs` |
-| HTML главной | 20 КБ gzip | `.size-limit.cjs` |
-| HTML записи | 25 КБ gzip | `.size-limit.cjs` |
-| JS островов | 30 КБ gzip (файл в `dist`) / байты в unit-тесте (инлайн) | `.size-limit.cjs`, тест компонента |
+| CSS всего сайта | 6,5 КБ brotli | `.size-limit.cjs` |
+| HTML самой тяжёлой страницы сборки | 5 КБ brotli | `.size-limit.cjs` |
+| остров | бюджет своей строки `ISLANDS`, brotli: инлайн — тег, файл — модуль с импортами | `seo:check`, тест компонента |
 | образ | _≤ 400 МБ_ | приёмка образа печатает размер — порога в ней нет |
 
 ## Generates

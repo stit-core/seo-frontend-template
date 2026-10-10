@@ -80,7 +80,8 @@ service → runtime → content → routing → rendering → seo → styling
   = «редактор без git» при источнике `git` — `**blocker**`, потому что публикация = релиз образа
 - каждый env, объявленный любым kind'ом, есть в `config.md`; секрет не помечен «в HTML: да»
 - канонический хост один: `service.md § Домены` = `seo.md § Идентичность` = `SITE_URL`
-- новый остров в `rendering.md § Интерактивность` имеет строку бюджета в `dependencies.md`
+- новый остров в `rendering.md § Интерактивность` имеет основание и бюджет — строку `ISLANDS`
+  (`scripts/lib/site-policy.mjs`)
 
 ## Промоушн draft → stable
 

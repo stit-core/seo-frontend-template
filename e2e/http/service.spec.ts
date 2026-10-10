@@ -133,7 +133,7 @@ test.describe('on-demand: ответы приложения', () => {
     request,
   }) => {
     for (const path of [UNKNOWN, ...onDemandRoutes()]) {
-      expect(scriptViolations(await (await request.get(path)).text()), path).toEqual([])
+      expect(scriptViolations(await (await request.get(path)).text(), path), path).toEqual([])
     }
   })
 

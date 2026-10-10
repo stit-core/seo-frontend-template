@@ -165,8 +165,8 @@ const CSP_PROTECTED: Record<string, string> = {
 const CSP_ANY = /\*|^'unsafe-/
 const CSP_HASH = /^'sha(256|384|512)-[\w+/]+={0,2}'$/
 
-// Острова политики, как их читает CSP: включён ли остров на этой сборке и его чужие origin.
-const islands: { hash: string; on?: boolean; sources?: Partial<Record<string, string[]>> }[] =
+// Острова политики, как их читает CSP: стоит ли остров хоть на одной странице и его чужие origin.
+const islands: { pages: string[]; sources?: Partial<Record<string, string[]>> }[] =
   Object.values(ISLANDS)
 
 // Чужие origin, которые политика разрешает директиве: ресурсы сайта (скрипту — нет, внешних
@@ -174,13 +174,13 @@ const islands: { hash: string; on?: boolean; sources?: Partial<Record<string, st
 const policyOrigins = (directive: string): string[] => [
   ...(directive === 'script-src' ? [] : RESOURCE_ORIGINS),
   ...islands
-    .filter((island) => island.on !== false)
+    .filter((island) => island.pages.length > 0)
     .flatMap((island) => island.sources?.[directive] ?? []),
 ]
 
 // CSP страницы так, как её применяет браузер: директива действует по первому вхождению (дубль он
-// отбрасывает), защитные — ровно литералы, источник сверх своего и хеша — только из политики, и
-// каждый инлайн-скрипт и инлайн-стиль документа разрешён хешем.
+// отбрасывает), защитные — ровно литералы, источник сверх своего и хеша — только из политики,
+// каждый инлайн-скрипт и инлайн-стиль документа разрешён хешем, а скрипт из файла — своим адресом.
 export function cspProblems(html: string, header: string | undefined): string[] {
   if (!header) return ['нет заголовка Content-Security-Policy']
   const problems: string[] = []
@@ -218,6 +218,15 @@ export function cspProblems(html: string, header: string | undefined): string[] 
     for (const [, attrs = '', body = ''] of html.matchAll(pattern)) {
       // JSON-LD — данные, а не код: CSP его не исполняет и не блокирует.
       if (isJsonLd(attrs)) continue
+      // Скрипт из файла (остров-файл) CSP сверяет по адресу, а не по хешу тела: свой путь — 'self'.
+      const src = element === 'script' ? /\bsrc="([^"]*)"/.exec(attrs)?.[1] : undefined
+      if (src !== undefined) {
+        const source = /^\/(?!\/)/.test(src) ? "'self'" : new URL(src, 'https://x.invalid').origin
+        if (!directives.get(name)?.includes(source)) {
+          problems.push(`<${element}${attrs}>: ${name} не пропускает ${source}`)
+        }
+        continue
+      }
       if (!directives.get(name)?.includes(`'${cspHash(body)}'`)) {
         problems.push(`<${element}${attrs}>: ${name} не пропускает ${cspHash(body)}`)
       }

@@ -181,7 +181,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   сниппет в бюджетах и не общий, `noindex` только у `NOINDEX_ROUTES` и у тегов ниже порога записей (от
   порога тег индексируется), canonical на плейсхолдере
   origin и ни плейсхолдера в `<body>`, исполняемый код (`<script>`, обработчики `on*=`,
-  `javascript:`) — острова `ISLANDS`, ресурсов с чужих origin нет (и в `style`), og:image и
+  `javascript:`) — острова реестра `ISLANDS` на своих страницах и в бюджете, ресурсов с чужих
+  origin нет (и в `style`), og:image и
   hreflang — на своём origin, у картинок размеры, картинка над h1 — не lazy и с
   `fetchpriority="high"`, у `@font-face` — `font-display` swap/fallback/optional;
   страниц черновиков нет; сборка против источника — страница у каждой опубликованной записи и

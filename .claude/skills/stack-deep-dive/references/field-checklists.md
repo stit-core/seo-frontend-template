@@ -83,10 +83,12 @@
 `Интерактивность (острова)`, `Generates`.
 
 **Generates**: `export const prerender` и заголовки в `src/pages/**`, строки в
-`docs/reference/rendering.md`, бюджеты `.size-limit.cjs`, HTTP-набор `e2e/http/`.
+`docs/reference/rendering.md`, строки `ISLANDS` (`scripts/lib/site-policy.mjs`), HTTP-набор
+`e2e/http/`.
 
 **Cross-kind**: `indexable: да` ⇒ режим `static` или `cached` (никогда `dynamic`/`client`);
-каждый остров ⇒ строка бюджета; источник контента не `git` ⇒ у его маршрутов режим не `static`.
+каждый остров ⇒ строка `ISLANDS` с основанием, страницами и бюджетом; источник контента не `git` ⇒
+у его маршрутов режим не `static`.
 
 **Anti-patterns**: `prerender = false` на контентной странице; request-only API
 (`Astro.request`, cookies, `url.search`) в prerender-маршруте; `Astro.site` для
@@ -152,12 +154,12 @@
 
 **Секции**: `Счётчики`, `Что не работает в РФ`, `ИИ-рефереры`, `Согласие`, `Бюджет`, `Generates`.
 
-**Generates**: `src/app/analytics/*`, идентификаторы в `site.ts`, баннер согласия и его
-строка бюджета, остров в `ISLANDS` (имя, хеш тела и origin счётчика — их пропускает CSP) и
+**Generates**: `src/app/analytics/*`, идентификаторы в `site.ts`, баннер согласия,
+острова в `ISLANDS` (основание, страницы, бюджет; хеш тела и origin счётчика пропускает CSP) и
 чужие origin в `RESOURCE_ORIGINS` (`scripts/lib/site-policy.mjs`, их держат `seo:check` и CSP).
 
 **Cross-kind**: идентификатор счётчика — поле `site.ts`, не env (`config.md § Публичные
-идентификаторы`); баннер — остров, строка в `rendering.md` и в `.size-limit.cjs`.
+идентификаторы`); баннер — остров, строка в `rendering.md` и в `ISLANDS`.
 
 **Anti-patterns**: счётчик синхронно в `<head>`; подключение из виджета или страницы мимо
 единственной точки `app/analytics`; GA4 как основная аналитика для российской аудитории.

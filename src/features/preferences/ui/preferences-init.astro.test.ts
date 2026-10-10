@@ -1,14 +1,9 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { Browser } from 'happy-dom'
-import { cspHash, ISLANDS } from '../../../../scripts/lib/site-policy.mjs'
+import { brotliBytes, cspHash, ISLANDS } from '../../../../scripts/lib/site-policy.mjs'
 import MotionToggle from './motion-toggle.astro'
 import PreferencesInit from './preferences-init.astro'
 import ThemeToggle from './theme-toggle.astro'
-
-// Отдельного файла в dist у острова нет — он инлайнится в <head> каждой страницы. Поэтому
-// его бюджет ровно один: байты отрендеренного <script>. Внутри HTML-документа их же считает
-// бюджет «HTML главной» в .size-limit.cjs.
-const INLINE_BUDGET_BYTES = 1300
 
 const container = await AstroContainer.create()
 const island = await container.renderToString(PreferencesInit)
@@ -120,7 +115,7 @@ function open({
 }
 
 describe('PreferencesInit', () => {
-  it('один инлайн-скрипт без загрузки, комментариев и прагм — в пределах бюджета', () => {
+  it('один инлайн-скрипт без загрузки, комментариев и прагм — в бюджете своей строки реестра', () => {
     const scripts = island.match(/<script[^>]*>[\s\S]*?<\/script>/g) ?? []
     expect(scripts).toHaveLength(1)
     const [script = ''] = scripts
@@ -128,7 +123,8 @@ describe('PreferencesInit', () => {
     // Комментарии и прагмы линтеров живут во frontmatter: в <head> уезжает только код.
     expect(script).not.toContain('biome-ignore')
     expect(script).not.toContain('//')
-    expect(Buffer.byteLength(script, 'utf8')).toBeLessThanOrEqual(INLINE_BUDGET_BYTES)
+    // Мера — тег целиком в brotli: так же его взвешивает seo:check на странице сборки.
+    expect(brotliBytes(script)).toBeLessThanOrEqual(ISLANDS.preferences.budget)
   })
 
   // CSP пропускает остров по хешу из политики: правка тела без новой строки политики — красный

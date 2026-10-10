@@ -4,31 +4,70 @@
 // заголовки) и браузер — CSP строится отсюда же. Список расширяется решением — служебная
 // страница, остров, сторонний сервис, тип разметки, — а не по месту в скрипте.
 import { createHash } from 'node:crypto'
+import { brotliCompressSync, constants } from 'node:zlib'
 import { METRIKA_ID, THEME } from '../../src/shared/config/site.ts'
+import { DEFAULT_LOCALE, localeOf } from '../../src/shared/i18n/locale.ts'
 import { isJsonLd } from './html.mjs'
 
 // Служебные prerendered-маршруты без префикса локали: только им положен noindex.
 export const NOINDEX_ROUTES = ['/contacts/spasibo', '/500']
+
+/**
+ * Путь без префикса локали и хвостового слеша: `/en/blog/` → `/blog`, `/en` → `/`.
+ * @param {string} path
+ */
+export function routeOf(path) {
+  const clean = path.replace(/(?<=.)\/+$/, '')
+  const locale = localeOf(clean)
+  return locale === DEFAULT_LOCALE ? clean : clean.slice(locale.length + 1) || '/'
+}
 
 // Страница тега индексируется от стольких опубликованных записей локали; ниже порога она почти
 // повторяет список — тонкая страница обязана быть с noindex (и только она: право на него тегу даёт
 // число записей в источнике, а не NOINDEX_ROUTES). Число здесь и в коллекции — одно и то же.
 export const TAG_INDEX_MIN_POSTS = 3
 
-// Острова: исполняемый <script> страницы — только инлайн в <head> и с data-island из списка. CSP
-// пропускает тело острова по хешу: правка тела — новый `hash` здесь (тест острова печатает его),
-// и изменение исполняемого кода сайта видно в диффе политики. `on` — печатает ли остров сайт
-// (по умолчанию — да), `sources` — чужие origin острова по директивам CSP.
+/**
+ * @typedef {object} Island
+ * @property {string} basis
+ * @property {string[]} pages
+ * @property {number} budget
+ * @property {string} [hash]
+ * @property {string} [file]
+ * @property {string} [markup]
+ * @property {Partial<Record<string, string[]>>} [sources]
+ */
+
+// Острова: исполняемый код страницы — только строки этого реестра, без них на сайте ни байта JS.
+// Строка — решение с основанием и ценой:
+// - `basis` — момент спецификации движения или плана страницы, который остров исполняет;
+// - `pages` — где он стоит: пути без префикса локали, `*` в конце — любое продолжение (`['*']` —
+//   весь сайт, `[]` — нигде: такой остров CSP не пропускает);
+// - `budget` — вес в brotli, байт: у инлайна — тег целиком, у файла — он и всё, что он импортирует;
+// - `hash` — остров-инлайн, `<script is:inline data-island>` в <head>: CSP пропускает тело по хешу.
+//   Правка тела — новый хеш здесь (его печатает тест острова): изменение кода видно в диффе политики;
+// - `file` — остров-файл: компонент, чей `<script>` Astro собирает в модуль
+//   `_astro/<имя>.astro_astro_type_script_…js`; CSP пропускает его как свой файл;
+// - `markup` — атрибут элементов, которые остров обслуживает: на странице без него они мертвы;
+// - `sources` — чужие origin острова по директивам CSP.
+/** @satisfies {Record<string, Island>} */
 export const ISLANDS = {
-  // Остров предпочтений (тема и движение) — только с кнопкой выбора: без неё тему и движение
-  // дают файл токенов и настройки системы, без скрипта.
-  preferences: { hash: 'sha256-BRdwgwRh483d/F0eQ6EvNd+iXckfZRBomGNnvx/B9Ak=', on: THEME.switcher },
-  // Счётчик — только с идентификатором; tag.js, хиты и пиксель — с его origin. Вебвизору, карте
-  // кликов и региональным доменам нужно больше — список Яндекса:
-  // https://yandex.ru/support/metrica/code/install-counter-csp.html
+  preferences: {
+    hash: 'sha256-BRdwgwRh483d/F0eQ6EvNd+iXckfZRBomGNnvx/B9Ak=',
+    basis:
+      'выбор темы и движения встаёт до первой отрисовки: кнопка темы — поле THEME, переключатель движения — эффект motion-toggle базы strategy',
+    // Без кнопки темы остров нужен только страницам с переключателем движения — их пути и встают сюда.
+    pages: THEME.switcher ? ['*'] : [],
+    markup: 'data-preference',
+    budget: 575,
+  },
+  // tag.js, хиты и пиксель счётчика — с его origin. Вебвизору, карте кликов и региональным доменам
+  // нужно больше — список Яндекса: https://yandex.ru/support/metrica/code/install-counter-csp.html
   metrika: {
     hash: 'sha256-tkhj0JcGzL7QaX6wrVvp3zLdoPOwBUgKraRdnuJTdrU=',
-    on: METRIKA_ID !== '',
+    basis: 'счётчик посещений: решение проекта — идентификатор METRIKA_ID',
+    pages: METRIKA_ID !== '' ? ['*'] : [],
+    budget: 290,
     sources: {
       'script-src': ['https://mc.yandex.ru'],
       'connect-src': ['https://mc.yandex.ru'],
@@ -36,6 +75,25 @@ export const ISLANDS = {
     },
   },
 }
+
+/**
+ * Стоит ли остров на странице — по своей строке реестра.
+ * @param {Island} island
+ * @param {string} path — путь страницы, с префиксом локали или без
+ */
+export function standsOn(island, path) {
+  const route = routeOf(path)
+  return island.pages.some((page) =>
+    page.endsWith('*') ? route.startsWith(page.slice(0, -1)) : route === page,
+  )
+}
+
+/**
+ * Вес в brotli — мера бюджетов: так свои байты отдаёт edge.
+ * @param {string | Uint8Array} content
+ */
+export const brotliBytes = (content) =>
+  brotliCompressSync(content, { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } }).length
 
 // Реестр ботов src/shared/seo/crawlers.yaml — копия файла базы strategy байт в байт: политика
 // ИИ-ботов сайта читает из него закрытые группы robots.txt и мету. Версия копии закреплена: файл
@@ -79,7 +137,7 @@ export function contentSecurityPolicy() {
       }
     }
   }
-  const islands = Object.values(ISLANDS).filter((island) => island.on !== false)
+  const islands = Object.values(ISLANDS).filter((island) => island.pages.length > 0)
   const sources = (directive) => islands.flatMap((island) => island.sources?.[directive] ?? [])
   // Явная директива перекрывает default-src: своё и чужие origin ресурсов — в каждой.
   const allow = (directive) => [...new Set(["'self'", ...RESOURCE_ORIGINS, ...sources(directive)])]
@@ -98,7 +156,7 @@ export function contentSecurityPolicy() {
     // Внешних скриптов у сайта нет: чужой origin скрипта — только у острова, который его грузит.
     scriptDirective: {
       resources: ["'self'", ...sources('script-src')],
-      hashes: islands.map((island) => island.hash),
+      hashes: islands.flatMap((island) => island.hash ?? []),
     },
     styleDirective: { resources: allow('style-src') },
   }
@@ -137,28 +195,75 @@ const ATTRIBUTE = /\s([\w:-]+)\s*=\s*("[^"]*"|'[^']*'|[^\s"'>]+)/g
 // Атрибуты-адреса, по которым браузер переходит или грузит: javascript: в них исполняется.
 const URL_ATTRIBUTE = /^(href|src|action|formaction|xlink:href|data)$/i
 
+// Модуль, в который Astro собирает <script> компонента: имя компонента — в имени файла сборки.
+const COMPONENT_SCRIPT = /^\/_astro\/([\w.-]+\.astro)_astro_type_script_index_\d+_lang\.[\w-]+\.js$/
+
 /**
- * Нарушения правила островов в документе: скрипт вне списка, внешний, в <body> или дубль;
- * исполняемый код мимо <script> — обработчик в атрибуте или javascript:-адрес.
+ * Скрипты документа: тег целиком, его место и остров реестра, которому он принадлежит, — инлайн
+ * по `data-island`, файл по имени компонента в `src`.
  * @param {string} html
+ * @param {Record<string, Island>} [islands]
+ */
+export function scriptsOf(html, islands = ISLANDS) {
+  const headEnd = html.indexOf('</head>')
+  return Array.from(html.matchAll(/<script\b([^>]*)>(?:[\s\S]*?<\/script>)?/g), (match) => {
+    const [tag, attrs = ''] = match
+    const src = /\bsrc="([^"]*)"/.exec(attrs)?.[1]
+    const component = COMPONENT_SCRIPT.exec(src ?? '')?.[1]
+    const island =
+      src === undefined
+        ? /\bdata-island="([^"]*)"/.exec(attrs)?.[1]
+        : Object.keys(islands).find((name) => islands[name]?.file?.split('/').at(-1) === component)
+    // Инлайн под именем острова-файла и наоборот — не тот остров, что в реестре.
+    const known =
+      island !== undefined &&
+      Object.hasOwn(islands, island) &&
+      (src === undefined) === (islands[island]?.hash !== undefined)
+    return {
+      tag,
+      attrs,
+      src,
+      jsonLd: isJsonLd(attrs),
+      inBody: match.index > headEnd,
+      island: known ? island : undefined,
+    }
+  })
+}
+
+/**
+ * Нарушения правила островов в документе: скрипт вне реестра, не на своей странице, инлайн в
+ * <body> или дубль; разметка острова без него; исполняемый код мимо <script> — обработчик в
+ * атрибуте или javascript:-адрес.
+ * @param {string} html
+ * @param {string} path — путь страницы
+ * @param {Record<string, Island>} [islands]
  * @returns {string[]}
  */
-export function scriptViolations(html) {
-  const headEnd = html.indexOf('</head>')
+export function scriptViolations(html, path, islands = ISLANDS) {
   const problems = []
   const seen = new Set()
-  for (const match of html.matchAll(/<script\b([^>]*)>/g)) {
-    const attrs = match[1] ?? ''
-    if (isJsonLd(attrs)) {
-      if (match.index > headEnd) problems.push('JSON-LD в <body>: разметка — только в <head>')
+  for (const { attrs, src, jsonLd, inBody, island } of scriptsOf(html, islands)) {
+    if (jsonLd) {
+      if (inBody) problems.push('JSON-LD в <body>: разметка — только в <head>')
       continue
     }
-    const island = /\bdata-island="([^"]*)"/.exec(attrs)?.[1]
-    if (/\bsrc=/.test(attrs)) problems.push(`внешний <script${attrs}>: островов из файла нет`)
-    else if (island === undefined || !Object.hasOwn(ISLANDS, island)) {
-      problems.push(`<script${attrs}> вне списка островов ISLANDS (scripts/lib/site-policy.mjs)`)
+    const row = island === undefined ? undefined : islands[island]
+    if (row === undefined) {
+      problems.push(
+        src === undefined
+          ? `<script${attrs}> вне списка островов ISLANDS (scripts/lib/site-policy.mjs)`
+          : `внешний <script${attrs}>: файла-острова нет в списке ISLANDS (scripts/lib/site-policy.mjs)`,
+      )
     } else if (seen.has(island)) problems.push(`остров ${island} дважды`)
-    if (match.index > headEnd) problems.push(`<script${attrs}> в <body>: остров живёт в <head>`)
+    else if (!standsOn(row, path)) {
+      problems.push(
+        `остров ${island} вне своих страниц (${row.pages.join(', ') || 'их нет'}): где он стоит, решает его строка ISLANDS (scripts/lib/site-policy.mjs)`,
+      )
+    }
+    // Модуль исполняется после разбора документа, где бы ни стоял; инлайн — на месте, до отрисовки.
+    if (src === undefined && inBody) {
+      problems.push(`<script${attrs}> в <body>: остров живёт в <head>`)
+    }
     if (island !== undefined) seen.add(island)
   }
   // Обработчик on*= и javascript:-адрес исполняют код без <script> — острову так не объявиться.
@@ -175,6 +280,13 @@ export function scriptViolations(html) {
           'javascript:-адрес в разметке: скрипт вне островов ISLANDS (scripts/lib/site-policy.mjs)',
         )
       }
+    }
+  }
+  // Кнопку острова без него некому показать и обслужить: посетитель её не увидит.
+  for (const [name, { markup: attribute }] of Object.entries(islands)) {
+    if (attribute === undefined || seen.has(name)) continue
+    if (new RegExp(`<[a-z][^>]*\\s${attribute}(?:[\\s=>]|/>)`, 'i').test(markup)) {
+      problems.push(`разметка острова ${name} (${attribute}) на странице без него`)
     }
   }
   return problems

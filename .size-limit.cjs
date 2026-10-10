@@ -1,32 +1,21 @@
-const { globSync, statSync } = require('node:fs')
+const { globSync, readFileSync } = require('node:fs')
+const { brotliCompressSync, constants } = require('node:zlib')
 
-// Бюджеты клиентских ассетов (синтез §6.5). size-limit падает на пустом glob'е, поэтому
-// строка JS появляется вместе с первым островом и сразу попадает под бюджет.
-// Что исполняемых скриптов на страницах нет, кроме островов из списка, проверяет seo:check.
-const islands =
-  globSync('dist/client/_astro/*.js').length > 0
-    ? [{ name: 'JS островов', path: 'dist/client/_astro/*.js', limit: '30 KB', gzip: true }]
-    : []
+// Бюджеты своих байтов — страховка от регрессии, в brotli: так их отдаёт edge. Вес страницы по
+// слоям судят ворота strategy, острова — seo:check по реестру ISLANDS (scripts/lib/site-policy.mjs).
+const brotli = (path) =>
+  brotliCompressSync(readFileSync(path), { params: { [constants.BROTLI_PARAM_QUALITY]: 11 } })
+    .length
 
-// Бюджет — на документ, а @size-limit/file суммирует все файлы glob'а (бюджет рос бы с
-// числом записей): измеряется самая тяжёлая запись обеих локалей.
-const posts = globSync(['dist/client/blog/*/index.html', 'dist/client/en/blog/*/index.html'])
-const heaviestPost =
-  posts.length > 0
-    ? posts.reduce((heaviest, path) =>
-        statSync(path).size > statSync(heaviest).size ? path : heaviest,
-      )
-    : undefined
-const postHtml = heaviestPost
-  ? [{ name: 'HTML поста (самого тяжёлого)', path: heaviestPost, limit: '25 KB', gzip: true }]
-  : []
+// Бюджет HTML — на документ: измеряется самая тяжёлая страница сборки, какой бы она ни была —
+// главная, запись или лендинг. Сборка без страниц — путь в пустоту: size-limit падает, а не молчит.
+const pages = globSync('dist/client/**/*.html').map((path) => ({ path, size: brotli(path) }))
+const heaviest = pages.reduce((a, b) => (b.size > a.size ? b : a), {
+  path: 'dist/client/index.html',
+  size: 0,
+})
 
-// Остров предпочтений инлайнится в <head> каждой страницы, файла в dist у него нет: его байты
-// входят в бюджеты HTML ниже, а сам он меряется один раз — в preferences-init.astro.test.ts.
 module.exports = [
-  ...islands,
-  { name: 'CSS (одна таблица)', path: 'dist/client/_astro/*.css', limit: '15 KB', gzip: true },
-  { name: 'HTML главной', path: 'dist/client/index.html', limit: '20 KB', gzip: true },
-  { name: 'HTML главной (en)', path: 'dist/client/en/index.html', limit: '20 KB', gzip: true },
-  ...postHtml,
+  { name: 'CSS (одна таблица)', path: 'dist/client/_astro/*.css', limit: '6.5 KB' },
+  { name: `HTML самой тяжёлой страницы (${heaviest.path})`, path: heaviest.path, limit: '5 KB' },
 ]

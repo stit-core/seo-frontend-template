@@ -1,10 +1,7 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { Browser } from 'happy-dom'
 import type * as SharedConfig from '@/shared/config'
-import { cspHash, ISLANDS } from '../../../scripts/lib/site-policy.mjs'
-
-// Отдельного файла у острова нет: его бюджет — байты отрендеренного <script> на каждой странице.
-const INLINE_BUDGET_BYTES = 650
+import { brotliBytes, cspHash, ISLANDS } from '../../../scripts/lib/site-policy.mjs'
 
 const { config } = vi.hoisted(() => ({ config: { METRIKA_ID: '' } }))
 
@@ -33,7 +30,7 @@ describe('Metrika', () => {
     expect((await render()).trim()).toBe('')
   })
 
-  it('с идентификатором — один инлайн-скрипт в бюджете, который грузит счётчик после простоя', async () => {
+  it('с идентификатором — один инлайн-скрипт в бюджете своей строки реестра, который грузит счётчик после простоя', async () => {
     config.METRIKA_ID = '12345678'
     const html = await render()
     const scripts = html.match(/<script[^>]*>/g) ?? []
@@ -46,7 +43,8 @@ describe('Metrika', () => {
     expect(html).not.toContain('defer')
     expect(html).toContain("'init'")
     const [script = ''] = html.match(/<script[^>]*>[\s\S]*?<\/script>/g) ?? []
-    expect(Buffer.byteLength(script, 'utf8')).toBeLessThanOrEqual(INLINE_BUDGET_BYTES)
+    // Сборка шаблона остров не печатает: его вес сверяет только этот тест — той же мерой, что seo:check.
+    expect(brotliBytes(script)).toBeLessThanOrEqual(ISLANDS.metrika.budget)
   })
 
   // CSP пропускает остров по хешу из политики: тело одно на любой идентификатор, иначе каждый

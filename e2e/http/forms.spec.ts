@@ -77,7 +77,7 @@ test.describe('обработчик формы /api/contact: HTTP-контрак
     expect(html).toContain('role="alert"')
     // Страница ответа — on-demand HTML: скрипты на ней — только острова политики, и CSP та же, что у
     // страниц сайта.
-    expect(scriptViolations(html)).toEqual([])
+    expect(scriptViolations(html, '/api/contact')).toEqual([])
     expect(cspProblems(html, response.headers()['content-security-policy'])).toEqual([])
     expect(edgeHeadersIn(response.headers())).toEqual([])
     // Поля возвращаются заполненными: письмо не набирают заново.
@@ -95,7 +95,7 @@ test.describe('обработчик формы /api/contact: HTTP-контрак
     const html = await response.text()
     expect(html).toContain('role="alert"')
     expect(html).toContain('<meta name="robots" content="noindex"')
-    expect(scriptViolations(html)).toEqual([])
+    expect(scriptViolations(html, '/api/contact')).toEqual([])
     expect(cspProblems(html, response.headers()['content-security-policy'])).toEqual([])
     expect(edgeHeadersIn(response.headers())).toEqual([])
   })

@@ -19,10 +19,13 @@
 //   только типов ORG_TYPES, одно имя на всю сборку, издатель сайта и записи — она; автор-человек —
 //   со своим @id, подписан на странице, и имя у него на локали одно; микроданных (itemscope,
 //   itemprop) нет — сущности размечает только JSON-LD;
-// - тело: ни плейсхолдера origin, ни HTML-комментариев; исполняемый код (<script>, on*=,
-//   javascript:) — только острова из списка; у картинок размеры, картинка над h1 (LCP) — не lazy и
-//   с fetchpriority; ресурсов с чужих origin нет (и в style=""), @font-face — с font-display
-//   swap/fallback/optional (и в CSS сборки);
+// - тело: ни плейсхолдера origin, ни HTML-комментариев; у картинок размеры, картинка над h1 (LCP) —
+//   не lazy и с fetchpriority; ресурсов с чужих origin нет (и в style=""), @font-face — с
+//   font-display swap/fallback/optional (и в CSS сборки);
+// - острова — по реестру проекта: исполняемый код (<script>, on*=, javascript:) — только его
+//   строки, остров — на своих страницах и в бюджете (brotli: инлайн — тег, файл — модуль и всё,
+//   что он импортирует), разметка острова — только вместе с ним; у строки реестра есть основание,
+//   бюджет и вид — инлайн или файл;
 // - сборка против источника: страница у каждой опубликованной записи и prerendered-маршрута,
 //   страниц черновиков нет;
 // - карта сайта sitemap.xml: ровно индексируемые страницы сборки своим self-canonical, lastmod —
@@ -31,7 +34,8 @@
 // On-demand ответы (robots.txt, /now, 404) и проштампованные карту и фиды проверяет HTTP-набор
 // (`pnpm test:http`) — им нужен сервер.
 import { existsSync, readFileSync, statSync } from 'node:fs'
-import { relative, resolve, sep } from 'node:path'
+import { basename, relative, resolve, sep } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { load } from 'js-yaml'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
 import {
@@ -53,6 +57,7 @@ import {
 } from './lib/html.mjs'
 import { pageRoutes, walk } from './lib/routes.mjs'
 import {
+  brotliBytes,
   DESCRIPTION_BUDGET,
   GENERIC_TITLE,
   ICON_MIN_SIDE,
@@ -61,6 +66,8 @@ import {
   NOINDEX_ROUTES,
   ORG_TYPES,
   RESOURCE_ORIGINS,
+  routeOf,
+  scriptsOf,
   scriptViolations,
   TAG_INDEX_MIN_POSTS,
   TITLE_BUDGET,
@@ -70,6 +77,11 @@ import { sitemapUrls } from './lib/sitemap.mjs'
 // Корень проекта; другой корень — негативные фикстуры check:gate (`.gate-fixtures/<скрипт>`).
 const root = resolve(process.argv[2] ?? resolve(import.meta.dirname, '..'))
 const collections = await collectionsOf(root)
+// Реестр островов — тоже проверяемого проекта: у сайта это ISLANDS политики, у мини-проекта
+// check:gate — свой, и гейт на гейт не зависит от островов сайта.
+const { ISLANDS: islands } = await import(
+  pathToFileURL(resolve(root, 'scripts/lib/site-policy.mjs')).href
+)
 const client = resolve(root, 'dist/client')
 if (!existsSync(client)) {
   console.error('seo:check: dist/client не найден — сначала pnpm build')
@@ -93,11 +105,6 @@ const fileInDist = (path) => {
 
 const isLocaleHome = (path) =>
   SUPPORTED_LOCALES.some((locale) => path === (locale === DEFAULT_LOCALE ? '/' : `/${locale}`))
-// Путь без префикса локали: `/en/blog` → `/blog`, `/en` → `/`.
-const routeOf = (path) => {
-  const locale = localeOf(path)
-  return locale === DEFAULT_LOCALE ? path : path.slice(locale.length + 1) || '/'
-}
 
 // Сторона PNG из заголовка файла (IHDR); не PNG или не квадрат — undefined.
 function pngSide(path) {
@@ -452,6 +459,45 @@ function checkMarkupVisible(where, path, body, blocks, page) {
 }
 
 // ---------- страницы ----------
+// Остров — решение с основанием и ценой: строка реестра без них — код без решения.
+for (const [name, island] of Object.entries(islands)) {
+  const where = `ISLANDS.${name} (scripts/lib/site-policy.mjs)`
+  if (typeof island.basis !== 'string' || island.basis.trim() === '') {
+    fail(where, 'нет основания (basis): момент спецификации движения или плана страницы')
+  }
+  if (!Number.isInteger(island.budget) || island.budget <= 0) {
+    fail(where, 'нет бюджета (budget): вес в brotli, байт')
+  }
+  if ((island.hash === undefined) === (island.file === undefined)) {
+    fail(where, 'остров — инлайн (hash) или файл (file): ровно одно из двух')
+  }
+}
+
+// Вес острова — то, что страница грузит ради него: инлайн — тег целиком, файл — модуль и всё, что
+// он импортирует сразу или отложенно (имена модулей сборки в его тексте).
+const modules = new Map(
+  walk(client)
+    .filter((file) => file.endsWith('.js'))
+    .map((file) => [basename(file), file]),
+)
+function loadOf({ tag, src }) {
+  if (src === undefined) return { weight: brotliBytes(tag), imports: [] }
+  const graph = new Set()
+  const queue = [basename(src)]
+  for (let name = queue.pop(); name !== undefined; name = queue.pop()) {
+    if (graph.has(name) || !modules.has(name)) continue
+    graph.add(name)
+    const code = readFileSync(modules.get(name), 'utf8')
+    queue.push(...[...modules.keys()].filter((other) => code.includes(other)))
+  }
+  const [, ...imports] = graph
+  return {
+    weight: [...graph].reduce((sum, name) => sum + brotliBytes(readFileSync(modules.get(name))), 0),
+    imports,
+  }
+}
+const weighed = new Set()
+
 // Страница сборки — каталог с index.html или страница ошибки `<код>.html` в корне (её Astro
 // пишет файлом, адаптер отдаёт при сбое рендера).
 const isPage = (rel) => rel.endsWith('index.html') || /^\d{3}\.html$/.test(rel)
@@ -491,7 +537,19 @@ for (const file of walk(client)) {
   const body = bodyOf(html)
   if (body.includes(OWN_HOST))
     fail(where, 'плейсхолдер origin в <body>: абсолютный URL своего сайта вне <head>')
-  for (const message of scriptViolations(html)) fail(where, message)
+  for (const message of scriptViolations(html, path, islands)) fail(where, message)
+  for (const script of scriptsOf(html, islands)) {
+    const island = islands[script.island]
+    if (island === undefined || weighed.has(script.src ?? script.tag)) continue
+    weighed.add(script.src ?? script.tag)
+    const { weight, imports } = loadOf(script)
+    if (weight > island.budget) {
+      fail(
+        where,
+        `остров ${script.island}: ${weight} Б в brotli, бюджет ${island.budget}${imports.length > 0 ? ` — с импортами ${imports.join(', ')}` : ''}`,
+      )
+    }
+  }
   checkResources(where, html)
   checkMedia(where, body)
   checkMicrodata(where, html)
