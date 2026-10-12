@@ -323,7 +323,8 @@ function withoutMotion(css: string) {
 // сократить; сокращённая запись `transition` несла бы длительность мимо роли.
 it('движение в правилах слоя — только под вариантом motion', () => {
   const rules = withoutMotion(source.replace(THEME_BLOCK, ''))
-  const still = /^(?:(?:background-|border-|outline-|text-decoration-)?color|fill|stroke|opacity)$/
+  const still =
+    /^(?:none|(?:background-|border-|outline-|text-decoration-)?color|fill|stroke|opacity)$/
   const moves = new Map<string, (value: string) => boolean>([
     ['animation', (value) => value !== 'none'],
     ['animation-name', (value) => value !== 'none'],
@@ -346,6 +347,8 @@ it('движение в правилах слоя — только под вар
   expect([...declared.map((pair) => pair.join(': ')), ...applied]).toEqual([])
   // Статика по умолчанию: без этой строки снимок страницы для перехода браузер делает всегда.
   expect(rules).toMatch(/:root \{\s*view-transition-name: none;/)
+  // Длительность без свойства перехода не двигает: свойство по умолчанию — `none`, а не `all`.
+  expect(rules).toMatch(/\*,\s*::before,\s*::after\s*\{\s*transition-property: none;\s*\}/)
 })
 
 // Переход между страницами рисует браузер; длительность и кривую его кадрам дают роли движения.

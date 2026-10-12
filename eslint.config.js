@@ -260,6 +260,12 @@ const astroSyntax = [
       'UI: компонент не знает тему (prefers-color-scheme, data-theme, light-dark(), dark:) — цвет темы несёт роль файла токенов, состояние кнопки — aria-pressed',
   },
   {
+    // SMIL-анимацию SVG не останавливают ни вариант motion:, ни выбор посетителя: она идёт всегда.
+    selector: 'JSXOpeningElement[name.name=/^(?:animate|animateMotion|animateTransform|set)$/]',
+    message:
+      'UI: SMIL-анимация SVG (<animate>, <animateMotion>, <animateTransform>, <set>) идёт при любом выборе движения — движение только утилитой под вариантом motion:',
+  },
+  {
     selector: `${CLASS} ${text(MOTION)}, ${STYLE}[value=/${CSS_MOTION}|@apply[^;{}]*(?:${MOTION})/i]`,
     message:
       'UI: движение (animate-*, transition-transform, transition-all, scroll-smooth; transition, animation и @keyframes в <style>) — только утилитой под вариантом motion: он знает систему и выбор посетителя; отклик без смещения — transition-colors, transition-opacity',

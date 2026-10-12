@@ -43,6 +43,12 @@ data-[theme=…]) и в <style> (prefers-color-scheme, data-theme, light-dark() 
     <path fill="var(--primitive-color-red-700)" d="M0 0h1v1H0z" />
   </svg>
   <svg viewBox="0 0 1 1" aria-hidden="true"><path stroke="tomato" d="M0 0h1v1H0z" /></svg>
+  <svg viewBox="0 0 2 2" aria-hidden="true">
+    <circle cx="1" cy="1" r="1">
+      <animate attributeName="r" values="1;0.5;1" dur="1s" repeatCount="indefinite" />
+      <animateTransform attributeName="transform" type="rotate" dur="2s" repeatCount="indefinite" />
+    </circle>
+  </svg>
   <p class="outline inset-ring backdrop-grayscale">Обводка, кольцо, фильтр</p>
   <p class:list={[{ ring: promo }]}>Ключевое слово ключом объекта</p>
   <p class={size}>Класс из переменной</p>

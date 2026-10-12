@@ -196,6 +196,15 @@
     animation-timing-function: --theme(--ease-in-out);
   }
 
+  /* Переход объявляет своё свойство: по умолчанию браузер переводит все (`all`), и одна длительность
+   * роли двигала бы и смещение — при любом выборе движения. Свойство ставят отклик без смещения
+   * (`transition-colors`, `transition-opacity`, `.button`) и утилиты под вариантом `motion:`. */
+  *,
+  ::before,
+  ::after {
+    transition-property: none;
+  }
+
   body {
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
