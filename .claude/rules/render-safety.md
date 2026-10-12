@@ -77,7 +77,9 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 рядом с каноном пути обёртки, который срезает слеш сам, — другая форма меняет оба места, их
 согласие держит тест таблицы), `session: false` (fs-драйвер сессий пишет в cacheDir), `prefetch: false` и без `<ClientRouter/>` (без островов — ни байта JS; переход между страницами — CSS View Transitions токен-слоя, rule `shared-ui`),
 `experimentalDisableStreaming: true`, `markdown.syntaxHighlight: false` (Shiki инлайнит сырые
-цвета мимо токен-слоя), Vite-плагины `yaml-modules` (`content/*.yaml` и реестр ботов `shared/seo/crawlers.yaml` → данные на сборке) и
+цвета мимо токен-слоя), `vite.build.assetsInlineLimit: 0` (сборка ничего не встраивает в страницу:
+короткий скрипт компонента без импортов остаётся модулем, по которому реестр `ISLANDS` узнаёт
+остров-файл, стиль страницы и ресурс — файлами на `'self'` CSP, а не `data:`-адресом), Vite-плагины `yaml-modules` (`content/*.yaml` и реестр ботов `shared/seo/crawlers.yaml` → данные на сборке) и
 `wrapper-entries` (модули приложения, которые `docker/*` берут по имени файла: схема env
 `shared/config/runtime.ts` — `dist/server/runtime-config.mjs`, её импортируют `docker/server.mjs` и
 `docker/stamp.mjs` до старта приложения; таблица адресов `app/middleware/redirects.ts` —
@@ -106,10 +108,9 @@ CSP — `security.csp` из политики сборки (`contentSecurityPolic
 
 CSP у prerendered-страниц одна на все: запись `_headers.json` статик-хендлер берёт первую, чей путь
 *содержит* путь запроса (`/` получает запись `/500`, `/blog` — `/blog/page/2`). Свой инлайн-стиль
-или источник у страницы (стиль секции, который Astro инлайнит только ей) дал бы ей чужую CSP —
-HTTP-набор краснеет на инлайн-стиле без хеша, браузерный — на нарушении CSP; такой стиль — файлом
-(`build.inlineStylesheets: 'never'`). Атрибут `style` в теле записи CSP блокирует так же — его
-отклоняет `check:content` до сборки.
+или источник у страницы дал бы ей чужую CSP — HTTP-набор краснеет на инлайн-стиле без хеша,
+браузерный — на нарушении CSP; поэтому стиль страницы — файл (сборка не встраивает ничего). Атрибут
+`style` в теле записи CSP блокирует так же — его отклоняет `check:content` до сборки.
 
 Два значения там же живут ради единственного POST-маршрута: `security.checkOrigin: false`
 (за прокси адаптер строит URL запроса как `http://<Host>` — origin сверяет `contact-form` с

@@ -16,6 +16,6 @@ const heaviest = pages.reduce((a, b) => (b.size > a.size ? b : a), {
 })
 
 module.exports = [
-  { name: 'CSS (одна таблица)', path: 'dist/client/_astro/*.css', limit: '6.5 KB' },
+  { name: 'CSS сборки (все таблицы)', path: 'dist/client/_astro/*.css', limit: '6.5 KB' },
   { name: `HTML самой тяжёлой страницы (${heaviest.path})`, path: heaviest.path, limit: '5 KB' },
 ]

@@ -98,6 +98,10 @@ export default defineConfig({
   // `css-variables` и переменные `--astro-code-*` в app/styles/index.css.
   markdown: { syntaxHighlight: false },
   vite: {
+    // Сборка ничего не встраивает в страницу: короткий скрипт компонента Astro иначе печатает
+    // инлайном, и остров-файл реестр ISLANDS по модулю `_astro/<имя>.astro_astro_type_script_…` не
+    // узнаёт; стиль страницы и ресурс — тоже файлы, их CSP пропускает как 'self' (data:-адрес — нет).
+    build: { assetsInlineLimit: 0 },
     plugins: [
       tailwindcss(),
       yamlModules,
