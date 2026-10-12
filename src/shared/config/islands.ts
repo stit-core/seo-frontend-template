@@ -26,7 +26,7 @@ export interface Island {
 
 export const ISLANDS = {
   preferences: {
-    hash: 'sha256-BRdwgwRh483d/F0eQ6EvNd+iXckfZRBomGNnvx/B9Ak=',
+    hash: 'sha256-D3AsY+Nt0QWpMa3EcZqE0noyo5GcNjGZtluT/v20Ko8=',
     basis:
       'выбор темы и движения встаёт до первой отрисовки: кнопка темы — поле THEME, переключатель движения — эффект motion-toggle базы strategy',
     // Без кнопки темы остров нужен только страницам с переключателем движения — их пути и встают сюда.
