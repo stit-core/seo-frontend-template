@@ -2,6 +2,7 @@
 title: "Zero JavaScript on content pages"
 description: "Content pages need no scripts: text, navigation and the language switch work in plain HTML. JavaScript appears only as an island and only by an explicit decision."
 pubDate: 2026-07-09
+updatedDate: 2026-10-13
 tags: [performance, astro]
 translationKey: zero-js
 ---
@@ -16,11 +17,11 @@ and add points of failure. So the starting state of a page here is zero bytes of
   script, style or font comes from someone else's domain.
 - `prefetch` and `<ClientRouter />` are off: a client router would cost almost 5 KB on every
   page.
-- Every island is a separate line in the `size-limit` budget, so adding one shows up in the
-  diff.
+- Every island is a line in the island registry: its reason, pages and brotli budget. The gate
+  checks it against every built page, and a new island shows up in the diff.
 
 ## What stays interactive
 
 Switching the language is a plain link. Pagination is links to `/blog/page/2`. The contact
-form submits with a native POST and answers with a redirect. The only planned island is the
-theme toggle — and even without it the theme follows the system setting through CSS.
+form submits with a native POST and answers with a redirect. The only island is the visitor's
+preferences — theme and motion. Without it both follow the system settings through CSS.
