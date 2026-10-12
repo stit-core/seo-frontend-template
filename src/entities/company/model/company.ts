@@ -17,8 +17,9 @@ export const COMPANY = {
   phoneHref: '+74950000000',
   addressCountry: 'RU',
   address: {
-    ru: { postalCode: '101000', locality: 'Москва', street: 'ул. Примерная, 1, офис 2' },
-    en: { postalCode: '101000', locality: 'Moscow', street: '1 Primernaya st., office 2' },
+    // Неразрывный пробел держит номер у слова: «офис 2» не рвётся висячей цифрой.
+    ru: { postalCode: '101000', locality: 'Москва', street: 'ул.\u00a0Примерная, 1, офис\u00a02' },
+    en: { postalCode: '101000', locality: 'Moscow', street: '1 Primernaya st., office\u00a02' },
   } satisfies Record<Locale, PostalAddress>,
   // Часы работы: строка Schema.org и та же мысль для человека.
   openingHours: 'Mo-Fr 10:00-19:00',
