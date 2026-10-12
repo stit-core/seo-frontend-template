@@ -26,7 +26,7 @@ describe('Metrika', () => {
     expectTypeOf<typeof SharedConfig.METRIKA_ID>().toEqualTypeOf<string>()
   })
 
-  it('с идентификатором — один инлайн-скрипт в бюджете своей строки реестра, который грузит счётчик после простоя', async () => {
+  it('с идентификатором — один инлайн-скрипт в бюджете своей строки реестра с запасом, который грузит счётчик после простоя', async () => {
     config.METRIKA_ID = '12345678'
     const html = await render()
     const scripts = html.match(/<script[^>]*>/g) ?? []
@@ -39,8 +39,9 @@ describe('Metrika', () => {
     expect(html).not.toContain('defer')
     expect(html).toContain("'init'")
     const [script = ''] = html.match(/<script[^>]*>[\s\S]*?<\/script>/g) ?? []
-    // Сборка шаблона остров не печатает: его вес сверяет только этот тест — той же мерой, что seo:check.
-    expect(brotliBytes(script)).toBeLessThanOrEqual(ISLANDS.metrika.budget)
+    // Сборка шаблона остров не печатает: его вес сверяет только этот тест — той же мерой, что seo:check,
+    // и с запасом нормы бюджета (10 %).
+    expect(brotliBytes(script) * 1.1).toBeLessThanOrEqual(ISLANDS.metrika.budget)
   })
 
   // CSP пропускает остров по хешу из политики: тело одно на любой идентификатор, иначе каждый

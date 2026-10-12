@@ -164,7 +164,7 @@ function parsing() {
 }
 
 describe('PreferencesInit', () => {
-  it('один инлайн-скрипт без загрузки, комментариев и прагм — в бюджете своей строки реестра', () => {
+  it('один инлайн-скрипт без загрузки, комментариев и прагм — в бюджете своей строки реестра с запасом', () => {
     const scripts = island.match(/<script[^>]*>[\s\S]*?<\/script>/g) ?? []
     expect(scripts).toHaveLength(1)
     const [script = ''] = scripts
@@ -172,8 +172,9 @@ describe('PreferencesInit', () => {
     // Комментарии и прагмы линтеров живут во frontmatter: в <head> уезжает только код.
     expect(script).not.toContain('biome-ignore')
     expect(script).not.toContain('//')
-    // Мера — тег целиком в brotli: так же его взвешивает seo:check на странице сборки.
-    expect(brotliBytes(script)).toBeLessThanOrEqual(ISLANDS.preferences.budget)
+    // Мера — тег целиком в brotli: так же его взвешивает seo:check на странице сборки. Запас нормы
+    // бюджета — 10 %: правка, которая его съела, меняет и бюджет.
+    expect(brotliBytes(script) * 1.1).toBeLessThanOrEqual(ISLANDS.preferences.budget)
   })
 
   // CSP пропускает остров по хешу из политики: правка тела без новой строки политики — красный
