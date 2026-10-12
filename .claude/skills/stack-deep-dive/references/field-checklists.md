@@ -83,7 +83,7 @@
 `Интерактивность (острова)`, `Generates`.
 
 **Generates**: `export const prerender` и заголовки в `src/pages/**`, строки в
-`docs/reference/rendering.md`, строки `ISLANDS` (`scripts/lib/site-policy.mjs`), HTTP-набор
+`docs/reference/rendering.md`, строки `ISLANDS` (`src/shared/config/islands.ts`), HTTP-набор
 `e2e/http/`.
 
 **Cross-kind**: `indexable: да` ⇒ режим `static` или `cached` (никогда `dynamic`/`client`);

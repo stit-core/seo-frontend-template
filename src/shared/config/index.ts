@@ -1,3 +1,5 @@
+export type { Island } from './islands'
+export { ISLANDS, standsOn } from './islands'
 export type { RuntimeConfig, RuntimeEnv } from './runtime'
 export { getRuntimeConfig, SITE_ORIGIN_PLACEHOLDER } from './runtime'
 export type { AiBotsPolicy } from './site'

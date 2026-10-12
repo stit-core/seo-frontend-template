@@ -81,7 +81,7 @@ service → runtime → content → routing → rendering → seo → styling
 - каждый env, объявленный любым kind'ом, есть в `config.md`; секрет не помечен «в HTML: да»
 - канонический хост один: `service.md § Домены` = `seo.md § Идентичность` = `SITE_URL`
 - новый остров в `rendering.md § Интерактивность` имеет основание и бюджет — строку `ISLANDS`
-  (`scripts/lib/site-policy.mjs`)
+  (`src/shared/config/islands.ts`)
 
 ## Промоушн draft → stable
 

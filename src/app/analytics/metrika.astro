@@ -2,23 +2,25 @@
 import { METRIKA_ID } from '@/shared/config'
 
 // Единственная точка подключения аналитики. Идентификатор счётчика — поле site.ts, а не env:
-// prerendered-страница печатается на сборке и runtime env не видит. Пусто (дефолт шаблона) —
-// разметка чиста, сторонних скриптов на сайте нет вообще.
+// prerendered-страница печатается на сборке и runtime env не видит. Где стоит счётчик, решает его
+// строка реестра ISLANDS (shared/config/islands.ts): без идентификатора — нигде, и сторонних
+// скриптов на сайте нет вообще.
 // Сам счётчик — 95 КБ чужого кода, поэтому он грузится после простоя браузера, не конкурируя
 // с контентом, и ровно один раз. `init` без параметров: просмотр страницы он засчитывает сам,
-// остальное настраивается в панели Метрики, а не здесь. data-island — имя в списке островов
-// политики сборки (scripts/lib/site-policy.mjs): без него seo:check счётчик не пропустит.
+// остальное настраивается в панели Метрики, а не здесь. data-island — имя строки реестра: без него
+// seo:check счётчик не пропустит.
 // Идентификатор — атрибутом, а не в коде: тело острова одно на любой счётчик, и CSP пропускает
-// его по хешу из политики.
+// его по хешу своей строки реестра.
 ---
 
-{METRIKA_ID !== '' && <script is:inline data-island="metrika" data-counter={METRIKA_ID}>
+<script is:inline data-island="metrika" data-counter={METRIKA_ID}>
   {
     const counterId = document.currentScript.dataset.counter
     const load = () => {
       if (window.ym) return
       window.ym = (...args) => {
-        ;(window.ym.a = window.ym.a || []).push(args)
+        window.ym.a = window.ym.a || []
+        window.ym.a.push(args)
       }
       window.ym.l = Date.now()
       const script = document.createElement('script')
@@ -30,4 +32,4 @@ import { METRIKA_ID } from '@/shared/config'
     if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 5000 })
     else setTimeout(load, 2000)
   }
-</script>}
+</script>

@@ -42,6 +42,7 @@ import {
   DEFAULT_LOCALE,
   localeOf,
   localePath,
+  routeOf,
   SUPPORTED_LOCALES,
 } from '../src/shared/i18n/locale.ts'
 import { collectionsOf, splitFrontmatter } from './lib/content.mjs'
@@ -66,7 +67,6 @@ import {
   NOINDEX_ROUTES,
   ORG_TYPES,
   RESOURCE_ORIGINS,
-  routeOf,
   scriptsOf,
   scriptViolations,
   TAG_INDEX_MIN_POSTS,
@@ -77,8 +77,9 @@ import { sitemapUrls } from './lib/sitemap.mjs'
 // Корень проекта; другой корень — негативные фикстуры check:gate (`.gate-fixtures/<скрипт>`).
 const root = resolve(process.argv[2] ?? resolve(import.meta.dirname, '..'))
 const collections = await collectionsOf(root)
-// Реестр островов — тоже проверяемого проекта: у сайта это ISLANDS политики, у мини-проекта
-// check:gate — свой, и гейт на гейт не зависит от островов сайта.
+// Реестр островов — тоже проверяемого проекта, из его политики сборки: у сайта она отдаёт реестр
+// приложения (src/shared/config/islands.ts), у мини-проекта check:gate — свой, и гейт на гейт не
+// зависит от островов сайта.
 const { ISLANDS: islands } = await import(
   pathToFileURL(resolve(root, 'scripts/lib/site-policy.mjs')).href
 )
@@ -461,7 +462,7 @@ function checkMarkupVisible(where, path, body, blocks, page) {
 // ---------- страницы ----------
 // Остров — решение с основанием и ценой: строка реестра без них — код без решения.
 for (const [name, island] of Object.entries(islands)) {
-  const where = `ISLANDS.${name} (scripts/lib/site-policy.mjs)`
+  const where = `ISLANDS.${name} (src/shared/config/islands.ts)`
   if (typeof island.basis !== 'string' || island.basis.trim() === '') {
     fail(where, 'нет основания (basis): момент спецификации движения или плана страницы')
   }

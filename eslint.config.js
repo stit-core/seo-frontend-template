@@ -61,6 +61,14 @@ const publicApiPatterns = [
   },
 ]
 
+// Гейт — потребитель кода src, а не его зависимость: модуль scripts/ (разбор HTML, node:*) коду
+// приложения не нужен, а связь стала бы двусторонней. Общие данные живут в src (реестр островов —
+// shared/config), гейт берёт их оттуда; тест скрипта гейта импортирует его законно.
+const GATE_SCRIPTS = {
+  regex: String.raw`^(\./)?(\.\./)+scripts/`,
+  message: 'FSD: код src не импортирует scripts/ — общие данные гейта и сайта живут в src',
+}
+
 // Стили — один токен-слой: CSS UI-кита или пакета приносит свои цвета и размеры мимо токенов.
 const importPatterns = [
   ...publicApiPatterns,
@@ -68,6 +76,7 @@ const importPatterns = [
     group: ['*.css', '!@/app/styles/index.css'],
     message: 'UI: стили — только токен-слой @/app/styles/index.css, CSS UI-китов и пакетов нет',
   },
+  GATE_SCRIPTS,
 ]
 
 // Клиентский <script> исполняется в браузере: импортирует только модули без серверного кода.
@@ -427,7 +436,13 @@ export default defineConfig(
   },
   {
     files: ['src/**/*.test.ts'],
-    rules: { '@typescript-eslint/no-explicit-any': 'off' },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      'no-restricted-imports': [
+        'error',
+        { patterns: importPatterns.filter((pattern) => pattern !== GATE_SCRIPTS) },
+      ],
+    },
   },
   {
     // Корневые конфиги — вне ts-программы src/: линтятся без type-aware правил.

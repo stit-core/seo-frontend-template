@@ -1,6 +1,9 @@
 ---
 // Нарушение: app импортирует pages — обратная зависимость к странице, которая импортирует шелл.
 import Index from '@/pages/index.astro'
+// Нарушение: код src импортирует скрипт гейта — реестр островов берётся из shared/config.
+import { ISLANDS } from '../../../scripts/lib/site-policy.mjs'
 ---
 
 <Index />
+{Object.keys(ISLANDS).length}

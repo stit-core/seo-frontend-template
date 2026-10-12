@@ -59,7 +59,7 @@ single-flight, прогрев, инвалидация) — `docs/reference/rende
 | _<фича>_ | _инлайн / файл / нет_ | _момент спецификации движения или плана страницы_ | _пути_ | _байт_ |
 
 0 JS — дефолт. Остров = момент спецификации движения или плана страницы + строка реестра
-`ISLANDS` (`scripts/lib/site-policy.mjs`): основание, страницы и бюджет в brotli; инлайн — ещё
+`ISLANDS` (`src/shared/config/islands.ts`): основание, страницы и бюджет в brotli; инлайн — ещё
 хеш тела (его пропускает CSP), файл — компонент, чей `<script>` собирает Astro. Сумму по уровню
 страницы судят ворота strategy; server islands (`server:defer`) для индексируемого контента не
 используются.
@@ -68,7 +68,7 @@ single-flight, прогрев, инвалидация) — `docs/reference/rende
 
 - `export const prerender` в файлах `src/pages/**` и `Astro.response.headers` в on-demand роутах
 - `docs/reference/rendering.md § Карта маршрутов` — строка на каждый on-demand маршрут
-- `scripts/lib/site-policy.mjs` — строки `ISLANDS`; `.size-limit.cjs` — бюджеты CSS и HTML
+- `src/shared/config/islands.ts` — строки `ISLANDS`; `.size-limit.cjs` — бюджеты CSS и HTML
 - HTTP-набор `e2e/http/{pages,service}.spec.ts` — статусы, заголовки, отсутствие плейсхолдера
 - `config.md` — env `SITE_URL`
 

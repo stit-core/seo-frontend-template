@@ -80,7 +80,7 @@ Frontmatter `.astro` и модули `.ts` исполняются на серв�
 | что | где |
 |---|---|
 | документ-шелл, middleware (лог, адреса `redirects.yaml`, 410), токены ДС и слой сопоставления | `app/layouts/document.astro`, `app/middleware`, `app/styles/{tokens,index}.css` |
-| runtime-конфиг, идентичность сайта (`SITE_NAME`, `sameAs`, `OG_DEFAULT_IMAGE`), политика ИИ-ботов | `shared/config` |
+| runtime-конфиг, идентичность сайта (`SITE_NAME`, `sameAs`, `OG_DEFAULT_IMAGE`), политика ИИ-ботов, реестр островов `ISLANDS` | `shared/config` |
 | локали, пути с префиксом, даты | `shared/i18n` |
 | SEO: `absoluteUrl`/hreflang, `SeoHead`, фабрики JSON-LD + `JsonLdScript`, генераторы robots/sitemap/rss, реестр ботов `crawlers.yaml` | `shared/seo` |
 | тест-хелперы | `shared/lib/testing` |
@@ -97,7 +97,8 @@ Frontmatter `.astro` и модули `.ts` исполняются на серв�
 
 - **Границы держит `pnpm lint`**: ESLint `boundaries` с резолвером + `no-restricted-imports`
   на всём коде `src` любого расширения, включая клиентские `<script>` в `.astro`; файл вне
-  слоёв — `boundaries/no-unknown-files`. Директива `eslint-disable` в коде не действует
+  слоёв — `boundaries/no-unknown-files`. Модуль гейта `scripts/` код `src` не импортирует (гейт —
+  потребитель `src`, общие данные живут в `src`), импортирует его только тест скрипта гейта. Директива `eslint-disable` в коде не действует
   (`noInlineConfig`), а её предупреждение роняет lint (`--max-warnings 0`): исключение из
   правила — блоком `eslint.config.js` с причиной. Steiger — структура (public API, сегменты,
   имена); он fail-open на `.astro`-целях и `export … from`

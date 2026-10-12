@@ -10,6 +10,13 @@ export function localeOf(path: string): Locale {
   )
 }
 
+// Путь без префикса локали и хвостового слеша — маршрут страницы: `/en/blog/` → `/blog`, `/en` → `/`.
+export function routeOf(path: string): string {
+  const clean = path.replace(/(?<=.)\/+$/, '')
+  const locale = localeOf(clean)
+  return locale === DEFAULT_LOCALE ? clean : clean.slice(locale.length + 1) || '/'
+}
+
 // Дефолтная локаль живёт без префикса (routing.prefixDefaultLocale: false).
 export function localePath(locale: Locale, path: string): string {
   const clean = path === '/' ? '' : path.replace(/\/+$/, '')

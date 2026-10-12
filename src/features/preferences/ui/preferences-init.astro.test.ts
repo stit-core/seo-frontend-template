@@ -1,6 +1,7 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { Browser } from 'happy-dom'
-import { brotliBytes, cspHash, ISLANDS } from '../../../../scripts/lib/site-policy.mjs'
+import { ISLANDS } from '@/shared/config'
+import { brotliBytes, cspHash } from '../../../../scripts/lib/site-policy.mjs'
 import MotionToggle from './motion-toggle.astro'
 import PreferencesInit from './preferences-init.astro'
 import ThemeToggle from './theme-toggle.astro'

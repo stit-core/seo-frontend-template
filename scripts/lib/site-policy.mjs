@@ -5,88 +5,23 @@
 // страница, остров, сторонний сервис, тип разметки, — а не по месту в скрипте.
 import { createHash } from 'node:crypto'
 import { brotliCompressSync, constants } from 'node:zlib'
-import { METRIKA_ID, THEME } from '../../src/shared/config/site.ts'
-import { DEFAULT_LOCALE, localeOf } from '../../src/shared/i18n/locale.ts'
+import { ISLANDS, standsOn } from '../../src/shared/config/islands.ts'
+import { routeOf } from '../../src/shared/i18n/locale.ts'
 import { isJsonLd } from './html.mjs'
+
+/** @typedef {import('../../src/shared/config/islands.ts').Island} Island */
+
+// Реестр островов — данные приложения (src/shared/config/islands.ts): по нему оболочка печатает
+// острова, а политика сборки строит CSP и сверяет страницы.
+export { ISLANDS }
 
 // Служебные prerendered-маршруты без префикса локали: только им положен noindex.
 export const NOINDEX_ROUTES = ['/contacts/spasibo', '/500']
-
-/**
- * Путь без префикса локали и хвостового слеша: `/en/blog/` → `/blog`, `/en` → `/`.
- * @param {string} path
- */
-export function routeOf(path) {
-  const clean = path.replace(/(?<=.)\/+$/, '')
-  const locale = localeOf(clean)
-  return locale === DEFAULT_LOCALE ? clean : clean.slice(locale.length + 1) || '/'
-}
 
 // Страница тега индексируется от стольких опубликованных записей локали; ниже порога она почти
 // повторяет список — тонкая страница обязана быть с noindex (и только она: право на него тегу даёт
 // число записей в источнике, а не NOINDEX_ROUTES). Число здесь и в коллекции — одно и то же.
 export const TAG_INDEX_MIN_POSTS = 3
-
-/**
- * @typedef {object} Island
- * @property {string} basis
- * @property {string[]} pages
- * @property {number} budget
- * @property {string} [hash]
- * @property {string} [file]
- * @property {string} [markup]
- * @property {Partial<Record<string, string[]>>} [sources]
- */
-
-// Острова: исполняемый код страницы — только строки этого реестра, без них на сайте ни байта JS.
-// Строка — решение с основанием и ценой:
-// - `basis` — момент спецификации движения или плана страницы, который остров исполняет;
-// - `pages` — где он стоит: пути без префикса локали, `*` в конце — любое продолжение (`['*']` —
-//   весь сайт, `[]` — нигде: такой остров CSP не пропускает);
-// - `budget` — вес в brotli, байт: у инлайна — тег целиком, у файла — он и всё, что он импортирует;
-// - `hash` — остров-инлайн, `<script is:inline data-island>` в <head>: CSP пропускает тело по хешу.
-//   Правка тела — новый хеш здесь (его печатает тест острова): изменение кода видно в диффе политики;
-// - `file` — остров-файл: компонент, чей `<script>` Astro собирает в модуль
-//   `_astro/<имя>.astro_astro_type_script_…js`; CSP пропускает его как свой файл;
-// - `markup` — атрибут элементов, которые остров обслуживает: на странице без него они мертвы;
-// - `sources` — чужие origin острова по директивам CSP.
-/** @satisfies {Record<string, Island>} */
-export const ISLANDS = {
-  preferences: {
-    hash: 'sha256-BRdwgwRh483d/F0eQ6EvNd+iXckfZRBomGNnvx/B9Ak=',
-    basis:
-      'выбор темы и движения встаёт до первой отрисовки: кнопка темы — поле THEME, переключатель движения — эффект motion-toggle базы strategy',
-    // Без кнопки темы остров нужен только страницам с переключателем движения — их пути и встают сюда.
-    pages: THEME.switcher ? ['*'] : [],
-    markup: 'data-preference',
-    budget: 575,
-  },
-  // tag.js, хиты и пиксель счётчика — с его origin. Вебвизору, карте кликов и региональным доменам
-  // нужно больше — список Яндекса: https://yandex.ru/support/metrica/code/install-counter-csp.html
-  metrika: {
-    hash: 'sha256-tkhj0JcGzL7QaX6wrVvp3zLdoPOwBUgKraRdnuJTdrU=',
-    basis: 'счётчик посещений: решение проекта — идентификатор METRIKA_ID',
-    pages: METRIKA_ID !== '' ? ['*'] : [],
-    budget: 290,
-    sources: {
-      'script-src': ['https://mc.yandex.ru'],
-      'connect-src': ['https://mc.yandex.ru'],
-      'img-src': ['https://mc.yandex.ru'],
-    },
-  },
-}
-
-/**
- * Стоит ли остров на странице — по своей строке реестра.
- * @param {Island} island
- * @param {string} path — путь страницы, с префиксом локали или без
- */
-export function standsOn(island, path) {
-  const route = routeOf(path)
-  return island.pages.some((page) =>
-    page.endsWith('*') ? route.startsWith(page.slice(0, -1)) : route === page,
-  )
-}
 
 /**
  * Вес в brotli — мера бюджетов: так свои байты отдаёт edge.
@@ -251,13 +186,13 @@ export function scriptViolations(html, path, islands = ISLANDS) {
     if (row === undefined) {
       problems.push(
         src === undefined
-          ? `<script${attrs}> вне списка островов ISLANDS (scripts/lib/site-policy.mjs)`
-          : `внешний <script${attrs}>: файла-острова нет в списке ISLANDS (scripts/lib/site-policy.mjs)`,
+          ? `<script${attrs}> вне списка островов ISLANDS (src/shared/config/islands.ts)`
+          : `внешний <script${attrs}>: файла-острова нет в списке ISLANDS (src/shared/config/islands.ts)`,
       )
     } else if (seen.has(island)) problems.push(`остров ${island} дважды`)
-    else if (!standsOn(row, path)) {
+    else if (!standsOn(row, routeOf(path))) {
       problems.push(
-        `остров ${island} вне своих страниц (${row.pages.join(', ') || 'их нет'}): где он стоит, решает его строка ISLANDS (scripts/lib/site-policy.mjs)`,
+        `остров ${island} вне своих страниц (${row.pages.join(', ') || 'их нет'}): где он стоит, решает его строка ISLANDS (src/shared/config/islands.ts)`,
       )
     }
     // Модуль исполняется после разбора документа, где бы ни стоял; инлайн — на месте, до отрисовки.
@@ -273,11 +208,11 @@ export function scriptViolations(html, path, islands = ISLANDS) {
     for (const [, name = '', value = ''] of tag.matchAll(ATTRIBUTE)) {
       if (/^on[a-z]+$/i.test(name)) {
         problems.push(
-          `обработчик ${name} в разметке: скрипт вне островов ISLANDS (scripts/lib/site-policy.mjs)`,
+          `обработчик ${name} в разметке: скрипт вне островов ISLANDS (src/shared/config/islands.ts)`,
         )
       } else if (URL_ATTRIBUTE.test(name) && /^["']?\s*javascript:/i.test(value)) {
         problems.push(
-          'javascript:-адрес в разметке: скрипт вне островов ISLANDS (scripts/lib/site-policy.mjs)',
+          'javascript:-адрес в разметке: скрипт вне островов ISLANDS (src/shared/config/islands.ts)',
         )
       }
     }

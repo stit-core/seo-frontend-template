@@ -80,7 +80,7 @@ origin штампуется при старте.
 | `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome и свои скрипты гейта (`seo:check`, `check:links`, `check:content`, `plan:check`) — ровно нарушениями из `expected.json`, скрипт релиза `indexnow` — ровно его исходами на локальной заглушке; guard-хук — отказ каждому обходу из `guard.json` |
 | `pnpm check:content` | контент-гейт до build: схема каждого `.md`, даты не из будущего, тело (без скрытой разметки), переводы, ссылки, `content/redirects.yaml`, строка карты `rendering.md` у каждого on-demand маршрута |
 | `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` (и абсолютные URL своего сайта) существуют и ведут на каноническую форму адреса; ссылки без схемы на другой хост (`//contacts`) нет |
-| `pnpm seo:check` | после build: у каждой страницы `dist/client` title/description (уникальные, в бюджетах, не общие), self-canonical, `lang`, один h1, OG с картинкой, первая иконка — PNG от 48 px, hreflang у каждой пары переводов, JSON-LD = видимое, организация одна (`@id`, имя), карта сайта = индексируемые страницы сборки; `noindex`, чужие ресурсы и типы JSON-LD — только по списку `scripts/lib/site-policy.mjs`, острова — по его реестру: на своих страницах и в бюджете (brotli); теги индексируются от порога записей |
+| `pnpm seo:check` | после build: у каждой страницы `dist/client` title/description (уникальные, в бюджетах, не общие), self-canonical, `lang`, один h1, OG с картинкой, первая иконка — PNG от 48 px, hreflang у каждой пары переводов, JSON-LD = видимое, организация одна (`@id`, имя), карта сайта = индексируемые страницы сборки; `noindex`, чужие ресурсы и типы JSON-LD — только по списку `scripts/lib/site-policy.mjs`, острова — по реестру `src/shared/config/islands.ts`: на своих страницах и в бюджете (brotli); теги индексируются от порога записей |
 | `pnpm size` | бюджеты `.size-limit.cjs` в brotli: CSS и HTML самой тяжёлой страницы сборки |
 | `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
 | `pnpm ttfb <origin> <path…>` | TTFB запущенного сервера: медиана/p90 20 запросов (`scripts/ttfb.mjs`) |
@@ -102,7 +102,7 @@ origin штампуется при старте.
 | env, `SITE_URL`, плейсхолдер и штамповка, что из env попадает в HTML | rule `env-local` |
 | Режимы рендера, карта маршрутов, кеш-заголовки, канон `astro.config.ts`, рецепт D | `docs/reference/rendering.md` + rule `render-safety` |
 | Тесты: два проекта Vitest, Container API, axe, Playwright, покрытие и пороги | rule `tests-pipeline` |
-| UI на токенах, тема-остров, картинки и LCP, scoped-CSS, 0 JS | rule `shared-ui` |
+| UI на токенах, остров предпочтений (тема и движение), картинки и LCP, scoped-CSS, 0 JS | rule `shared-ui` |
 | Форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка | rule `forms-antispam` |
 | Deployment: образ, entrypoint, `server.mjs`, env-контракт, требования к прокси | `docs/reference/deployment.md` |
 | SEO: head через `DocumentLayout`, hreflang, OG, JSON-LD, `robots.txt`/`sitemap.xml`/фиды/ключ IndexNow, staging в три контура, гейты `seo:check` и HTTP-набор | rule `seo-invariants` + `docs/reference/seo.md` |
@@ -129,11 +129,11 @@ origin штампуется при старте.
 - Границы FSD держит `pnpm lint` (ESLint с резолвером) вместе с `.gate-fixtures/`; Steiger —
   структура
 - 0 JS по умолчанию: исполняемый код страницы — только острова реестра `ISLANDS`
-  (`scripts/lib/site-policy.mjs`). Строка острова — основание (момент спецификации движения или
+  (`src/shared/config/islands.ts`). Строка острова — основание (момент спецификации движения или
   плана страницы), страницы и бюджет в brotli; в реестре — предпочтения посетителя (тема и
   движение, инлайн-`<script>` в `<head>`) и счётчик при заданном `METRIKA_ID`. Служебные `noindex`,
-  чужие ресурсы и типы JSON-LD — по спискам там же; оттуда же CSP каждой страницы (инлайн-остров —
-  по хешу тела)
+  чужие ресурсы и типы JSON-LD — по спискам политики сборки `scripts/lib/site-policy.mjs`; она же
+  строит CSP каждой страницы (инлайн-остров — по хешу тела)
 - Контент — Markdown в `src/entities/<name>/content/<locale>/`; `draft: true` виден только в
   `astro dev`
 - Каждая страница — через `DocumentLayout`; абсолютные URL — только `absoluteUrl()` из `shared/seo`
