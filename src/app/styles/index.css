@@ -298,9 +298,10 @@
     }
   }
 
-  /* Врезка рядом с формой и на юридических страницах: тон вместо рамки-коробки. */
+  /* Врезка рядом с формой и на юридических страницах: тон вместо рамки-коробки. Кегль — тела: в колонке
+   * чтения строка мельче вышла бы длиннее потолка нормы (80 знаков). */
   .note {
-    @apply rounded-r-control border-l-thick border-accent bg-accent p-md text-helper;
+    @apply rounded-r-control border-l-thick border-accent bg-accent p-md text-body;
   }
 }
 

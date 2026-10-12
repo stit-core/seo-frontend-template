@@ -60,7 +60,7 @@ Astro Fonts API (`subsets: ['cyrillic','latin']`) — способ его под
 | отступы | шкала `--space-3xs…5xl` (`mt-md`, `gap-x-lg`) и ритм страницы `--rhythm-page-x`, `--rhythm-section-s\|m\|l`, `--rhythm-stack-display`; числовой шкалы Tailwind нет |
 | размеры и радиусы | `--size-control-md`, `--size-icon-md`, `--size-thumbnail`, `--size-term`; `--radius-xs…lg` → `rounded-focus\|code\|control\|panel` |
 | линии | `--border-width-default\|strong\|focus`, `--border-offset-focus\|underline` |
-| ширина контейнера | `--size-measure` (колонка чтения: строка текста — 50–60 знаков), `--size-container` (страница: шапка, подвал), `--size-container-wide` (широкая сетка) → `max-w-<роль>` только в примитиве секции `shared/ui/section`: страницу собирают секции (`width`, `tone`, `rhythm`) |
+| ширина контейнера | `--size-measure` (колонка чтения: строка тела — около 60 знаков и не длиннее 75), `--size-container` (страница: шапка, подвал), `--size-container-wide` (широкая сетка) → `max-w-<роль>` только в примитиве секции `shared/ui/section`: страницу собирают секции (`width`, `tone`, `rhythm`) |
 | границы раскладки | `--breakpoint-tablet` (40rem), `--breakpoint-desktop` (60rem) → варианты `tablet:`, `desktop:` |
 | scoped `<style>` | только layout (grid, позиционирование); цвета и типографика — утилитами |
 
