@@ -40,3 +40,9 @@ export const ISLANDS = {
   // Строка без решения: ни основания, ни бюджета, ни вида.
   'bez-resheniya': { pages: [] },
 }
+
+// Список шрифтов мини-проекта: законный шрифт — Fonts API по строкам семейства Golos Text.
+export const FONTS = [
+  { family: 'Golos Text', weight: '400 900', style: 'normal', file: 'golos-latin.woff2', preload: true },
+  { family: 'Golos Text', weight: '400 900', style: 'normal', file: 'golos-cyrillic.woff2', preload: true },
+]

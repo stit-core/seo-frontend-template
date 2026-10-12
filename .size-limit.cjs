@@ -15,7 +15,15 @@ const heaviest = pages.reduce((a, b) => (b.size > a.size ? b : a), {
   size: 0,
 })
 
+// Шрифты ДС — файлы списка src/app/styles/fonts.ts. Строка возникает с первым файлом сборки (путь
+// без файлов size-limit считает ошибкой); лимит — цена решения о шрифтах: у шаблона их нет — 0, форк
+// ставит факт с запасом не меньше 10 % тем же диффом, что кладёт файлы.
+const fonts = globSync('dist/client/_astro/fonts/*')
+
 module.exports = [
   { name: 'CSS сборки (все таблицы)', path: 'dist/client/_astro/*.css', limit: '6.5 KB' },
   { name: `HTML самой тяжёлой страницы (${heaviest.path})`, path: heaviest.path, limit: '5 KB' },
+  ...(fonts.length > 0
+    ? [{ name: 'Шрифты ДС (все файлы)', path: 'dist/client/_astro/fonts/*', limit: '0 KB' }]
+    : []),
 ]

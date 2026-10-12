@@ -152,7 +152,7 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
   `model/schema.ts`, `lib/paginate.ts`, `entities/author/model/authors.ts`,
   `shared/redirects/table.ts`, `shared/i18n/locale.ts`, `shared/config/runtime.ts`,
   `shared/config/site.ts` (его читает политика сборки), `shared/config/islands.ts` (реестр
-  островов, импорт — `./site.ts` с расширением), `shared/seo/sitemap.ts` (формат карты —
+  островов, импорт — `./site.ts` с расширением), `app/styles/fonts.ts` (список шрифтов ДС), `shared/seo/sitemap.ts` (формат карты —
   генератору `scripts/lib/sitemap.mjs`); импорт в `authors.ts` и `site.ts` — только типов
 - Новая коллекция — запись в реестре `collections` модуля `scripts/lib/content.mjs` (каталог,
   схема, порождаемые маршруты): каталог `src/entities/*/content` вне реестра и запись реестра без

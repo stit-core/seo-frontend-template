@@ -21,7 +21,9 @@
 //   itemprop) нет — сущности размечает только JSON-LD;
 // - тело: ни плейсхолдера origin, ни HTML-комментариев; у картинок размеры, картинка над h1 (LCP) —
 //   не lazy и с fetchpriority; ресурсов с чужих origin нет (и в style=""), @font-face — с
-//   font-display swap/fallback/optional (и в CSS сборки);
+//   font-display swap/fallback/optional;
+// - шрифты — Fonts API по списку проекта: @font-face — семейства списка в <style> страницы (в CSS
+//   сборки его нет), preload шрифтов — не больше FONT_PRELOAD_MAX;
 // - острова — по реестру проекта: исполняемый код (<script>, on*=, javascript:) — только его
 //   строки, остров — на своих страницах и в бюджете (brotli: инлайн — тег, файл — модуль и всё,
 //   что он импортирует), разметка острова — только вместе с ним; у строки реестра есть основание,
@@ -61,6 +63,7 @@ import {
   brotliBytes,
   componentOf,
   DESCRIPTION_BUDGET,
+  FONT_PRELOAD_MAX,
   GENERIC_TITLE,
   ICON_MIN_SIDE,
   JSON_LD_FORBIDDEN,
@@ -78,10 +81,10 @@ import { sitemapUrls } from './lib/sitemap.mjs'
 // Корень проекта; другой корень — негативные фикстуры check:gate (`.gate-fixtures/<скрипт>`).
 const root = resolve(process.argv[2] ?? resolve(import.meta.dirname, '..'))
 const collections = await collectionsOf(root)
-// Реестр островов — тоже проверяемого проекта, из его политики сборки: у сайта она отдаёт реестр
-// приложения (src/shared/config/islands.ts), у мини-проекта check:gate — свой, и гейт на гейт не
-// зависит от островов сайта.
-const { ISLANDS: islands } = await import(
+// Реестр островов и список шрифтов — тоже проверяемого проекта, из его политики сборки: у сайта она
+// отдаёт данные приложения (src/shared/config/islands.ts, src/app/styles/fonts.ts), у мини-проекта
+// check:gate — свои, и гейт на гейт не зависит от островов и шрифтов сайта.
+const { ISLANDS: islands, FONTS: fonts } = await import(
   pathToFileURL(resolve(root, 'scripts/lib/site-policy.mjs')).href
 )
 const client = resolve(root, 'dist/client')
@@ -171,6 +174,10 @@ function checkBreadcrumbList(where, data, canonical) {
 const OWN_ORIGIN = new URL(SITE_ORIGIN_PLACEHOLDER).origin
 const OWN_HOST = new URL(SITE_ORIGIN_PLACEHOLDER).hostname
 const FONT_DISPLAY = ['swap', 'fallback', 'optional']
+// Шрифт подключает Fonts API по строке списка: `@font-face` он печатает в <style> страницы под именем
+// семейства списка с хешем сборки (`"Golos Text-1a2b…"`), метрический фолбэк — `"… fallback: Arial"`.
+const FONT_FAMILIES = new Set(fonts.map(({ family }) => family))
+const listedFamilyOf = (name) => /^(.+)-[\da-f]+(?: fallback: .+)?$/.exec(name)?.[1]
 
 // Сниппет выдачи: title без суффикса сайта и description — в бюджетах и не общие.
 function checkSnippet(where, title, description, siteName) {
@@ -202,8 +209,9 @@ function checkResourceUrl(where, url) {
   }
 }
 
-// CSS сборки и инлайн-<style>: чужие ресурсы и шрифты, невидимые до загрузки.
-function checkCss(where, css) {
+// CSS сборки и инлайн-<style>: чужие ресурсы и шрифты — мимо списка и невидимые до загрузки.
+// `@font-face` законен только в <style> страницы (`page`): CSS сборки Fonts API не трогает.
+function checkCss(where, css, page = false) {
   for (const [, url] of css.matchAll(/(?:url\(|@import\s+)\s*['"]?([^'")\s;]+)/g)) {
     checkResourceUrl(where, url ?? '')
   }
@@ -213,6 +221,14 @@ function checkCss(where, css) {
       fail(
         where,
         `@font-face с font-display ${display ?? 'по умолчанию (auto)'}: текст невидим, пока грузится шрифт`,
+      )
+    }
+    const [, quoted, bare] = /font-family\s*:\s*(?:"([^"]*)"|([^;}]*))/.exec(block) ?? []
+    const name = (quoted ?? bare ?? '').trim()
+    if (!page || !FONT_FAMILIES.has(listedFamilyOf(name))) {
+      fail(
+        where,
+        `@font-face ${name}: шрифт мимо списка src/app/styles/fonts.ts — его подключает Fonts API по строке списка`,
       )
     }
   }
@@ -243,7 +259,7 @@ function checkResources(where, html) {
     }
   }
   for (const [, css = ''] of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g))
-    checkCss(where, css)
+    checkCss(where, css, true)
   for (const [, css = ''] of html.matchAll(/\sstyle="([^"]*)"/g)) checkCss(where, decode(css))
 }
 
@@ -569,6 +585,18 @@ for (const file of walk(client)) {
     }
   }
   checkResources(where, html)
+  const fontPreloads = tags.filter(
+    (item) =>
+      item.tag === 'link' &&
+      item.as === 'font' &&
+      (item.rel ?? '').toLowerCase().split(/\s+/).includes('preload'),
+  ).length
+  if (fontPreloads > FONT_PRELOAD_MAX) {
+    fail(
+      where,
+      `preload шрифтов — ${fontPreloads}: не больше ${FONT_PRELOAD_MAX}, это начертания первого экрана (preload строк src/app/styles/fonts.ts)`,
+    )
+  }
   checkMedia(where, body)
   checkMicrodata(where, html)
 

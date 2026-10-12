@@ -7,7 +7,8 @@
 hreflang, OG, JSON-LD; `robots.txt` on-demand на runtime origin, `sitemap.xml` и `rss.xml` — файлы
 сборки) /
 форма обратной связи без JS (PRG, антиспам-лестница, один канал доставки) / острова — предпочтения
-(тема и движение) и счётчик при заданном `METRIKA_ID` / картинки `astro:assets` / FSD под линтером
+(тема и движение) и счётчик при заданном `METRIKA_ID` / картинки `astro:assets` / шрифты ДС — Fonts
+API по списку файлов / FSD под линтером
 (ESLint 10 `boundaries` + `no-restricted-imports`; Steiger — структура) / Biome 2 + Prettier
 (только `*.astro`) / Vitest 5 (Container API) + Playwright на prod-сборке (HTTP-набор в гейте,
 браузер — в `/release`) / size-limit / pnpm 10 / lefthook. Один Node-образ на все среды:
@@ -102,7 +103,7 @@ origin штампуется при старте.
 | env, `SITE_URL`, плейсхолдер и штамповка, что из env попадает в HTML | rule `env-local` |
 | Режимы рендера, карта маршрутов, кеш-заголовки, канон `astro.config.ts`, рецепт D | `docs/reference/rendering.md` + rule `render-safety` |
 | Тесты: два проекта Vitest, Container API, axe, Playwright, покрытие и пороги | rule `tests-pipeline` |
-| UI на токенах, остров предпочтений (тема и движение), картинки и LCP, scoped-CSS, 0 JS | rule `shared-ui` |
+| UI на токенах, шрифты ДС (Fonts API по списку), остров предпочтений (тема и движение), картинки и LCP, scoped-CSS, 0 JS | rule `shared-ui` |
 | Форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка | rule `forms-antispam` |
 | Deployment: образ, entrypoint, `server.mjs`, env-контракт, требования к прокси | `docs/reference/deployment.md` |
 | SEO: head через `DocumentLayout`, hreflang, OG, JSON-LD, `robots.txt`/`sitemap.xml`/фиды/ключ IndexNow, staging в три контура, гейты `seo:check` и HTTP-набор | rule `seo-invariants` + `docs/reference/seo.md` |

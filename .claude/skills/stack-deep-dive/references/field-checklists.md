@@ -121,8 +121,8 @@
 **Секции**: `Источники`, `Палитра и семантика`, `Тема`, `Шрифты`,
 `Типографика, отступы и размеры`, `Бюджет`, `Generates`.
 
-**Generates**: `src/app/styles/{tokens,index}.css`, бюджеты CSS/HTML в `.size-limit.cjs`,
-`src/features/preferences/**`.
+**Generates**: `src/app/styles/{tokens,index}.css`, список шрифтов `src/app/styles/fonts.ts`,
+бюджеты CSS, HTML и шрифтов в `.size-limit.cjs`, `src/features/preferences/**`.
 
 **Cross-kind**: веб-шрифт ⇒ строка веса в `dependencies.md § Бюджеты`; остров предпочтений ⇒
 строка в `rendering.md § Интерактивность`.

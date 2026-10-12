@@ -27,9 +27,13 @@ const compileLayer = () =>
 const compiler = await compileLayer()
 // Компилятор копит классы всех вызовов: «класс не дал CSS» — вывод равен выводу до него.
 const adds = (classes: string[]) => compiler.build([]) !== compiler.build(classes)
-// Объявления, которые утилита даёт своему классу.
+// Объявления, которые утилита даёт своему классу: у роли текста их два блока — гарнитура от утилиты
+// `text-*` слоя и остальное от Tailwind.
 const rule = (utility: string) =>
-  new RegExp(`\\.${utility}\\s*\\{([^}]*)\\}`).exec(compiler.build([utility]))?.[1] ?? ''
+  Array.from(
+    compiler.build([utility]).matchAll(new RegExp(`\\.${utility}\\s*\\{([^}]*)\\}`, 'g')),
+    ([, body = '']) => body,
+  ).join('')
 // Переменная ДС, которую утилита роли кладёт в своё свойство.
 const roleOf = (utility: string) => /var\((--[\w-]+)\)/.exec(rule(utility))?.[1] ?? utility
 // Свойство утилита берёт у роли — какой именно, решает строка слоя, а не тест.
@@ -198,12 +202,12 @@ it('утилита роли — только своего свойства: ро
   expect(fromRole('bg-canvas', 'background-color')).toBe(true)
 })
 
-it('роль текста — одна утилита: кегль, интерлиньяж, насыщенность и трекинг', () => {
+it('роль текста — одна утилита: гарнитура, кегль, интерлиньяж, насыщенность и трекинг', () => {
   const roles = Array.from(
     layer.matchAll(/--text-((?!color-|decoration-|underline-)[a-z]+(?:-[a-z]+)*):/g),
     ([, role = '']) => role,
   )
-  const parts = ['font-size', 'line-height', 'font-weight', 'letter-spacing']
+  const parts = ['font-family', 'font-size', 'line-height', 'font-weight', 'letter-spacing']
   expect(roles).toContain('body')
   expect(roles.filter((role) => !parts.every((part) => fromRole(`text-${role}`, part)))).toEqual([])
 })

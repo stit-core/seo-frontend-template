@@ -41,55 +41,68 @@
   --default-font-family: var(--font-text);
   --default-mono-font-family: var(--font-mono);
 
-  /* Роль текста — одна утилита: кегль, интерлиньяж, насыщенность и трекинг. */
+  /* Роль текста — одна утилита: гарнитура, кегль, интерлиньяж, насыщенность и трекинг. Гарнитуру
+   * роли Tailwind в утилиту не кладёт — её добавляет утилита `text-*` ниже по ключу `--typeface-*`. */
   --text-page-title-lg: var(--type-page-title-lg-size);
   --text-page-title-lg--line-height: var(--type-page-title-lg-leading);
   --text-page-title-lg--font-weight: var(--type-page-title-lg-weight);
   --text-page-title-lg--letter-spacing: var(--type-page-title-lg-tracking);
+  --typeface-page-title-lg: var(--type-page-title-lg-family);
   --text-page-title: var(--type-page-title-size);
   --text-page-title--line-height: var(--type-page-title-leading);
   --text-page-title--font-weight: var(--type-page-title-weight);
   --text-page-title--letter-spacing: var(--type-page-title-tracking);
+  --typeface-page-title: var(--type-page-title-family);
   --text-section: var(--type-section-size);
   --text-section--line-height: var(--type-section-leading);
   --text-section--font-weight: var(--type-section-weight);
   --text-section--letter-spacing: var(--type-section-tracking);
+  --typeface-section: var(--type-section-family);
   --text-card-title: var(--type-card-title-size);
   --text-card-title--line-height: var(--type-card-title-leading);
   --text-card-title--font-weight: var(--type-card-title-weight);
   --text-card-title--letter-spacing: var(--type-card-title-tracking);
+  --typeface-card-title: var(--type-card-title-family);
   --text-lead: var(--type-lead-size);
   --text-lead--line-height: var(--type-lead-leading);
   --text-lead--font-weight: var(--type-lead-weight);
   --text-lead--letter-spacing: var(--type-lead-tracking);
+  --typeface-lead: var(--type-lead-family);
   --text-body: var(--type-body-size);
   --text-body--line-height: var(--type-body-leading);
   --text-body--font-weight: var(--type-body-weight);
   --text-body--letter-spacing: var(--type-body-tracking);
+  --typeface-body: var(--type-body-family);
   --text-body-long: var(--type-body-long-size);
   --text-body-long--line-height: var(--type-body-long-leading);
   --text-body-long--font-weight: var(--type-body-long-weight);
   --text-body-long--letter-spacing: var(--type-body-long-tracking);
+  --typeface-body-long: var(--type-body-long-family);
   --text-body-strong: var(--type-body-strong-size);
   --text-body-strong--line-height: var(--type-body-strong-leading);
   --text-body-strong--font-weight: var(--type-body-strong-weight);
   --text-body-strong--letter-spacing: var(--type-body-strong-tracking);
+  --typeface-body-strong: var(--type-body-strong-family);
   --text-label: var(--type-label-size);
   --text-label--line-height: var(--type-label-leading);
   --text-label--font-weight: var(--type-label-weight);
   --text-label--letter-spacing: var(--type-label-tracking);
+  --typeface-label: var(--type-label-family);
   --text-helper: var(--type-helper-size);
   --text-helper--line-height: var(--type-helper-leading);
   --text-helper--font-weight: var(--type-helper-weight);
   --text-helper--letter-spacing: var(--type-helper-tracking);
+  --typeface-helper: var(--type-helper-family);
   --text-button: var(--type-button-size);
   --text-button--line-height: var(--type-button-leading);
   --text-button--font-weight: var(--type-button-weight);
   --text-button--letter-spacing: var(--type-button-tracking);
+  --typeface-button: var(--type-button-family);
   --text-code: var(--type-code-size);
   --text-code--line-height: var(--type-code-leading);
   --text-code--font-weight: var(--type-code-weight);
   --text-code--letter-spacing: var(--type-code-tracking);
+  --typeface-code: var(--type-code-family);
 
   /* Выделение в строке — насыщенность роли: кегль и интерлиньяж оно берёт у своего текста. */
   --font-weight-strong: var(--type-body-strong-weight);
@@ -153,6 +166,13 @@
    * `breakpoint.*` файла токенов держит index.server.test.ts. */
   --breakpoint-tablet: 40rem;
   --breakpoint-desktop: 60rem;
+}
+
+/* Гарнитура роли текста: утилита `text-<роль>` берёт её по ключу `--typeface-<роль>` слоя (у цвета
+ * текста такого ключа нет — `text-primary` гарнитуры не несёт). Семейство с файлом шрифта — ссылка
+ * файла токенов на переменную семейства, её объявляет `<Font>` оболочки. */
+@utility text-* {
+  font-family: --value(--typeface-*);
 }
 
 /* Движение разрешено, когда система не просит его сократить и посетитель не выбрал «меньше», —

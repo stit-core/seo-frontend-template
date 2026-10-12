@@ -77,7 +77,8 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 рядом с каноном пути обёртки, который срезает слеш сам, — другая форма меняет оба места, их
 согласие держит тест таблицы), `session: false` (fs-драйвер сессий пишет в cacheDir), `prefetch: false` и без `<ClientRouter/>` (без островов — ни байта JS; переход между страницами — CSS View Transitions токен-слоя, rule `shared-ui`),
 `experimentalDisableStreaming: true`, `markdown.syntaxHighlight: false` (Shiki инлайнит сырые
-цвета мимо токен-слоя), `vite.build.assetsInlineLimit: 0` (сборка ничего не встраивает в страницу:
+цвета мимо токен-слоя), `fonts` — семейства списка шрифтов ДС `src/app/styles/fonts.ts` (Fonts API,
+локальный провайдер; запасные гарнитуры — хвост стека семейства в файле токенов, rule `shared-ui`), `vite.build.assetsInlineLimit: 0` (сборка ничего не встраивает в страницу:
 короткий скрипт компонента без импортов остаётся модулем, по которому реестр `ISLANDS` узнаёт
 остров-файл, стиль страницы и ресурс — файлами на `'self'` CSP, а не `data:`-адресом), Vite-плагины `yaml-modules` (`content/*.yaml` и реестр ботов `shared/seo/crawlers.yaml` → данные на сборке) и
 `wrapper-entries` (модули приложения, которые `docker/*` берут по имени файла: схема env
@@ -96,7 +97,8 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 отбор страниц — `filter`, а не `noindex` самой страницы, шарды вместо одного файла) нет.
 
 CSP — `security.csp` из политики сборки (`contentSecurityPolicy()`, `scripts/lib/site-policy.mjs`:
-защитные директивы, чужие origin, хеши островов; хеши своих стилей Astro добавляет сам) и
+защитные директивы, чужие origin, хеши островов; хеши своих стилей — и `<style>` шрифтов `<Font>`
+— и `font-src 'self'` Astro добавляет сам) и
 `staticHeaders: true` адаптера: prerendered-страница получает заголовок из `dist/_headers.json`
 (статик-хендлер), on-demand — от Astro в ответе. Заголовком, а не `<meta>`: `frame-ancestors`
 в `<meta>` не действует. Каждая директива — одна: браузер действует по первому вхождению, поэтому

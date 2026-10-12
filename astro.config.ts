@@ -1,11 +1,13 @@
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import node from '@astrojs/node'
 import tailwindcss from '@tailwindcss/vite'
 import type { AstroIntegration } from 'astro'
-import { defineConfig } from 'astro/config'
+import { defineConfig, fontProviders } from 'astro/config'
 import { load } from 'js-yaml'
 import { contentSecurityPolicy } from './scripts/lib/site-policy.mjs'
 import { writeSitemap } from './scripts/lib/sitemap.mjs'
+import { fontFamilies, fontStacks } from './src/app/styles/fonts.ts'
 import { TRAILING_SLASH } from './src/shared/redirects/table.ts'
 
 // Один образ на все среды: на сборке в prerendered-выход попадает плейсхолдер
@@ -57,8 +59,22 @@ const sitemapFromBuild: AstroIntegration = {
   },
 }
 
+// Шрифты ДС — файлы списка src/app/styles/fonts.ts: Fonts API печатает их `@font-face` с метрическим
+// фолбэком. Переменная семейства, которую объявляет `<Font>`, заменяет стек файла токенов целиком,
+// поэтому запасные гарнитуры — хвост этого стека.
+const stacks = fontStacks(
+  readFileSync(new URL('./src/app/styles/tokens.css', import.meta.url), 'utf8'),
+)
+
 export default defineConfig({
   site: process.env.SITE_URL,
+  fonts: fontFamilies().map(({ family, variable, variants }) => ({
+    provider: fontProviders.local(),
+    name: family,
+    cssVariable: variable,
+    fallbacks: stacks.get(variable)?.slice(1),
+    options: { variants },
+  })),
   integrations: [closedImageEndpoint, sitemapFromBuild],
   output: 'static',
   // Дефолтный лимит тела у адаптера — 1 ГиБ, а разбор формы буферизует тело в heap процесса

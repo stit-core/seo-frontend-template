@@ -11,12 +11,13 @@ const config = fileURLToPath(new URL('../../../.size-limit.cjs', import.meta.url
 
 type Limit = { name: string; path: string; limit: string }
 
-function htmlLimit(pages: Record<string, string>) {
+// Строки бюджета над сборкой из этих файлов `dist/client`; `exists` — путь строки ведёт к файлу.
+function limitsOf(files: Record<string, string>) {
   const root = mkdtempSync(join(tmpdir(), 'size-limit-'))
   try {
-    for (const [path, html] of Object.entries(pages)) {
+    for (const [path, content] of Object.entries(files)) {
       mkdirSync(dirname(join(root, 'dist/client', path)), { recursive: true })
-      writeFileSync(join(root, 'dist/client', path), html)
+      writeFileSync(join(root, 'dist/client', path), content)
     }
     const load = `process.stdout.write(JSON.stringify(require(${JSON.stringify(config)})))`
     const result = spawnSync(process.execPath, ['-e', load], {
@@ -24,13 +25,18 @@ function htmlLimit(pages: Record<string, string>) {
       encoding: 'utf8',
       timeout: 10_000,
     })
-    const html = (JSON.parse(result.stdout) as Limit[]).find((limit) =>
-      limit.name.startsWith('HTML'),
-    )
-    return { path: html?.path ?? '', exists: existsSync(join(root, html?.path ?? '')) }
+    return (JSON.parse(result.stdout) as Limit[]).map((limit) => ({
+      ...limit,
+      exists: existsSync(join(root, limit.path)),
+    }))
   } finally {
     rmSync(root, { recursive: true, force: true })
   }
+}
+
+const htmlLimit = (pages: Record<string, string>) => {
+  const html = limitsOf(pages).find((limit) => limit.name.startsWith('HTML'))
+  return { path: html?.path ?? '', exists: html?.exists ?? false }
 }
 
 describe('бюджет HTML size-limit', () => {
@@ -47,5 +53,18 @@ describe('бюджет HTML size-limit', () => {
 
   it('сборка без страниц — путь к странице, которой нет: size-limit падает, а не молчит', () => {
     expect(htmlLimit({}).exists).toBe(false)
+  })
+})
+
+describe('бюджет шрифтов size-limit', () => {
+  const fontLimits = (files: Record<string, string>) =>
+    limitsOf({ 'index.html': '<p>a</p>', ...files }).filter((limit) =>
+      limit.path.startsWith('dist/client/_astro/fonts/'),
+    )
+
+  // Путь без файлов size-limit считает ошибкой: у сайта без шрифтов строки нет вовсе.
+  it('строка возникает с первым файлом шрифта сборки', () => {
+    expect(fontLimits({})).toEqual([])
+    expect(fontLimits({ '_astro/fonts/golos.woff2': 'woff2' })).toHaveLength(1)
   })
 })

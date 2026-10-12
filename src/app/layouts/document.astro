@@ -1,6 +1,11 @@
 ---
+import type { CssVariable } from 'astro:assets'
+// Файлом компонента, а не из astro:assets: этот модуль тянет стили картинок Astro, и их вторым файлом
+// грузила бы каждая страница.
+import Font from 'astro/components/Font.astro'
 import '@/app/styles/index.css'
 import Metrika from '@/app/analytics/metrika.astro'
+import { fontFamilies } from '@/app/styles/fonts'
 import { PreferencesInit } from '@/features/preferences'
 import { ISLANDS, standsOn, THEME } from '@/shared/config'
 import { type Locale, routeOf, t } from '@/shared/i18n'
@@ -42,6 +47,13 @@ const theme = THEME.default === 'system' ? undefined : THEME.default
 // Острова оболочки — по строкам реестра: предпочтения с кнопкой темы — на всём сайте, без неё — на
 // страницах с переключателем движения; счётчик — при заданном идентификаторе.
 const route = routeOf(Astro.url.pathname)
+// Шрифты ДС — `<Font>` каждого семейства списка: `@font-face` и переменная семейства, на которую
+// ссылаются роли файла токенов; preload — начертания первого экрана. Тип CssVariable Astro выводит
+// из конфига, а конфиг — из того же списка.
+const fonts = fontFamilies().map(({ variable, preload }) => ({
+  cssVariable: variable as CssVariable,
+  preload: preload.length > 0 && preload,
+}))
 // Порядок иконок: первой — PNG 192×192. Какую из нескольких иконок возьмёт выдача Google, его
 // справка не говорит, поэтому первой стоит та, что ему подходит: растр (SVG в списке его форматов
 // нет) крупнее рекомендованных 48 px — ICO 32×32 мельче.
@@ -52,6 +64,9 @@ const route = routeOf(Astro.url.pathname)
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    {fonts.map(({ cssVariable, preload }) => (
+      <Font cssVariable={cssVariable} preload={preload} />
+    ))}
     <SeoHead
       title={title}
       description={description}

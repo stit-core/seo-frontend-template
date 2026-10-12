@@ -184,7 +184,9 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   `javascript:`) — острова реестра `ISLANDS` на своих страницах и в бюджете, ресурсов с чужих
   origin нет (и в `style`), og:image и
   hreflang — на своём origin, у картинок размеры, картинка над h1 — не lazy и с
-  `fetchpriority="high"`, у `@font-face` — `font-display` swap/fallback/optional;
+  `fetchpriority="high"`, у `@font-face` — `font-display` swap/fallback/optional, и он только от
+  Fonts API по списку шрифтов (семейство списка в `<style>` страницы; в CSS сборки — нет), preload
+  шрифтов — не больше двух;
   страниц черновиков нет; сборка против источника — страница у каждой опубликованной записи и
   prerendered-маршрута `src/pages`, hreflang только у страниц сверенных пар. Сам скрипт под
   гейтом: фикстура `.gate-fixtures/seo` обязана давать ровно нарушения из `expected.json`

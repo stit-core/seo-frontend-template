@@ -1,4 +1,5 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import type * as Fonts from '@/app/styles/fonts'
 import type * as Config from '@/shared/config'
 import { parseHtml } from '@/shared/lib/testing'
 import DocumentLayout from './document.astro'
@@ -15,6 +16,36 @@ vi.mock('@/shared/config', async (importOriginal) => ({
   THEME: theme,
   ISLANDS: islands,
 }))
+
+// Список шрифтов — данные ДС проекта, у шаблона он пуст: тест задаёт семейства, а их `@font-face`
+// и файлы — как их собрал бы Fonts API.
+const fonts = vi.hoisted(() => ({ families: [] as ReturnType<typeof Fonts.fontFamilies> }))
+vi.mock('@/app/styles/fonts', async (importOriginal) => ({
+  ...(await importOriginal<typeof Fonts>()),
+  fontFamilies: () => fonts.families,
+}))
+vi.mock('virtual:astro:assets/fonts/internal', () => {
+  const face = (name: string) => `@font-face{font-family:"${name}-1a2b";}`
+  const file = (url: string, weight: string) => ({ url, type: 'woff2', weight, style: 'normal' })
+  return {
+    componentDataByCssVariable: new Map([
+      [
+        '--font-golos-text',
+        {
+          css: face('Golos Text'),
+          preloads: [
+            file('/_astro/fonts/golos-latin.woff2', '400 900'),
+            file('/_astro/fonts/golos-cyrillic.woff2', '400 900'),
+          ],
+        },
+      ],
+      [
+        '--font-onest',
+        { css: face('Onest'), preloads: [file('/_astro/fonts/onest-latin.woff2', '100 900')] },
+      ],
+    ]),
+  }
+})
 
 const container = await AstroContainer.create()
 
@@ -37,6 +68,10 @@ async function render(
   })
   const document = parseHtml(html)
   return {
+    fontStyles: [...document.head.querySelectorAll('style')].map((style) => style.textContent),
+    fontPreloads: [...document.head.querySelectorAll('link[rel="preload"][as="font"]')].map(
+      (link) => link.getAttribute('href'),
+    ),
     root: document.documentElement,
     main: document.querySelector('main'),
     island: (name: string) => document.head.querySelector(`script[data-island="${name}"]`),
@@ -84,6 +119,30 @@ describe('DocumentLayout', () => {
   it('оболочка страницу не сужает: у <main> — только место в колонке оболочки', async () => {
     const page = await render({ default: 'system', switcher: true })
     expect(page.main?.className).toBe('flex-1')
+  })
+
+  // Fonts API печатает `@font-face` семейства и его переменную только там, где стоит `<Font>`:
+  // оболочка ставит его каждому семейству списка, preload — файлам начертаний первого экрана.
+  it('шрифты — <Font> каждого семейства списка, preload — начертания первого экрана', async () => {
+    const { fontFamilies } = await vi.importActual<typeof Fonts>('@/app/styles/fonts')
+    const face = { weight: '400 900', style: 'normal', preload: true } as const
+    fonts.families = fontFamilies([
+      { family: 'Golos Text', ...face, file: 'golos-latin.woff2' },
+      { family: 'Golos Text', ...face, file: 'golos-cyrillic.woff2' },
+      { family: 'Onest', weight: '100 900', style: 'normal', file: 'onest-latin.woff2' },
+    ])
+    const page = await render({ default: 'system', switcher: true })
+    expect(page.fontStyles).toEqual([
+      '@font-face{font-family:"Golos Text-1a2b";}',
+      '@font-face{font-family:"Onest-1a2b";}',
+    ])
+    expect(page.fontPreloads).toEqual([
+      '/_astro/fonts/golos-latin.woff2',
+      '/_astro/fonts/golos-cyrillic.woff2',
+    ])
+    fonts.families = []
+    const plain = await render({ default: 'system', switcher: true })
+    expect([...plain.fontStyles, ...plain.fontPreloads]).toEqual([])
   })
 
   // color-scheme страницы объявляет файл токенов: у ДС с одной темой второй схемы нет.

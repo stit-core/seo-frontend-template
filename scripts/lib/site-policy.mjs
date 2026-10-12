@@ -11,9 +11,15 @@ import { isJsonLd } from './html.mjs'
 
 /** @typedef {import('../../src/shared/config/islands.ts').Island} Island */
 
+export { FONTS } from '../../src/app/styles/fonts.ts'
 // Реестр островов — данные приложения (src/shared/config/islands.ts): по нему оболочка печатает
-// острова, а политика сборки строит CSP и сверяет страницы.
+// острова, а политика сборки строит CSP и сверяет страницы. Так же — список шрифтов ДС: по нему
+// конфиг и оболочка подключают шрифты, seo:check сверяет `@font-face` страниц.
 export { ISLANDS }
+
+// Preload шрифтов на странице — начертания первого экрана, не больше двух файлов (ворота strategy
+// SG-PERF-13): каждый следующий спорит за канал с картинкой первого экрана.
+export const FONT_PRELOAD_MAX = 2
 
 // Служебные prerendered-маршруты без префикса локали: только им положен noindex.
 export const NOINDEX_ROUTES = ['/contacts/spasibo', '/500']

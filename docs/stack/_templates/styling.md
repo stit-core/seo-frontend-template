@@ -44,19 +44,20 @@ status: draft
 
 | поле | значение |
 |---|---|
-| основной | системный стек `system-ui` — ноль байт по проводу и ноль CLS |
-| моноширинный | системный `ui-monospace` |
-| веб-шрифт | _нет_ |
+| гарнитуры ролей | стеки файла токенов: семейство с файлом — `var(--font-<ключ>, <стек>)` (форма производного CSS strategy), системное — литералом |
+| файлы | список `src/app/styles/fonts.ts` — строки шрифтов манифеста продукта strategy (семейство, насыщенность, начертание, файл WOFF2 с лицензией; `unicodeRange` — подмножество, `preload` — начертание первого экрана) |
+| подключение | Astro Fonts API, локальный провайдер: `@font-face` с метрическим фолбэком, `<Font>` в оболочке |
+| шаблон | _список пуст_ — системные стеки, 0 байт шрифтов |
 
-Веб-шрифт — проектное решение и перф-риск: только self-host, только WOFF2, обязательный
-сабсет кириллицы, preload не больше одного файла активной локали, бюджет ≤ 60 КБ.
-Astro Fonts API (`subsets: ['cyrillic','latin']`) — способ его подключить.
+Веб-шрифт — решение ДС и перф-риск: только self-host и WOFF2, у кириллицы — своё подмножество,
+preload — не больше двух файлов на странице (`seo:check`), вес — строка `.size-limit.cjs` с
+первым файлом; колонку чтения форк перемеряет под ширину знака своего шрифта (rule `shared-ui`).
 
 ## Типографика, отступы и размеры
 
 | поле | значение |
 |---|---|
-| роли текста | `--type-<роль>-{size,leading,weight,tracking}` → одна утилита `text-<роль>`: `page-title`, `page-title-lg`, `section`, `card-title`, `lead`, `body`, `body-long`, `body-strong`, `label`, `helper`, `button`, `code` |
+| роли текста | `--type-<роль>-{family,size,leading,weight,tracking}` → одна утилита `text-<роль>`: `page-title`, `page-title-lg`, `section`, `card-title`, `lead`, `body`, `body-long`, `body-strong`, `label`, `helper`, `button`, `code` |
 | отступы | шкала `--space-3xs…5xl` (`mt-md`, `gap-x-lg`) и ритм страницы `--rhythm-page-x`, `--rhythm-section-s\|m\|l`, `--rhythm-stack-display`; числовой шкалы Tailwind нет |
 | размеры и радиусы | `--size-control-md`, `--size-icon-md`, `--size-thumbnail`, `--size-term`; `--radius-xs…lg` → `rounded-focus\|code\|control\|panel` |
 | линии | `--border-width-default\|strong\|focus`, `--border-offset-focus\|underline` |
@@ -70,13 +71,15 @@ Astro Fonts API (`subsets: ['cyrillic','latin']`) — способ его под
 |---|---|
 | CSS всего сайта | ≤ 6,5 КБ brotli (одна таблица, `.size-limit.cjs`) |
 | HTML страницы | ≤ 5 КБ brotli (самая тяжёлая страница сборки) |
+| шрифты ДС | строка с первым файлом: факт с запасом не меньше 10 %, у шаблона — 0 |
 
 ## Generates
 
 - `src/app/styles/tokens.css` — значения дизайн-системы: роли, темы
 - `src/app/styles/index.css` — слой сопоставления, классы-компоненты
+- `src/app/styles/fonts.ts` — список шрифтов ДС: файлы и начертания для Fonts API
 - `astro.config.ts` — плагин Tailwind
-- `.size-limit.cjs` — бюджеты CSS и HTML
+- `.size-limit.cjs` — бюджеты CSS, HTML и шрифтов
 - `src/features/preferences/**` — остров предпочтений и кнопки выбора темы и движения
 
 ## Открытые вопросы
