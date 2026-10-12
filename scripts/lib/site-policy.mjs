@@ -134,6 +134,12 @@ const URL_ATTRIBUTE = /^(href|src|action|formaction|xlink:href|data)$/i
 const COMPONENT_SCRIPT = /^\/_astro\/([\w.-]+\.astro)_astro_type_script_index_\d+_lang\.[\w-]+\.js$/
 
 /**
+ * Имя компонента, чей <script> Astro собрал в модуль по этому адресу.
+ * @param {string | undefined} src
+ */
+export const componentOf = (src) => COMPONENT_SCRIPT.exec(src ?? '')?.[1]
+
+/**
  * Скрипты документа: тег целиком, его место и остров реестра, которому он принадлежит, — инлайн
  * по `data-island`, файл по имени компонента в `src`.
  * @param {string} html
@@ -144,7 +150,7 @@ export function scriptsOf(html, islands = ISLANDS) {
   return Array.from(html.matchAll(/<script\b([^>]*)>(?:[\s\S]*?<\/script>)?/g), (match) => {
     const [tag, attrs = ''] = match
     const src = /\bsrc="([^"]*)"/.exec(attrs)?.[1]
-    const component = COMPONENT_SCRIPT.exec(src ?? '')?.[1]
+    const component = componentOf(src)
     const island =
       src === undefined
         ? /\bdata-island="([^"]*)"/.exec(attrs)?.[1]

@@ -59,6 +59,7 @@ import {
 import { pageRoutes, walk } from './lib/routes.mjs'
 import {
   brotliBytes,
+  componentOf,
   DESCRIPTION_BUDGET,
   GENERIC_TITLE,
   ICON_MIN_SIDE,
@@ -481,6 +482,22 @@ const modules = new Map(
     .filter((file) => file.endsWith('.js'))
     .map((file) => [basename(file), file]),
 )
+// Остров-файл узнаётся по имени компонента в имени модуля: второй модуль с тем же именем — одноимённый
+// компонент со скриптом или второй <script> — прошёл бы островом.
+for (const [name, island] of Object.entries(islands)) {
+  const component = island.file?.split('/').at(-1)
+  if (component === undefined) continue
+  const named = [...modules.keys()].filter(
+    (module) => componentOf(`/_astro/${module}`) === component,
+  )
+  if (named.length > 1) {
+    fail(
+      `ISLANDS.${name} (src/shared/config/islands.ts)`,
+      `модулей компонента ${component} в сборке ${named.length}: у острова-файла он один — одноимённый компонент со скриптом или второй <script> прошёл бы островом`,
+    )
+  }
+}
+
 function loadOf({ tag, src }) {
   if (src === undefined) return { weight: brotliBytes(tag), imports: [] }
   const graph = new Set()

@@ -33,6 +33,7 @@
     "ISLANDS.bez-resheniya (src/shared/config/islands.ts): нет основания (basis): момент спецификации движения или плана страницы",
     "ISLANDS.bez-resheniya (src/shared/config/islands.ts): нет бюджета (budget): вес в brotli, байт",
     "ISLANDS.bez-resheniya (src/shared/config/islands.ts): остров — инлайн (hash) или файл (file): ровно одно из двух",
+    "ISLANDS.tyazhelyy (src/shared/config/islands.ts): модулей компонента tyazhelyy.astro в сборке 2: у острова-файла он один — одноимённый компонент со скриптом или второй <script> прошёл бы островом",
     "dist/client/500.html: meta description: ожидается ровно один, найдено 0",
     "dist/client/about/index.html: <title>: ожидается ровно один, найдено 2",
     "dist/client/about/index.html: h1: ожидается ровно один, найдено 2",
