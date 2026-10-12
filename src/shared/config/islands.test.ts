@@ -1,3 +1,4 @@
+import { standsOn } from './islands'
 import type * as Site from './site'
 
 // Где стоят острова оболочки — решения проекта в site.ts: тест задаёт их и читает реестр заново.
@@ -20,6 +21,9 @@ const islands = async () => {
   return (await import('./islands')).ISLANDS
 }
 
+// Страницы, которые проект в реестр не вписывал: главная, запись, страница без переключателя.
+const ROUTES = ['/', '/blog/zapis', '/stranica-bez-pereklyuchatelya']
+
 describe('реестр островов', () => {
   it('счётчик стоит только при заданном идентификаторе: без него сторонних скриптов нет', async () => {
     site.metrika = ''
@@ -29,11 +33,14 @@ describe('реестр островов', () => {
   })
 
   // Без кнопки темы остров нужен только страницам с переключателем движения: их пути вписывает
-  // проект.
-  it('остров предпочтений — на всём сайте с кнопкой темы, без неё — нигде', async () => {
+  // проект, а кнопку на странице без острова валит seo:check. Тест держит инвариант — «не на всём
+  // сайте», а не список страниц шаблона.
+  it('остров предпочтений — на всём сайте с кнопкой темы, без неё — не на всём', async () => {
     site.switcher = true
-    expect((await islands()).preferences.pages).toEqual(['*'])
+    const withButton = (await islands()).preferences
+    expect(ROUTES.filter((route) => !standsOn(withButton, route))).toEqual([])
     site.switcher = false
-    expect((await islands()).preferences.pages).toEqual([])
+    const withoutButton = (await islands()).preferences
+    expect(standsOn(withoutButton, '/stranica-bez-pereklyuchatelya')).toBe(false)
   })
 })
