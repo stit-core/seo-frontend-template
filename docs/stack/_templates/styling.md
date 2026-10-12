@@ -25,7 +25,7 @@ status: draft
 | текст | `--color-text-primary`, `--color-text-secondary`, `--color-text-on-accent` |
 | акцент и действие | `--color-accent-bg`, `--color-accent-border`, `--color-accent-solid`, `--color-accent-solid-hover`, `--color-accent-text`, `--color-focus-ring` |
 | ошибка | `--color-danger-bg`, `--color-danger-border`, `--color-danger-text` |
-| классы-компоненты | `.button`, `.field`, `.note`, `.section-title`, `.prose`, `.touch-target` (цель касания 44 px при `pointer: coarse`) |
+| классы-компоненты | `.button`, `.field`, `.note`, `.section-title`, `.prose`, `.touch-target` (цель касания 44 px при `pointer: coarse`), `.honeypot` (ловушка формы) |
 
 Проектная палитра — значения этих же ролей: _фирменные цвета_. Новая семантика — роль в
 файле токенов и строка слоя сопоставления, а не сырой цвет в компоненте.
