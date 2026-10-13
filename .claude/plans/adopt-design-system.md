@@ -229,7 +229,8 @@ blocked-by: —
   P8). Автозапуск сильнее `preload="none"` (N1): петля всегда `loading="lazy"` — Chromium 153 не качает её до
   приближения, и остров успевает снять автозапуск при «меньше» (без `lazy` петля первого экрана качалась целиком,
   1,46 МБ); WebKit 26.6 атрибута не знает. Роль `lcp` (R2) — preload постера `fetchpriority="high"`: LCP-постер 860 мс
-  против 1228 и 1040 без `lazy` (медленная сеть, `M/p4e/r2-probe2.out`); `seo:check` требует его у петли над h1.
+  против 1228 и 1040 без `lazy` (медленная сеть, `M/p4e/r2-probe2.out`); `seo:check` требует его у петли над h1
+  (фикстура: без preload, без приоритета и не `as="image"` — R2-d, R2-g, R2-h).
   «Меньше» снимает автозапуск, `load()` обрывает загрузку; «полное» вопреки системе снимает условие с источников петли
   без выбранного ролика. Save-Data и 2G без JS не узнать (Handoff strategy). LCP первого экрана — не ролик
   (SG-PERF-16). Стили картинок Astro сняты: картинку ведут стили Tailwind, миниатюре — `densities={[2]}`; их возврат
@@ -293,8 +294,8 @@ blocked-by: —
 
 ## Где мы сейчас
 Этапы A–D приняты (`M/validation-adopt-design-system-{A,B,C,D}.md` — PASS). Этап E: замечания валидатора части 1
-(`M/validation-adopt-design-system-E.md`) — B1, N1, N2 закрыты, N3–N7 следом (`M/p4e/fix/`); часть 2 — S13. Следующий
-шаг — перепроверка валидатором (часть 1 — фиксы, часть 2 — S13), затем S14. Дальше:
+(`M/validation-adopt-design-system-E.md`) — B1, N1, N2, N4 закрыты, N3, N5–N7 следом (`M/p4e/fix/`); часть 2 — S13.
+Следующий шаг — перепроверка валидатором (часть 1 — фиксы, часть 2 — S13), затем S14. Дальше:
 - Материалы этапа E — `M/p4e/` (`notes.md`; R1 — `r1-mut.sh`; R2 — `r2-*.mjs`, `r2_mut2.py`; S12 — `s12_mutations.py`,
   `e2e_mut.py`, `s12.out`; S13 — `s13-notes.md`; эталон — `mutations.py`, 45 якорей); D — `M/p4d/`, C — `M/p4c/`.
 - DTCG ДС шаблона — `M/p4a/ds/docs/projects/site-template/design/system.tokens.json`; пересборка — `ds_build.py build
