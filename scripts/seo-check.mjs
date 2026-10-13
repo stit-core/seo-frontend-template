@@ -21,8 +21,8 @@
 //   со своим @id, подписан на странице, и имя у него на локали одно; микроданных (itemscope,
 //   itemprop) нет — сущности размечает только JSON-LD;
 // - тело: ни плейсхолдера origin, ни HTML-комментариев; у картинок размеры, картинка над h1 (LCP) —
-//   не lazy и с fetchpriority; фолбэк <picture> — не PNG; кадр под устройство (<source media>) — со
-//   своими размерами и достижим; ролик — с постером, по кнопке — preload none или metadata, с автозапуском —
+//   не lazy и с fetchpriority; фолбэк <picture> — не PNG-производная мастера; источник <source media>
+//   другой пропорции — со своими размерами, и он достижим; ролик — с постером, по кнопке — preload none или metadata, с автозапуском —
 //   ленивый, preload="none" и только под условием движения;
 //   ресурсов с чужих origin и data:-адресов нет (и в style="", и в CSS сборки): CSP их не пропустит;
 //   @font-face — с font-display swap/fallback/optional;
@@ -322,14 +322,18 @@ function checkMedia(where, body) {
   checkVideos(where, body)
 }
 
-// Кадр под устройство — источник с условием `media`: у него свои размеры, иначе место под картинкой
-// резервирует чужая пропорция. Браузер берёт первый подходящий источник: за источником без `media`
-// источник того же типа недостижим — кадр без условия устройства перекрывает следующий.
+// Источник с условием `media` — кадр под окно или вариант (тёмная тема). Браузер берёт первый подходящий
+// источник: за источником без `media` источник того же типа недостижим — он перекрывает следующий.
 function checkPictures(where, body) {
   for (const [, inner = ''] of body.matchAll(/<picture\b[^>]*>([\s\S]*?)<\/picture>/g)) {
-    // Фолбэк <img> берут браузер без AVIF и поиск по картинкам: PNG фото в разы тяжелее WebP и JPEG.
-    const fallback = attributesOf(/<img\b([^>]*)>/.exec(inner)?.[1] ?? '').get('src') ?? ''
-    if (/\.png$/i.test(fallback)) fail(where, `<picture>: фолбэк <img> — PNG: ${fallback}`)
+    const img = attributesOf(/<img\b([^>]*)>/.exec(inner)?.[1] ?? '')
+    // Фолбэк <img> берут браузер без AVIF и поиск по картинкам. Сборка перекодирует мастер в формат фолбэка:
+    // PNG фото в разы тяжелее WebP. Файл как есть (public/, плоская схема в PNG) — выбор автора.
+    const fallback = img.get('src') ?? ''
+    if (/\.png$/i.test(fallback) && derived(fallback)) {
+      fail(where, `<picture>: фолбэк <img> — PNG-производная мастера, а не WebP: ${fallback}`)
+    }
+    const ratio = Number(img.get('width')) / Number(img.get('height'))
     const covered = new Set()
     for (const [, attrs = ''] of inner.matchAll(/<source\b([^>]*)>/g)) {
       const source = attributesOf(attrs)
@@ -343,7 +347,15 @@ function checkPictures(where, body) {
       }
       if (!source.has('media')) covered.add(type)
       else if (!source.has('width') || !source.has('height')) {
-        fail(where, `<source media> без width и height: место под кадром устройства — ${srcset}`)
+        // Без своих размеров место под источником резервирует <img>: годится только кадр той же пропорции
+        // (вариант для тёмной темы), другой — кадр под окно — растянет бокс, когда придёт файл.
+        const file = images.get(decode(srcset.split(',')[0]?.trim().split(/\s+/)[0] ?? ''))
+        if (!(file && Math.abs(file.width / file.height / ratio - 1) < 0.01)) {
+          fail(
+            where,
+            `<source media> без width и height — кадр другой пропорции, чем <img>: ${srcset}`,
+          )
+        }
       }
     }
   }
@@ -545,6 +557,9 @@ function checkOgImage(where, path, width, height) {
 // Мастер файла сборки: производную картинку Astro называет `<имя мастера>_<хеш>.<формат>`, мастер —
 // `<имя>.<хеш>.<формат>`, файл public/ — своим именем.
 const masterOf = (path) => path.replace(/(?:_[0-9A-Za-z]+)?\.\w+$/, '')
+// Производная — файл, который сборка сделала из мастера.
+const derived = (path) =>
+  path.startsWith('/_astro/') && masterOf(path) !== path.replace(/\.\w+$/, '')
 
 // Картинка статьи в разметке — кадры мастера её превью ссылки: разметка про картинку этой страницы.
 // Google просит пропорции 16:9, 4:3 и 1:1 и для выдачи берёт нужную.
