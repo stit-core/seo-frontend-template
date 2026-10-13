@@ -16,7 +16,7 @@ import {
 } from '@/entities/post'
 import { type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { invariant } from '@/shared/lib'
-import { blogPosting, breadcrumbList, type Crumb } from '@/shared/seo'
+import { articleImagesOf, blogPosting, breadcrumbList, type Crumb, ogImageOf } from '@/shared/seo'
 
 // Логика секций блога — здесь, разметка — в .astro: ru- и en-страницы делят и то и другое.
 const otherLocale = (locale: Locale): Locale | undefined =>
@@ -36,16 +36,10 @@ export async function postPageModel(post: Post) {
   // Ссылка на перевод — только при реальном twin по translationKey; slug перевода может отличаться.
   const other = otherLocale(locale)
   const twin = other ? await findTranslation(post, other) : undefined
-  // Социальная карточка — обложка записи (исходный PNG), без обложки — дефолт сайта.
-  const ogImage =
-    data.cover && data.coverAlt
-      ? {
-          path: data.cover.src,
-          width: data.cover.width,
-          height: data.cover.height,
-          alt: data.coverAlt,
-        }
-      : undefined
+  // Превью ссылки и кадры разметки — из обложки записи; без обложки превью — карточка сайта.
+  const cover = data.cover && data.coverAlt ? { src: data.cover, alt: data.coverAlt } : undefined
+  const ogImage = cover && (await ogImageOf(cover.src, cover.alt))
+  const imagePaths = cover && (await articleImagesOf(cover.src)).map(({ path }) => path)
   const crumbs: Crumb[] = [
     { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
     { name: t(locale, 'blog.title'), href: blogPath(locale) },
@@ -65,7 +59,7 @@ export async function postPageModel(post: Post) {
         description: data.description,
         published: data.pubDate,
         updated: data.updatedDate,
-        imagePath: ogImage?.path,
+        imagePaths,
         author,
       }),
       breadcrumbList(crumbs),

@@ -19,7 +19,8 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
   `title` (25–65 символов), `description` (70–170), `pubDate`, `updatedDate?` (не раньше
   `pubDate`; источник `dateModified` в JSON-LD и `lastmod` в sitemap — у записи без правки
   `lastmod` — её `pubDate`), `cover?` +
-  `coverAlt?` (только вместе; обложка — и `og:image` записи), `tags` (slug'и, без дублей),
+  `coverAlt?` (только вместе; из обложки сборка делает и превью ссылки `og:image`, и кадры разметки
+  статьи), `tags` (slug'и, без дублей),
   `draft` (по умолчанию `false`), `translationKey` (slug, общий для переводов), `author?` (id
   реестра `src/entities/author/model/authors.ts`; id вне реестра — ошибка схемы)
 - Автор — запись реестра `AUTHORS`: имя и роль по локалям; у записи с `author` страница печатает
@@ -81,8 +82,12 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
   отличаться. `translationKey` уникален внутри локали; запись без twin — норма.
   Fallback-режима нет: непереведённая запись под другой локалью — 404, а не копия. Ссылка
   на перевод (и hreflang) — только при реальном twin (`findTranslation`)
-- Обложки — `content/covers/<translationKey>.png` (1600×900), общие для локалей:
-  `cover: ../covers/<key>.png` + `coverAlt`
+- Обложка — мастер 1600×900 в `content/covers/<translationKey>.<jpg|png>`, общий для локалей:
+  `cover: ../covers/<key>.jpg` + `coverAlt` (что на картинке — предложением, с её надписями). Фото —
+  JPEG, плоская графика (схема, надпись, иллюстрация в несколько цветов) — PNG: PNG фото весит в разы
+  больше. Из мастера сборка делает AVIF и WebP страницы, превью ссылки 1200×630 и кадры разметки
+  статьи 16:9, 4:3 и 1:1 в JPEG (`shared/seo`); кадры не растягиваются — у мастера мельче превью
+  ссылки файл выходит не по норме, и `seo:check` краснеет
 
 ## Списки
 

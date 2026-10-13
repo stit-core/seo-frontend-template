@@ -5,7 +5,7 @@ pubDate: 2026-07-16
 tags: [seo]
 translationKey: honest-404-410
 cover: ../covers/honest-404-410.png
-coverAlt: "Three rectangles of different sizes on a dark background, the rightmost one crossed out by a diagonal line"
+coverAlt: "Large numbers 404 and 410 on a dark background with a Russian caption: no such address, removed for good"
 ---
 
 A soft-404 is a page that honestly says “nothing found” but answers with status 200. The

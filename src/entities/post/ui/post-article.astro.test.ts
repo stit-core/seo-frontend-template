@@ -1,5 +1,6 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
+import { SLOT_SIZES } from '@/shared/ui/section'
 import type { Post } from '../api/queries'
 import PostArticle from './post-article.astro'
 
@@ -74,6 +75,18 @@ describe('PostArticle', () => {
     expect(img?.[0]).not.toContain('loading="lazy"')
     expect(img?.[0]).toMatch(/\swidth="\d+"/)
     expect(img?.[0]).toMatch(/\sheight="\d+"/)
+  })
+
+  // Файл обложки браузер выбирает до раскладки — по `sizes`: шире слота — лишние байты LCP.
+  it('файлы обложки — по слоту колонки чтения записи', async () => {
+    const container = await AstroContainer.create()
+    const cover = { src: '/_astro/cover.png', width: 1600, height: 900, format: 'png' as const }
+    const html = await container.renderToString(PostArticle, {
+      props: { post: { ...post, data: { ...post.data, cover, coverAlt: 'Обложка записи' } } },
+    })
+    const candidates = [...parseHtml(html).querySelectorAll('picture source, picture img')]
+    expect(candidates.length).toBeGreaterThan(1)
+    for (const element of candidates) expect(element.getAttribute('sizes')).toBe(SLOT_SIZES.reading)
   })
 
   it('черновик (astro dev) помечен', async () => {

@@ -56,8 +56,8 @@ export const THEME: {
   readonly switcher: boolean
 } = { default: 'system', switcher: true }
 
-// Социальная карточка по умолчанию, 1200×630 (public/og-default.png); у записи с обложкой —
-// её обложка.
+// Превью ссылки по умолчанию, 1200×630 (public/og-default.png); у записи с обложкой — её кадр того
+// же размера (shared/seo).
 export const OG_DEFAULT_IMAGE = {
   path: '/og-default.png',
   width: 1200,

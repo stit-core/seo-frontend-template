@@ -25,6 +25,13 @@ export const FONT_PRELOAD_MAX = 2
 // ресурс не кешируется и едет в HTML каждого визита, тормозя первый экран.
 export const INLINE_DATA_MAX = 10 * 1024
 
+// Превью ссылки (og:image) — норма базы strategy: 1200×630 (эту рамку режут соцсети и мессенджеры),
+// JPEG или PNG (AVIF и WebP превью читают не все), не тяжелее 300 КБ.
+export const OG_IMAGE = { width: 1200, height: 630, formats: ['jpeg', 'png'], maxBytes: 300 * 1024 }
+
+// Кадры картинки статьи в разметке — пропорции, которые просит выдача Google: она берёт нужную.
+export const ARTICLE_IMAGE_RATIOS = { '16:9': 16 / 9, '4:3': 4 / 3, '1:1': 1 }
+
 // Служебные prerendered-маршруты без префикса локали: только им положен noindex.
 export const NOINDEX_ROUTES = ['/contacts/spasibo', '/500']
 

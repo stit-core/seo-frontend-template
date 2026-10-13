@@ -32,7 +32,7 @@ Reference-набор шаблона — **живой образец**, а не �
 Коллекция `post` остаётся, меняется её содержимое.
 
 1. Удалить демо-записи и обложки: `src/entities/post/content/{ru,en}/*.md`,
-   `src/entities/post/content/covers/*.png`
+   `src/entities/post/content/covers/*`
 2. Написать свои — `/content` (минимум по одной записи на локаль, иначе списки пусты)
 3. `content/redirects.yaml` — демо-записи убрать, вписать адреса своего старого сайта
 4. Проверить бюджет HTML в `.size-limit.cjs` (`pnpm size`): он меряет самую тяжёлую страницу

@@ -92,7 +92,7 @@ const BlogPostingSchema = z.object({
   datePublished: calendarDate,
   dateModified: calendarDate.optional(),
   inLanguage: z.string().min(2),
-  image: absolute.optional(),
+  image: z.array(absolute).min(1).optional(),
   author: z.union([PersonSchema, OrganizationRefSchema]),
   publisher: OrganizationRefSchema,
   mainEntityOfPage: z.object({ '@type': z.literal('WebPage'), '@id': absolute }),
@@ -139,8 +139,8 @@ export interface BlogPostingInput {
   description: string
   published: Date
   updated?: Date | undefined
-  // Корневой путь обложки; без обложки поле не выводится.
-  imagePath?: string | undefined
+  // Корневые пути кадров обложки (16:9, 4:3, 1:1 — `articleImagesOf`); без обложки поле не выводится.
+  imagePaths?: readonly string[] | undefined
   // Автор-человек; без него автор записи — организация.
   author?: PersonInput | undefined
 }
@@ -239,7 +239,7 @@ export function blogPosting(input: BlogPostingInput): JsonLd {
     datePublished: isoDate(input.published),
     ...(input.updated === undefined ? {} : { dateModified: isoDate(input.updated) }),
     inLanguage: input.locale,
-    ...(input.imagePath === undefined ? {} : { image: absoluteUrl(input.imagePath) }),
+    ...(input.imagePaths === undefined ? {} : { image: input.imagePaths.map(absoluteUrl) }),
     author: input.author === undefined ? organizationRef() : person(input.author),
     publisher: organizationRef(),
     mainEntityOfPage: { '@type': 'WebPage', '@id': absoluteUrl(input.path) },

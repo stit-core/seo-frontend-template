@@ -1,7 +1,7 @@
 import type * as AuthorSlice from '@/entities/author'
 import { getPost, listPosts, type Post, paginate } from '@/entities/post'
 import { type DictKey, t } from '@/shared/i18n'
-import { blogPosting, breadcrumbList } from '@/shared/seo'
+import { articleImagesOf, blogPosting, breadcrumbList, ogImageOf } from '@/shared/seo'
 import { blogListPageModel, postPageModel, tagPageModel } from './sections'
 
 vi.mock('astro:content', () =>
@@ -111,20 +111,26 @@ describe('страница записи', () => {
     )
   })
 
-  it('обложка с alt — социальная карточка и image разметки', async () => {
+  it('обложка с alt — превью ссылки и кадры разметки из неё', async () => {
     const para = await post('ru', 'para')
     const cover = { src: '/_astro/para.png', width: 1600, height: 900, format: 'png' as const }
     const model = await postPageModel({
       ...para,
       data: { ...para.data, cover, coverAlt: 'Обложка записи' },
     })
-    expect(model.ogImage).toEqual({
-      path: '/_astro/para.png',
-      width: 1600,
-      height: 900,
-      alt: 'Обложка записи',
-    })
-    expect(model.jsonLd[0]).toHaveProperty('image', `${ORIGIN}/_astro/para.png`)
+    expect(model.ogImage).toEqual(await ogImageOf(cover, 'Обложка записи'))
+    const frames = (await articleImagesOf(cover)).map(({ path }) => path)
+    expect(model.jsonLd[0]).toEqual(
+      blogPosting({
+        locale: 'ru',
+        path: '/blog/para',
+        title: 'Запись с переводом',
+        description: 'Анонс записи ru/para.',
+        published: new Date('2026-03-01'),
+        imagePaths: frames,
+        author: { id: 'anna-smirnova', name: 'Анна Смирнова', jobTitle: 'редактор блога' },
+      }),
+    )
   })
 })
 

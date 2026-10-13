@@ -6,7 +6,7 @@ updatedDate: 2026-10-07
 tags: [seo, deploy]
 translationKey: staging-noindex
 cover: ../covers/staging-noindex.png
-coverAlt: "Три горизонтальные полосы разной длины на тёмно-синем фоне"
+coverAlt: "Три полосы с надписями X-Robots-Tag, basic-auth и Disallow: / на тёмном фоне и подпись «три независимых контура»"
 ---
 
 Проиндексированный staging — классическая беда: дубли страниц с другого хоста, утёкшие

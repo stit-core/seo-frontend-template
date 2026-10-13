@@ -145,8 +145,8 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 ## SEO
 
 `<head>` каждой страницы собирает `DocumentLayout` из props (`title`, `description`,
-`alternatePath`, `jsonLd`): title-шаблон, self-canonical, полный OG (`og:image` — обложка записи
-или `public/og-default.png`), `twitter:card`, hreflang только для реальных переводов (взаимно, +
+`alternatePath`, `jsonLd`): title-шаблон, self-canonical, полный OG (`og:image` — кадр 1200×630
+обложки записи или `public/og-default.png`), `twitter:card`, hreflang только для реальных переводов (взаимно, +
 `x-default`), RSS autodiscovery. JSON-LD — в `<head>`: `Organization`/`WebSite` на главной,
 `LocalBusiness` на «О компании» — одна организация с `@id` `<origin>/#org`, на неё ссылаются сайт
 и записи; `BreadcrumbList` на вложенных (из того же массива, что видимые крошки
@@ -187,7 +187,7 @@ shutdown под Traefik и отказывается стартовать, есл
 скриптов: из JavaScript в шаблоне только острова — предпочтения посетителя (инлайн-`<script>` в
 `<head>`: ставит выбор темы и движения до первой отрисовки и обслуживает кнопки) и счётчик при заданном
 `METRIKA_ID`; CSP каждой страницы пропускает только их — по хешу тела. Картинки мастеров контента —
-`astro:assets` (`<Picture>`: AVIF/WebP с фолбэком, размеры заданы, обложка записи грузится с
+`astro:assets` (`<Picture>`: AVIF и фолбэк WebP, размеры заданы, обложка записи грузится с
 приоритетом), готовые файлы ДС и ролик-петля — примитивы `shared/ui/media` (кадр под устройство,
 роль слота, ролик — только при разрешённом движении). Скрипты, чужие ресурсы, размеры картинок и
 роликов, кадры устройства и приоритет LCP каждой страницы проверяет `seo:check`, CSP — HTTP-набор,

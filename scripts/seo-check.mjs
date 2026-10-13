@@ -1,7 +1,8 @@
 // SEO-гейт на прод-сборке (после build) — по каждой prerendered-странице dist/client:
 // - head: ровно один <title> и один <h1>, description с непустым content, self-canonical
 //   абсолютным URL на плейсхолдере origin (один образ на все среды), lang по локали пути, полный
-//   OG с существующей картинкой, без keywords; title и description уникальны среди всех страниц;
+//   OG с существующей картинкой — файлом превью ссылки по норме OG_IMAGE (размер, формат, вес), без
+//   keywords; title и description уникальны среди всех страниц;
 // - иконка сайта: первая <link rel="icon"> — PNG не мельче ICON_MIN_SIDE, файл в сборке того же
 //   размера; на главных она обязательна;
 // - сниппет индексируемой страницы в бюджетах и не общий; noindex (в любой форме) — только у
@@ -13,15 +14,15 @@
 //   только у них;
 // - JSON-LD (любой <script> этого типа, какие бы ещё атрибуты ни стояли у тега): типы из списка
 //   политики, Organization/WebSite только на главной, правильный BreadcrumbList, разметка = видимое
-//   (headline = h1, даты = <time>, image = og:image, mainEntityOfPage = canonical, крошки =
-//   BreadcrumbList, имена и контакты организации — на странице; видимое — без поддеревьев под
-//   hidden и aria-hidden); организация одна — один @id у её узлов и ссылок на неё, узел с этим @id —
-//   только типов ORG_TYPES, одно имя на всю сборку, издатель сайта и записи — она; автор-человек —
+//   (headline = h1, даты = <time>, image — кадры 16:9, 4:3 и 1:1 мастера og:image, mainEntityOfPage =
+//   canonical, крошки = BreadcrumbList, имена и контакты организации — на странице; видимое — без
+//   поддеревьев под hidden и aria-hidden); организация одна — один @id у её узлов и ссылок на неё,
+//   узел с этим @id — только типов ORG_TYPES, одно имя на всю сборку, издатель сайта и записи — она; автор-человек —
 //   со своим @id, подписан на странице, и имя у него на локали одно; микроданных (itemscope,
 //   itemprop) нет — сущности размечает только JSON-LD;
 // - тело: ни плейсхолдера origin, ни HTML-комментариев; у картинок размеры, картинка над h1 (LCP) —
-//   не lazy и с fetchpriority; кадр под устройство (<source media>) — со своими размерами и
-//   достижим; ролик — с постером и preload="none", автозапуск — только под условием движения;
+//   не lazy и с fetchpriority; фолбэк <picture> — не PNG; кадр под устройство (<source media>) — со
+//   своими размерами и достижим; ролик — с постером и preload="none", автозапуск — только под условием движения;
 //   ресурсов с чужих origin нет (и в style=""), data:-адресов — не больше INLINE_DATA_MAX,
 //   @font-face — с font-display swap/fallback/optional;
 // - шрифты — Fonts API по списку проекта: @font-face — семейства списка в <style> страницы (в CSS
@@ -41,6 +42,7 @@ import { existsSync, readFileSync, statSync } from 'node:fs'
 import { basename, relative, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { load } from 'js-yaml'
+import sharp from 'sharp'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
 import {
   DEFAULT_LOCALE,
@@ -62,6 +64,7 @@ import {
 } from './lib/html.mjs'
 import { pageRoutes, walk } from './lib/routes.mjs'
 import {
+  ARTICLE_IMAGE_RATIOS,
   brotliBytes,
   componentOf,
   DESCRIPTION_BUDGET,
@@ -72,6 +75,7 @@ import {
   JSON_LD_FORBIDDEN,
   JSON_LD_TYPES,
   NOINDEX_ROUTES,
+  OG_IMAGE,
   ORG_TYPES,
   RESOURCE_ORIGINS,
   scriptsOf,
@@ -94,6 +98,22 @@ const client = resolve(root, 'dist/client')
 if (!existsSync(client)) {
   console.error('seo:check: dist/client не найден — сначала pnpm build')
   process.exit(1)
+}
+
+// Картинки сборки — размеры, формат и вес из самих файлов: с ними сверяются превью ссылки и кадры
+// разметки, а не с обещанием мета-тегов. Файл, который не читается как картинка, в карте отсутствует.
+const images = new Map()
+for (const file of walk(client).filter((path) => /\.(png|jpe?g|webp|avif|gif)$/i.test(path))) {
+  const meta = await sharp(file)
+    .metadata()
+    .catch(() => undefined)
+  if (meta === undefined) continue
+  images.set(`/${relative(client, file).split(sep).join('/')}`, {
+    width: meta.width,
+    height: meta.height,
+    format: meta.format === 'heif' ? 'avif' : meta.format,
+    bytes: statSync(file).size,
+  })
 }
 
 const errors = []
@@ -312,6 +332,9 @@ function checkMedia(where, body) {
 // источник того же типа недостижим — кадр без условия устройства перекрывает следующий.
 function checkPictures(where, body) {
   for (const [, inner = ''] of body.matchAll(/<picture\b[^>]*>([\s\S]*?)<\/picture>/g)) {
+    // Фолбэк <img> берут браузер без AVIF и поиск по картинкам: PNG фото в разы тяжелее WebP и JPEG.
+    const fallback = attributesOf(/<img\b([^>]*)>/.exec(inner)?.[1] ?? '').get('src') ?? ''
+    if (/\.png$/i.test(fallback)) fail(where, `<picture>: фолбэк <img> — PNG: ${fallback}`)
     const covered = new Set()
     for (const [, attrs = ''] of inner.matchAll(/<source\b([^>]*)>/g)) {
       const source = attributesOf(attrs)
@@ -473,6 +496,75 @@ function checkEntities(where, blocks, page) {
   }
 }
 
+// Превью ссылки — файл в рамке нормы (OG_IMAGE политики): размеры, формат и вес — из самого файла.
+function checkOgImage(where, path, width, height) {
+  const file = images.get(path)
+  if (file === undefined) {
+    fail(where, `og:image ${path} — не картинка: файл не читается`)
+    return
+  }
+  if (file.width !== OG_IMAGE.width || file.height !== OG_IMAGE.height) {
+    fail(
+      where,
+      `og:image ${path} — ${file.width}×${file.height}: превью ссылки — ${OG_IMAGE.width}×${OG_IMAGE.height}`,
+    )
+  }
+  if (width !== String(file.width) || height !== String(file.height)) {
+    fail(
+      where,
+      `og:image:width и og:image:height — ${width}×${height}, а файл ${path} — ${file.width}×${file.height}`,
+    )
+  }
+  if (!OG_IMAGE.formats.includes(file.format)) {
+    fail(where, `og:image ${path} — ${file.format}: превью ссылки читают JPEG и PNG`)
+  }
+  if (file.bytes > OG_IMAGE.maxBytes) {
+    fail(
+      where,
+      `og:image ${path} — ${Math.round(file.bytes / 1024)} КБ, превью ссылки — до ${OG_IMAGE.maxBytes / 1024} КБ`,
+    )
+  }
+}
+
+// Мастер файла сборки: производную картинку Astro называет `<имя мастера>_<хеш>.<формат>`, мастер —
+// `<имя>.<хеш>.<формат>`, файл public/ — своим именем.
+const masterOf = (path) => path.replace(/(?:_[0-9A-Za-z]+)?\.\w+$/, '')
+
+// Картинка статьи в разметке — кадры мастера её превью ссылки: разметка про картинку этой страницы.
+// Google просит пропорции 16:9, 4:3 и 1:1 и для выдачи берёт нужную.
+function checkArticleImages(where, type, image, ogImage) {
+  const ratios = new Set()
+  for (const url of [image].flat()) {
+    if (typeof url !== 'string' || !absolute(url) || new URL(url).origin !== OWN_ORIGIN) {
+      fail(where, `${type}.image ${url} — не абсолютный URL своего сайта`)
+      continue
+    }
+    const { pathname } = new URL(url)
+    if (absolute(ogImage) && masterOf(pathname) !== masterOf(new URL(ogImage).pathname)) {
+      fail(
+        where,
+        `${type}.image ${pathname} — не кадр мастера og:image: разметка — про картинку этой страницы`,
+      )
+    }
+    const file = images.get(pathname)
+    if (file === undefined) fail(where, `${type}.image ${pathname} нет в dist/client`)
+    else {
+      ratios.add(
+        Object.keys(ARTICLE_IMAGE_RATIOS).find(
+          (ratio) => Math.abs(file.width / file.height / ARTICLE_IMAGE_RATIOS[ratio] - 1) < 0.01,
+        ),
+      )
+    }
+  }
+  const missing = Object.keys(ARTICLE_IMAGE_RATIOS).filter((ratio) => !ratios.has(ratio))
+  if (missing.length > 0) {
+    fail(
+      where,
+      `${type}.image без кадров ${missing.join(', ')}: выдача просит 16:9, 4:3 и 1:1 одного мастера`,
+    )
+  }
+}
+
 // Разметка = видимое: JSON-LD не добавляет фактов, которых нет на странице.
 function checkMarkupVisible(where, path, body, blocks, page) {
   const visible = textOf(body)
@@ -502,9 +594,7 @@ function checkMarkupVisible(where, path, body, blocks, page) {
           fail(where, `${type}.${field} ${data[field]} — нет такой <time datetime> на странице`)
         }
       }
-      if (data.image !== undefined && data.image !== page.ogImage) {
-        fail(where, `${type}.image ${data.image} ≠ og:image`)
-      }
+      if (data.image !== undefined) checkArticleImages(where, type, data.image, page.ogImage)
       if (data.inLanguage !== undefined && data.inLanguage !== page.lang) {
         fail(where, `${type}.inLanguage «${data.inLanguage}» ≠ язык страницы «${page.lang}»`)
       }
@@ -757,6 +847,7 @@ for (const file of walk(client)) {
         fail(where, `og:image на чужом origin: ${image}`)
       } else if (!fileInDist(new URL(image).pathname))
         fail(where, `og:image ${new URL(image).pathname} нет в dist/client`)
+      else checkOgImage(where, new URL(image).pathname, og('og:image:width'), og('og:image:height'))
     }
     for (const side of ['og:image:width', 'og:image:height']) {
       if (!/^[1-9]\d*$/.test(og(side) ?? '')) fail(where, `${side} не целое число`)

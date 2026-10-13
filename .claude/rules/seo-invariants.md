@@ -48,9 +48,11 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   полный взаимный набор `ru`, `en`, `x-default` (дефолтная локаль) с self-ссылкой, все на своём
   origin; без перевода —
   ни одной `<link hreflang>`; canonical внутри локали; авторедиректов по `Accept-Language` нет
-- `og:image` — обложка записи (исходный PNG из `_astro/`, `immutable`) или `public/og-default.png`
-  1200×630 (`OG_DEFAULT_IMAGE`, `shared/config/site.ts`); URL абсолютный на своём origin, файл
-  есть в сборке
+- `og:image` — превью ссылки 1200×630: у записи с обложкой — её кадр JPEG (`ogImageOf`,
+  `shared/seo`; файл `_astro/`, `immutable`), иначе `public/og-default.png` (`OG_DEFAULT_IMAGE`,
+  `shared/config/site.ts`); URL абсолютный на своём origin, файл есть в сборке. `seo:check` сверяет
+  сам файл с нормой базы (`OG_IMAGE` политики): 1200×630 и те же размеры в мета, JPEG или PNG, до
+  300 КБ
 - Публичные идентификаторы сайта — поля `shared/config/site.ts`, не env: prerendered печатается
   на сборке, а образ собирается без env. `SITE_VERIFICATION.google`/`.yandex` — токены Search
   Console и Вебмастера (пусто — тега нет; альтернатива — HTML-файл в `public/` или DNS TXT),
@@ -100,9 +102,11 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
 - Фабрики `shared/seo/json-ld.ts` возвращают типизированные литералы; `json-ld.test.ts` сверяет
   выход каждой фабрики полным объектом и Zod-схемой (абсолютные URL, обязательные поля,
   календарные даты), а `seo:check` — типы на реальном HTML. Размечается только видимое на
-  странице: `dateModified` — при `updatedDate`, `image` — при обложке. «Разметка = видимое»
+  странице: `dateModified` — при `updatedDate`, `image` — при обложке: кадры её мастера 16:9, 4:3 и
+  1:1 (`articleImagesOf`), пропорции, которые просит выдача Google. «Разметка = видимое»
   держит `seo:check` на каждой странице: `headline` = видимый h1, `datePublished`/`dateModified`
-  и `article:*_time` — `datetime` видимого `<time>`, `image` = `og:image`, `mainEntityOfPage` =
+  и `article:*_time` — `datetime` видимого `<time>`, `image` — кадры 16:9, 4:3 и 1:1 мастера `og:image`
+  (файлы сборки), `mainEntityOfPage` =
   canonical, `inLanguage` = язык страницы; у `Organization`/`LocalBusiness` имя, юрлицо, адрес и
   почта видны в тексте, телефон — ссылкой `tel:` с тем же номером. Видимое — без поддеревьев под
   атрибутом `hidden` и под `aria-hidden="true"`: текст, которого человек не видит, разметку не
@@ -168,12 +172,14 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
 
 - `pnpm seo:check` (после `build`, внутри `pnpm check`): по `dist/client` — один `<title>` и
   `<h1>`, description с непустым `content`, self-canonical, `lang` по локали пути, OG с
-  существующей картинкой, уникальность title/description, иконка сайта (первая — PNG от 48 px с
+  существующей картинкой — превью ссылки по норме (`OG_IMAGE`: 1200×630, JPEG или PNG, до 300 КБ),
+  уникальность title/description, иконка сайта (первая — PNG от 48 px с
   файлом того же размера, на главных обязательна); hreflang — полный взаимный набор у
   каждой пары переводов (главные, списки и индексируемые теги под обоими префиксами локалей; записи — twin по
   `translationKey` из frontmatter, реестр коллекций `scripts/lib/content.mjs`) и ни одной ссылки
   на отсутствующую страницу; JSON-LD (любой блок этого типа; типы, `Organization`/`WebSite` только
-  на главной, форма `BreadcrumbList`, разметка = видимое без скрытых поддеревьев, одна организация —
+  на главной, форма `BreadcrumbList`, разметка = видимое без скрытых поддеревьев (картинка статьи —
+  кадры 16:9, 4:3 и 1:1 мастера превью), одна организация —
   `@id` узлов и ссылок, типы узла — `ORG_TYPES`, одно имя, автор-человек — свой `@id`, подпись на
   странице, одно имя на локали), микроданных нет; карта сайта `sitemap.xml` — ровно индексируемые
   страницы сборки своим self-canonical, `lastmod` — дата последнего изменения записи из frontmatter
@@ -184,7 +190,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   `javascript:`) — острова реестра `ISLANDS` на своих страницах и в бюджете, ресурсов с чужих
   origin нет (и в `style`), data:-адресов — не больше 10 КБ, og:image и
   hreflang — на своём origin, у картинок и роликов размеры, картинка над h1 — не lazy и с
-  `fetchpriority="high"`, кадр под устройство (`<source media>`) — со своими размерами и достижим,
+  `fetchpriority="high"`, фолбэк `<picture>` — не PNG, кадр под устройство (`<source media>`) — со
+  своими размерами и достижим,
   у ролика — постер и `preload="none"`, автозапуск — под условием движения, у `@font-face` — `font-display` swap/fallback/optional, и он только от
   Fonts API по списку шрифтов (семейство списка в `<style>` страницы; в CSS сборки — нет), preload
   шрифтов — не больше двух;

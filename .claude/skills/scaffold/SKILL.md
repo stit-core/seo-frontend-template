@@ -73,7 +73,7 @@ src/pages/en/<path>.astro             en-обёртка: locale = 'en'
 
 ```
 src/entities/<name>/
-├─ content/<locale>/<slug>.md      записи; обложки — content/covers/<translationKey>.png
+├─ content/<locale>/<slug>.md      записи; обложки — content/covers/<translationKey>.jpg|png
 ├─ model/schema.ts                 Zod-схема frontmatter (прямой import { z } from 'zod')
 ├─ model/collection.ts             defineCollection + glob({ base })
 ├─ api/queries.ts                  списки, запись, перевод; фильтр draft и локали

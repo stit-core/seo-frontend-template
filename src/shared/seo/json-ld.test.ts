@@ -104,7 +104,7 @@ describe('seo/json-ld', () => {
     expect(JsonLdSchema.parse(data)).toEqual(data)
   })
 
-  it('BlogPosting: даты, dateModified и image при наличии, автор и издатель — организация по @id; проходит схему', () => {
+  it('BlogPosting: даты, dateModified и кадры обложки при наличии, автор и издатель — организация по @id; проходит схему', () => {
     const base = {
       locale: 'ru' as const,
       path: '/blog/x',
@@ -129,12 +129,20 @@ describe('seo/json-ld', () => {
     const full = blogPosting({
       ...base,
       updated: new Date('2026-09-10'),
-      imagePath: '/_astro/cover.abc.png',
+      imagePaths: [
+        '/_astro/cover.abc_16x9.jpg',
+        '/_astro/cover.abc_4x3.jpg',
+        '/_astro/cover.abc_1x1.jpg',
+      ],
     })
     expect(full).toEqual({
       ...plain,
       dateModified: '2026-09-10',
-      image: `${ORIGIN}/_astro/cover.abc.png`,
+      image: [
+        `${ORIGIN}/_astro/cover.abc_16x9.jpg`,
+        `${ORIGIN}/_astro/cover.abc_4x3.jpg`,
+        `${ORIGIN}/_astro/cover.abc_1x1.jpg`,
+      ],
     })
     expect(JsonLdSchema.parse(full)).toEqual(full)
   })

@@ -113,13 +113,13 @@ describe('SeoHead', () => {
     const doc = await render('/blog/x', {
       ...base,
       ogType: 'article',
-      ogImage: { path: '/_astro/cover.abc.png', width: 1600, height: 900, alt: 'Обложка' },
+      ogImage: { path: '/_astro/cover.abc_og.jpg', width: 1200, height: 630, alt: 'Обложка' },
       article: { published: new Date('2026-09-08'), modified: new Date('2026-09-10') },
     })
     expect(og(doc)).toMatchObject({
       'og:type': 'article',
-      'og:image': `${ORIGIN}/_astro/cover.abc.png`,
-      'og:image:width': '1600',
+      'og:image': `${ORIGIN}/_astro/cover.abc_og.jpg`,
+      'og:image:width': '1200',
       'og:image:alt': 'Обложка',
     })
     expect(content(doc, 'property="article:published_time"')).toBe('2026-09-08')

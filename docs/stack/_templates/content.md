@@ -71,9 +71,9 @@ sitemap, ни по URL (404). Preview-режима с токеном нет: у 
 
 | поле | значение |
 |---|---|
-| пайплайн | build-time `astro:assets`: `<Picture>` с `formats={['avif','webp']}` + фолбэк `<img src>` |
-| где лежат | рядом с текстом — `content/covers/<translationKey>.png`, общие для локалей |
-| обложка записи | 1600×900; она же `og:image` страницы |
+| пайплайн | build-time `astro:assets`: `<Picture>` с `formats={['avif']}` + фолбэк `<img src>` WebP; готовые файлы ДС — `ArtPicture` без пережатия |
+| где лежат | рядом с текстом — `content/covers/<translationKey>.<jpg\|png>` (фото — JPEG), общие для локалей |
+| обложка записи | мастер 1600×900; из него — превью ссылки `og:image` 1200×630 и кадры разметки 16:9, 4:3, 1:1 (JPEG) |
 | дефолтная OG | `public/og-default.png`, 1200×630 |
 | размеры | `width`/`height` заданы всегда; LCP-картинка — `fetchpriority="high"` без `lazy`, остальные — `lazy` + `decoding="async"` |
 | `alt` | обязателен; декоративная миниатюра рядом с заголовком-ссылкой — `alt=""` |

@@ -2,6 +2,7 @@
 import { Picture } from 'astro:assets'
 import { formatDate, isoDate, t } from '@/shared/i18n'
 import { Heading } from '@/shared/ui/heading'
+import { SLOT_SIZES } from '@/shared/ui/section'
 import type { Post } from '../api/queries'
 import DraftBadge from './draft-badge.astro'
 import TagList from './tag-list.astro'
@@ -14,7 +15,8 @@ interface Props {
 
 const { post, titleId } = Astro.props
 const { locale, data } = post
-// Обложка — LCP-элемент записи: грузится сразу и с приоритетом, размеры заданы.
+// Обложка — LCP-элемент записи: грузится сразу и с приоритетом, размеры заданы; слот — колонка чтения
+// записи. Без AVIF браузер и поиск по картинкам берут WebP, а не тяжёлый PNG.
 const cover = data.cover && data.coverAlt ? { src: data.cover, alt: data.coverAlt } : undefined
 ---
 
@@ -24,8 +26,9 @@ const cover = data.cover && data.coverAlt ? { src: data.cover, alt: data.coverAl
       src={cover.src}
       alt={cover.alt}
       widths={[480, 800, 1200]}
-      sizes="(min-width: 40rem) 40rem, 100vw"
-      formats={['avif', 'webp']}
+      sizes={SLOT_SIZES.reading}
+      formats={['avif']}
+      fallbackFormat="webp"
       loading="eager"
       fetchpriority="high"
       decoding="async"
