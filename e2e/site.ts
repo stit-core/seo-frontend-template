@@ -52,6 +52,20 @@ export function freePort(): Promise<number> {
 // Все prerendered-страницы — ровно то, что статик-хендлер отдаёт в контейнере.
 export const prerenderedPaths = (): string[] => builtPages(clientDir)
 
+// CSP prerendered-страниц, которую сборка оставляет статик-хендлеру: запись `dist/_headers.json` на путь.
+export function staticCsp(): Map<string, string | undefined> {
+  const records = JSON.parse(readFileSync(resolve(root, 'dist/_headers.json'), 'utf8')) as {
+    pathname: string
+    headers: { key: string; value: string }[]
+  }[]
+  return new Map(
+    records.map(({ pathname, headers }) => [
+      pathname,
+      headers.find(({ key }) => key.toLowerCase() === 'content-security-policy')?.value,
+    ]),
+  )
+}
+
 // Индексируемые страницы сборки: prerendered минус закрытые noindex. Ровно их называет карта сайта.
 export function indexablePaths(): string[] {
   return prerenderedPaths().filter((path) => {

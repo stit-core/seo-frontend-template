@@ -44,11 +44,31 @@ export default defineConfig({
     // HTTP-контракт прод-сборки — шаг pnpm check: браузер не нужен, только `request`.
     { name: 'http', testDir: './http', testIgnore: 'staging.spec.ts' },
     { name: 'staging', testDir: './http', testMatch: 'staging.spec.ts', use: { baseURL: staging } },
-    // Браузерный остаток — обязательный шаг /release: axe в двух темах, тема, форма без JS.
+    // Браузерный набор — обязательный шаг /release. Десктоп — все спеки; телефон — axe и раскладка
+    // шаблонов страниц; WebKit — ролик-петля: Safari выбирает и качает ролик по-своему.
     {
       name: 'browser',
       testDir: './browser',
       use: { ...devices['Desktop Chrome'], trace: 'retain-on-failure' },
+    },
+    {
+      name: 'phone',
+      testDir: './browser',
+      testMatch: ['a11y.spec.ts', 'layout.spec.ts'],
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 390, height: 844 },
+        deviceScaleFactor: 3,
+        isMobile: true,
+        hasTouch: true,
+        trace: 'retain-on-failure',
+      },
+    },
+    {
+      name: 'webkit',
+      testDir: './browser',
+      testMatch: 'loop-video.spec.ts',
+      use: { ...devices['Desktop Safari'], trace: 'retain-on-failure' },
     },
   ],
   webServer: [

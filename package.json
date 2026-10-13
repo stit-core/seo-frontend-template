@@ -19,7 +19,7 @@
     "test": "vitest run --coverage",
     "test:watch": "vitest",
     "test:http": "playwright test -c e2e/playwright.config.ts --project http --project staging",
-    "test:e2e": "pnpm build && playwright test -c e2e/playwright.config.ts --project browser",
+    "test:e2e": "pnpm build && playwright test -c e2e/playwright.config.ts --project browser --project phone --project webkit",
     "steiger": "steiger src",
     "check:gate": "node scripts/check-gate.mjs",
     "check:content": "node scripts/check-content.mjs",

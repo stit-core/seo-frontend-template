@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { bodyOf, headTags } from '../../scripts/lib/html.mjs'
 import { SITE_ORIGIN_PLACEHOLDER } from '../../src/shared/config/runtime.ts'
-import { cspProblems, edgeHeadersIn, indexablePaths, prerenderedPaths } from '../site'
+import { cspProblems, edgeHeadersIn, indexablePaths, prerenderedPaths, staticCsp } from '../site'
 
 // Голый хост плейсхолдера: ловит и полный URL, и упоминание без схемы.
 const PLACEHOLDER = new URL(SITE_ORIGIN_PLACEHOLDER).hostname
@@ -12,11 +12,12 @@ const GOOGLEBOT = {
 }
 
 test.describe('prerendered-страницы — как их отдаёт контейнер', () => {
-  test('каждая страница сборки: 200 от статик-хендлера, CSP без заголовков edge, origin проштампован, тело без своего origin', async ({
+  test('каждая страница сборки: 200 от статик-хендлера, CSP — запись своего пути, без заголовков edge, origin проштампован, тело без своего origin', async ({
     request,
     baseURL,
   }) => {
     const indexable = new Set(indexablePaths())
+    const csp = staticCsp()
     for (const path of prerenderedPaths()) {
       const response = await request.get(path)
       expect(response.status(), path).toBe(200)
@@ -27,7 +28,13 @@ test.describe('prerendered-страницы — как их отдаёт кон�
       // Прод-профиль: индексацию закрывать нечему.
       expect(response.headers()['x-robots-tag'], path).toBeUndefined()
       const html = await response.text()
-      // CSP статики — из dist/_headers.json сборки: её ставит статик-хендлер, а не приложение.
+      // CSP статики — из dist/_headers.json сборки: её ставит статик-хендлер, а не приложение. Запись он
+      // подбирает по вхождению пути (`/` получает запись `/500`): страница со своей записью — свой
+      // инлайн-стиль или источник — получила бы чужую CSP, и браузер заблокировал бы её стиль.
+      expect(
+        response.headers()['content-security-policy'],
+        `${path}: CSP — запись своего пути`,
+      ).toBe(csp.get(path))
       expect(cspProblems(html, response.headers()['content-security-policy']), path).toEqual([])
       expect(edgeHeadersIn(response.headers()), path).toEqual([])
       // Клоакинга нет: бот получает ровно тот же HTML, что и человек.
