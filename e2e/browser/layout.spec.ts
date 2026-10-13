@@ -23,8 +23,9 @@ const TOUCH_MIN = 44
 //   роль ширины или всё окно; роль браузер читает утилитой слоя на пробном элементе;
 // - разорванные слова заголовков: слово рвётся (overflow-wrap: anywhere), только когда не помещается в
 //   строку, а заголовку при обычном кегле до этого не доходит;
-// - цели: что посетитель видит и нажимает, кроме ссылки внутри предложения (исключение WCAG 2.5.8: в её
-//   блоке есть слова вне неё, размер задаёт строка текста), — бокс, высота её текста и заливка.
+// - цели: что посетитель видит и нажимает, — бокс, высота его текста и заливка. Кроме ссылки внутри
+//   предложения (исключение WCAG 2.5.8: размер задаёт строка текста): она строчная, и в её блоке есть
+//   слова вне неё. Элемент флекса или грида браузер делает блочным — он не в строке текста.
 function layout() {
   const root = document.documentElement
   const width = root.clientWidth
@@ -88,6 +89,7 @@ function layout() {
 
   const words = (text: string) => text.match(/[\p{L}\p{N}]+/gu)?.length ?? 0
   const inSentence = (element: Element) => {
+    if (!getComputedStyle(element).display.startsWith('inline')) return false
     let block = element.parentElement
     while (block && getComputedStyle(block).display.startsWith('inline')) {
       block = block.parentElement
