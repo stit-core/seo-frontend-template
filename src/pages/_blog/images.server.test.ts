@@ -24,6 +24,13 @@ describe('картинки превью и разметки', () => {
     })
   })
 
+  // Безопасная зона мастера — его центр: кадр выбирает не детектор заметности, а правило автора.
+  it('каждый кадр — по центру мастера', async () => {
+    const paths = [(await ogImageOf(master, 'Обложка')).path]
+    for (const { path } of await articleImagesOf(master)) paths.push(path)
+    for (const path of paths) expect(requestOf(path)).not.toHaveProperty('position')
+  })
+
   it('кадры разметки статьи — 16:9, 4:3 и 1:1 из того же мастера, JPEG, без растяжения', async () => {
     const frames = await articleImagesOf(master)
     expect(frames.map(({ width, height }) => width / height)).toEqual([16 / 9, 4 / 3, 1])
