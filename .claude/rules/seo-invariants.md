@@ -193,8 +193,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   hreflang — на своём origin, у картинок и роликов размеры, картинка над h1 — не lazy и с
   `fetchpriority="high"`, фолбэк `<picture>` — не PNG-производная мастера, источник `<source media>`
   другой пропорции — со своими размерами, и он достижим, у ролика — постер, по кнопке — `preload`
-  `none` или `metadata`, с автозапуском — `preload="none"`, источники под условием движения, ниже h1 —
-  `loading="lazy"`, над h1 — без него и с preload постера `fetchpriority="high"`, у `@font-face` —
+  `none` или `metadata`, с автозапуском — `loading="lazy"`, `preload="none"` и источники под условием
+  движения, над h1 — ещё и preload постера с `fetchpriority="high"`, у `@font-face` —
   `font-display` swap/fallback/optional, и он только от Fonts API по списку шрифтов (семейство списка в
   `<style>` страницы; в CSS сборки — нет), preload шрифтов — не больше двух;
   страниц черновиков нет; сборка против источника — страница у каждой опубликованной записи и

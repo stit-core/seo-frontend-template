@@ -23,8 +23,8 @@
 // - тело: ни плейсхолдера origin, ни HTML-комментариев; у картинок размеры, картинка над h1 (LCP) —
 //   не lazy и с fetchpriority; фолбэк <picture> — не PNG-производная мастера; источник <source media>
 //   другой пропорции — со своими размерами, и он достижим; ролик — с постером, по кнопке — preload none или metadata, с автозапуском —
-//   preload="none" и только под условием движения, ниже h1 — ленивый, над h1 (первый экран) — сразу, а его
-//   постер — preload с fetchpriority;
+//   ленивый, preload="none" и только под условием движения, над h1 (первый экран) — с preload постера и
+//   fetchpriority;
 //   ресурсов с чужих origin и data:-адресов нет (и в style="", и в CSS сборки): CSP их не пропустит;
 //   @font-face — с font-display swap/fallback/optional;
 // - шрифты — Fonts API по списку проекта: @font-face — семейства списка в <style> страницы (в CSS
@@ -364,11 +364,11 @@ function checkPictures(where, body) {
 }
 
 // Ролик: постер — кадр до загрузки. Ролик по кнопке до запуска качает самое большее метаданные. Автозапуск
-// сильнее preload: запущенный ролик качается целиком, — поэтому ролик с автозапуском — с `preload="none"`
-// (снятый автозапуск, выбор «меньше», оставляет его ждать, не качаясь) и только при разрешённом движении: у
-// каждого источника условие prefers-reduced-motion: no-preference, у самого <video> адреса нет, — при
-// сокращённом движении браузер не выбирает ни одного. Ниже h1 он ленивый (браузер запускает его у экрана);
-// над h1 (между началом <main> и h1) — первый экран: стартует сразу, а постер, кандидат в LCP, грузится с
+// сильнее preload: запущенный ролик качается целиком, — поэтому ролик с автозапуском ленивый (браузер
+// запускает его у экрана, остров к тому времени снимает автозапуск при «меньше»), с `preload="none"` (снятый
+// автозапуск оставляет его ждать, не качаясь) и только при разрешённом движении: у каждого источника условие
+// prefers-reduced-motion: no-preference, у самого <video> адреса нет, — при сокращённом движении браузер не
+// выбирает ни одного. Над h1 (между началом <main> и h1) — первый экран: постер, кандидат в LCP, грузится с
 // приоритетом — preload.
 function checkVideos(where, html) {
   const preloaded = new Set(
@@ -411,19 +411,13 @@ function checkVideos(where, html) {
       )
     }
     const firstScreen = match.index > mainAt && match.index < h1At
-    if (firstScreen && video.get('loading') === 'lazy') {
-      fail(
-        where,
-        `<video autoplay> над h1 (первый экран) с loading="lazy": старт петли и её постер ждут раскладки — ${name}`,
-      )
-    }
     if (firstScreen && !preloaded.has(video.get('poster'))) {
       fail(
         where,
         `<video autoplay> над h1 (первый экран) без preload постера с fetchpriority="high": постер — кандидат в LCP — ${name}`,
       )
     }
-    if (!firstScreen && video.get('loading') !== 'lazy') {
+    if (video.get('loading') !== 'lazy') {
       fail(
         where,
         `<video autoplay> без loading="lazy": запущенный ролик качается целиком с загрузки страницы, где бы ни стоял — ${name}`,

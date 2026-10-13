@@ -48,18 +48,16 @@ describe('LoopVideo', () => {
     expect(video?.hasAttribute('src')).toBe(false)
   })
 
-  // Петля первого экрана ленивой загрузкой ждала бы раскладки, а с ней и постер — кандидат в LCP. Приоритет
-  // постеру даёт preload: своего fetchpriority у него нет.
-  it('роль слота: петля первого экрана — сразу, постер — с приоритетом; без роли — лениво и без preload', async () => {
+  // Постер петли первого экрана — кандидат в LCP: приоритет ему даёт preload, своего fetchpriority у постера
+  // нет. Сама петля ленивая и там: запущенная сразу, она качалась бы и при «меньше».
+  it('роль слота: у петли первого экрана постер — с приоритетом, петля ленивая; без роли — без preload', async () => {
     const first = parseHtml(await render({ lcp: true }))
-    expect(first.querySelector('video')?.hasAttribute('loading')).toBe(false)
+    expect(first.querySelector('video')?.getAttribute('loading')).toBe('lazy')
     const preload = first.querySelector('link')
     expect(
       ['rel', 'as', 'href', 'fetchpriority'].map((name) => preload?.getAttribute(name)),
     ).toEqual(['preload', 'image', '/_astro/loop.avif', 'high'])
-    const rest = parseHtml(await render())
-    expect(rest.querySelector('video')?.getAttribute('loading')).toBe('lazy')
-    expect(rest.querySelector('link')).toBeNull()
+    expect(parseHtml(await render()).querySelector('link')).toBeNull()
   })
 
   it('при системном сокращении движения браузер не выбирает ни одного ролика', async () => {
