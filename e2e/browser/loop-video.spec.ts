@@ -125,18 +125,27 @@ test.describe('система просит сократить движение',
   })
 })
 
-// WebKit начинает загрузку петли с автозапуском ещё при разборе: атрибута loading у видео он не знает, и
-// остров обрывает её только первым кадром — сколько байт успеет прийти, решает сеть (цена — rule shared-ui).
-test('выбор «меньше» — ни байта ролика; «как в системе» — петля первого экрана качается', async ({
+// «Меньше» снимает автозапуск — петли стоят. WebKit начинает загрузку петли с автозапуском ещё при разборе:
+// атрибута loading у видео он не знает, и остров обрывает её только первым кадром — сколько байт успеет
+// прийти, решает сеть (rule shared-ui). Поэтому состояние петель судят оба движка, байты — Chromium.
+test('выбор «меньше» — петли стоят, ни байта ролика; «как в системе» — петля первого экрана качается', async ({
   page,
   browserName,
 }) => {
-  test.skip(browserName === 'webkit', 'WebKit качает петлю до первого кадра острова')
   await page.addInitScript(() => localStorage.setItem('motion', 'reduced'))
   const videos = videoResponses(page)
   await page.goto(site)
   await settled(page)
-  expect(videos).toEqual([])
+  const loops = await page
+    .locator('video')
+    .evaluateAll((all: HTMLVideoElement[]) =>
+      all.map(({ autoplay, paused }) => ({ autoplay, paused })),
+    )
+  expect(loops).toEqual([
+    { autoplay: false, paused: true },
+    { autoplay: false, paused: true },
+  ])
+  if (browserName !== 'webkit') expect(videos).toEqual([])
   const first = loaded(page, 'pervyy-ekran')
   await page.getByRole('button', { name: t('ru', 'motion.system') }).click()
   await first
