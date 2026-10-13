@@ -28,8 +28,9 @@ status: draft
 | Дисциплина | `lefthook`, `@commitlint/*` | 2 / 21 |
 
 Мажор (у 0.x — минор), на котором шаблон держит пакет; в `package.json` — точная версия.
-Runtime-зависимостей у образа ровно столько: выход Astro не self-contained — `entry.mjs`
-импортирует `astro` и `zod`, обработка картинок — `sharp`.
+Пакеты `dependencies` едут в образ: выход Astro не self-contained — серверный бандл импортирует
+`zod` и `@astrojs/rss`, `nodemailer` и `@sentry/node` — динамически; `sharp` кодирует картинки на
+сборке.
 
 TypeScript — `~6.0`, не 7: `@astrojs/check` (шаг `typecheck`) TypeScript 7 не поддерживает, а
 typescript-eslint объявляет peer `<6.1` — с 7 падают `typecheck`, `lint` и `check:gate`. Переход —

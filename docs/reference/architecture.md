@@ -18,11 +18,11 @@ app → pages → widgets → features → entities → shared
 | слой | что лежит |
 |---|---|
 | `app/` | документ-шелл `layouts/document.astro`, `middleware` (лог, адреса `redirects.yaml`, заголовки), токены ДС и слой сопоставления `styles/{tokens,index}.css`, единственная точка аналитики |
-| `pages/` | роутинг: 1 файл = 1 URL; секции страниц — рядом, в `_<name>/` |
+| `pages/` | роутинг: 1 файл = 1 URL; файлы страницы (разметка и модель) — рядом, в `_<name>/` |
 | `widgets/` | блоки каркаса и переиспользуемые блоки: шапка, подвал, список записей, крошки |
 | `features/` | пользовательские сценарии: форма обратной связи, предпочтения посетителя (тема и движение) |
 | `entities/` | доменные сущности: коллекция контента `post` (с текстами внутри слайса), реквизиты `company`, реестр авторов `author` |
-| `shared/` | инфраструктура: config, i18n, seo, redirects, observability, antispam, lib и примитивы страницы `ui` — секция, заголовок, сетка «термин — описание» |
+| `shared/` | инфраструктура: config, i18n, seo, redirects, observability, antispam, lib и примитивы страницы `ui` — секция, заголовок, сетка «термин — описание», медиа (готовая картинка и ролик-петля) |
 
 ### Единственный импорт вверх
 
@@ -82,10 +82,10 @@ src/
 ├─ app/           layouts/document.astro · middleware/ · styles/{tokens,index}.css · analytics/
 ├─ pages/         index · about · contacts/{index,spasibo} · legal/privacy · blog/**
 │                 en/** · 404 · 500 · now · healthz · robots.txt · rss.xml
-│                 [key].txt · api/contact · секции _about/ _blog/ _contacts/
+│                 [key].txt · api/contact · файлы страниц _about/ _blog/ _contacts/
 │                 · тесты маршрутов _tests/
 ├─ widgets/       site-header · site-footer · post-list · breadcrumbs
-├─ features/      contact-form · theme
+├─ features/      contact-form · preferences
 ├─ entities/      post (content/{ru,en}/*.md + covers, model, api, lib, ui) · company · author
 └─ shared/        config · i18n · seo · redirects · observability · antispam · lib
                   · ui/{section,heading,term-list,media}

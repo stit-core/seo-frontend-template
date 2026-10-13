@@ -76,13 +76,13 @@ origin штампуется при старте.
 | `pnpm format:check` | `biome format` + `prettier --check "src/**/*.astro"` |
 | `pnpm test` | Vitest: проекты `astro` (node, Container API) и `dom` (happy-dom), покрытие широкого объёма с порогами |
 | `pnpm test:http` | HTTP-набор `e2e/http/` после build: prod-сервер как контейнер (копия сборки, `entrypoint.sh` + `server.mjs`) на свободных портах, профили прод и staging |
-| `pnpm test:e2e` | build + браузерный набор `e2e/browser/`: axe в двух темах, тема, форма без JS — обязательный шаг `/release` |
+| `pnpm test:e2e` | build + браузерный набор `e2e/browser/` на профилях десктопа и телефона (петля — ещё в WebKit): axe в обеих темах, раскладка шаблонов страниц, переход страниц, петля, тема, форма без JS; кадры шаблонов — `test-results/frames/` — обязательный шаг `/release` |
 | `pnpm steiger` | структурный линтер FSD |
 | `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome и свои скрипты гейта (`seo:check`, `check:links`, `check:content`, `plan:check`) — ровно нарушениями из `expected.json`, скрипт релиза `indexnow` — ровно его исходами на локальной заглушке; guard-хук — отказ каждому обходу из `guard.json` |
 | `pnpm check:content` | контент-гейт до build: схема каждого `.md`, даты не из будущего, тело (без скрытой разметки), переводы, ссылки, `content/redirects.yaml`, строка карты `rendering.md` у каждого on-demand маршрута |
 | `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` (и абсолютные URL своего сайта) существуют и ведут на каноническую форму адреса; ссылки без схемы на другой хост (`//contacts`) нет |
-| `pnpm seo:check` | после build: у каждой страницы `dist/client` title/description (уникальные, в бюджетах, не общие), self-canonical, `lang`, один h1, OG с превью ссылки 1200×630, первая иконка — PNG от 48 px, hreflang у каждой пары переводов, JSON-LD = видимое, организация одна (`@id`, имя), карта сайта = индексируемые страницы сборки; `noindex`, чужие ресурсы и типы JSON-LD — только по списку `scripts/lib/site-policy.mjs`, острова — по реестру `src/shared/config/islands.ts`: на своих страницах и в бюджете (brotli); теги индексируются от порога записей |
-| `pnpm size` | бюджеты `.size-limit.cjs` в brotli: CSS и HTML самой тяжёлой страницы сборки |
+| `pnpm seo:check` | после build: у каждой страницы `dist/client` title/description (уникальные, в бюджетах, не общие), self-canonical, `lang`, один h1, OG с превью ссылки 1200×630, первая иконка — PNG от 48 px, hreflang у каждой пары переводов, JSON-LD = видимое, организация одна (`@id`, имя), карта сайта = индексируемые страницы сборки; `noindex`, чужие ресурсы и типы JSON-LD — только по списку `scripts/lib/site-policy.mjs`, острова — по реестру `src/shared/config/islands.ts`: на своих страницах и в бюджете (brotli); картинки и ролики — с размерами, над h1 — с приоритетом (у петли — preload постера), шрифты — Fonts API по списку; теги индексируются от порога записей; серверный бандл — без конвейера картинок (`sharp`) |
+| `pnpm size` | бюджеты `.size-limit.cjs` в brotli: CSS сборки, HTML самой тяжёлой страницы и шрифты ДС (строка — с первым файлом); серверный бандл — без сжатия |
 | `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
 | `pnpm ttfb <origin> <path…>` | TTFB запущенного сервера: медиана/p90 20 запросов (`scripts/ttfb.mjs`) |
 | `pnpm indexnow <origin> [карта-до.xml] --key <ключ>` | после выката: адреса, которые изменил релиз, — новые, изменённые и удалённые против карты до выката; ключ сверяется с живым `/<ключ>.txt`; сухой прогон, отправка — `--send` (`scripts/indexnow.mjs`, шаг `/release`) |
@@ -103,7 +103,7 @@ origin штампуется при старте.
 | env, `SITE_URL`, плейсхолдер и штамповка, что из env попадает в HTML | rule `env-local` |
 | Режимы рендера, карта маршрутов, кеш-заголовки, канон `astro.config.ts`, рецепт D | `docs/reference/rendering.md` + rule `render-safety` |
 | Тесты: два проекта Vitest, Container API, axe, Playwright, покрытие и пороги | rule `tests-pipeline` |
-| UI на токенах, шрифты ДС (Fonts API по списку), остров предпочтений (тема и движение), картинки, ролики и LCP, scoped-CSS, 0 JS | rule `shared-ui` |
+| UI на токенах: облик — роли и проза ДС (и для плагина `frontend-design`), страница из секций, шрифты ДС (Fonts API по списку), остров предпочтений (тема и движение), картинки, ролики и LCP, scoped-CSS, 0 JS | rule `shared-ui` |
 | Форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка | rule `forms-antispam` |
 | Deployment: образ, entrypoint, `server.mjs`, env-контракт, требования к прокси | `docs/reference/deployment.md` |
 | SEO: head через `DocumentLayout`, hreflang, OG, JSON-LD, `robots.txt`/`sitemap.xml`/фиды/ключ IndexNow, staging в три контура, гейты `seo:check` и HTTP-набор | rule `seo-invariants` + `docs/reference/seo.md` |

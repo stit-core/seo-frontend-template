@@ -13,7 +13,7 @@ status: draft
 |---|---|
 | источник | файлы `src/pages` — 1 файл = 1 URL; подпапки = сегменты URL |
 | параметрические | `[slug].astro` + `getStaticPaths()` из контента |
-| секции страниц | `src/pages/_<name>/` — префикс `_` вне роутинга |
+| файлы страниц | `src/pages/_<name>/` — разметка и модель страницы, префикс `_` вне роутинга |
 | формат сборки | `build.format: 'directory'` → `/about/index.html`, адрес без `.html` |
 | хвостовой слеш | без слеша (`TRAILING_SLASH`, `shared/redirects/table.ts` — его же получает `trailingSlash` Astro): `/blog/` → 301 `/blog` |
 | регистр | не нормализуется — URL к нему чувствительны, canonical = реальный адрес |
@@ -25,7 +25,7 @@ status: draft
 | `ru` | нет (дефолтная) | `/blog/<slug>` |
 | `en` | `/en` | `/en/blog/<slug>` |
 
-Физические каталоги `src/pages/en/**`; ru/en-обёртки делят одну разметку секции.
+Физические каталоги `src/pages/en/**`; ru/en-обёртки делят одну разметку страницы.
 Авторедиректов по `Accept-Language` нет — язык выбирает человек ссылкой в шапке.
 
 ## Карта страниц
@@ -67,7 +67,7 @@ status: draft
 ## Generates
 
 - `src/pages/**` — файлы маршрутов и `getStaticPaths()`
-- `src/pages/_<name>/` — секции страниц
+- `src/pages/_<name>/` — файлы страниц: разметка, общая для локалей, и модель
 - `content/redirects.yaml`
 - строки в `rendering.md § Карта маршрутов`; карту сайта пишет сборка по страницам `dist/client`
 - `src/shared/i18n/dict.ts` — подписи навигации

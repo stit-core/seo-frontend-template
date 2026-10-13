@@ -64,7 +64,7 @@
 **Секции**: `Как устроены маршруты`, `Локали в URL`, `Карта страниц`, `Редиректы и
 нештатные коды`, `Навигация`, `Generates`.
 
-**Generates**: файлы `src/pages/**` и `getStaticPaths()`, секции `src/pages/_<name>/`,
+**Generates**: файлы `src/pages/**` и `getStaticPaths()`, файлы страниц `src/pages/_<name>/`,
 `content/redirects.yaml`, подписи навигации в `src/shared/i18n/dict.ts`; карту сайта пишет сборка
 по страницам `dist/client`.
 

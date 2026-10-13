@@ -4,8 +4,8 @@
 
 ### Шаблон индексируемого сайта: static-first, SSR по необходимости
 
-Astro 7 + Node-адаптер, Feature-Sliced Design под линтером, ноль JavaScript на
-контентных страницах, один Docker-образ на все среды. Приложение за логином —
+Astro 7 + Node-адаптер, Feature-Sliced Design под линтером, JavaScript — только
+острова по реестру, один Docker-образ на все среды. Приложение за логином —
 это [`spa-frontend-template`](https://git.stit.tech/stit-core/spa-frontend-template).
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-2563eb)](LICENSE)
@@ -59,13 +59,13 @@ pnpm lint             # Biome + ESLint (границы FSD — здесь)
 pnpm format:check     # Biome + Prettier для *.astro
 pnpm test             # Vitest: unit + Container API (.astro) + axe, покрытие с порогами
 pnpm test:http        # после build: HTTP-набор на prod-сервере, профили прод и staging
-pnpm test:e2e         # build + браузерный набор: axe в двух темах, тема, форма без JS
+pnpm test:e2e         # build + браузерный набор: axe, раскладка, переход, петля, тема, форма без JS
 pnpm steiger          # структурный линтер FSD
 pnpm check:gate       # негативные фикстуры обязаны валить линтеры и скрипты гейта
 pnpm check:content    # контент-гейт: схема .md, даты, тело без скрытой разметки, переводы, ссылки, redirects.yaml
 pnpm check:links      # после build: все внутренние ссылки в dist/client существуют
 pnpm seo:check        # после build: head, сниппет, hreflang, JSON-LD = видимое, острова и ресурсы каждой страницы
-pnpm size             # бюджеты CSS / HTML
+pnpm size             # бюджеты: CSS, HTML самой тяжёлой страницы, шрифты ДС, серверный бандл
 pnpm kin:diff         # сверка обвязки с ../spa-frontend-template (advisory)
 pnpm ttfb <origin> …  # TTFB запущенного сервера: медиана/p90 20 запросов
 pnpm indexnow <origin> [карта-до.xml] --key <ключ>   # IndexNow после выката: адреса, которые изменил релиз
@@ -92,7 +92,7 @@ src/app/          layouts/document.astro (<head> из props: SeoHead + JSON-LD),
 src/pages/        роутинг Astro = слой pages: index, about, contacts/{index,spasibo},
                   legal/privacy, blog/{index,[slug],page/[page],tag/[tag]}, en/… , 500,
                   rss.xml, en/rss.xml (prerender); 404, healthz, now, robots.txt, [key].txt,
-                  api/contact (on-demand); секции страниц — _blog/, _about/, _contacts/;
+                  api/contact (on-demand); файлы страниц — _blog/, _about/, _contacts/;
                   тесты маршрутов и страниц — _tests/
 src/widgets/      site-header, site-footer, post-list, breadcrumbs (видимые крошки)
 src/features/     contact-form (форма без JS и её обработчик), preferences (остров предпочтений:
@@ -104,7 +104,7 @@ src/shared/       config (runtime env, Zod; идентичность сайта)
                   seo (absoluteUrl, hreflang, SeoHead, JSON-LD, robots/sitemap/rss), antispam
                   (шов капчи), observability (JSON-лог с порогом LOG_LEVEL, Sentry по DSN), ui
 src/{content.config,middleware,env.d}.ts   навязанные Astro entry — тонкие входы
-docker/           Dockerfile (3 стадии), entrypoint.sh + stamp.mjs (штамповка SITE_URL), server.mjs
+docker/           Dockerfile (4 стадии), entrypoint.sh + stamp.mjs (штамповка SITE_URL), server.mjs
 e2e/              Playwright на prod-сборке: http/ — в гейте, browser/ — в /release
 scripts/          гейты (check-gate, check-content, check-links, seo-check, lib/), validate-plan,
                   pre-push, kin-diff, ttfb, indexnow, geo-probe, bot-sources, accept-image
@@ -119,7 +119,7 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 `draft`, обложка с `alt`, `author` — id из реестра авторов). Язык задаёт каталог; переводы
 связаны `translationKey`, непереведённое под `/en/` — 404, черновики видны только в
 `astro dev`. Списки — `/blog`, `/blog/page/N`, `/blog/tag/<tag>` (страница тега индексируется от
-трёх записей локали, ниже — `noindex` и вне карты сайта); всё prerender, 0 JS.
+трёх записей локали, ниже — `noindex` и вне карты сайта); всё prerender.
 Инварианты и гейты — rule `.claude/rules/content-invariants.md`.
 
 ## Режимы рендера
@@ -191,7 +191,7 @@ shutdown под Traefik и отказывается стартовать, есл
 приоритетом), готовые файлы ДС и ролик-петля — примитивы `shared/ui/media` (кадр под устройство,
 роль слота, ролик — только при разрешённом движении). Скрипты, чужие ресурсы, размеры картинок и
 роликов, кадры устройства и приоритет LCP каждой страницы проверяет `seo:check`, CSP — HTTP-набор,
-сырые `<img>`, `<video>` и цвета мимо токенов — ESLint, доступность и
+сырые `<img>`, `<video>` и цвета мимо токенов — ESLint, доступность, раскладку и
 нарушения CSP — браузерный набор в обеих темах на `/release`.
 
 ## Из шаблона — в свой сайт

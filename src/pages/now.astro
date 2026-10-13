@@ -1,6 +1,6 @@
 ---
 // Режим dynamic: время сервера меняется на каждый запрос, поэтому страница рендерится
-// on-demand и не кешируется. Единственная такая HTML-страница reference-набора.
+// on-demand и не кешируется.
 export const prerender = false
 
 import DocumentLayout from '@/app/layouts/document.astro'
@@ -41,12 +41,11 @@ Astro.response.headers.set('cache-control', 'private, no-store')
       Почти все страницы собираются один раз на сборке и отдаются Node-процессом как файлы. Эта —
       исключение: у неё стоит <code>export const prerender = false</code>, и она рендерится на
       каждый запрос, поэтому время выше — свежее. Так же устроены только служебные маршруты:
-      проверка живости процесса, страница 404, robots.txt, карта сайта, фиды, обработчик формы.
+      проверка живости процесса, страница 404, robots.txt, файл ключа IndexNow, обработчик формы.
     </p>
     <p class="mt-md text-body">
       Ответ уходит с <code>Cache-Control: private, no-store</code> и <code>noindex</code>: живая
-      страница не для общих кешей и не для поиска. JavaScript здесь, как и на остальных страницах,
-      нет.
+      страница не для общих кешей и не для поиска.
     </p>
   </Section>
 </DocumentLayout>

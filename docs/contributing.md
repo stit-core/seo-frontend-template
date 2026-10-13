@@ -43,7 +43,7 @@
 | `render-safety` | три момента исполнения: сборка · запрос · остров |
 | `seo-invariants` | head через layout, hreflang, JSON-LD, robots/sitemap/фиды, гейты |
 | `forms-antispam` | форма без JS, антиспам-лестница, согласие на ПДн, доставка |
-| `shared-ui` | токен-слой, тема, картинки, 0 JS по умолчанию |
+| `shared-ui` | облик на ролях ДС, страница из секций, шрифты, тема и движение, картинки и ролики, 0 JS по умолчанию |
 | `env-local` | env только runtime, `SITE_URL` и штамповка, что из env попадает в HTML, секреты |
 | `tests-pipeline` | два проекта Vitest, Container API, axe, Playwright, покрытие и пороги, состав гейта |
 | `comments` | комментарии только про «зачем», по-русски |

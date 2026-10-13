@@ -22,10 +22,11 @@ app → pages → widgets → features → entities → shared
 
 1 файл = 1 URL: `index.astro` → `/`, `en/index.astro` → `/en`, `healthz.ts` → `/healthz`.
 Подпапки — сегменты URL, не слайсы (правила слайсов Steiger на `pages` выключены).
-Секции одной страницы — рядом, в `src/pages/_<name>/` (префикс `_` вне роутинга);
-widget — только при ≥ 2 страницах. Server route — `src/pages/<name>.ts` с
-`export const prerender = false`. `src/pages/_image.ts` — не секция, а обработчик маршрута
-`/_image`, который вводит сам Astro (`image.endpoint` в `astro.config.ts`).
+Файлы одной страницы — её разметка, общая для локалей, и `.ts`-модель — рядом, в
+`src/pages/_<name>/` (префикс `_` вне роутинга); widget — только при ≥ 2 страницах. Server route —
+`src/pages/<name>.ts` с `export const prerender = false`. `src/pages/_image.ts` — не файл
+страницы, а обработчик маршрута `/_image`, который вводит сам Astro (`image.endpoint` в
+`astro.config.ts`).
 
 ## Навязанные Astro точки входа
 
@@ -89,7 +90,7 @@ Frontmatter `.astro` и модули `.ts` исполняются на серв�
 | каркас сайта, список записей, хлебные крошки (видимые; `BreadcrumbList` из того же массива печатает layout в `<head>`) | `widgets/site-header`, `widgets/site-footer`, `widgets/post-list`, `widgets/breadcrumbs` |
 | коллекция контента: `.md`, схема, запросы, карточка/статья | `entities/post/{content,model,api,lib,ui}` |
 | реестр авторов и подпись (подпись ставит страница в слот статьи: слайсы одного слоя не импортируют друг друга) | `entities/author/{model,ui}` |
-| секции страниц блога, их логика, `getStaticPaths` и фид (ru/en делят разметку, логику, пути и фид) | `src/pages/_blog/*.astro`, `src/pages/_blog/sections.ts`, `src/pages/_blog/static-paths.ts`, `src/pages/_blog/feed.ts`, кадры обложки для превью и разметки — `src/pages/_blog/images.ts` (сборочный модуль вне барреля `shared/seo`: on-demand маршрутам конвейер картинок не нужен) |
+| разметка страниц блога, их модель, `getStaticPaths` и фид (ru/en делят разметку, модель, пути и фид) | `src/pages/_blog/*.astro`, `src/pages/_blog/sections.ts`, `src/pages/_blog/static-paths.ts`, `src/pages/_blog/feed.ts`, кадры обложки для превью и разметки — `src/pages/_blog/images.ts` (сборочный модуль вне барреля `shared/seo`: on-demand маршрутам конвейер картинок не нужен) |
 | SEO-маршруты: on-demand `robots.txt` и ключ IndexNow, prerendered фиды | `src/pages/{robots.txt,[key].txt}.ts`, `src/pages/{rss.xml,en/rss.xml}.ts` |
 | карта сайта — файл сборки по страницам `dist/client` | интеграция `sitemap-from-build` в `astro.config.ts` + `scripts/lib/sitemap.mjs` (формат — `shared/seo/sitemap.ts`) |
 

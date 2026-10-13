@@ -44,7 +44,7 @@
 
 ```bash
 pnpm check      # gate — состав: .claude/rules/tests-pipeline.md § Gate
-pnpm test:e2e   # браузерный набор (axe, тема, форма без JS) — обязательный шаг /release
+pnpm test:e2e   # браузерный набор (axe, раскладка, переход, петля, тема, форма без JS) — обязательный шаг /release
 ```
 
 - **Conventional Commits** (commitlint): `<type>(<scope>)?: <subject>`, subject ≤ 72.

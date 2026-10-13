@@ -9,7 +9,7 @@ Reference-набор шаблона — **живой образец**, а не �
 ## Что остаётся в любом режиме
 
 `src/pages/{index,about,contacts/*,legal/privacy,404,500,now,healthz,robots.txt,[key].txt,api/contact}`,
-секции `_about/`, `_contacts/`, `src/features/{contact-form,theme}`,
+файлы страниц `_about/`, `_contacts/`, `src/features/{contact-form,preferences}`,
 `src/entities/company`, `src/widgets/{site-header,site-footer,breadcrumbs}`,
 `src/shared/**`, `src/app/**`, `.gate-fixtures/`, `docker/`, `scripts/`, гейты. Фикстуры гейта на
 гейт не правятся ни в каком режиме: у мини-проектов `.gate-fixtures/` свой реестр коллекций, и
@@ -19,8 +19,8 @@ Reference-набор шаблона — **живой образец**, а не �
 `/now` — образец режима `dynamic`; если проекту она не нужна, удаляется вместе со строкой в
 карте маршрутов `docs/reference/rendering.md`, импортом и кейсом в
 `src/pages/_tests/pages.astro.test.ts`, ссылкой в подвале (`site-footer.astro`, его тест и ключ
-`footer.now` в `dict.ts` — иначе `check:links` упадёт на `/now`) и упоминаниями `/now` в
-`e2e/http/service.spec.ts` и `e2e/browser/a11y.spec.ts`.
+`footer.now` в `dict.ts` — иначе `check:links` упадёт на `/now`) и упоминаниями `/now` в спеках
+`e2e/`.
 
 Цели e2e выводятся из сборки и контента (`e2e/site.ts`): смена или удаление записей, тегов и
 редиректов правок в `e2e/` не требует.

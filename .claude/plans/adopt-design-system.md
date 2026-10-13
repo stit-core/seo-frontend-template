@@ -177,10 +177,12 @@ blocked-by: —
   - Сделано: проекты `browser`, `phone`, `webkit`; `layout.spec`, `motion.spec`, `loop-video.spec`, `theme.spec`, axe на
     обоих профилях, HTTP — CSP = запись пути; 20 из 20 мутаций красные (`M/p4e/s12.out`; T-41 первой формы мимо —
     scoped-стиль не достаёт форму, T-41′); `test:e2e` — 211 passed, 2 skipped, 31 с (было 82, 14 с); `test:http` — 71
-- [ ] **S13** — Правда прозы: `CLAUDE.md`, rules `shared-ui`, `render-safety`, `tests-pipeline`, `fsd-architecture`,
+- [x] **S13** — Правда прозы: `CLAUDE.md`, rules `shared-ui`, `render-safety`, `tests-pipeline`, `fsd-architecture`,
   `docs/reference/`, шаблон и волна `styling`; в `shared-ui` — «облик — только роли и проза ДС» (`frontend-design`)
   - Проверка: `grep` по `src`, `.claude/rules`, `docs/reference`, `docs/stack` и `README.md` — нет `data-scheme` и
     `--scheme-`; `pnpm check` → зелёный · Закрывает: AC1, AC2, AC6 · Зависит от: S12
+  - Сделано: команды и карта `CLAUDE.md`, наборы в README и CONTRIBUTING, «секция», `preferences`, «0 JS», образ и CSP
+    шрифтов, тексты главной и `/now`, CON-16; `data-scheme`, `--scheme-` — 0; сверка — `M/p4e/s13-notes.md`
 
 ### Этап F — приёмка
 - [ ] **S14** — Приёмка отдельным агентом: набор мутаций и сценарии аудита на итоговом коде, ворота strategy, 45 мутаций
@@ -260,20 +262,24 @@ blocked-by: —
   раньше ленивой загрузки); WebKit при «меньше» качает петлю до первого кадра острова, перенос в MutationObserver не
   помог (Handoff strategy). PRF-11 — здесь: контракт ответа формы переживёт P5. h1 при тексте 200 % на 360–720 px
   растёт в 1,65 раза — формулу резиновой роли выбирает ДС (Handoff strategy).
+- Проза (S13). «Секция» — только `Section` (`src/pages/_<name>/` — файлы страницы, «секции» стека — разделы документа);
+  принцип — «0 JS по умолчанию», факт — «JavaScript — только острова по реестру»; CON-16 — и в карте `CLAUDE.md`.
 
 ## Handoff
 - P5: блоки стоят в секциях P4; повторяемая форма наследует сводку ошибок; согласие — строка `ISLANDS` счётчика
   (страницы, бюджет); переключатель движения — странице с петлями; кадры набора — визуальная проверка в `/scaffold`.
   Страница с CSS-петлями: без JS «Меньше» не выбрать — пауза петель без скрипта (WCAG 2.2.2) по норме `motion-toggle`:
-  радио в `fieldset` с `legend` и `:has()`.
+  радио в `fieldset` с `legend` и `:has()`. Модель блога `_blog/sections.ts` — переименовать: имя занято `Section`.
 - P8: `tokens.css` ← `design/system.tokens.css` снимка (недостающие роли называет тест — строки слоя сопоставления или
   `STRATEGY-ISSUE`); `THEME` ← `themes` брифа; список шрифтов ← принятые строки манифеста продукта с `font` (файлы — в
   `app/styles/fonts/`, лимит строки шрифтов size-limit — факт с запасом); примитивы медиа ← строки манифеста
   поверхности и `delivery` плана ассетов (кадр телефона 4:5 у ролика — видео-слой с островом по шаблону 02 базы:
   `LoopVideo` без JS берёт один ролик); острова ← моменты `motion-spec`; скрипт ворот и шаг `/release` (прототип —
-  `M/perf/run-gates.sh`), пункт V3 ← тест зума; знак, иконки и OG ← бренд.
+  `M/perf/run-gates.sh`), пункт V3 ← тест зума; знак, иконки и OG ← бренд; бриф `frontend_design` → CON-16 `/scaffold`.
 - P9: `/de-template` — файл токенов, `THEME`, список шрифтов; kinship — `cn.ts` и строка о токен-слое. SPA (Handoff
   программы): слой сопоставления, правило имён и ключ хранилища предпочтений — образец P4.
+- Владелец: `astro`, `@astrojs/node`, `sharp` — в `dependencies`, а серверный бандл их не импортирует (`dist/server`);
+  вынос в `devDependencies` — проверить образом и `accept:image`, с ним — комментарий prod-deps `docker/Dockerfile`.
 - strategy (владелец): ролик без JS (ai-media 10/02 §4.2) — `loading="lazy"` у петли (Chromium 153: ниже первого
   экрана 0 Б до приближения); Save-Data и 2G без JS недостижимы (`prefers-reduced-data` не знают ни Chromium 153, ни
   WebKit 26.6), а WebKit при «меньше» качает петлю до первого кадра острова — «0 байт» у них только видео-слоем. Норма
@@ -284,16 +290,10 @@ blocked-by: —
   `unicode-range` — нужно поле подмножества у строки или один файл на начертание.
 
 ## Где мы сейчас
-Этапы A–D приняты (`M/validation-adopt-design-system-{A,B,C,D}.md` — PASS). Этап E: остатки перепроверки D — R1
-(`seo:check` краснит `dist/server` с импортом sharp), R2 (роль `lcp` петли — preload постера, петля ленивая всегда), F2
-(решение в «Решениях»); S12 сделан. Следующий шаг — S13 вторым исполнителем этапа E, затем валидатор этапа E. Дальше:
-- S13. `CLAUDE.md`: строки `pnpm test:e2e` (состав, кадры), `pnpm seo:check` (серверный бандл без sharp, петля над h1),
-  `pnpm size` («CSS, HTML главной и поста» → CSS и HTML самой тяжёлой страницы, шрифты, серверный бандл), «тема-остров»
-  в карте; README и CONTRIBUTING — состав набора; сверить правленые с кодом rules `tests-pipeline`, `shared-ui`,
-  `seo-invariants` и шаг 1 `/release`. `/now` зовёт карту и фиды on-demand маршрутами; «секция» — и файл
-  `src/pages/_<name>/`, и `Section`; волна styling — шрифты по списку; `architecture.md` — фича `theme`.
+Этапы A–D приняты (`M/validation-adopt-design-system-{A,B,C,D}.md` — PASS). Этап E сделан: часть 1 (R1, R2, F2, S12)
+проверяет свой валидатор, часть 2 — S13. Следующий шаг — валидатор этапа E (часть 2 — S13), затем S14. Дальше:
 - Материалы этапа E — `M/p4e/` (`notes.md`; R1 — `r1-mut.sh`; R2 — `r2-*.mjs`, `r2_mut2.py`; S12 — `s12_mutations.py`,
-  `e2e_mut.py`, `s12.out`, worktree `M/wt-p4e`; эталон — `mutations.py`, якоря 45 на месте); D — `M/p4d/`, C — `M/p4c/`.
+  `e2e_mut.py`, `s12.out`; S13 — `s13-notes.md`; эталон — `mutations.py`, 45 якорей); D — `M/p4d/`, C — `M/p4c/`.
 - DTCG ДС шаблона — `M/p4a/ds/docs/projects/site-template/design/system.tokens.json`; пересборка — `ds_build.py build
   site-template --repo M/p4a/ds` соседа (окружение `~/.cache/design-deep-dive/venv`), итог — в `tokens.css` (`cmp`).
 - Новая роль — строка DTCG и строка слоя (ключ — не именем переменной ДС; роль текста — ещё `--typeface-<роль>`);

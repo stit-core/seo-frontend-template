@@ -5,7 +5,7 @@
 
 ---
 
-## page — секция `src/pages/_<name>/<name>-page.astro`
+## page — разметка `src/pages/_<name>/<name>-page.astro`
 
 ```astro
 ---

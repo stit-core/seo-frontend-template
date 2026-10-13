@@ -38,7 +38,7 @@ status: draft
 | системная | блок `prefers-color-scheme` файла токенов — без JS |
 | явный выбор | `data-theme="light\|dark"` на `<html>`, хранится в `localStorage` (ключ `theme`; движение — `data-motion` и ключ `motion`) |
 | остров | один инлайн-`<script>` в `<head>` (`features/preferences`) — ставит выбор темы и движения до первой отрисовки; где он стоит, решает его строка `ISLANDS` (с кнопкой темы — весь сайт) |
-| оси помимо схемы | _нет_ (`data-brand`, `data-density` — по потребности) |
+| оси помимо темы и движения | _нет_ (`data-brand`, `data-density` — по потребности) |
 
 ## Шрифты
 

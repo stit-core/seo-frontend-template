@@ -29,7 +29,8 @@ Dockerfile монтирует его необязательно. Мажор Node
 - **prod-deps** — `pnpm install --prod --ignore-scripts` + прунинг build-машинерии,
   которую `astro` тянет в `dependencies` (gnu-варианты rolldown / sharp-libvips /
   lightningcss / `@astrojs/compiler` / satteri, `@types/node`, `caniuse-lite`, `prismjs`):
-  выход Astro не self-contained, `entry.mjs` импортит `astro`/`zod`, сервис картинок — `sharp`
+  выход Astro не self-contained — серверный бандл импортирует `zod` и `@astrojs/rss`, канал формы и
+  Sentry (`nodemailer`, `@sentry/node`) — динамически
 - **runtime** — `node_modules` из prod-deps, `dist/`, `package.json`, `docker/{entrypoint.sh,
   stamp.mjs,server.mjs}`; `USER node`, `EXPOSE 3000`, `HEALTHCHECK wget …:${PORT:-3000}/healthz`,
   `ENTRYPOINT entrypoint.sh`, `CMD node ./docker/server.mjs`
