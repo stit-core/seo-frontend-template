@@ -23,7 +23,8 @@
 // - тело: ни плейсхолдера origin, ни HTML-комментариев; у картинок размеры, картинка над h1 (LCP) —
 //   не lazy и с fetchpriority; фолбэк <picture> — не PNG-производная мастера; источник <source media>
 //   другой пропорции — со своими размерами, и он достижим; ролик — с постером, по кнопке — preload none или metadata, с автозапуском —
-//   ленивый, preload="none" и только под условием движения;
+//   preload="none" и только под условием движения, ниже h1 — ленивый, над h1 (первый экран) — сразу, а его
+//   постер — preload с fetchpriority;
 //   ресурсов с чужих origin и data:-адресов нет (и в style="", и в CSS сборки): CSP их не пропустит;
 //   @font-face — с font-display swap/fallback/optional;
 // - шрифты — Fonts API по списку проекта: @font-face — семейства списка в <style> страницы (в CSS
@@ -297,7 +298,7 @@ function checkResources(where, html) {
 
 // Картинки, видео и фреймы — с размерами (иначе сдвиг вёрстки); картинка над h1 — кандидат в
 // LCP: грузится сразу и с приоритетом.
-function checkMedia(where, body) {
+function checkMedia(where, html, body) {
   const imgs = [...body.matchAll(/<(img|video|iframe)\b[^>]*>/g)].map(([tag, name]) => ({
     tag,
     name,
@@ -320,7 +321,7 @@ function checkMedia(where, body) {
   if (priority.length > 2)
     fail(where, `fetchpriority="high" у ${priority.length} картинок, больше двух`)
   checkPictures(where, body)
-  checkVideos(where, body)
+  checkVideos(where, html)
 }
 
 // Источник с условием `media` — кадр под окно или вариант (тёмная тема). Браузер берёт первый подходящий
@@ -363,12 +364,29 @@ function checkPictures(where, body) {
 }
 
 // Ролик: постер — кадр до загрузки. Ролик по кнопке до запуска качает самое большее метаданные. Автозапуск
-// сильнее preload: запущенный ролик качается целиком, — поэтому ролик с автозапуском ленивый (браузер
-// запускает его у экрана), с `preload="none"` (снятый автозапуск, выбор «меньше», оставляет его ждать, не
-// качаясь) и только при разрешённом движении: у каждого источника условие prefers-reduced-motion:
-// no-preference, у самого <video> адреса нет, — при сокращённом движении браузер не выбирает ни одного.
-function checkVideos(where, body) {
-  for (const [, attrs = '', inner = ''] of body.matchAll(/<video\b([^>]*)>([\s\S]*?)<\/video>/g)) {
+// сильнее preload: запущенный ролик качается целиком, — поэтому ролик с автозапуском — с `preload="none"`
+// (снятый автозапуск, выбор «меньше», оставляет его ждать, не качаясь) и только при разрешённом движении: у
+// каждого источника условие prefers-reduced-motion: no-preference, у самого <video> адреса нет, — при
+// сокращённом движении браузер не выбирает ни одного. Ниже h1 он ленивый (браузер запускает его у экрана);
+// над h1 (между началом <main> и h1) — первый экран: стартует сразу, а постер, кандидат в LCP, грузится с
+// приоритетом — preload.
+function checkVideos(where, html) {
+  const preloaded = new Set(
+    [...html.matchAll(/<link\b([^>]*)>/g)]
+      .map(([, tag = '']) => attributesOf(tag))
+      .filter(
+        (link) =>
+          link.get('rel') === 'preload' &&
+          link.get('as') === 'image' &&
+          link.get('fetchpriority') === 'high',
+      )
+      .map((link) => link.get('href')),
+  )
+  const body = bodyOf(html)
+  const mainAt = body.indexOf('<main')
+  const h1At = mainAt < 0 ? -1 : body.slice(mainAt).search(/<h1[\s>]/) + mainAt
+  for (const match of body.matchAll(/<video\b([^>]*)>([\s\S]*?)<\/video>/g)) {
+    const [, attrs = '', inner = ''] = match
     const video = attributesOf(attrs)
     const sources = [...inner.matchAll(/<source\b([^>]*)>/g)].map(([, tag = '']) =>
       attributesOf(tag),
@@ -392,7 +410,20 @@ function checkVideos(where, body) {
         `<video autoplay> без preload="none": ролик со снятым автозапуском («меньше») качался бы — ${name}`,
       )
     }
-    if (video.get('loading') !== 'lazy') {
+    const firstScreen = match.index > mainAt && match.index < h1At
+    if (firstScreen && video.get('loading') === 'lazy') {
+      fail(
+        where,
+        `<video autoplay> над h1 (первый экран) с loading="lazy": старт петли и её постер ждут раскладки — ${name}`,
+      )
+    }
+    if (firstScreen && !preloaded.has(video.get('poster'))) {
+      fail(
+        where,
+        `<video autoplay> над h1 (первый экран) без preload постера с fetchpriority="high": постер — кандидат в LCP — ${name}`,
+      )
+    }
+    if (!firstScreen && video.get('loading') !== 'lazy') {
       fail(
         where,
         `<video autoplay> без loading="lazy": запущенный ролик качается целиком с загрузки страницы, где бы ни стоял — ${name}`,
@@ -790,7 +821,7 @@ for (const file of walk(client)) {
       `preload шрифтов — ${fontPreloads}: не больше ${FONT_PRELOAD_MAX}, это начертания первого экрана (preload строк src/app/styles/fonts.ts)`,
     )
   }
-  checkMedia(where, body)
+  checkMedia(where, html, body)
   checkMicrodata(where, html)
 
   // Закрытая страница — один noindex, без canonical, OG и hreflang: разрешающие и запрещающие

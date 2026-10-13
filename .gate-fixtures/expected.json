@@ -102,6 +102,8 @@
     "dist/client/media/index.html: <video> без poster: первый экран ждёт кадр ролика — /rolik.mp4",
     "dist/client/media/index.html: <video autoplay> без preload=\"none\": ролик со снятым автозапуском («меньше») качался бы — /rolik.mp4",
     "dist/client/media/index.html: <video autoplay> без loading=\"lazy\": запущенный ролик качается целиком с загрузки страницы, где бы ни стоял — /rolik.mp4",
+    "dist/client/media/index.html: <video autoplay> над h1 (первый экран) с loading=\"lazy\": старт петли и её постер ждут раскладки — /petlya-lenivaya.mp4",
+    "dist/client/media/index.html: <video autoplay> над h1 (первый экран) без preload постера с fetchpriority=\"high\": постер — кандидат в LCP — /petlya-lenivaya.mp4",
     "dist/client/media/index.html: <video> без автозапуска с preload auto: до запуска — none или metadata, не сам ролик — /rolik-po-knopke.mp4",
     "dist/client/media/index.html: <video autoplay> качается при сокращённом движении: источник без условия prefers-reduced-motion: no-preference — /rolik.mp4",
     "dist/client/media/index.html: data:-адрес ресурса — CSP сайта его не пропустит, ресурс — файлом: data:image/gif;base64,R0lGODlhAQABAAAAAC",

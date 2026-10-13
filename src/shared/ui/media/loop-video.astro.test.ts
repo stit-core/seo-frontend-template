@@ -11,7 +11,8 @@ const sources = [
   { src: '/_astro/loop.h264.mp4', type: 'video/mp4; codecs="avc1.640032"' },
 ]
 
-const render = () => astro.renderToString(LoopVideo, { props: { poster, sources } })
+const render = (props: { lcp?: boolean } = {}) =>
+  astro.renderToString(LoopVideo, { props: { poster, sources, ...props } })
 
 const browsers: Browser[] = []
 afterAll(() => Promise.all(browsers.map((browser) => browser.close())))
@@ -45,6 +46,20 @@ describe('LoopVideo', () => {
     expect(video?.getAttribute('poster')).toBe('/_astro/loop.avif')
     expect([video?.getAttribute('width'), video?.getAttribute('height')]).toEqual(['1920', '1080'])
     expect(video?.hasAttribute('src')).toBe(false)
+  })
+
+  // Петля первого экрана ленивой загрузкой ждала бы раскладки, а с ней и постер — кандидат в LCP. Приоритет
+  // постеру даёт preload: своего fetchpriority у него нет.
+  it('роль слота: петля первого экрана — сразу, постер — с приоритетом; без роли — лениво и без preload', async () => {
+    const first = parseHtml(await render({ lcp: true }))
+    expect(first.querySelector('video')?.hasAttribute('loading')).toBe(false)
+    const preload = first.querySelector('link')
+    expect(
+      ['rel', 'as', 'href', 'fetchpriority'].map((name) => preload?.getAttribute(name)),
+    ).toEqual(['preload', 'image', '/_astro/loop.avif', 'high'])
+    const rest = parseHtml(await render())
+    expect(rest.querySelector('video')?.getAttribute('loading')).toBe('lazy')
+    expect(rest.querySelector('link')).toBeNull()
   })
 
   it('при системном сокращении движения браузер не выбирает ни одного ролика', async () => {
