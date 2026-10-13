@@ -111,6 +111,18 @@ test.describe('система просит сократить движение',
     await page.getByRole('button', { name: t('ru', 'motion.full') }).click()
     await first
   })
+
+  // Без скрипта ленивой загрузки нет (так требует HTML), и острова нет: ролик держит одно условие движения
+  // у источников.
+  test.describe('скрипта нет', () => {
+    test.use({ javaScriptEnabled: false })
+
+    test('ни байта ролика', async ({ page }) => {
+      const videos = videoResponses(page)
+      await page.goto(site, { waitUntil: 'networkidle' })
+      expect(videos).toEqual([])
+    })
+  })
 })
 
 // WebKit начинает загрузку петли с автозапуском ещё при разборе: атрибута loading у видео он не знает, и
