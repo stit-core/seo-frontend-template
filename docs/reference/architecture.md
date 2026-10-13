@@ -88,7 +88,7 @@ src/
 ├─ features/      contact-form · theme
 ├─ entities/      post (content/{ru,en}/*.md + covers, model, api, lib, ui) · company · author
 └─ shared/        config · i18n · seo · redirects · observability · antispam · lib
-                  · ui/{section,heading,term-list}
+                  · ui/{section,heading,term-list,media}
 ```
 
 ## Сегменты слайса

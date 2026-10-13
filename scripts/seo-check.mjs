@@ -20,8 +20,10 @@
 //   со своим @id, подписан на странице, и имя у него на локали одно; микроданных (itemscope,
 //   itemprop) нет — сущности размечает только JSON-LD;
 // - тело: ни плейсхолдера origin, ни HTML-комментариев; у картинок размеры, картинка над h1 (LCP) —
-//   не lazy и с fetchpriority; ресурсов с чужих origin нет (и в style=""), @font-face — с
-//   font-display swap/fallback/optional;
+//   не lazy и с fetchpriority; кадр под устройство (<source media>) — со своими размерами и
+//   достижим; ролик — с постером и preload="none", автозапуск — только под условием движения;
+//   ресурсов с чужих origin нет (и в style=""), data:-адресов — не больше INLINE_DATA_MAX,
+//   @font-face — с font-display swap/fallback/optional;
 // - шрифты — Fonts API по списку проекта: @font-face — семейства списка в <style> страницы (в CSS
 //   сборки его нет), preload шрифтов — не больше FONT_PRELOAD_MAX;
 // - острова — по реестру проекта: исполняемый код (<script>, on*=, javascript:) — только его
@@ -66,6 +68,7 @@ import {
   FONT_PRELOAD_MAX,
   GENERIC_TITLE,
   ICON_MIN_SIDE,
+  INLINE_DATA_MAX,
   JSON_LD_FORBIDDEN,
   JSON_LD_TYPES,
   NOINDEX_ROUTES,
@@ -240,27 +243,40 @@ const RESOURCE_LINK =
   /^(stylesheet|preload|modulepreload|prefetch|preconnect|dns-prefetch|manifest|icon|apple-touch-icon|mask-icon)$/i
 
 // Ресурсы документа: что браузер скачает сам (src, srcset, poster, data; ресурсные link; CSS в
-// <style> и в атрибутах style).
+// <style> и в атрибутах style). data:-адреса едут в самом HTML — их вес на страницу ограничен.
 function checkResources(where, html) {
+  let inline = 0
   for (const [, tag, attrs = ''] of html.matchAll(
     /<(link|script|img|source|video|audio|iframe|embed|object|track)\b([^>]*)>/g,
   )) {
     if (tag === 'link') {
       const rels = (/\brel="([^"]*)"/.exec(attrs)?.[1] ?? '').split(/\s+/)
-      if (rels.some((rel) => RESOURCE_LINK.test(rel))) {
-        checkResourceUrl(where, decode(/\bhref="([^"]*)"/.exec(attrs)?.[1] ?? ''))
-      }
+      const href = decode(/\bhref="([^"]*)"/.exec(attrs)?.[1] ?? '')
+      if (rels.some((rel) => RESOURCE_LINK.test(rel))) checkResourceUrl(where, href)
+      if (href.startsWith('data:')) inline += href.length
       continue
     }
     for (const [, name, value = ''] of attrs.matchAll(/\b(src|srcset|poster|data)="([^"]*)"/g)) {
+      // В data:-адресе есть запятая — srcset с ним не делится на кандидатов.
+      if (value.includes('data:')) inline += value.length
       const urls =
         name === 'srcset' ? value.split(',').map((item) => item.trim().split(/\s+/)[0]) : [value]
       for (const url of urls) checkResourceUrl(where, decode(url ?? ''))
     }
   }
-  for (const [, css = ''] of html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g))
-    checkCss(where, css, true)
-  for (const [, css = ''] of html.matchAll(/\sstyle="([^"]*)"/g)) checkCss(where, decode(css))
+  const blocks = [...html.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/g)].map(([, css = '']) => css)
+  const attributes = [...html.matchAll(/\sstyle="([^"]*)"/g)].map(([, css = '']) => decode(css))
+  for (const css of blocks) checkCss(where, css, true)
+  for (const css of attributes) checkCss(where, css)
+  for (const css of [...blocks, ...attributes]) {
+    for (const [, url = ''] of css.matchAll(/url\(\s*['"]?(data:[^'")]*)/g)) inline += url.length
+  }
+  if (inline > INLINE_DATA_MAX) {
+    fail(
+      where,
+      `data:-адреса в странице — ${(inline / 1024).toFixed(1)} КБ, не больше ${INLINE_DATA_MAX / 1024} КБ: встроенный ресурс не кешируется и едет в каждом визите`,
+    )
+  }
 }
 
 // Картинки, видео и фреймы — с размерами (иначе сдвиг вёрстки); картинка над h1 — кандидат в
@@ -287,6 +303,61 @@ function checkMedia(where, body) {
     fail(where, 'fetchpriority="high" вместе с loading="lazy"')
   if (priority.length > 2)
     fail(where, `fetchpriority="high" у ${priority.length} картинок, больше двух`)
+  checkPictures(where, body)
+  checkVideos(where, body)
+}
+
+// Кадр под устройство — источник с условием `media`: у него свои размеры, иначе место под картинкой
+// резервирует чужая пропорция. Браузер берёт первый подходящий источник: за источником без `media`
+// источник того же типа недостижим — кадр без условия устройства перекрывает следующий.
+function checkPictures(where, body) {
+  for (const [, inner = ''] of body.matchAll(/<picture\b[^>]*>([\s\S]*?)<\/picture>/g)) {
+    const covered = new Set()
+    for (const [, attrs = ''] of inner.matchAll(/<source\b([^>]*)>/g)) {
+      const source = attributesOf(attrs)
+      const type = source.get('type') ?? ''
+      const srcset = source.get('srcset') ?? ''
+      if (covered.has('') || covered.has(type)) {
+        fail(
+          where,
+          `<source> ${type} недостижим: перед ним источник того же типа без media — ${srcset}`,
+        )
+      }
+      if (!source.has('media')) covered.add(type)
+      else if (!source.has('width') || !source.has('height')) {
+        fail(where, `<source media> без width и height: место под кадром устройства — ${srcset}`)
+      }
+    }
+  }
+}
+
+// Ролик: постер — кадр до загрузки, `preload="none"` — ни байта до показа. Автозапуск — только при
+// разрешённом движении: у каждого источника условие prefers-reduced-motion: no-preference, у самого
+// <video> адреса нет, — при сокращённом движении браузер не выбирает ни одного и не качает ничего.
+function checkVideos(where, body) {
+  for (const [, attrs = '', inner = ''] of body.matchAll(/<video\b([^>]*)>([\s\S]*?)<\/video>/g)) {
+    const video = attributesOf(attrs)
+    const sources = [...inner.matchAll(/<source\b([^>]*)>/g)].map(([, tag = '']) =>
+      attributesOf(tag),
+    )
+    const name = video.get('src') ?? sources[0]?.get('src') ?? ''
+    if (!video.get('poster'))
+      fail(where, `<video> без poster: первый экран ждёт кадр ролика — ${name}`)
+    if (video.get('preload') !== 'none') {
+      fail(where, `<video> без preload="none": ролик качается до показа — ${name}`)
+    }
+    const ungated =
+      video.has('src') ||
+      sources.some(
+        (source) => !/prefers-reduced-motion:\s*no-preference/.test(source.get('media') ?? ''),
+      )
+    if (video.has('autoplay') && ungated) {
+      fail(
+        where,
+        `<video autoplay> качается при сокращённом движении: источник без условия prefers-reduced-motion: no-preference — ${name}`,
+      )
+    }
+  }
 }
 
 // Сущности размечает только JSON-LD в <head>: микроданные в теле — вторая разметка мимо правил

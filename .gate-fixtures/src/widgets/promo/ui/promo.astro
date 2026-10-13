@@ -14,8 +14,8 @@ const WIDTHS = { 'text-body': 'w-[37px]' }
 console.log(promo, getRuntimeConfig().RELEASE, config.SITE_NAME, import.meta.env.SECRET_KEY)
 ---
 
-<!-- Нарушения: сырой <img> мимо <Picture>, client:* без фреймворка островов, инлайн-style, сырой
-цвет в классе (литералом и в шаблонной строке), в атрибуте SVG (hex и словом) и в <style> (hex и
+<!-- Нарушения: сырые <img> и <video> мимо примитивов медиа, client:* без фреймворка островов,
+инлайн-style, сырой цвет в классе (литералом и в шаблонной строке), в атрибуте SVG (hex и словом) и в <style> (hex и
 словом); значение мимо роли — числовая утилита, произвольный размер и кегль в скобках, ключевое
 слово со своим значением (интерлиньяж, скругление, обводка, кольцо, фильтр — и ключом объекта),
 переменная ДС в классе, в атрибуте SVG и в <style> (заглавными), размер числом и @apply
@@ -29,6 +29,7 @@ data-[theme=…]) и в <style> (prefers-color-scheme, data-theme, light-dark() 
 (transition, @apply, условие системы, @keyframes с animation — в четырёх блоках). -->
 <section class="promo">
   <img src="/promo.png" alt="Промо" width="10" height="10" />
+  <video src="/promo.mp4" width="10" height="10" muted></video>
   <Badge client:load />
   <p style="margin-top: 1rem">Акция</p>
   <p class:list={['mt-md', 'text-[#e11d48]']}>Скидка</p>

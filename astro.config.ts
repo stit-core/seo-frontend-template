@@ -103,7 +103,6 @@ export default defineConfig({
   // 'file' + node-адаптер = 404 на /blog и /en (статик-хендлер видит каталог); только 'directory'.
   build: { format: 'directory' },
   i18n: { defaultLocale: 'ru', locales: ['ru', 'en'], routing: { prefixDefaultLocale: false } },
-  image: { responsiveStyles: true, layout: 'constrained' },
   // fs-драйвер сессий адаптера пишет в cacheDir и ломает read-only контейнер.
   session: false,
   // Без островов — ни байта JS; prefetch и <ClientRouter/> не включать: переход между страницами

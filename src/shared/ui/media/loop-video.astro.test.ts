@@ -1,0 +1,67 @@
+import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import { Browser } from 'happy-dom'
+import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
+import LoopVideo from './loop-video.astro'
+
+const astro = await AstroContainer.create()
+
+const poster = { src: '/_astro/loop.avif', width: 1920, height: 1080, format: 'avif' }
+const desktop = [
+  { src: '/_astro/loop.av1.mp4', type: 'video/mp4; codecs="av01.0.08M.10"' },
+  { src: '/_astro/loop.h264.mp4', type: 'video/mp4; codecs="avc1.640032"' },
+]
+const mobile = [{ src: '/_astro/loop-4x5.av1.mp4', type: 'video/mp4; codecs="av01.0.04M.10"' }]
+
+const render = (props: Record<string, unknown> = {}) =>
+  astro.renderToString(LoopVideo, { props: { poster, desktop, ...props } })
+
+const browsers: Browser[] = []
+afterAll(() => Promise.all(browsers.map((browser) => browser.close())))
+
+// Какой ролик выберет браузер: первый источник, чьё условие `media` выполнено при этой настройке
+// движения и ширине окна; нет такого — ни байта ролика, виден постер.
+function chosen(html: string, { reduce = false, width = 1280 } = {}) {
+  const browser = new Browser({
+    settings: { device: { prefersReducedMotion: reduce ? 'reduce' : 'no-preference' } },
+  })
+  browsers.push(browser)
+  const page = browser.newPage()
+  page.setViewport({ width, height: 900 })
+  page.content = html
+  const { window, document } = page.mainFrame
+  return [...document.querySelectorAll('source')]
+    .find((source) => window.matchMedia(source.media).matches)
+    ?.getAttribute('src')
+}
+
+describe('LoopVideo', () => {
+  it('петля без звука и без загрузки до показа: постер — кадр 0, размеры ролика — его', async () => {
+    const video = parseHtml(await render()).querySelector('video')
+    for (const flag of ['autoplay', 'muted', 'loop', 'playsinline']) {
+      expect(video?.hasAttribute(flag)).toBe(true)
+    }
+    expect(video?.getAttribute('preload')).toBe('none')
+    expect(video?.getAttribute('poster')).toBe('/_astro/loop.avif')
+    expect([video?.getAttribute('width'), video?.getAttribute('height')]).toEqual(['1920', '1080'])
+    expect(video?.hasAttribute('src')).toBe(false)
+  })
+
+  it('при системном сокращении движения браузер не выбирает ни одного ролика', async () => {
+    const html = await render({ mobile })
+    for (const width of [390, 1280]) expect(chosen(html, { reduce: true, width })).toBeUndefined()
+    expect(chosen(html, { width: 390 })).toBe('/_astro/loop-4x5.av1.mp4')
+    expect(chosen(html, { width: 1280 })).toBe('/_astro/loop.av1.mp4')
+    expect(chosen(await render(), { width: 390 })).toBe('/_astro/loop.av1.mp4')
+  })
+
+  it('ролик, который браузер не сыграет, он пропускает по типу с кодеком', async () => {
+    const types = [...parseHtml(await render({ mobile })).querySelectorAll('source')].map(
+      (source) => source.getAttribute('type'),
+    )
+    expect(types).toEqual([...mobile, ...desktop].map(({ type }) => type))
+  })
+
+  it('не имеет нарушений доступности', async () => {
+    await expectNoA11yViolations(await render({ mobile }))
+  })
+})

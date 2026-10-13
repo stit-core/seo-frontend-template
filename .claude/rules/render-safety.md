@@ -78,7 +78,7 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 согласие держит тест таблицы), `session: false` (fs-драйвер сессий пишет в cacheDir), `prefetch: false` и без `<ClientRouter/>` (без островов — ни байта JS; переход между страницами — CSS View Transitions токен-слоя, rule `shared-ui`),
 `experimentalDisableStreaming: true`, `markdown.syntaxHighlight: false` (Shiki инлайнит сырые
 цвета мимо токен-слоя), `fonts` — семейства списка шрифтов ДС `src/app/styles/fonts.ts` (Fonts API,
-локальный провайдер; запасные гарнитуры — хвост стека семейства в файле токенов, rule `shared-ui`), `vite.build.assetsInlineLimit: 0` (сборка ничего не встраивает в страницу:
+локальный провайдер; запасные гарнитуры — хвост стека семейства в файле токенов, rule `shared-ui`), `image` — без адаптивных стилей и раскладки Astro (`responsiveStyles`, `layout`: их CSS вторым файлом грузила бы страница с картинкой; выбор файла и размеры даёт её компонент, rule `shared-ui`), `vite.build.assetsInlineLimit: 0` (сборка ничего не встраивает в страницу:
 короткий скрипт компонента без импортов остаётся модулем, по которому реестр `ISLANDS` узнаёт
 остров-файл, стиль страницы и ресурс — файлами на `'self'` CSP, а не `data:`-адресом), Vite-плагины `yaml-modules` (`content/*.yaml` и реестр ботов `shared/seo/crawlers.yaml` → данные на сборке) и
 `wrapper-entries` (модули приложения, которые `docker/*` берут по имени файла: схема env

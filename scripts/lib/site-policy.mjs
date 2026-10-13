@@ -21,6 +21,10 @@ export { ISLANDS }
 // SG-PERF-13): каждый следующий спорит за канал с картинкой первого экрана.
 export const FONT_PRELOAD_MAX = 2
 
+// data:-адреса в странице — не больше 10 КБ на страницу (ворота strategy SG-WEIGHT-07): встроенный
+// ресурс не кешируется и едет в HTML каждого визита, тормозя первый экран.
+export const INLINE_DATA_MAX = 10 * 1024
+
 // Служебные prerendered-маршруты без префикса локали: только им положен noindex.
 export const NOINDEX_ROUTES = ['/contacts/spasibo', '/500']
 

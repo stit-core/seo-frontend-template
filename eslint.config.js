@@ -209,12 +209,22 @@ const containerWidth = {
   message:
     'UI: ширина контейнера (max-w-*, container, max-width) — только примитив секции @/shared/ui/section: страницу собирают Section, каркас — Container',
 }
-// Канон разметки .astro (rules shared-ui, render-safety).
-const astroSyntax = [
+// Сырые <img> и <video> — только в примитивах медиа: мимо них картинка теряет форматы, размеры и роль
+// слота, а ролик — постер и условие движения.
+const rawMedia = [
   {
     selector: "JSXOpeningElement[name.name='img']",
-    message: 'UI: картинка — <Picture> из astro:assets (форматы, размеры, LCP), а не сырой <img>',
+    message:
+      'UI: сырой <img> — только в примитиве @/shared/ui/media: мастер контента — <Picture> из astro:assets (форматы, размеры, LCP), готовый файл ДС — ArtPicture',
   },
+  {
+    selector: "JSXOpeningElement[name.name='video']",
+    message:
+      'UI: сырой <video> — только в примитиве @/shared/ui/media: LoopVideo (постер, preload="none", источники под условием движения)',
+  },
+]
+// Канон разметки .astro (rules shared-ui, render-safety).
+const astroSyntax = [
   {
     selector: "JSXNamespacedName[namespace.name='client']",
     message: 'UI: client:* — фреймворка островов нет, остров — инлайн-<script data-island>',
@@ -353,12 +363,19 @@ export default defineConfig(
       parser: astroParser,
       parserOptions: { parser: tseslint.parser, extraFileExtensions: ['.astro'] },
     },
-    rules: { 'no-restricted-syntax': ['error', ...astroSyntax, containerWidth, importMetaEnv] },
+    rules: {
+      'no-restricted-syntax': ['error', ...rawMedia, ...astroSyntax, containerWidth, importMetaEnv],
+    },
   },
   {
     // Примитив секции — единственное место, где задаётся ширина контейнера.
     files: ['src/shared/ui/section/*.astro'],
-    rules: { 'no-restricted-syntax': ['error', ...astroSyntax, importMetaEnv] },
+    rules: { 'no-restricted-syntax': ['error', ...rawMedia, ...astroSyntax, importMetaEnv] },
+  },
+  {
+    // Примитивы медиа — единственное место сырых <img> и <video>.
+    files: ['src/shared/ui/media/*.astro'],
+    rules: { 'no-restricted-syntax': ['error', ...astroSyntax, containerWidth, importMetaEnv] },
   },
   {
     files: [CLIENT_SCRIPTS],

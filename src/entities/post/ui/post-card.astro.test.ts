@@ -1,5 +1,5 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
-import { expectNoA11yViolations } from '@/shared/lib/testing'
+import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import type { Post } from '../api/queries'
 import PostCard from './post-card.astro'
 
@@ -53,20 +53,24 @@ describe('PostCard', () => {
     expect(html).toContain('14 July 2026')
   })
 
-  it('миниатюра обложки — слот 160×90: размеры заданы, кандидаты не крупнее двух плотностей', async () => {
+  it('миниатюра обложки — слот 160×90: размеры заданы, файлы — по плотности экрана до 2x', async () => {
     const container = await AstroContainer.create()
     const cover = { src: '/_astro/cover.png', width: 1600, height: 900, format: 'png' as const }
     const html = await container.renderToString(PostCard, {
       props: { post: { ...post, data: { ...post.data, cover, coverAlt: 'Обложка' } } },
     })
-    const img = /<img\b[^>]*>/.exec(html)?.[0] ?? ''
-    expect(img).toContain('width="160"')
-    expect(img).toContain('height="90"')
-    expect(img).toContain('loading="lazy"')
-    // Без размеров Picture отдал бы исходные 1600 px в слот шириной 160.
-    const widths = [...html.matchAll(/\s(\d+)w\b/g)].map(([, width]) => Number(width))
-    expect(widths.length).toBeGreaterThan(0)
-    expect(Math.max(...widths)).toBeLessThanOrEqual(320)
+    const doc = parseHtml(html)
+    const img = doc.querySelector('img')
+    expect([img?.getAttribute('width'), img?.getAttribute('height')]).toEqual(['160', '90'])
+    expect(img?.getAttribute('loading')).toBe('lazy')
+    // Без размеров Picture отдал бы исходные 1600 px в слот шириной 160; слоту постоянной ширины
+    // нужны плотности экрана, а не ширины окна.
+    const descriptors = [...doc.querySelectorAll('source, img')].flatMap((element) =>
+      (element.getAttribute('srcset') ?? '')
+        .split(', ')
+        .map((candidate) => candidate.split(' ')[1] ?? '1x'),
+    )
+    expect(new Set(descriptors)).toEqual(new Set(['1x', '2x']))
   })
 
   it('не имеет нарушений доступности', async () => {

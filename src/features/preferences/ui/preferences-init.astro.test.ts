@@ -2,6 +2,7 @@ import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { Browser } from 'happy-dom'
 import { ISLANDS } from '@/shared/config'
 import { parseHtml } from '@/shared/lib/testing'
+import { LoopVideo } from '@/shared/ui/media'
 import { brotliBytes, cspHash } from '../../../../scripts/lib/site-policy.mjs'
 import MotionToggle from './motion-toggle.astro'
 import PreferencesInit from './preferences-init.astro'
@@ -10,11 +11,21 @@ import ThemeToggle from './theme-toggle.astro'
 const container = await AstroContainer.create()
 const island = await container.renderToString(PreferencesInit)
 const body = /<script[^>]*>([\s\S]*?)<\/script>/.exec(island)?.[1] ?? ''
-// Кнопки — как их печатают компоненты: договор острова с разметкой проверяется на ней самой.
+// Кнопки и петля — как их печатают компоненты: договор острова с разметкой проверяется на ней самой.
 const controls = [
   await container.renderToString(ThemeToggle, { props: { locale: 'ru' } }),
   await container.renderToString(MotionToggle, { props: { locale: 'ru' } }),
 ].join('')
+const loop = await container.renderToString(LoopVideo, {
+  props: {
+    poster: { src: '/_astro/loop.avif', width: 1920, height: 1080, format: 'avif' },
+    desktop: [
+      { src: '/_astro/loop.av1.mp4', type: 'video/mp4; codecs="av01.0.08M.10"' },
+      { src: '/_astro/loop.h264.mp4', type: 'video/mp4; codecs="avc1.640032"' },
+    ],
+    mobile: [{ src: '/_astro/loop-4x5.av1.mp4', type: 'video/mp4; codecs="av01.0.04M.10"' }],
+  },
+})
 
 type Theme = 'light' | 'dark'
 type Motion = '' | 'reduced' | 'full'
@@ -67,9 +78,27 @@ function open({
       },
     })
   }
-  const paused = vi.spyOn(window.HTMLMediaElement.prototype, 'pause')
+  const { prototype } = window.HTMLMediaElement
+  const paused = vi.spyOn(prototype, 'pause')
+  // Браузер выбирает источник ролика по `media` при разборе и при load(), а не на каждой смене настройки
+  // системы: currentSrc — итог последнего выбора, пустой — источника нет и ролик не качается.
+  let selected: string | undefined
+  const select = (video: HTMLMediaElement) =>
+    [...video.querySelectorAll('source')].find(
+      (source) => source.media === '' || window.matchMedia(source.media).matches,
+    )?.src ?? ''
+  Object.defineProperty(prototype, 'currentSrc', {
+    configurable: true,
+    get(this: HTMLMediaElement) {
+      selected ??= select(this)
+      return selected
+    },
+  })
+  const reloads = vi.spyOn(prototype, 'load').mockImplementation(function (this: HTMLMediaElement) {
+    selected = select(this)
+  })
   const root = preset ? `<html data-theme="${preset}">` : '<html>'
-  page.content = `<!doctype html>${root}<head>${island}</head><body><main>Текст</main>${controls}<video loop muted></video></body></html>`
+  page.content = `<!doctype html>${root}<head>${island}</head><body><main>Текст</main>${controls}${loop}</body></html>`
   const { document } = page.mainFrame
   const click = (selector: string) =>
     document
@@ -78,6 +107,8 @@ function open({
   const pressed = (selector: string) =>
     [...document.querySelectorAll(selector)].map((button) => button.getAttribute('aria-pressed'))
   const video = document.querySelector('video')
+  // Источник выбран при разборе — до любой смены настройки системы.
+  void video?.currentSrc
   return {
     // Документ разобран: кнопки и видео страницы острову видны.
     ready: () => page.waitUntilComplete(),
@@ -115,6 +146,11 @@ function open({
     },
     playing: () => video?.paused === false,
     pausedOnLoad: () => paused.mock.calls.length > 0,
+    // Условия источников петли и ролик, который браузер выбрал по ним последним.
+    conditions: () =>
+      [...document.querySelectorAll('video source')].map((source) => source.getAttribute('media')),
+    source: () => video?.currentSrc,
+    reloads: () => reloads.mock.calls.length,
     // Настройка системы меняется на открытой странице.
     system: (device: { prefersColorScheme?: Theme; prefersReducedMotion?: string }) => {
       Object.assign(browser.settings.device, device)
@@ -317,6 +353,43 @@ describe('PreferencesInit', () => {
     const page = open(visit)
     await page.ready()
     expect(page.pausedOnLoad()).toBe(stopped)
+  })
+
+  // Без скрипта при системном сокращении браузер не выбирает ни одного источника петли: «Полное» — выбор
+  // посетителя вопреки системе — снимает с них условие движения и запускает выбор заново.
+  it('«Полное» вопреки системе — петля получает источник, кадр телефона по-прежнему по окну', async () => {
+    const page = open({ reduce: true, stored: { motion: 'full' } })
+    await page.ready()
+    expect(page.conditions()).toEqual(['(width < 40rem)', '', ''])
+    expect(page.source()).toMatch(/\/loop\.av1\.mp4$/)
+    expect(page.reloads()).toBe(1)
+  })
+
+  it('«Полное» кликом при системном сокращении — источник встаёт без перезагрузки страницы', async () => {
+    const page = open({ reduce: true })
+    await page.ready()
+    expect(page.source()).toBe('')
+    expect(page.reloads()).toBe(0)
+    page.chooseMotion('full')
+    expect(page.source()).toMatch(/\/loop\.av1\.mp4$/)
+    expect(page.reloads()).toBe(1)
+    await page.play()
+    page.chooseMotion('')
+    expect(page.playing()).toBe(false)
+    page.chooseMotion('full')
+    expect(page.reloads()).toBe(1)
+    expect(page.playing()).toBe(true)
+  })
+
+  it('движение разрешено системой: источники петли и выбранный ролик не трогаются', async () => {
+    const page = open()
+    await page.ready()
+    const conditions = page.conditions()
+    page.chooseMotion('full')
+    page.system({ prefersReducedMotion: 'reduce' })
+    expect(page.conditions()).toEqual(conditions)
+    expect(page.source()).toMatch(/\/loop\.av1\.mp4$/)
+    expect(page.reloads()).toBe(0)
   })
 
   // Отказ — обычный исход play(): без обработки он всплыл бы ошибкой страницы.

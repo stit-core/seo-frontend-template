@@ -182,9 +182,10 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   порога тег индексируется), canonical на плейсхолдере
   origin и ни плейсхолдера в `<body>`, исполняемый код (`<script>`, обработчики `on*=`,
   `javascript:`) — острова реестра `ISLANDS` на своих страницах и в бюджете, ресурсов с чужих
-  origin нет (и в `style`), og:image и
-  hreflang — на своём origin, у картинок размеры, картинка над h1 — не lazy и с
-  `fetchpriority="high"`, у `@font-face` — `font-display` swap/fallback/optional, и он только от
+  origin нет (и в `style`), data:-адресов — не больше 10 КБ, og:image и
+  hreflang — на своём origin, у картинок и роликов размеры, картинка над h1 — не lazy и с
+  `fetchpriority="high"`, кадр под устройство (`<source media>`) — со своими размерами и достижим,
+  у ролика — постер и `preload="none"`, автозапуск — под условием движения, у `@font-face` — `font-display` swap/fallback/optional, и он только от
   Fonts API по списку шрифтов (семейство списка в `<style>` страницы; в CSS сборки — нет), preload
   шрифтов — не больше двух;
   страниц черновиков нет; сборка против источника — страница у каждой опубликованной записи и

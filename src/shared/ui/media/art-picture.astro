@@ -1,0 +1,91 @@
+---
+import type { ImageMetadata } from 'astro'
+import { invariant } from '@/shared/lib'
+import { PHONE } from './conditions'
+
+// Готовая картинка ДС: файлы идут на страницу как есть — сборка их не пережимает, принятый кадр не
+// портится (мастер контента — <Picture> из astro:assets). Кадр телефона — свой файл со своими
+// размерами: браузер берёт его по условию `media`, место под ним резервирует его пропорция.
+interface Props {
+  // Пустой — декоративная картинка: смысл несёт текст рядом.
+  alt: string
+  // Файлы кадра по умолчанию: AVIF и WebP одной пропорции, ширины — лестница.
+  desktop: readonly ImageMetadata[]
+  // Кадр телефона (окно у́же границы tablet): свой мастер, а не обрезка десктопного.
+  mobile?: readonly ImageMetadata[] | undefined
+  // Ширина слота на странице: по ней браузер выбирает файл до раскладки.
+  sizes: string
+  // Роль слота — кандидат в LCP: грузится сразу и с приоритетом, остальное — лениво.
+  lcp?: boolean | undefined
+  class?: string | undefined
+}
+
+const { alt, desktop, mobile, sizes, lcp = false, class: className } = Astro.props
+
+const srcset = (files: readonly ImageMetadata[]) =>
+  files.map(({ src, width }) => `${src} ${width}w`).join(', ')
+
+function frame(name: string, files: readonly ImageMetadata[]) {
+  const avif = files.filter((file) => file.format === 'avif')
+  const webp = files.filter((file) => file.format === 'webp')
+  const [first] = webp
+  invariant(
+    first && avif.length > 0 && avif.length + webp.length === files.length,
+    `ArtPicture: кадр ${name} — файлы AVIF и WebP`,
+  )
+  // Размеры источника резервируют место под его кадр: файл другой пропорции встал бы в чужую рамку.
+  const ratio = first.width / first.height
+  invariant(
+    files.every((file) => Math.abs(file.width / file.height / ratio - 1) < 0.01),
+    `ArtPicture: кадр ${name} — файлы разных пропорций`,
+  )
+  const largest = webp.reduce((max, file) => (file.width > max.width ? file : max), first)
+  const { src, width, height } = largest
+  return { avif: srcset(avif), webp: srcset(webp), src, width, height }
+}
+
+const main = frame('desktop', desktop)
+const phone = mobile && frame('mobile', mobile)
+---
+
+<picture>
+  {phone && (
+    <Fragment>
+      <source
+        media={PHONE}
+        type="image/avif"
+        srcset={phone.avif}
+        sizes={sizes}
+        width={phone.width}
+        height={phone.height}
+      />
+      <source
+        media={PHONE}
+        type="image/webp"
+        srcset={phone.webp}
+        sizes={sizes}
+        width={phone.width}
+        height={phone.height}
+      />
+    </Fragment>
+  )}
+  <source
+    type="image/avif"
+    srcset={main.avif}
+    sizes={sizes}
+    width={main.width}
+    height={main.height}
+  />
+  <img
+    src={main.src}
+    srcset={main.webp}
+    sizes={sizes}
+    width={main.width}
+    height={main.height}
+    alt={alt}
+    loading={lcp ? 'eager' : 'lazy'}
+    fetchpriority={lcp ? 'high' : undefined}
+    decoding="async"
+    class={className}
+  />
+</picture>

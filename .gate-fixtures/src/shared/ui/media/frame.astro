@@ -1,0 +1,11 @@
+---
+// Законное: сырые <img> и <video> — в примитиве медиа.
+---
+
+<picture>
+  <source type="image/avif" srcset="/kadr.avif 1600w" sizes="100vw" width="1600" height="900" />
+  <img src="/kadr.webp" alt="" width="1600" height="900" loading="lazy" decoding="async" />
+</picture>
+<video autoplay muted loop playsinline preload="none" poster="/kadr.webp" width="1600" height="900">
+  <source media="(prefers-reduced-motion: no-preference)" src="/kadr.mp4" type="video/mp4" />
+</video>

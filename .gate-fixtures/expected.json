@@ -17,7 +17,7 @@
     { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-imports" },
     { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-properties" },
     { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-console" },
-    { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-syntax", "count": 57 },
+    { "file": "src/widgets/promo/ui/promo.astro", "rule": "no-restricted-syntax", "count": 58 },
     { "file": "src/shared/ui/button/index.ts", "rule": "no-restricted-syntax" }
   ],
   "steiger": [
@@ -91,6 +91,12 @@
     "dist/client/media/index.html: картинка над h1 (кандидат в LCP) без fetchpriority=\"high\"",
     "dist/client/media/index.html: fetchpriority=\"high\" вместе с loading=\"lazy\"",
     "dist/client/media/index.html: fetchpriority=\"high\" у 3 картинок, больше двух",
+    "dist/client/media/index.html: <source media> без width и height: место под кадром устройства — /og.png 1w",
+    "dist/client/media/index.html: <source> image/webp недостижим: перед ним источник того же типа без media — /og.png 3w",
+    "dist/client/media/index.html: <video> без poster: первый экран ждёт кадр ролика — /rolik.mp4",
+    "dist/client/media/index.html: <video> без preload=\"none\": ролик качается до показа — /rolik.mp4",
+    "dist/client/media/index.html: <video autoplay> качается при сокращённом движении: источник без условия prefers-reduced-motion: no-preference — /rolik.mp4",
+    "dist/client/media/index.html: data:-адреса в странице — 10.2 КБ, не больше 10 КБ: встроенный ресурс не кешируется и едет в каждом визите",
     "dist/client/o-nas/index.html: LocalBusiness.telephone «hello@example.com» — нет ссылки tel: с этим номером",
     "dist/client/o-nas/index.html: LocalBusiness.address.streetAddress «ул. Невидимая, 1» не виден на странице",
     "dist/client/o-nas/index.html: LocalBusiness.address.addressLocality «Город» не виден на странице",

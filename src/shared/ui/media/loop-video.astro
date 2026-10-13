@@ -1,0 +1,46 @@
+---
+import type { ImageMetadata } from 'astro'
+import { MOTION, PHONE } from './conditions'
+
+// Ролик-петля — фон, смысл несёт текст рядом. Источники встают только при разрешённом движении: при
+// системном сокращённом движении браузер не выбирает ни одного и не качает ни байта — без скрипта, на месте
+// ролика остаётся постер. Выбор посетителя («меньше» — пауза, «полное» вопреки системе — источники без
+// условия движения) исполняет остров предпочтений.
+interface Source {
+  src: string
+  // MIME с кодеком (`video/mp4; codecs="av01.0.08M.10"`): ролик, который браузер не сыграет, он пропускает.
+  type: string
+}
+
+interface Props {
+  // Кадр 0 ролика: виден до загрузки и при сокращённом движении; размеры ролика — его.
+  poster: ImageMetadata
+  // Ролики кадра по умолчанию: AV1 первым, H.264 — всегда.
+  desktop: readonly Source[]
+  // Ролики кадра телефона (окно у́же границы tablet).
+  mobile?: readonly Source[] | undefined
+  class?: string | undefined
+}
+
+const { poster, desktop, mobile = [], class: className } = Astro.props
+---
+
+<video
+  autoplay
+  muted
+  loop
+  playsinline
+  preload="none"
+  poster={poster.src}
+  width={poster.width}
+  height={poster.height}
+  aria-hidden="true"
+  class={className}
+>
+  {mobile.map(({ src, type }) => (
+    <source media={`${MOTION} and ${PHONE}`} src={src} type={type} />
+  ))}
+  {desktop.map(({ src, type }) => (
+    <source media={MOTION} src={src} type={type} />
+  ))}
+</video>

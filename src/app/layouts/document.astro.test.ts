@@ -28,6 +28,8 @@ vi.mock('virtual:astro:assets/fonts/internal', () => {
   const face = (name: string) => `@font-face{font-family:"${name}-1a2b";}`
   const file = (url: string, weight: string) => ({ url, type: 'woff2', weight, style: 'normal' })
   return {
+    // Данные `fontData` из astro:assets — оболочка их не читает.
+    fontDataByCssVariable: new Map(),
     componentDataByCssVariable: new Map([
       [
         '--font-golos-text',

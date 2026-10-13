@@ -85,7 +85,7 @@ Frontmatter `.astro` и модули `.ts` исполняются на серв�
 | SEO: `absoluteUrl`/hreflang, `SeoHead`, фабрики JSON-LD + `JsonLdScript`, генераторы robots/sitemap/rss, реестр ботов `crawlers.yaml` | `shared/seo` |
 | тест-хелперы | `shared/lib/testing` |
 | канон пути и таблица адресов (данные → правила, ответ на адрес запроса) | `shared/redirects` |
-| проектные UI-примитивы: секция страницы и контейнер каркаса, заголовок, сетка «термин — описание» | `shared/ui/{section,heading,term-list}` |
+| проектные UI-примитивы: секция страницы и контейнер каркаса, заголовок, сетка «термин — описание», готовая картинка и ролик-петля | `shared/ui/{section,heading,term-list,media}` |
 | каркас сайта, список записей, хлебные крошки (видимые; `BreadcrumbList` из того же массива печатает layout в `<head>`) | `widgets/site-header`, `widgets/site-footer`, `widgets/post-list`, `widgets/breadcrumbs` |
 | коллекция контента: `.md`, схема, запросы, карточка/статья | `entities/post/{content,model,api,lib,ui}` |
 | реестр авторов и подпись (подпись ставит страница в слот статьи: слайсы одного слоя не импортируют друг друга) | `entities/author/{model,ui}` |

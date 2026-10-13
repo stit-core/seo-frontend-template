@@ -6,6 +6,9 @@
 // раньше своей отрисовки.
 // Страница из кеша переходов «назад» применяет хранилище целиком: ключа нет — атрибут разметки (`M`)
 // или его отсутствие. При `reduced` видео-петли (`video[loop]`) стоят, с возвратом движения — идут.
+// «Полное» вопреки системе снимает с источников петли условие движения (`LoopVideo`, shared/ui/media) и
+// перезапускает их выбор: без скрипта браузер ни одного не выбрал. Только у петли без источника и когда
+// документ разобран — выбранный ролик не перезапускается, а источники все на месте.
 // Тело уезжает в <head> страницы как есть: плотное, без комментариев и прагм; хеш тела — строка
 // ISLANDS (shared/config/islands.ts).
 ---
@@ -16,7 +19,10 @@ const still=()=>s.motion?s.motion==='reduced':R.matches
 let w=false,S=0
 const show=()=>{for(const b of d.querySelectorAll('[data-preference]'))b.setAttribute('aria-pressed',b.dataset.preference==='theme'?dark():b.value===(s.motion||''))
 const m=still()
-for(const v of d.querySelectorAll('video[loop]')){if(m)v.pause()
+for(const v of d.querySelectorAll('video[loop]')){if(m){v.pause();continue}
+const x=R.matches&&!v.currentSrc&&d.readyState!=='loading'?v.querySelectorAll('source[media*=no-preference]'):[]
+for(const o of x)o.media=o.media.replace(/\(prefers-reduced-motion: no-preference\)( and )?/,'')
+if(x.length)v.load()
 else if(w)v.play()?.catch(()=>{})}
 w=m}
 const tick=()=>{show()

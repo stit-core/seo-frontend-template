@@ -35,13 +35,14 @@ const cover = data.cover && data.coverAlt ? data.cover : undefined
     <TagList locale={locale} tags={data.tags} class="mt-sm" />
   </div>
   {cover && (
-    // Ширину держит обёртка: адаптивные стили картинки задают ей width: 100%.
+    // Слот миниатюры постоянной ширины: файл — по плотности экрана, а не по ширине окна.
     <div class="hidden w-thumbnail shrink-0 tablet:block">
       <Picture
         src={cover}
         alt=""
         width={160}
         height={90}
+        densities={[2]}
         formats={['avif', 'webp']}
         loading="lazy"
         decoding="async"

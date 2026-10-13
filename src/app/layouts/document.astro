@@ -1,8 +1,5 @@
 ---
-import type { CssVariable } from 'astro:assets'
-// Файлом компонента, а не из astro:assets: этот модуль тянет стили картинок Astro, и их вторым файлом
-// грузила бы каждая страница.
-import Font from 'astro/components/Font.astro'
+import { type CssVariable, Font } from 'astro:assets'
 import '@/app/styles/index.css'
 import Metrika from '@/app/analytics/metrika.astro'
 import { fontFamilies } from '@/app/styles/fonts'
