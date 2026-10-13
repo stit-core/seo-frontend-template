@@ -48,8 +48,9 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   полный взаимный набор `ru`, `en`, `x-default` (дефолтная локаль) с self-ссылкой, все на своём
   origin; без перевода —
   ни одной `<link hreflang>`; canonical внутри локали; авторедиректов по `Accept-Language` нет
-- `og:image` — превью ссылки 1200×630: у записи с обложкой — её кадр JPEG (`ogImageOf`,
-  `shared/seo`; файл `_astro/`, `immutable`), иначе `public/og-default.png` (`OG_DEFAULT_IMAGE`,
+- `og:image` — превью ссылки 1200×630: у записи с обложкой — её кадр JPEG (`ogImageOf` модуля сборки
+  блога `src/pages/_blog/images.ts`: конвейер картинок Astro серверному бандлу не нужен; файл `_astro/`,
+  `immutable`), иначе `public/og-default.png` (`OG_DEFAULT_IMAGE`,
   `shared/config/site.ts`); URL абсолютный на своём origin, файл есть в сборке. `seo:check` сверяет
   сам файл с нормой базы (`OG_IMAGE` политики): 1200×630 и те же размеры в мета, JPEG или PNG, до
   300 КБ

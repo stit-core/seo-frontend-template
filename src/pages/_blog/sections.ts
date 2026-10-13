@@ -16,7 +16,8 @@ import {
 } from '@/entities/post'
 import { type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { invariant } from '@/shared/lib'
-import { articleImagesOf, blogPosting, breadcrumbList, type Crumb, ogImageOf } from '@/shared/seo'
+import { blogPosting, breadcrumbList, type Crumb } from '@/shared/seo'
+import { articleImagesOf, ogImageOf } from './images'
 
 // Логика секций блога — здесь, разметка — в .astro: ru- и en-страницы делят и то и другое.
 const otherLocale = (locale: Locale): Locale | undefined =>

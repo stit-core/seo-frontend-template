@@ -1,7 +1,8 @@
 import type * as AuthorSlice from '@/entities/author'
 import { getPost, listPosts, type Post, paginate } from '@/entities/post'
 import { type DictKey, t } from '@/shared/i18n'
-import { articleImagesOf, blogPosting, breadcrumbList, ogImageOf } from '@/shared/seo'
+import { blogPosting, breadcrumbList } from '@/shared/seo'
+import { articleImagesOf, ogImageOf } from './images'
 import { blogListPageModel, postPageModel, tagPageModel } from './sections'
 
 vi.mock('astro:content', () =>

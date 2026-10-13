@@ -1,5 +1,8 @@
 ---
-import { type CssVariable, Font } from 'astro:assets'
+import type { CssVariable } from 'astro:assets'
+// Компонент — файлом, а не из astro:assets: модуль astro:assets тянет конвейер картинок (getImage, обёртку
+// sharp), а оболочку рендерят и on-demand страницы — их серверный бандл нёс бы его зря.
+import Font from 'astro/components/Font.astro'
 import '@/app/styles/index.css'
 import Metrika from '@/app/analytics/metrika.astro'
 import { fontFamilies } from '@/app/styles/fonts'

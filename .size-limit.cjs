@@ -20,10 +20,18 @@ const heaviest = pages.reduce((a, b) => (b.size > a.size ? b : a), {
 // ставит факт с запасом не меньше 10 % тем же диффом, что кладёт файлы.
 const fonts = globSync('dist/client/_astro/fonts/*')
 
+// Серверный бандл — код on-demand маршрутов и обёртки: читается с диска, поэтому без сжатия. Сборочное
+// (конвейер картинок Astro для превью и кадров) в нём лишнее: преобразований на запросе нет.
 module.exports = [
   { name: 'CSS сборки (все таблицы)', path: 'dist/client/_astro/*.css', limit: '6.5 KB' },
   { name: `HTML самой тяжёлой страницы (${heaviest.path})`, path: heaviest.path, limit: '5 KB' },
   ...(fonts.length > 0
     ? [{ name: 'Шрифты ДС (все файлы)', path: 'dist/client/_astro/fonts/*', limit: '0 KB' }]
     : []),
+  {
+    name: 'Серверный бандл (dist/server, без сжатия)',
+    path: 'dist/server/**/*.mjs',
+    brotli: false,
+    limit: '925 KB',
+  },
 ]

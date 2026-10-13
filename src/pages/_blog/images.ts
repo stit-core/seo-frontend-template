@@ -1,8 +1,10 @@
 import { getImage } from 'astro:assets'
 import type { ImageMetadata } from 'astro'
 import { OG_DEFAULT_IMAGE } from '@/shared/config'
-import type { OgImage } from './meta'
+import type { OgImage } from '@/shared/seo'
 
+// Модуль сборки страниц блога, а не баррель shared/seo: getImage тянет конвейер картинок Astro, а баррель
+// берут и on-demand маршруты — их серверный бандл конвейер нёс бы зря (преобразований на запросе нет).
 // Картинки для превью ссылок и выдачи — кадры мастера записи в JPEG: его читает любая соцсеть,
 // мессенджер и поисковик. Превью — размера карточки сайта (1200×630), кадры разметки статьи —
 // пропорции, которые просит выдача Google (16:9, 4:3, 1:1). Кадр — обрезка без растяжения (мастер
