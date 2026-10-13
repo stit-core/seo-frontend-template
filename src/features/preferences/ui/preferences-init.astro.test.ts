@@ -78,10 +78,13 @@ function open({
     })
   }
   const { prototype } = window.HTMLMediaElement
-  const paused = vi.spyOn(prototype, 'pause')
   // Браузер выбирает источник ролика по `media` при разборе и при load(), а не на каждой смене настройки
-  // системы: currentSrc — итог последнего выбора, пустой — источника нет и ролик не качается.
+  // системы: currentSrc — итог последнего выбора, пустой — источника нет и ролик не качается. Ролик с
+  // `preload="none"` качается, когда его запускают: автозапуском разметки — сразу, как выбран источник,
+  // или play(). Пауза загрузку не обрывает — её обрывает load(): он ставит ролик на паузу и выбирает
+  // источник заново, и без автозапуска ролик ждёт запуска, не качаясь.
   let selected: string | undefined
+  let fetching = false
   const select = (video: HTMLMediaElement) =>
     [...video.querySelectorAll('source')].find(
       (source) => source.media === '' || window.matchMedia(source.media).matches,
@@ -89,16 +92,28 @@ function open({
   Object.defineProperty(prototype, 'currentSrc', {
     configurable: true,
     get(this: HTMLMediaElement) {
-      selected ??= select(this)
+      if (selected === undefined) {
+        selected = select(this)
+        fetching = selected !== ''
+      }
       return selected
     },
   })
   const reloads = vi.spyOn(prototype, 'load').mockImplementation(function (this: HTMLMediaElement) {
+    this.pause()
     selected = select(this)
+    fetching = selected !== '' && this.autoplay
   })
   const root = preset ? `<html data-theme="${preset}">` : '<html>'
   page.content = `<!doctype html>${root}<head>${island}</head><body><main>Текст</main>${controls}${loop}</body></html>`
   const { document } = page.mainFrame
+  document.addEventListener(
+    'play',
+    () => {
+      fetching ||= Boolean(selected)
+    },
+    true,
+  )
   const click = (selector: string) =>
     document
       .querySelector(selector)
@@ -144,7 +159,7 @@ function open({
       })
     },
     playing: () => video?.paused === false,
-    pausedOnLoad: () => paused.mock.calls.length > 0,
+    fetching: () => fetching,
     // Условия источников петли и ролик, который браузер выбрал по ним последним.
     conditions: () =>
       [...document.querySelectorAll('video source')].map((source) => source.getAttribute('media')),
@@ -329,29 +344,34 @@ describe('PreferencesInit', () => {
     expect(page.stored()).toEqual({})
   })
 
-  it('«Меньше» останавливает видео-петлю, возврат движения запускает её снова', async () => {
+  it('«Меньше» останавливает видео-петлю и обрывает её загрузку, возврат движения запускает её снова', async () => {
     const page = open()
     await page.play()
     page.toggleTheme()
     expect(page.playing()).toBe(true)
     page.chooseMotion('reduced')
     expect(page.playing()).toBe(false)
+    expect(page.fetching()).toBe(false)
     // Смена темы остановленную петлю не запускает: движение по-прежнему «Меньше».
     page.toggleTheme()
     expect(page.playing()).toBe(false)
     page.chooseMotion('')
     expect(page.playing()).toBe(true)
+    expect(page.fetching()).toBe(true)
   })
 
+  // Автозапуск сильнее `preload="none"`: без острова петля, которую посетитель не хочет видеть, качалась бы
+  // целиком и стояла.
   it.each([
-    ['сохранённое «Меньше»', { stored: { motion: 'reduced' } }, true],
-    ['настройка системы без выбора', { reduce: true }, true],
-    ['«Полное» вопреки системе', { reduce: true, stored: { motion: 'full' } }, false],
-    ['движение разрешено', {}, false],
-  ] as const)('%s — видео-петля с загрузки страницы', async (_, visit, stopped) => {
+    ['сохранённое «Меньше»', false, { stored: { motion: 'reduced' } }],
+    ['настройка системы без выбора', false, { reduce: true }],
+    ['«Полное» вопреки системе', true, { reduce: true, stored: { motion: 'full' } }],
+    ['движение разрешено', true, {}],
+  ] as const)('%s — видео-петля качается с загрузки страницы: %s', async (_, fetching, visit) => {
     const page = open(visit)
     await page.ready()
-    expect(page.pausedOnLoad()).toBe(stopped)
+    expect(page.fetching()).toBe(fetching)
+    expect(page.playing()).toBe(false)
   })
 
   // Без скрипта при системном сокращении браузер не выбирает ни одного источника петли: «Полное» — выбор
@@ -373,10 +393,14 @@ describe('PreferencesInit', () => {
     expect(page.source()).toMatch(/\/loop\.av1\.mp4$/)
     expect(page.reloads()).toBe(1)
     await page.play()
+    // «Как в системе» при сокращённом движении — остановка с обрывом загрузки: ещё один load().
     page.chooseMotion('')
     expect(page.playing()).toBe(false)
+    expect(page.fetching()).toBe(false)
+    expect(page.reloads()).toBe(2)
+    // Ролик уже выбран: «Полное» его запускает, а не выбирает заново.
     page.chooseMotion('full')
-    expect(page.reloads()).toBe(1)
+    expect(page.reloads()).toBe(2)
     expect(page.playing()).toBe(true)
   })
 

@@ -22,3 +22,10 @@ declare module '*.yaml' {
   const data: unknown
   export default data
 }
+
+// Ленивая загрузка ролика — атрибут `loading` у <video> (Chromium): в типах разметки Astro его пока нет.
+declare namespace astroHTML.JSX {
+  interface VideoHTMLAttributes {
+    loading?: 'eager' | 'lazy' | undefined | null
+  }
+}

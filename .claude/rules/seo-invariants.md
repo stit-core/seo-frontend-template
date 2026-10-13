@@ -192,9 +192,10 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   hreflang — на своём origin, у картинок и роликов размеры, картинка над h1 — не lazy и с
   `fetchpriority="high"`, фолбэк `<picture>` — не PNG, кадр под устройство (`<source media>`) — со
   своими размерами и достижим,
-  у ролика — постер и `preload="none"`, автозапуск — под условием движения, у `@font-face` — `font-display` swap/fallback/optional, и он только от
-  Fonts API по списку шрифтов (семейство списка в `<style>` страницы; в CSS сборки — нет), preload
-  шрифтов — не больше двух;
+  у ролика — постер, по кнопке — `preload` `none` или `metadata`, с автозапуском — `loading="lazy"`,
+  `preload="none"` и источники под условием движения, у `@font-face` — `font-display`
+  swap/fallback/optional, и он только от Fonts API по списку шрифтов (семейство списка в `<style>`
+  страницы; в CSS сборки — нет), preload шрифтов — не больше двух;
   страниц черновиков нет; сборка против источника — страница у каждой опубликованной записи и
   prerendered-маршрута `src/pages`, hreflang только у страниц сверенных пар. Сам скрипт под
   гейтом: фикстура `.gate-fixtures/seo` обязана давать ровно нарушения из `expected.json`

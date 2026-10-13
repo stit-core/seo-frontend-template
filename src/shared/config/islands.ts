@@ -29,13 +29,13 @@ export interface Island {
 
 export const ISLANDS = {
   preferences: {
-    hash: 'sha256-huwxyJ2yemp6JwEpSSM3KnktKtU468iDbEVKJmv9nCg=',
+    hash: 'sha256-7VLt8Eq26z3tjG+dABk3Fdq6PMYYS8H+Cdc135LnYxQ=',
     basis:
       'выбор темы и движения встаёт до первой отрисовки: кнопка темы — поле THEME, переключатель движения — эффект motion-toggle базы strategy',
     // Без кнопки темы остров нужен только страницам с переключателем движения — их пути и встают сюда.
     pages: THEME.switcher ? ['*'] : [],
     markup: 'data-preference',
-    budget: 750,
+    budget: 725,
   },
   // Счётчик стоит только при заданном идентификаторе: пусто — сторонних скриптов на сайте нет.
   // tag.js, хиты и пиксель счётчика — с его origin. Вебвизору, карте кликов и региональным доменам

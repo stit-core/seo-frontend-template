@@ -33,11 +33,14 @@ function chosen(html: string, { reduce = false, width = 1280 } = {}) {
 }
 
 describe('LoopVideo', () => {
-  it('петля без звука и без загрузки до показа: постер — кадр 0, размеры ролика — его', async () => {
+  // Автозапуск сильнее preload: петля качается целиком, как только браузер её запускает. Ленивая загрузка
+  // откладывает запуск до приближения к экрану, а без автозапуска («меньше») ролик ждёт и не качается.
+  it('петля без звука качается у экрана: постер — кадр 0, размеры ролика — его', async () => {
     const video = parseHtml(await render()).querySelector('video')
     for (const flag of ['autoplay', 'muted', 'loop', 'playsinline']) {
       expect(video?.hasAttribute(flag)).toBe(true)
     }
+    expect(video?.getAttribute('loading')).toBe('lazy')
     expect(video?.getAttribute('preload')).toBe('none')
     expect(video?.getAttribute('poster')).toBe('/_astro/loop.avif')
     expect([video?.getAttribute('width'), video?.getAttribute('height')]).toEqual(['1920', '1080'])
