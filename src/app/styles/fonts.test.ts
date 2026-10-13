@@ -77,6 +77,9 @@ function fontFaults(layer: string, tokens: string, fonts: readonly FontFile[]) {
     }
   }
   for (const font of fonts) {
+    if (!/\.woff2$/i.test(font.file)) {
+      faults.push(`${font.file}: не WOFF2 — файл шрифта ДС только WOFF2 (манифест strategy)`)
+    }
     if (!named.has(font)) {
       faults.push(`${font.file} (${font.family} ${font.weight}): файл не называет ни одна роль`)
     }
@@ -153,6 +156,13 @@ describe('проверка согласия называет нарушение'
     ).toEqual([
       '--font-text: гарнитура Inter литералом — семейству с файлом нужна ссылка var(--font-inter, …) файла токенов (strategy 0.2.1) и строки списка шрифтов',
       '--type-body-family: гарнитура Inter литералом — семейству с файлом нужна ссылка var(--font-inter, …) файла токенов (strategy 0.2.1) и строки списка шрифтов',
+    ])
+  })
+
+  it('файл шрифта не WOFF2: TTF и OTF тяжелее в разы', () => {
+    const ttf: FontFile = { ...onest, file: 'onest-600.ttf' }
+    expect(fontFaults(LAYER, tokens(), [...golos, ttf])).toEqual([
+      'onest-600.ttf: не WOFF2 — файл шрифта ДС только WOFF2 (манифест strategy)',
     ])
   })
 

@@ -39,9 +39,11 @@ describe('Metrika', () => {
     expect(html).not.toContain('defer')
     expect(html).toContain("'init'")
     const [script = ''] = html.match(/<script[^>]*>[\s\S]*?<\/script>/g) ?? []
-    // Сборка шаблона остров не печатает: его вес сверяет только этот тест — той же мерой, что seo:check,
-    // и с запасом нормы бюджета (10 %).
-    expect(brotliBytes(script) * 1.1).toBeLessThanOrEqual(ISLANDS.metrika.budget)
+    // Сборка шаблона остров не печатает: его вес сверяет только этот тест — той же мерой, что seo:check.
+    // Бюджет — норма реестра: факт с запасом 10 %, округлённый вверх до 25 Б, — не меньше и не больше.
+    const norm = brotliBytes(script) * 1.1
+    expect(norm).toBeLessThanOrEqual(ISLANDS.metrika.budget)
+    expect(ISLANDS.metrika.budget).toBeLessThanOrEqual(Math.ceil(norm / 25) * 25)
   })
 
   // CSP пропускает остров по хешу из политики: тело одно на любой идентификатор, иначе каждый

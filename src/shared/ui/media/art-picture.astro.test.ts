@@ -79,7 +79,6 @@ describe('ArtPicture', () => {
       '/_astro/hero-1280.webp 1280w, /_astro/hero-1920.webp 1920w',
     )
     expect([img?.getAttribute('width'), img?.getAttribute('height')]).toEqual(['1920', '1080'])
-    for (const element of [source, img]) expect(element?.getAttribute('sizes')).toBe(sizes)
     expect(html).not.toContain('/_image')
   })
 
@@ -100,6 +99,17 @@ describe('ArtPicture', () => {
         '1350',
       ])
     }
+  })
+
+  // Ширину слота браузер узнаёт из sizes до раскладки: источник со srcset в ширинах без него считает слот
+  // во всё окно и берёт файл крупнее нужного.
+  it('у каждого источника и картинки — sizes слота', async () => {
+    const slot = '(min-width: 38rem) 35rem, calc(100vw - 3rem)'
+    const elements = [
+      ...parseHtml(await render({ mobile, sizes: slot })).querySelectorAll('source, img'),
+    ]
+    expect(elements).toHaveLength(4)
+    for (const element of elements) expect(element.getAttribute('sizes')).toBe(slot)
   })
 
   it('роль слота: кандидат в LCP — сразу и с приоритетом, остальное — лениво', async () => {

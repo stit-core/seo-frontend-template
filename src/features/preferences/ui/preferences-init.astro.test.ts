@@ -222,9 +222,11 @@ describe('PreferencesInit', () => {
     // Комментарии и прагмы линтеров живут во frontmatter: в <head> уезжает только код.
     expect(script).not.toContain('biome-ignore')
     expect(script).not.toContain('//')
-    // Мера — тег целиком в brotli: так же его взвешивает seo:check на странице сборки. Запас нормы
-    // бюджета — 10 %: правка, которая его съела, меняет и бюджет.
-    expect(brotliBytes(script) * 1.1).toBeLessThanOrEqual(ISLANDS.preferences.budget)
+    // Мера — тег целиком в brotli: так же его взвешивает seo:check на странице сборки. Бюджет — норма
+    // реестра: факт с запасом 10 %, округлённый вверх до 25 Б, — не меньше и не больше.
+    const norm = brotliBytes(script) * 1.1
+    expect(norm).toBeLessThanOrEqual(ISLANDS.preferences.budget)
+    expect(ISLANDS.preferences.budget).toBeLessThanOrEqual(Math.ceil(norm / 25) * 25)
   })
 
   // CSP пропускает остров по хешу из политики: правка тела без новой строки политики — красный
