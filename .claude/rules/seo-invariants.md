@@ -188,7 +188,7 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   порога тег индексируется), canonical на плейсхолдере
   origin и ни плейсхолдера в `<body>`, исполняемый код (`<script>`, обработчики `on*=`,
   `javascript:`) — острова реестра `ISLANDS` на своих страницах и в бюджете, ресурсов с чужих
-  origin нет (и в `style`), data:-адресов — не больше 10 КБ, og:image и
+  origin и data:-адресов нет (и в `style`, и в CSS сборки: CSP их не пропускает), og:image и
   hreflang — на своём origin, у картинок и роликов размеры, картинка над h1 — не lazy и с
   `fetchpriority="high"`, фолбэк `<picture>` — не PNG, кадр под устройство (`<source media>`) — со
   своими размерами и достижим,

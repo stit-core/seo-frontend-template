@@ -21,10 +21,6 @@ export { ISLANDS }
 // SG-PERF-13): каждый следующий спорит за канал с картинкой первого экрана.
 export const FONT_PRELOAD_MAX = 2
 
-// data:-адреса в странице — не больше 10 КБ на страницу (ворота strategy SG-WEIGHT-07): встроенный
-// ресурс не кешируется и едет в HTML каждого визита, тормозя первый экран.
-export const INLINE_DATA_MAX = 10 * 1024
-
 // Превью ссылки (og:image) — норма базы strategy: 1200×630 (эту рамку режут соцсети и мессенджеры),
 // JPEG или PNG (AVIF и WebP превью читают не все), не тяжелее 300 КБ.
 export const OG_IMAGE = { width: 1200, height: 630, formats: ['jpeg', 'png'], maxBytes: 300 * 1024 }

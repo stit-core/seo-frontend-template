@@ -24,7 +24,7 @@
 //   не lazy и с fetchpriority; фолбэк <picture> — не PNG; кадр под устройство (<source media>) — со
 //   своими размерами и достижим; ролик — с постером, по кнопке — preload none или metadata, с автозапуском —
 //   ленивый, preload="none" и только под условием движения;
-//   ресурсов с чужих origin нет (и в style=""), data:-адресов — не больше INLINE_DATA_MAX,
+//   ресурсов с чужих origin и data:-адресов нет (и в style="", и в CSS сборки): CSP их не пропустит;
 //   @font-face — с font-display swap/fallback/optional;
 // - шрифты — Fonts API по списку проекта: @font-face — семейства списка в <style> страницы (в CSS
 //   сборки его нет), preload шрифтов — не больше FONT_PRELOAD_MAX;
@@ -72,7 +72,6 @@ import {
   FONT_PRELOAD_MAX,
   GENERIC_TITLE,
   ICON_MIN_SIDE,
-  INLINE_DATA_MAX,
   JSON_LD_FORBIDDEN,
   JSON_LD_TYPES,
   NOINDEX_ROUTES,
@@ -223,9 +222,17 @@ function checkSnippet(where, title, description, siteName) {
   }
 }
 
-// Абсолютный URL ресурса на чужом origin вне списка политики — ошибка: шрифты, стили, скрипты и
-// картинки грузятся со своего сайта.
+// Шрифты, стили, скрипты и картинки грузятся со своего сайта: чужой origin — только из списка политики,
+// data:-адрес — никогда. CSP сайта пропускает в директивах загрузки только свой сайт и origin из списка,
+// и встроенный ресурс браузер не покажет.
 function checkResourceUrl(where, url) {
+  if (/^\s*data:/i.test(url)) {
+    fail(
+      where,
+      `data:-адрес ресурса — CSP сайта его не пропустит, ресурс — файлом: ${url.slice(0, 40)}`,
+    )
+    return
+  }
   if (!/^(https?:)?\/\//.test(url)) return
   const { origin } = new URL(url, OWN_ORIGIN)
   if (origin !== OWN_ORIGIN && !RESOURCE_ORIGINS.includes(origin)) {
@@ -264,9 +271,8 @@ const RESOURCE_LINK =
   /^(stylesheet|preload|modulepreload|prefetch|preconnect|dns-prefetch|manifest|icon|apple-touch-icon|mask-icon)$/i
 
 // Ресурсы документа: что браузер скачает сам (src, srcset, poster, data; ресурсные link; CSS в
-// <style> и в атрибутах style). data:-адреса едут в самом HTML — их вес на страницу ограничен.
+// <style> и в атрибутах style).
 function checkResources(where, html) {
-  let inline = 0
   for (const [, tag, attrs = ''] of html.matchAll(
     /<(link|script|img|source|video|audio|iframe|embed|object|track)\b([^>]*)>/g,
   )) {
@@ -274,12 +280,9 @@ function checkResources(where, html) {
       const rels = (/\brel="([^"]*)"/.exec(attrs)?.[1] ?? '').split(/\s+/)
       const href = decode(/\bhref="([^"]*)"/.exec(attrs)?.[1] ?? '')
       if (rels.some((rel) => RESOURCE_LINK.test(rel))) checkResourceUrl(where, href)
-      if (href.startsWith('data:')) inline += href.length
       continue
     }
     for (const [, name, value = ''] of attrs.matchAll(/\b(src|srcset|poster|data)="([^"]*)"/g)) {
-      // В data:-адресе есть запятая — srcset с ним не делится на кандидатов.
-      if (value.includes('data:')) inline += value.length
       const urls =
         name === 'srcset' ? value.split(',').map((item) => item.trim().split(/\s+/)[0]) : [value]
       for (const url of urls) checkResourceUrl(where, decode(url ?? ''))
@@ -289,15 +292,6 @@ function checkResources(where, html) {
   const attributes = [...html.matchAll(/\sstyle="([^"]*)"/g)].map(([, css = '']) => decode(css))
   for (const css of blocks) checkCss(where, css, true)
   for (const css of attributes) checkCss(where, css)
-  for (const css of [...blocks, ...attributes]) {
-    for (const [, url = ''] of css.matchAll(/url\(\s*['"]?(data:[^'")]*)/g)) inline += url.length
-  }
-  if (inline > INLINE_DATA_MAX) {
-    fail(
-      where,
-      `data:-адреса в странице — ${(inline / 1024).toFixed(1)} КБ, не больше ${INLINE_DATA_MAX / 1024} КБ: встроенный ресурс не кешируется и едет в каждом визите`,
-    )
-  }
 }
 
 // Картинки, видео и фреймы — с размерами (иначе сдвиг вёрстки); картинка над h1 — кандидат в
