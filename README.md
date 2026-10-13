@@ -40,6 +40,13 @@ pnpm prepare         # lefthook git-hooks
 pnpm dev             # http://localhost:4321 (демон Astro 7: pnpm astro dev stop)
 ```
 
+Браузеры браузерного набора (`pnpm test:e2e`, шаг `/release`) — Chromium и WebKit Playwright:
+
+```bash
+pnpm exec playwright install chromium webkit
+pnpm exec playwright install-deps webkit   # только Linux: системные библиотеки WebKit (просит sudo)
+```
+
 Как в контейнере — prod-сборка с плейсхолдером origin, штамповка и обёртка сервера
 (`pnpm start` читает `.env`, если он есть; шаблон — `.env.example`):
 

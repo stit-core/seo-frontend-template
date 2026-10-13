@@ -267,6 +267,7 @@ blocked-by: —
   формулу резиновой роли выбирает ДС (Handoff strategy).
 - Проза (S13). «Секция» — только `Section` (`src/pages/_<name>/` — файлы страницы, «секции» стека — разделы документа);
   принцип — «0 JS по умолчанию», факт — «JavaScript — только острова по реестру»; CON-16 — и в карте `CLAUDE.md`.
+  Браузеры набора — строка `README.md § Быстрый старт` (окружение ставят там); `/release` и `tests-pipeline` — ссылкой.
 
 ## Handoff
 - P5: блоки стоят в секциях P4; повторяемая форма наследует сводку ошибок; согласие — строка `ISLANDS` счётчика
@@ -294,7 +295,7 @@ blocked-by: —
 
 ## Где мы сейчас
 Этапы A–D приняты (`M/validation-adopt-design-system-{A,B,C,D}.md` — PASS). Этап E: замечания валидатора части 1
-(`M/validation-adopt-design-system-E.md`) — B1, N1, N2, N4 закрыты, N3, N5–N7 следом (`M/p4e/fix/`); часть 2 — S13.
+(`M/validation-adopt-design-system-E.md`) — B1, N1, N2, N4, N5 закрыты, N3, N6, N7 следом (`M/p4e/fix/`); часть 2 — S13.
 Следующий шаг — перепроверка валидатором (часть 1 — фиксы, часть 2 — S13), затем S14. Дальше:
 - Материалы этапа E — `M/p4e/` (`notes.md`; R1 — `r1-mut.sh`; R2 — `r2-*.mjs`, `r2_mut2.py`; S12 — `s12_mutations.py`,
   `e2e_mut.py`, `s12.out`; S13 — `s13-notes.md`; эталон — `mutations.py`, 45 якорей); D — `M/p4d/`, C — `M/p4c/`.
