@@ -19,11 +19,10 @@ const controls = [
 const loop = await container.renderToString(LoopVideo, {
   props: {
     poster: { src: '/_astro/loop.avif', width: 1920, height: 1080, format: 'avif' },
-    desktop: [
+    sources: [
       { src: '/_astro/loop.av1.mp4', type: 'video/mp4; codecs="av01.0.08M.10"' },
       { src: '/_astro/loop.h264.mp4', type: 'video/mp4; codecs="avc1.640032"' },
     ],
-    mobile: [{ src: '/_astro/loop-4x5.av1.mp4', type: 'video/mp4; codecs="av01.0.04M.10"' }],
   },
 })
 
@@ -357,10 +356,10 @@ describe('PreferencesInit', () => {
 
   // Без скрипта при системном сокращении браузер не выбирает ни одного источника петли: «Полное» — выбор
   // посетителя вопреки системе — снимает с них условие движения и запускает выбор заново.
-  it('«Полное» вопреки системе — петля получает источник, кадр телефона по-прежнему по окну', async () => {
+  it('«Полное» вопреки системе — петля получает источник', async () => {
     const page = open({ reduce: true, stored: { motion: 'full' } })
     await page.ready()
-    expect(page.conditions()).toEqual(['(width < 40rem)', '', ''])
+    expect(page.conditions()).toEqual(['', ''])
     expect(page.source()).toMatch(/\/loop\.av1\.mp4$/)
     expect(page.reloads()).toBe(1)
   })

@@ -6,14 +6,12 @@ import LoopVideo from './loop-video.astro'
 const astro = await AstroContainer.create()
 
 const poster = { src: '/_astro/loop.avif', width: 1920, height: 1080, format: 'avif' }
-const desktop = [
+const sources = [
   { src: '/_astro/loop.av1.mp4', type: 'video/mp4; codecs="av01.0.08M.10"' },
   { src: '/_astro/loop.h264.mp4', type: 'video/mp4; codecs="avc1.640032"' },
 ]
-const mobile = [{ src: '/_astro/loop-4x5.av1.mp4', type: 'video/mp4; codecs="av01.0.04M.10"' }]
 
-const render = (props: Record<string, unknown> = {}) =>
-  astro.renderToString(LoopVideo, { props: { poster, desktop, ...props } })
+const render = () => astro.renderToString(LoopVideo, { props: { poster, sources } })
 
 const browsers: Browser[] = []
 afterAll(() => Promise.all(browsers.map((browser) => browser.close())))
@@ -47,21 +45,27 @@ describe('LoopVideo', () => {
   })
 
   it('при системном сокращении движения браузер не выбирает ни одного ролика', async () => {
-    const html = await render({ mobile })
+    const html = await render()
     for (const width of [390, 1280]) expect(chosen(html, { reduce: true, width })).toBeUndefined()
-    expect(chosen(html, { width: 390 })).toBe('/_astro/loop-4x5.av1.mp4')
-    expect(chosen(html, { width: 1280 })).toBe('/_astro/loop.av1.mp4')
-    expect(chosen(await render(), { width: 390 })).toBe('/_astro/loop.av1.mp4')
+  })
+
+  // Место под роликом резервирует постер, а он один на все окна: ролик другой пропорции на узком окне
+  // растянул бы бокс, когда придут данные ролика, и сдвинул всё, что ниже.
+  it('на любом окне браузер берёт тот же ролик — пропорции постера', async () => {
+    const html = await render()
+    for (const width of [320, 390, 639, 640, 1280]) {
+      expect(chosen(html, { width })).toBe('/_astro/loop.av1.mp4')
+    }
   })
 
   it('ролик, который браузер не сыграет, он пропускает по типу с кодеком', async () => {
-    const types = [...parseHtml(await render({ mobile })).querySelectorAll('source')].map(
-      (source) => source.getAttribute('type'),
+    const types = [...parseHtml(await render()).querySelectorAll('source')].map((source) =>
+      source.getAttribute('type'),
     )
-    expect(types).toEqual([...mobile, ...desktop].map(({ type }) => type))
+    expect(types).toEqual(sources.map(({ type }) => type))
   })
 
   it('не имеет нарушений доступности', async () => {
-    await expectNoA11yViolations(await render({ mobile }))
+    await expectNoA11yViolations(await render())
   })
 })
