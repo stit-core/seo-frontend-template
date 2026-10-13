@@ -265,22 +265,23 @@ blocked-by: —
 
 ## Где мы сейчас
 Этапы A–C приняты (`M/validation-adopt-design-system-{A,B,C}.md` — PASS). Этап D: S9–S11 сделаны, `tokens.css` —
-сборка `ds_build` strategy 0.2.2 (тег `v0.2.2`). Валидатор D — FAIL (`M/validation-adopt-design-system-D.md`: B1 и
-N1–N11); замечания закрываются коммитами `fix(...)`, ход и пробы — `M/p4d/fix/` (`notes.md`). Закрыты: B1 — ролик
-петли один на все окна; N1 — «меньше» обрывает загрузку петли, петля ленивая; N2 — data:-адрес краснит `seo:check`;
-N3 — серверный бандл без конвейера картинок; N4, N7, N8 — `sizes` у источников `ArtPicture`, бюджет острова с обеих
-сторон, шрифт только WOFF2; N5 — `seo:check` пропускает законный сырой HTML; N6 — кадры обложки по центру, ключевое —
-в безопасной зоне мастера.
-Следующий шаг — остальные замечания, затем перепроверка валидатором D, затем этап E. Дальше:
+сборка `ds_build` strategy 0.2.2 (тег `v0.2.2`); замечания валидатора D (`M/validation-adopt-design-system-D.md`, FAIL:
+B1, N1–N11) закрыты коммитами `fix(...)`, ход и пробы — `M/p4d/fix/notes.md`: B1 — ролик петли один на все окна (CLS 0
+на 390 и 1280); N1 — «меньше» обрывает загрузку петли, петля ленивая; N2 — data:-адрес краснит `seo:check`; N3 —
+серверный бандл без конвейера картинок; N4, N7, N8 — `sizes` у источников, бюджет острова с обеих сторон, шрифт только
+WOFF2; N5 — `seo:check` пропускает законный сырой HTML; N6 — кадры обложки по центру; N9, N10 — правда плана.
+Следующий шаг — перепроверка валидатором D, затем этап E. Дальше:
 - S12. T-24: на новой странице в `pagereveal` — `event.viewTransition.ready`, затем `document.getAnimations()`: при
   `reduce` и `data-motion="reduced"` кадров перехода нет, иначе — группа `root` на 300 мс (проба —
   `M/p4c/s7/transition.mjs`). Снимок в WebKit Playwright делает со своим `<style>`: сообщение CSP — его. Пункты среды
-  базы (`M/p4c/ui-audit-s7/`): «серьёзно» — только J3 (правило приложения). T-34 браузером — на странице с `LoopVideo`
-  (сценарий «медиа-образец» покрытия): при `reduce` ни одного запроса ролика.
+  базы (`ui_audit` 0.2.2, `M/val-p4d/ui/`): «серьёзно» — J3 (правило приложения) и F2 WARN на пяти страницах из шести,
+  кроме главной (`a.touch-target` 51×20 на десктопе, было и до этапа D) — цель десктопа решает S12. T-34 браузером — на
+  странице с `LoopVideo`: при `reduce` ни одного запроса ролика; страницы и пробы петли — `M/p4d/fix/` (`video-*.mjs`).
 - Материалы этапа D — `M/p4d/`: `notes.md`; мутации — `s9_mutations.py` (шаблон), `s9_scenario_mutations.py`
   (сценарий) и их `.out`, прогон — `mutate.py` (worktree `M/wt-p4d`, перенос дерева — `sync-wt.sh`); сценарий «шрифты
   базы» — `scenario/` (`apply.sh`, пробы `fonts.mjs`, `measure.mjs`); S10–S11 — `s10_mutations.py`, `s11_mutations.py`
-  и их `.out` (worktree `M/wt-p4d2`, `sync-wt2.sh`), облик до и после — `shots/` (`media.mjs`). Этапа C — `M/p4c/`.
+  и их `.out` (worktree `M/wt-p4d2`, `sync-wt2.sh`), облик до и после — `shots/` (`media.mjs`); фикс замечаний
+  валидатора — `fix/` (пробы, `covers.mjs`, кадры `shots/`, мутации `n4n7n8_mut.py`, `n5_check.py`). Этапа C — `M/p4c/`.
 - DTCG ДС шаблона — `M/p4a/ds/docs/projects/site-template/design/system.tokens.json`; пересборка — `ds_build.py build
   site-template --repo M/p4a/ds` соседа (окружение `~/.cache/design-deep-dive/venv`), итог — в `tokens.css` (`cmp`).
 - Новая роль — строка DTCG и строка слоя (ключ — не именем переменной ДС; роль текста — ещё `--typeface-<роль>`); новая
