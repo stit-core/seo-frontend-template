@@ -181,6 +181,7 @@
     "dist/client/xdefault/index.html: x-default не совпадает ни с одной локальной версией",
     "dist/client/_astro/site.css: @font-face с font-display block: текст невидим, пока грузится шрифт",
     "dist/client/_astro/site.css: @font-face Y: шрифт мимо списка src/app/styles/fonts.ts — его подключает Fonts API по строке списка",
+    "dist/server/chunks/sharp_Fx1.mjs: импорт sharp — конвейер картинок Astro в серверном бандле: getImage и astro:assets — только модулям сборки",
     "dist/client: у организации несколько имён в JSON-LD: «Фикстура» (dist/client/blog/statya/index.html), «ООО «Фикстура»» (dist/client/organizaciya/index.html) — имя одно, бренд; юрлицо — в legalName",
     "dist/client/dubl/index.html: title совпадает с dist/client/about/index.html",
     "dist/client/en/blog/post/index.html: hreflang ru → https://__site_origin__/blog/zapis не взаимный",

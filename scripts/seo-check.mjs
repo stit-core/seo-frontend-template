@@ -34,6 +34,7 @@
 //   бюджет и вид — инлайн или файл;
 // - сборка против источника: страница у каждой опубликованной записи и prerendered-маршрута,
 //   страниц черновиков нет;
+// - серверный бандл (dist/server) — без конвейера картинок Astro: модуля с импортом sharp в нём нет;
 // - карта сайта sitemap.xml: ровно индексируемые страницы сборки своим self-canonical, lastmod —
 //   дата последнего изменения записи из frontmatter (правка, без неё — публикация), у остальных
 //   страниц его нет.
@@ -932,6 +933,22 @@ if (pages.size === 0) {
 
 for (const file of walk(client).filter((path) => path.endsWith('.css'))) {
   checkCss(`dist/client/${relative(client, file).split(sep).join('/')}`, readFileSync(file, 'utf8'))
+}
+
+// Серверный бандл — код on-demand маршрутов и обёртки. Картинки на запросе не преобразуются (`/_image`
+// закрыт), поэтому конвейер картинок Astro — getImage и сервис sharp — живёт только в модулях сборки:
+// модуль dist/server с импортом sharp значит, что on-demand маршрут дотянулся до него через общий модуль
+// (баррель, `astro:assets`). Бюджет серверного бандла в size-limit ловит то же только по объёму.
+const SHARP_IMPORT =
+  /\bimport\s*\(\s*["']sharp["']\s*\)|\bfrom\s*["']sharp["']|\bimport\s*["']sharp["']/
+const server = resolve(root, 'dist/server')
+for (const file of existsSync(server) ? walk(server).filter((path) => path.endsWith('.mjs')) : []) {
+  if (SHARP_IMPORT.test(readFileSync(file, 'utf8'))) {
+    fail(
+      `dist/server/${relative(server, file).split(sep).join('/')}`,
+      'импорт sharp — конвейер картинок Astro в серверном бандле: getImage и astro:assets — только модулям сборки',
+    )
+  }
 }
 
 // ---------- между страницами: имя организации, уникальность сниппета, hreflang ----------
