@@ -196,9 +196,9 @@
   --color-danger-text: #ff9a92;
 }
 
-/* Сокращённое движение: только токены движения. */
+/* Сокращённое движение: только токены движения; выбор посетителя data-motion сильнее системы в обе стороны. */
 @media (prefers-reduced-motion: reduce) {
-  :root {
+  :root:not([data-motion="full"]) {
     --motion-marketing-duration-page: 0ms;
   }
 }
