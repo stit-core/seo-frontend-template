@@ -88,7 +88,7 @@ origin штампуется при старте.
 | `pnpm indexnow <origin> [карта-до.xml] --key <ключ>` | после выката: адреса, которые изменил релиз, — новые, изменённые и удалённые против карты до выката; ключ сверяется с живым `/<ключ>.txt`; сухой прогон, отправка — `--send` (`scripts/indexnow.mjs`, шаг `/release`) |
 | `pnpm geo:probe <origin> [strategy-path]` | GEO-шаг `/seo-audit` (вне gate): `geo_probe.py --ua-probe` соседнего strategy по шаблонам страниц сборки, флаги B и S — «чинить», кроме ожидаемых политикой сайта; сверка копии реестра ботов с базой; без соседа — строка пропуска |
 | `pnpm bots:sources` | источники сетей ботов для allowlist edge (вне gate): первой строкой — версия реестра `crawlers.yaml`, дальше по строке на бота — назначение, токен, список сетей вендора, суффиксы rDNS; вывод — файл хаба `configs/crowdsec/ai-bots.sources` (`infra-handoff.md § Боты`) |
-| `pnpm accept:image <image>` | приёмка собранного образа до пуша: отказ без `SITE_URL` за 20 с, штамповка (страницы, карта, фиды), статусы, canonical, robots, одна форма адреса, отказ 400 без падения на `TRACE`, staging, дренаж по SIGTERM быстрее `SHUTDOWN_TIMEOUT_MS`; TTFB — печать без порога |
+| `pnpm accept:image <image>` | приёмка собранного образа до пуша: размер в бюджете (255 МБ), отказ без `SITE_URL` за 20 с, штамповка (страницы, карта, фиды), статусы, canonical, robots, одна форма адреса, отказ 400 без падения на `TRACE`, staging, дренаж по SIGTERM быстрее `SHUTDOWN_TIMEOUT_MS`; TTFB — печать без порога |
 | `pnpm check` | **gate**: шаги по порядку до первого красного — состав и что держит каждый: rule `tests-pipeline` § Gate |
 
 Перед claim «готово» / push — **`pnpm check`** (его же гоняет pre-push — для пушимого HEAD на

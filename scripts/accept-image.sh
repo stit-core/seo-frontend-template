@@ -1,8 +1,8 @@
 #!/usr/bin/env sh
-# Приёмка собранного образа до пуша в registry: отказ без SITE_URL за конечное время, штамповка
-# origin (страницы, карта, фиды), статусы ключевых маршрутов, canonical, CSP, robots, одна форма
-# адреса (301 с неканонической, 404 на %2F), отказ 400 без падения на TRACE, контур staging, дренаж
-# по SIGTERM; заголовки и TTFB — печать без порога.
+# Приёмка собранного образа до пуша в registry: размер в бюджете, отказ без SITE_URL за конечное
+# время, штамповка origin (страницы, карта, фиды), статусы ключевых маршрутов, canonical, CSP, robots,
+# одна форма адреса (301 с неканонической, 404 на %2F), отказ 400 без падения на TRACE, контур staging,
+# дренаж по SIGTERM; заголовки и TTFB — печать без порога.
 # Использование: pnpm accept:image <image> [port]
 set -u
 
@@ -14,6 +14,8 @@ ORIGIN=https://accept.example
 REFUSE_S=20
 # Умолчание SHUTDOWN_TIMEOUT_MS обёртки: дренаж обязан уложиться в него, docker stop ждёт дольше.
 DRAIN_MS=15000
+# Бюджет образа — факт с запасом 10 % (docs/stack/_templates/dependencies.md § Бюджеты).
+BUDGET_MB=255
 
 if [ -z "$IMAGE" ]; then
   echo "usage: pnpm accept:image <image> [port]" >&2
@@ -47,7 +49,9 @@ docker image inspect "$IMAGE" >/dev/null 2>&1 || {
   echo "нет образа $IMAGE — собери его сначала" >&2
   exit 2
 }
-docker images "$IMAGE" --format '  размер: {{.Size}}'
+size=$(docker image inspect -f '{{.Size}}' "$IMAGE")
+[ "$size" -le $((BUDGET_MB * 1000000)) ] && ok "размер: $((size / 1000000)) МБ, бюджет $BUDGET_MB МБ" ||
+  fail "размер: $((size / 1000000)) МБ — больше бюджета $BUDGET_MB МБ"
 
 running() { [ "$(docker inspect -f '{{.State.Running}}' "$NAME" 2>/dev/null)" = "true" ]; }
 exit_code() { docker inspect -f '{{.State.ExitCode}}' "$NAME"; }
