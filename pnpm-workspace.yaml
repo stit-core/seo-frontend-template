@@ -24,15 +24,18 @@ peerDependencyRules:
     # tsconfck (через плагин Steiger) объявляет TypeScript ^5, а читает только tsconfig — гейт на 6 зелёный.
     tsconfck>typescript: '6'
 
-# Уязвимость, которую не закрыть обновлением, — строкой с причиной: почему она в этом сайте не
-# эксплуатируется. Цикл обновлений пересматривает строки (docs/stack/_templates/dependencies.md).
+# Исправленную версию транзитивной зависимости не пускает точный пин её владельца — подмена с причиной.
+# Селектор — только уязвимые версии: когда владелец поднимет пин сам, подмена не сработает, и цикл
+# обновлений её снимет (docs/stack/_templates/dependencies.md § Обновления).
+overrides:
+  # handlebars 4.7.9 — точный пин eslint-plugin-boundaries 7.2.0, последней версии плагина; две critical
+  # (GHSA-8r5x-fm3f-whwj, GHSA-p8wg-vrv2-v86f) закрыты в 4.7.10.
+  'handlebars@<4.7.10': 4.7.10
+
+# Уязвимость без исправленной версии — строкой с причиной: почему она в этом сайте не эксплуатируется.
+# Цикл обновлений пересматривает строки (docs/stack/_templates/dependencies.md).
 auditConfig:
   ignoreGhsas:
-    # handlebars 4.7.9 — точный пин eslint-plugin-boundaries 7.2.0, последней версии плагина: он
-    # компилирует шаблоны сообщений из eslint.config.js проекта — чужого шаблона нет; линтер в образ
-    # не едет.
-    - GHSA-8r5x-fm3f-whwj
-    - GHSA-p8wg-vrv2-v86f
-    # braces ≤ 3.0.3, исправления нет: micromatch того же плагина разбирает шаблоны путей из
-    # eslint.config.js.
+    # braces ≤ 3.0.3, исправления нет: micromatch линтера eslint-plugin-boundaries разбирает шаблоны
+    # путей из eslint.config.js.
     - GHSA-vfj7-8cjw-p6xm
