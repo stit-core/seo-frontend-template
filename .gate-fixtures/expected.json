@@ -192,7 +192,6 @@
     "dist/server/chunks/forma_Fx2.mjs: импорт nodemailer — пакета нет в dependencies, а образ ставит только их",
     "dist/server/chunks/sharp_Fx1.mjs: импорт sharp — конвейер картинок Astro в серверном бандле: getImage и astro:assets — только модулям сборки",
     "docker/server.mjs: import() или require() с вычисляемым именем — пакет не проверить: имя модуля строкой",
-    "docker/server.mjs: импорт pino — пакета нет в dependencies, а образ ставит только их",
     "docker/server.mjs: импорт semver — пакета нет в dependencies, а образ ставит только их",
     "docker/server.mjs: импорт yaml — пакета нет в dependencies, а образ ставит только их",
     "docker/server.mjs: импорт picocolors — пакета нет в dependencies, а образ ставит только их",

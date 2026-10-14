@@ -4,6 +4,7 @@
     "@astrojs/rss": "*",
     "@sentry/node": "*",
     "astro": "*",
+    "pino": "*",
     "sharp": "*",
     "zod": "*"
   }

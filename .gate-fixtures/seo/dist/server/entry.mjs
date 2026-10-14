@@ -1,6 +1,6 @@
-// Законный модуль: зависимости — с подпутём, побочным и динамическим импортом; встроенные модули,
-// относительный импорт и путь к файлу шаблоном — не пакеты; слово sharp и «import 'js-yaml'» в тексте —
-// не импорт.
+// Законный модуль: зависимости — с подпутём, побочным и динамическим импортом; встроенные модули, адрес
+// со схемой, относительный импорт и путь к файлу шаблоном — не пакеты; слово sharp и «import 'js-yaml'»
+// в тексте — не импорт.
 import { readFileSync } from 'fs'
 import { createRequire } from 'node:module'
 import '@astrojs/rss'
@@ -13,5 +13,6 @@ const { relative } = __require('path')
 export const imageService = { entrypoint: 'astro/assets/services/sharp' }
 export const hint = "import 'js-yaml' — текст ошибки, а не импорт"
 export const page = (name) => import(`./chunks/${name}.mjs`)
+export const inline = () => import('data:text/javascript,export default 1')
 export const sentry = () => import('@sentry/node')
 export { readFileSync, relative, z }
