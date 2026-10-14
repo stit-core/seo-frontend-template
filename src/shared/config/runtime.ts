@@ -53,8 +53,9 @@ const RuntimeConfigSchema = z.object({
   CAPTCHA_PROVIDER: z.enum(['none']).default('none'),
   CAPTCHA_SECRET: z.string().default(''),
   CAPTCHA_FAIL_MODE: z.enum(['open', 'closed']).default('open'),
-  // Обёртка сервера (docker/server.mjs): keep-alive дольше idle-таймаута прокси, дренаж на SIGTERM.
-  KEEP_ALIVE_TIMEOUT_MS: milliseconds(65_000),
+  // Обёртка сервера (docker/server.mjs): keep-alive дольше idle-соединения прокси (у Traefik — 90 с),
+  // дренаж на SIGTERM.
+  KEEP_ALIVE_TIMEOUT_MS: milliseconds(95_000),
   SHUTDOWN_TIMEOUT_MS: milliseconds(15_000),
 })
 

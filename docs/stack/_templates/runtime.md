@@ -17,7 +17,7 @@ status: draft
 | порт / хост | `PORT=3000` / `HOST=0.0.0.0` |
 | liveness | `GET /healthz` → `200 ok`, `Cache-Control: no-store`, без зависимостей |
 | graceful shutdown | `SIGTERM`/`SIGINT` → `close()` + `closeIdleConnections()`, потолок `SHUTDOWN_TIMEOUT_MS` (15 с) |
-| keep-alive | `KEEP_ALIVE_TIMEOUT_MS` 65 с (> idle-таймаута прокси), `headersTimeout` +5 с |
+| keep-alive | `KEEP_ALIVE_TIMEOUT_MS` 95 с (> idle-соединения прокси, у Traefik 90 с), `headersTimeout` +5 с |
 | сжатие | в процессе нет — жмёт Traefik |
 | память | `mem_limit` _512 МБ_ (768 МБ — с рендером на запрос и кешем процесса), `NODE_OPTIONS=--max-old-space-size` ≈ 75 % лимита |
 | реплик | _1_ — модульного состояния в приложении нет, масштабирование горизонтальное |

@@ -60,7 +60,8 @@ http.on('request', (request, response) => {
   }
 })
 
-// Traefik/nginx держат idle-соединение дольше, чем дефолтные 5 с Node.
+// Прокси держит idle-соединение с процессом дольше, чем дефолтные 5 с Node (Traefik — 90 с):
+// закрывает его процесс позже прокси, иначе запрос уходит в закрытый сокет и получает 502.
 http.keepAliveTimeout = config.KEEP_ALIVE_TIMEOUT_MS
 http.headersTimeout = config.KEEP_ALIVE_TIMEOUT_MS + 5_000
 

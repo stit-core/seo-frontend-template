@@ -82,8 +82,8 @@ origin из runtime `SITE_URL` (`Astro.site` для URL не используе�
 Адаптер `@astrojs/node` не даёт ни graceful shutdown, ни keep-alive. Обёртка запускает
 `startServer()` адаптера (`ASTRO_NODE_AUTOSTART=disabled`) и добавляет:
 
-- `keepAliveTimeout` 65 с (> idle-таймаута Traefik) и `headersTimeout` +5 с — иначе
-  прокси переиспользует соединение, которое Node уже закрывает, и ловит 502
+- `keepAliveTimeout` 95 с (> idle-соединения Traefik с процессом, 90 с) и `headersTimeout` +5 с —
+  иначе прокси переиспользует соединение, которое Node уже закрывает, и ловит 502
 - дренаж на `SIGTERM`/`SIGINT`: `close()` + `closeIdleConnections()` каждые 200 мс,
   потолок `SHUTDOWN_TIMEOUT_MS` (15 с; меньше `stop_grace_period` контейнера);
   `docker stop` без трафика — доли секунды, запрос в полёте доезжает. Сигнал доходит до node,
@@ -132,7 +132,7 @@ origin из runtime `SITE_URL` (`Astro.site` для URL не используе�
 | `ROBOTS_POLICY` | `index` \| `noindex` → `X-Robots-Tag: noindex, nofollow` на каждом ответе процесса и `robots.txt` = `Disallow: /` | `index` | нет (заголовок и `robots.txt`) |
 | `RELEASE` | версия для логов | `unknown` | нет |
 | `LOG_LEVEL` | `debug` \| `info` \| `warn` \| `error` — JSON-лог запросов | `info` | нет |
-| `KEEP_ALIVE_TIMEOUT_MS` / `SHUTDOWN_TIMEOUT_MS` | обёртка сервера | `65000` / `15000` | нет |
+| `KEEP_ALIVE_TIMEOUT_MS` / `SHUTDOWN_TIMEOUT_MS` | обёртка сервера | `95000` / `15000` | нет |
 | `INDEXNOW_KEY` | ключ IndexNow (8–128 символов `a-zA-Z0-9-`), подтверждается файлом `/<ключ>.txt` | `''` — файла нет | нет (файл `.txt`) |
 | `FORM_DELIVERY` | канал доставки заявки: `smtp` \| `backend` | `smtp` | нет |
 | `SMTP_URL` | строка подключения SMTP (`smtps://user:pass@host`) — канал `smtp` | `''` | нет (секрет) |

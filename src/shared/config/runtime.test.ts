@@ -17,7 +17,7 @@ describe('runtime config', () => {
     CAPTCHA_PROVIDER: 'none',
     CAPTCHA_SECRET: '',
     CAPTCHA_FAIL_MODE: 'open',
-    KEEP_ALIVE_TIMEOUT_MS: 65_000,
+    KEEP_ALIVE_TIMEOUT_MS: 95_000,
     SHUTDOWN_TIMEOUT_MS: 15_000,
   }
 

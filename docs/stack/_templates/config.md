@@ -26,7 +26,7 @@ prerendered-выхода, `absoluteUrl()` на on-demand); публичные и
 | `INDEXNOW_KEY` | ключ IndexNow; файл `/<ключ>.txt` | `''` | нет | нет |
 | `RELEASE` | версия для логов и Sentry | `unknown` | нет | нет |
 | `LOG_LEVEL` | порог JSON-лога | `info` | нет | нет |
-| `KEEP_ALIVE_TIMEOUT_MS` / `SHUTDOWN_TIMEOUT_MS` | обёртка сервера | `65000` / `15000` | нет | нет |
+| `KEEP_ALIVE_TIMEOUT_MS` / `SHUTDOWN_TIMEOUT_MS` | обёртка сервера | `95000` / `15000` | нет | нет |
 | `SENTRY_DSN` / `SENTRY_ENVIRONMENT` | серверные исключения | `''` / `production` | нет | нет (DSN public by design) |
 | `FORM_DELIVERY` | канал доставки заявки | `smtp` | нет | нет |
 | `SMTP_URL` | подключение SMTP | `''` | нет | **да** |
