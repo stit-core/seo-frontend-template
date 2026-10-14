@@ -35,9 +35,9 @@
 //   бюджет и вид — инлайн или файл;
 // - сборка против источника: страница у каждой опубликованной записи и prerendered-маршрута,
 //   страниц черновиков нет;
-// - рантайм образа (dist/server и docker/*.mjs) импортирует ровно dependencies: пакета вне них и
-//   зависимости без импорта нет; серверный бандл — без конвейера картинок Astro: модуля с импортом
-//   sharp в нём нет;
+// - рантайм образа (dist/server и docker/*.mjs) импортирует ровно dependencies: пакета вне них,
+//   зависимости без импорта и имени модуля, которого не прочесть, нет; серверный бандл — без
+//   конвейера картинок Astro: модуля с импортом sharp в нём нет;
 // - карта сайта sitemap.xml: ровно индексируемые страницы сборки своим self-canonical, lastmod —
 //   дата последнего изменения записи из frontmatter (правка, без неё — публикация), у остальных
 //   страниц его нет.
@@ -964,31 +964,70 @@ for (const file of walk(client).filter((path) => path.endsWith('.css'))) {
   checkCss(`dist/client/${relative(client, file).split(sep).join('/')}`, readFileSync(file, 'utf8'))
 }
 
-// Пакеты, которые импортирует модуль: import и export … from, import() и require() буквальной строкой.
-// Разбор синтаксиса, а не текста: слово «import» или имя пакета в строке и комментарии — не импорт.
+// Пакет по имени модуля: встроенный модуль, путь и адрес со схемой (`node:`, `data:`) — не пакет.
 function packageOf(specifier) {
   if (isBuiltin(specifier) || /^[./#]|:/.test(specifier)) return undefined
   const [first, second] = specifier.split('/')
   return first.startsWith('@') ? `${first}/${second}` : first
 }
 
-function packagesOf(file) {
-  const found = new Set()
-  const visit = (node) => {
+// Имя вызванной функции: у `f(…)` и `obj.f(…)` — `f`.
+const nameOf = (node) =>
+  ts.isIdentifier(node)
+    ? node.text
+    : ts.isPropertyAccessExpression(node)
+      ? node.name.text
+      : undefined
+const isCreateRequire = (node) =>
+  node !== undefined && ts.isCallExpression(node) && nameOf(node.expression) === 'createRequire'
+
+// Путь к файлу, а не пакет: шаблон с ./, ../ или / в начале и pathToFileURL(…) с его href.
+function isFilePath(node) {
+  if (ts.isTemplateExpression(node)) return /^\.{0,2}\//.test(node.head.text)
+  const call = ts.isPropertyAccessExpression(node) ? node.expression : node
+  return ts.isCallExpression(call) && nameOf(call.expression) === 'pathToFileURL'
+}
+
+// Что грузит модуль: import и export … from, import() и require() — под своим именем, результатом
+// createRequire(…) и любым именем, которому модуль его присвоил. Разбор синтаксиса, а не текста: слово
+// «import» или имя пакета в строке и комментарии — не импорт. Имя модуля не строкой и не путём к файлу
+// прочесть нельзя — computed: нарушение, а не молчание.
+function loadsOf(file) {
+  const nodes = []
+  const collect = (node) => {
+    nodes.push(node)
+    ts.forEachChild(node, collect)
+  }
+  collect(ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest))
+  const requires = new Set()
+  for (const node of nodes) {
+    const [name, value] = ts.isVariableDeclaration(node)
+      ? [node.name, node.initializer]
+      : ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken
+        ? [node.left, node.right]
+        : []
+    if (name && ts.isIdentifier(name) && isCreateRequire(value)) requires.add(name.text)
+  }
+  const isLoad = (callee) =>
+    callee.kind === ts.SyntaxKind.ImportKeyword ||
+    isCreateRequire(callee) ||
+    (ts.isIdentifier(callee) && (/^_*require$/.test(callee.text) || requires.has(callee.text)))
+  const packages = new Set()
+  let computed = false
+  for (const node of nodes) {
     const specifier =
       ts.isImportDeclaration(node) || ts.isExportDeclaration(node)
         ? node.moduleSpecifier
-        : ts.isCallExpression(node) &&
-            (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
-              (ts.isIdentifier(node.expression) && /^_*require$/.test(node.expression.text)))
+        : ts.isCallExpression(node) && isLoad(node.expression)
           ? node.arguments[0]
           : undefined
-    const name = specifier && ts.isStringLiteralLike(specifier) && packageOf(specifier.text)
-    if (name) found.add(name)
-    ts.forEachChild(node, visit)
+    if (specifier === undefined) continue
+    if (ts.isStringLiteralLike(specifier)) {
+      const name = packageOf(specifier.text)
+      if (name) packages.add(name)
+    } else if (!isFilePath(specifier)) computed = true
   }
-  visit(ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest))
-  return found
+  return { packages, computed }
 }
 
 // Рантайм образа — серверный бандл и обёртка процесса docker/*.mjs; стадия prod-deps ставит ему только
@@ -1007,7 +1046,14 @@ for (const dir of ['dist/server', 'docker']) {
   const base = resolve(root, dir)
   for (const file of existsSync(base) ? walk(base).filter((path) => path.endsWith('.mjs')) : []) {
     const where = `${dir}/${relative(base, file).split(sep).join('/')}`
-    for (const name of packagesOf(file)) {
+    const { packages, computed } = loadsOf(file)
+    if (computed) {
+      fail(
+        where,
+        'import() или require() с вычисляемым именем — пакет не проверить: имя модуля строкой',
+      )
+    }
+    for (const name of packages) {
       imported.add(name)
       if (name === 'sharp' && dir === 'dist/server') {
         fail(
