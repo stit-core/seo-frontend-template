@@ -99,8 +99,8 @@ pnpm check            # полный гейт
 
 Сайт живёт за Traefik в `<org>/infra`; что он требует от среды и edge (лимит формы, строгий `Host`
 и методы, закрытый не-прод, allowlist ботов) — контракт `docs/reference/infra-handoff.md`. Первый
-релиз на среде — канон хаба: профиль `site` и сразу `make bump SVC=site TAG=vX.Y.Z` (тег образа
-ставит он), затем `make status` и `make accept SVC=site`; `ACTION` печатает `/release`.
+релиз на среде — порядок канона хаба (`docs/reference/ecosystem.md § Handoff-блок релиза` в
+`<org>/infra`), его `ACTION` печатает `/release`.
 
 ## Гейт перед push
 

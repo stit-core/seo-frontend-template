@@ -124,18 +124,15 @@ healthy; образ, который не поднялся, — отказ с в�
    Сменилась версия реестра — в хабе `make bots-sources` (печать `pnpm -s bots:sources` этого тега,
    `docs/reference/infra-handoff.md § Боты`), `make ship` и после бампа `make allowlist`.
 
-   Первый релиз сайта на среде — `ACTION` длиннее, по канону хаба (там же, «Первый релиз сайта на
+   Первый релиз сайта на среде — `ACTION` длиннее, шаги канона хаба (там же, «Первый релиз сайта на
    среде»):
 
    ```
    ACTION: в <org>/infra — первый релиз на среде (канон: ecosystem.md § Handoff-блок релиза):
-           секция site в .env (не-прод — ещё замок и make deploy до профиля) →
-           профиль site в COMPOSE_PROFILES → make bump SVC=site TAG=vX.Y.Z → make status →
-           make accept SVC=site
+           DNS www и Docker Engine ≥ 25 (make doctor) → секция site в .env (не-прод — замок
+           и make deploy до профиля) → профиль site → make bump SVC=site TAG=vX.Y.Z →
+           make status → make accept SVC=site
    ```
-
-   `make bump SVC=site` сам ставит `SITE_TAG` и строит allowlist ботов по `robots.txt` образа;
-   `make accept SVC=site` — приёмка сайта на среде, код 0.
 
 9. **После выката** — прогнать `/seo-audit` по прод-домену, пройти пункты «после деплоя»
    чек-листа ниже и сообщить поисковикам адреса, которые изменил релиз:
