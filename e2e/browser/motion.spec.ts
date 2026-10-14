@@ -1,3 +1,4 @@
+import { ISLANDS } from '../../src/shared/config/islands.ts'
 import { expect, test } from './csp'
 
 // Переход между страницами рисует браузер — CSS View Transitions, без скрипта. Что он анимирует, видит
@@ -27,6 +28,9 @@ function watch() {
 }
 
 // Движение разрешено системой без выбора «меньше» и выбором «полное» вопреки системе (норма motion-toggle).
+// Выбор применяет остров предпочтений: у сайта без выбора — ни кнопки темы, ни переключателя движения — его
+// нет ни на одной странице, и движение — по системе.
+const choosable = ISLANDS.preferences.pages.length > 0
 const STATES = [
   { system: 'no-preference', choice: undefined, moves: true },
   { system: 'reduce', choice: undefined, moves: false },
@@ -37,6 +41,10 @@ const STATES = [
 for (const { system, choice, moves } of STATES) {
   test.describe(`система ${system}, выбор ${choice ?? 'нет'}`, () => {
     test.use({ reducedMotion: system })
+    test.skip(
+      choice !== undefined && !choosable,
+      'выбора нет: остров предпочтений на сайте не стоит',
+    )
 
     test(`переход между страницами — ${moves ? 'анимирован' : 'без кадров'}`, async ({ page }) => {
       if (choice) await page.addInitScript((value) => localStorage.setItem('motion', value), choice)

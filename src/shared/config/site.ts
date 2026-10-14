@@ -56,6 +56,11 @@ export const THEME: {
   readonly switcher: boolean
 } = { default: 'system', switcher: true }
 
+// Переключатель движения — решение проекта (эффект motion-toggle в планах страниц strategy): `switcher` —
+// `MotionToggle` на страницах с петлями. Выбор движения, как и темы, действует на всём сайте: остров
+// предпочтений встаёт на каждую страницу. Без переключателя движение — по настройке системы.
+export const MOTION: { readonly switcher: boolean } = { switcher: false }
+
 // Превью ссылки по умолчанию, 1200×630 (public/og-default.png); у записи с обложкой — её кадр того
 // же размера (shared/seo).
 export const OG_DEFAULT_IMAGE = {

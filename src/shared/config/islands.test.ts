@@ -2,7 +2,7 @@ import { standsOn } from './islands'
 import type * as Site from './site'
 
 // Где стоят острова оболочки — решения проекта в site.ts: тест задаёт их и читает реестр заново.
-const site = vi.hoisted(() => ({ metrika: '', switcher: true }))
+const site = vi.hoisted(() => ({ metrika: '', theme: true, motion: false }))
 vi.mock('./site', async (importOriginal) => {
   const original = await importOriginal<typeof Site>()
   return {
@@ -11,7 +11,10 @@ vi.mock('./site', async (importOriginal) => {
       return site.metrika
     },
     get THEME() {
-      return { ...original.THEME, switcher: site.switcher }
+      return { ...original.THEME, switcher: site.theme }
+    },
+    get MOTION() {
+      return { ...original.MOTION, switcher: site.motion }
     },
   }
 })
@@ -21,7 +24,7 @@ const islands = async () => {
   return (await import('./islands')).ISLANDS
 }
 
-// Страницы, которые проект в реестр не вписывал: главная, запись, страница без переключателя.
+// Главная, запись и страница, на которой переключателя нет.
 const ROUTES = ['/', '/blog/zapis', '/stranica-bez-pereklyuchatelya']
 
 describe('реестр островов', () => {
@@ -32,15 +35,20 @@ describe('реестр островов', () => {
     expect((await islands()).metrika.pages).toEqual(['*'])
   })
 
-  // Без кнопки темы остров нужен только страницам с переключателем движения: их пути вписывает
-  // проект, а кнопку на странице без острова валит seo:check. Тест держит инвариант — «не на всём
-  // сайте», а не список страниц шаблона.
-  it('остров предпочтений — на всём сайте с кнопкой темы, без неё — не на всём', async () => {
-    site.switcher = true
-    const withButton = (await islands()).preferences
-    expect(ROUTES.filter((route) => !standsOn(withButton, route))).toEqual([])
-    site.switcher = false
-    const withoutButton = (await islands()).preferences
-    expect(standsOn(withoutButton, '/stranica-bez-pereklyuchatelya')).toBe(false)
+  // Выбор посетителя действует на всём сайте: «Меньше» на странице с переключателем движения
+  // останавливает и переход между любыми страницами.
+  it.each([
+    ['кнопка темы', true, false],
+    ['переключатель движения', false, true],
+    ['оба', true, true],
+  ])('сайт даёт выбор (%s) — остров предпочтений на каждой странице', async (_, theme, motion) => {
+    Object.assign(site, { theme, motion })
+    const { preferences } = await islands()
+    expect(ROUTES.filter((route) => !standsOn(preferences, route))).toEqual([])
+  })
+
+  it('сайт без выбора — острова предпочтений нет нигде', async () => {
+    Object.assign(site, { theme: false, motion: false })
+    expect((await islands()).preferences.pages).toEqual([])
   })
 })

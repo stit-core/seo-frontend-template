@@ -1,4 +1,4 @@
-import { METRIKA_ID, THEME } from './site.ts'
+import { METRIKA_ID, MOTION, THEME } from './site.ts'
 
 // Острова: исполняемый код страницы — только строки этого реестра, без них на сайте ни байта JS.
 // Строка — решение с основанием и ценой:
@@ -31,9 +31,10 @@ export const ISLANDS = {
   preferences: {
     hash: 'sha256-Yzebn4pYJtvCqrXa+AvV0p64VtbbaJ3lP4GYz8VArk8=',
     basis:
-      'выбор темы и движения встаёт до первой отрисовки: кнопка темы — поле THEME, переключатель движения — эффект motion-toggle базы strategy',
-    // Без кнопки темы остров нужен только страницам с переключателем движения — их пути и встают сюда.
-    pages: THEME.switcher ? ['*'] : [],
+      'выбор темы и движения встаёт до первой отрисовки: кнопка темы — поле THEME, переключатель движения — поле MOTION (эффект motion-toggle базы strategy)',
+    // Выбор посетителя действует на всём сайте: остров стоит на каждой странице, когда сайт даёт выбор —
+    // кнопку темы или переключатель движения; без выбора его нет нигде.
+    pages: THEME.switcher || MOTION.switcher ? ['*'] : [],
     markup: ['data-theme-toggle', 'data-motion-set'],
     budget: 750,
   },
