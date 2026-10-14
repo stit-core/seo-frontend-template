@@ -971,27 +971,12 @@ function packageOf(specifier) {
   return first.startsWith('@') ? `${first}/${second}` : first
 }
 
-// Имя вызванной функции: у `f(…)` и `obj.f(…)` — `f`.
-const nameOf = (node) =>
-  ts.isIdentifier(node)
-    ? node.text
-    : ts.isPropertyAccessExpression(node)
-      ? node.name.text
-      : undefined
-const isCreateRequire = (node) =>
-  node !== undefined && ts.isCallExpression(node) && nameOf(node.expression) === 'createRequire'
-
-// Путь к файлу, а не пакет: шаблон с ./, ../ или / в начале и pathToFileURL(…) с его href.
-function isFilePath(node) {
-  if (ts.isTemplateExpression(node)) return /^\.{0,2}\//.test(node.head.text)
-  const call = ts.isPropertyAccessExpression(node) ? node.expression : node
-  return ts.isCallExpression(call) && nameOf(call.expression) === 'pathToFileURL'
-}
-
-// Что грузит модуль: import и export … from, import() и require() — под своим именем, результатом
-// createRequire(…) и любым именем, которому модуль его присвоил. Разбор синтаксиса, а не текста: слово
-// «import» или имя пакета в строке и комментарии — не импорт. Имя модуля не строкой и не путём к файлу
-// прочесть нельзя — computed: нарушение, а не молчание.
+// Что грузит модуль: import и export … from, import() и require() — под своим именем и с суффиксом
+// бандлера (`__require$1`), результатом createRequire(…) и любым именем, которому модуль его
+// присвоил. Функцию узнаёт её имя в модуле-источнике: импорт под другим именем и вызов через объект
+// (`module.f(…)`) — та же функция. Разбор синтаксиса, а не текста: слово «import» или имя пакета в
+// строке и комментарии — не импорт. Имя модуля не строкой и не путём к файлу прочесть нельзя —
+// computed: нарушение, а не молчание.
 function loadsOf(file) {
   const nodes = []
   const collect = (node) => {
@@ -999,6 +984,37 @@ function loadsOf(file) {
     ts.forEachChild(node, collect)
   }
   collect(ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest))
+  const imported = new Map(
+    nodes
+      .filter((node) => ts.isImportSpecifier(node))
+      .map((node) => [node.name.text, (node.propertyName ?? node.name).text]),
+  )
+  // Имя функции в модуле-источнике: у `f(…)`, `obj.f(…)` и `g(…)` при `import { f as g }` — `f`.
+  const nameOf = (node) =>
+    ts.isIdentifier(node)
+      ? (imported.get(node.text) ?? node.text)
+      : ts.isPropertyAccessExpression(node)
+        ? node.name.text
+        : undefined
+  const calls = (node, name) =>
+    node !== undefined && ts.isCallExpression(node) && nameOf(node.expression) === name
+  const isImportMetaUrl = (node) =>
+    node !== undefined &&
+    ts.isPropertyAccessExpression(node) &&
+    ts.isMetaProperty(node.expression) &&
+    node.name.text === 'url'
+  // Путь к файлу, а не пакет: шаблон с ./, ../ или / в начале, pathToFileURL(…) и
+  // new URL(…, import.meta.url) — и их href.
+  const isFilePath = (node) => {
+    if (ts.isTemplateExpression(node)) return /^\.{0,2}\//.test(node.head.text)
+    const url = ts.isPropertyAccessExpression(node) ? node.expression : node
+    return (
+      calls(url, 'pathToFileURL') ||
+      (ts.isNewExpression(url) &&
+        nameOf(url.expression) === 'URL' &&
+        isImportMetaUrl(url.arguments?.[1]))
+    )
+  }
   const requires = new Set()
   for (const node of nodes) {
     const [name, value] = ts.isVariableDeclaration(node)
@@ -1006,12 +1022,13 @@ function loadsOf(file) {
       : ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken
         ? [node.left, node.right]
         : []
-    if (name && ts.isIdentifier(name) && isCreateRequire(value)) requires.add(name.text)
+    if (name && ts.isIdentifier(name) && calls(value, 'createRequire')) requires.add(name.text)
   }
   const isLoad = (callee) =>
     callee.kind === ts.SyntaxKind.ImportKeyword ||
-    isCreateRequire(callee) ||
-    (ts.isIdentifier(callee) && (/^_*require$/.test(callee.text) || requires.has(callee.text)))
+    calls(callee, 'createRequire') ||
+    (ts.isIdentifier(callee) &&
+      (/^_*require(\$\d+)?$/.test(callee.text) || requires.has(callee.text)))
   const packages = new Set()
   let computed = false
   for (const node of nodes) {
