@@ -102,7 +102,8 @@ healthy; образ, который не поднялся, — отказ с в�
    curl -fsS https://<domain>/sitemap.xml -o "${TMPDIR:-/tmp}/sitemap-before.xml"
    ```
 
-8. **INFRA-HANDOFF** — напечатать блок:
+8. **INFRA-HANDOFF** — напечатать блок; хаб применяет его по шагам канона
+   `docs/reference/ecosystem.md § Handoff-блок релиза` в `<org>/infra`:
 
    ```
    === INFRA HANDOFF · <org>/site vX.Y.Z ===
@@ -110,22 +111,31 @@ healthy; образ, который не поднялся, — отказ с в�
    ACTION: в <org>/infra: make bump SVC=site TAG=vX.Y.Z
    ENV:    <новые ключи из docs/stack/config.md; иначе "—">
    AI-BOTS: <AI_BOTS_POLICY из src/shared/config/site.ts>, реестр <первые 12 знаков CRAWLERS_SHA256 из scripts/lib/site-policy.mjs>
-   PROXY:  <новые требования к Traefik: rate-limit, редиректы; иначе "—">
+   PROXY:  <требования, которые релиз добавил в docs/reference/infra-handoff.md; иначе "—">
    RISK:   <риски отката и совместимости; иначе "—">
    ===
    ```
 
    Новые env-ключи инфра-админ дописывает в `.env` VPS **до** бампа, иначе контейнер
    поднимется с дефолтами или не поднимется вовсе (`SITE_URL` обязателен). Политика ИИ-ботов —
-   поле сборки, она уже в образе: строка `AI-BOTS` говорит инфре, что политика или версия реестра
-   ботов сменилась и список источников allowlist CrowdSec пора обновить — выводом
-   `pnpm -s bots:sources` этого тега (`docs/reference/infra-handoff.md § 1.5`).
+   поле сборки, она уже в образе; строка `AI-BOTS` называет её и версию реестра ботов. Сменилась
+   политика — allowlist CrowdSec пересобирает сам `make bump SVC=site`: строит недостающие и не
+   обновлявшиеся дольше шести дней списки, а списки ботов, которых закрыл `robots.txt`, снимает.
+   Сменилась версия реестра — в хабе `make bots-sources` (печать `pnpm -s bots:sources` этого тега,
+   `docs/reference/infra-handoff.md § Боты`), `make ship` и после бампа `make allowlist`.
 
-   Первый релиз на VPS — `ACTION` длиннее: сначала в `.env` VPS профиль `site` в
-   `COMPOSE_PROFILES` и секция сайта (канал формы; на не-прод среде — `ROBOTS_POLICY=noindex` и
-   замок `STAGING_BASIC_AUTH_USERS`), затем тот же `make bump` — он ставит `SITE_TAG` сам. Профиль
-   без тега роняет `make deploy`, а `make bump` без профиля поднимает сервис, которым
-   `make deploy` не управляет; приёмка первого деплоя — `docs/reference/infra-handoff.md § 1.7`.
+   Первый релиз сайта на среде — `ACTION` длиннее, по канону хаба (там же, «Первый релиз сайта на
+   среде»):
+
+   ```
+   ACTION: в <org>/infra — первый релиз на среде (канон: ecosystem.md § Handoff-блок релиза):
+           секция site в .env (не-прод — ещё замок и make deploy до профиля) →
+           профиль site в COMPOSE_PROFILES → make bump SVC=site TAG=vX.Y.Z → make status →
+           make accept SVC=site
+   ```
+
+   `make bump SVC=site` сам ставит `SITE_TAG` и строит allowlist ботов по `robots.txt` образа;
+   `make accept SVC=site` — приёмка сайта на среде, код 0.
 
 9. **После выката** — прогнать `/seo-audit` по прод-домену, пройти пункты «после деплоя»
    чек-листа ниже и сообщить поисковикам адреса, которые изменил релиз:
