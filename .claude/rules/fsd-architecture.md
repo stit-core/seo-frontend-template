@@ -20,7 +20,9 @@ app → pages → widgets → features → entities → shared
 
 ## `src/pages` = роутинг Astro
 
-1 файл = 1 URL: `index.astro` → `/`, `en/index.astro` → `/en`, `healthz.ts` → `/healthz`.
+Страница — один файл маршрута на все локали: `[...locale]/index.astro` → `/` и `/en`; пути и проп
+`locale` — из `getStaticPaths` (`localeRoutes`, `shared/strategy`: языки страницы — строка карты),
+у дефолтной локали сегмента нет. Служебный маршрут — свой файл: `healthz.ts` → `/healthz`.
 Подпапки — сегменты URL, не слайсы (правила слайсов Steiger на `pages` выключены).
 Файлы одной страницы — её разметка, общая для локалей, и `.ts`-модель — рядом, в
 `src/pages/_<name>/` (префикс `_` вне роутинга); widget — только при ≥ 2 страницах. Server route —
@@ -82,17 +84,17 @@ Frontmatter `.astro` и модули `.ts` исполняются на серв�
 |---|---|
 | документ-шелл, middleware (лог, адреса `redirects.yaml`, 410), токены ДС и слой сопоставления | `app/layouts/document.astro`, `app/middleware`, `app/styles/{tokens,index}.css` |
 | runtime-конфиг, идентичность сайта (`SITE_NAME`, `sameAs`, `OG_DEFAULT_IMAGE`), политика ИИ-ботов, реестр островов `ISLANDS` | `shared/config` |
-| локали, пути с префиксом, даты | `shared/i18n` |
+| дескриптор локалей (код, Intl, OG, самоназвание; первая — дефолтная) и правила адреса по нему, словари каркаса с подстановками, даты | `shared/i18n` |
 | SEO: `absoluteUrl`/hreflang, `SeoHead`, фабрики JSON-LD + `JsonLdScript`, генераторы robots/sitemap/rss, реестр ботов `crawlers.yaml` | `shared/seo` |
 | тест-хелперы | `shared/lib/testing` |
 | канон пути и таблица адресов (данные → правила, ответ на адрес запроса) | `shared/redirects` |
-| чтение данных strategy — снимок `strategy/` в корне (бриф, карта, планы, copy deck по языкам, факты; копии каталогов базы `kb/`): страница — секции плана по порядку, тексты слотов по ключу `page/section/slot`, действия, факты, мета и место в карте; правила контракта и схемы читаемых полей — листовой `contract.ts` (его берут и скрипты) | `shared/strategy` |
+| чтение данных strategy — снимок `strategy/` в корне (бриф, карта, планы, copy deck по языкам, факты; копии каталогов базы `kb/`): страница — секции плана по порядку, тексты слотов по ключу `page/section/slot`, действия, факты, мета и место в карте; локали страниц карты (`localeRoutes` маршрутов), карта переводов, ссылка на страницу на языке страницы или основном, переключатель языка; правила контракта и схемы читаемых полей — листовой `contract.ts` (его берут и скрипты) | `shared/strategy` |
 | проектные UI-примитивы: секция страницы и контейнер каркаса, заголовок, сетка «термин — описание», готовая картинка и ролик-петля | `shared/ui/{section,heading,term-list,media}` |
 | каркас сайта, список записей, хлебные крошки (видимые; `BreadcrumbList` из того же массива печатает layout в `<head>`) | `widgets/site-header`, `widgets/site-footer`, `widgets/post-list`, `widgets/breadcrumbs` |
 | коллекция контента: `.md`, схема, запросы, карточка/статья | `entities/post/{content,model,api,lib,ui}` |
 | реестр авторов и подпись (подпись ставит страница в слот статьи: слайсы одного слоя не импортируют друг друга) | `entities/author/{model,ui}` |
-| разметка страниц блога, их модель, `getStaticPaths` и фид (ru/en делят разметку, модель, пути и фид) | `src/pages/_blog/*.astro`, `src/pages/_blog/sections.ts`, `src/pages/_blog/static-paths.ts`, `src/pages/_blog/feed.ts`, кадры обложки для превью и разметки — `src/pages/_blog/images.ts` (сборочный модуль вне барреля `shared/seo`: on-demand маршрутам конвейер картинок не нужен) |
-| SEO-маршруты: on-demand `robots.txt` и ключ IndexNow, prerendered фиды | `src/pages/{robots.txt,[key].txt}.ts`, `src/pages/{rss.xml,en/rss.xml}.ts` |
+| разметка страниц блога, их модель, `getStaticPaths` и фид (локали делят разметку, модель, пути и фид) | `src/pages/_blog/*.astro`, `src/pages/_blog/sections.ts`, `src/pages/_blog/static-paths.ts`, `src/pages/_blog/feed.ts`, кадры обложки для превью и разметки — `src/pages/_blog/images.ts` (сборочный модуль вне барреля `shared/seo`: on-demand маршрутам конвейер картинок не нужен) |
+| SEO-маршруты: on-demand `robots.txt` и ключ IndexNow, prerendered фиды | `src/pages/{robots.txt,[key].txt}.ts`, `src/pages/[...locale]/rss.xml.ts` |
 | карта сайта — файл сборки по страницам `dist/client` | интеграция `sitemap-from-build` в `astro.config.ts` + `scripts/lib/sitemap.mjs` (формат — `shared/seo/sitemap.ts`) |
 
 ## Кто что проверяет

@@ -2,11 +2,10 @@ import type { APIContext, APIRoute } from 'astro'
 import type * as SharedConfig from '@/shared/config'
 import { CLEAN_PARAMS } from '@/shared/config'
 import { ALL as imageEndpoint } from '../_image.ts'
+import { GET as feed, getStaticPaths as feedPaths } from '../[...locale]/rss.xml.ts'
 import { GET as indexNowKey } from '../[key].txt.ts'
-import { GET as feedEn } from '../en/rss.xml.ts'
 import { GET as healthz } from '../healthz.ts'
 import { GET as robotsTxt } from '../robots.txt.ts'
-import { GET as feedRu } from '../rss.xml.ts'
 
 vi.mock('astro:content', () => import('./fixtures').then((fixtures) => fixtures.astroContent))
 
@@ -22,9 +21,12 @@ vi.mock('@/shared/config', async (importOriginal) => ({
 
 const ORIGIN = 'https://demo.example'
 
-// Служебным маршрутам из контекста запроса нужны только параметры пути.
-const get = (route: APIRoute, params: Record<string, string> = {}): Promise<Response> =>
-  Promise.resolve(route({ params } as unknown as APIContext))
+// Маршрутам из контекста запроса нужны только параметры пути и пропсы getStaticPaths.
+const get = <P extends Record<string, unknown>>(
+  route: APIRoute<P>,
+  params: Record<string, string> = {},
+  props: Partial<P> = {},
+): Promise<Response> => Promise.resolve(route({ params, props } as unknown as APIContext<P>))
 
 beforeEach(() => {
   vi.stubEnv('SITE_URL', ORIGIN)
@@ -83,9 +85,12 @@ describe('фиды', () => {
   const links = (xml: string) =>
     [...xml.matchAll(/<item>[\s\S]*?<link>([^<]+)<\/link>/g)].map(([, link]) => link)
 
-  it('у каждой локали свои записи без черновика, свой язык и self-ссылка', async () => {
-    const ru = await get(feedRu)
-    const ruXml = await ru.text()
+  it('фид — у каждой локали блога в карте: свои записи без черновика, свой язык и self-ссылка', async () => {
+    const feeds = feedPaths()
+    expect(feeds.map(({ params }) => params.locale)).toEqual([undefined, 'en'])
+    const [ruFeed, enFeed] = feeds.map(({ props }) => get(feed, {}, props))
+    const ru = await ruFeed
+    const ruXml = (await ru?.text()) ?? ''
     expect(links(ruXml)).toEqual([
       `${ORIGIN}/blog/para`,
       `${ORIGIN}/blog/odna`,
@@ -97,7 +102,7 @@ describe('фиды', () => {
     expect(ruXml).toContain('<language>ru</language>')
     expect(ruXml).toContain(`<atom:link href="${ORIGIN}/rss.xml" rel="self"`)
 
-    const enXml = await (await get(feedEn)).text()
+    const enXml = (await (await enFeed)?.text()) ?? ''
     expect(links(enXml)).toEqual([
       `${ORIGIN}/en/blog/pair`,
       `${ORIGIN}/en/blog/note-2`,
@@ -106,7 +111,7 @@ describe('фиды', () => {
     expect(enXml).toContain('<language>en</language>')
     expect(enXml).toContain(`<atom:link href="${ORIGIN}/en/rss.xml" rel="self"`)
 
-    expect(ru.headers.get('content-type')).toBe('application/rss+xml; charset=utf-8')
+    expect(ru?.headers.get('content-type')).toBe('application/rss+xml; charset=utf-8')
   })
 })
 

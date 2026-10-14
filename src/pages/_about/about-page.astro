@@ -3,6 +3,7 @@ import DocumentLayout from '@/app/layouts/document.astro'
 import { COMPANY, CompanyContacts } from '@/entities/company'
 import { type Locale, localePath, t } from '@/shared/i18n'
 import { breadcrumbList, localBusiness } from '@/shared/seo'
+import { pageVersions } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 import { Term, TermList } from '@/shared/ui/term-list'
@@ -58,7 +59,7 @@ const address = COMPANY.address[locale]
   locale={locale}
   title={copy.title}
   description={copy.description}
-  alternatePath="/about"
+  translations={pageVersions('about')}
   jsonLd={[
     localBusiness({
       legalName: COMPANY.legalName,

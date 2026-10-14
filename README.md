@@ -22,7 +22,8 @@ Astro 7 + Node-адаптер, Feature-Sliced Design под линтером, Ja
 
 Astro 7.3 + `@astrojs/node` (`output: 'static'`, standalone) · TypeScript 6
 (`astro/tsconfigs/strictest`) · Tailwind v4 на собственном токен-слое · контент — Markdown
-в git внутри слайса (Content Layer + Zod 4) · i18n `ru` (без префикса) + `en` (`/en`) ·
+в git внутри слайса (Content Layer + Zod 4) · локали 1…N одним дескриптором (у шаблона `ru` без
+префикса + `en` под `/en`) ·
 редиректы как данные (`content/redirects.yaml`) · SEO-слой `shared/seo` (canonical, hreflang,
 OG, JSON-LD; `robots.txt` on-demand на runtime origin, `sitemap.xml` и `rss.xml` — файлы сборки) · Biome 2 +
 Prettier (только `*.astro`) ·
@@ -98,11 +99,12 @@ strategy/         данные страниц в форме strategy на мес
                   copy deck по языкам, факты) и копии каталогов базы kb/ — читает shared/strategy
 public/           иконки, manifest, og-default.png (социальная карточка 1200×630)
 src/app/          layouts/document.astro (<head> из props: SeoHead + JSON-LD), middleware, styles/{tokens,index}.css
-src/pages/        роутинг Astro = слой pages: index, about, contacts/{index,spasibo},
-                  legal/privacy, blog/{index,[slug],page/[page],tag/[tag]}, en/… , 500,
-                  rss.xml, en/rss.xml (prerender); 404, healthz, now, robots.txt, [key].txt,
-                  api/contact (on-demand); файлы страниц — _blog/, _about/, _contacts/;
-                  тесты маршрутов и страниц — _tests/
+src/pages/        роутинг Astro = слой pages: страница — один файл на все локали в [...locale]/
+                  (index, about, contacts/{index,spasibo}, legal/privacy,
+                  blog/{index,[slug],page/[page],tag/[tag]}, rss.xml — prerender), 500;
+                  404, healthz, now, robots.txt, [key].txt, api/contact (on-demand); файлы
+                  страниц — _home/, _about/, _contacts/, _privacy/, _blog/; тесты маршрутов и
+                  страниц — _tests/
 src/widgets/      site-header, site-footer, post-list, breadcrumbs (видимые крошки)
 src/features/     contact-form (форма без JS и её обработчик), preferences (остров предпочтений:
                   тема и движение)
@@ -155,9 +157,10 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 ## SEO
 
 `<head>` каждой страницы собирает `DocumentLayout` из props (`title`, `description`,
-`alternatePath`, `jsonLd`): title-шаблон, self-canonical, полный OG (`og:image` — кадр 1200×630
-обложки записи или `public/og-default.png`), `twitter:card`, hreflang только для реальных переводов (взаимно, +
-`x-default`), RSS autodiscovery. JSON-LD — в `<head>`: `Organization`/`WebSite` на главной,
+`translations`, `jsonLd`): title-шаблон, self-canonical, полный OG (`og:image` — кадр 1200×630
+обложки записи или `public/og-default.png`), `twitter:card`, hreflang по карте переводов страницы —
+только для реальных переводов (взаимно, + `x-default`), RSS autodiscovery фида своей локали.
+JSON-LD — в `<head>`: `Organization`/`WebSite` на главной,
 `LocalBusiness` на «О компании» — одна организация с `@id` `<origin>/#org`, на неё ссылаются сайт
 и записи; `BreadcrumbList` на вложенных (из того же массива, что видимые крошки
 `widgets/breadcrumbs`), `BlogPosting` у записи — с автором `Person`, когда у записи есть автор
@@ -166,7 +169,7 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 группы — из реестра ботов базы strategy; `Clean-param` Яндексу — служебные параметры адреса
 `CLEAN_PARAMS`) и `/<INDEXNOW_KEY>.txt` — on-demand на runtime `SITE_URL`; `sitemap.xml` (сборка пишет его по
 страницам `dist/client`: ровно страницы без `noindex`, `lastmod` — дата правки или публикации
-записи) и фиды `rss.xml`/`en/rss.xml` — файлы сборки, origin в них штампуется при старте
+записи) и фиды `rss.xml` каждой локали блога — файлы сборки, origin в них штампуется при старте
 контейнера. Гейты: `pnpm seo:check` и HTTP-набор
 (`e2e/http/`: сырой HTML, тот же ответ каждому боту реестра, robots, карта, фиды) в `pnpm check`;
 правило — `.claude/rules/seo-invariants.md`.

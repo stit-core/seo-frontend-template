@@ -1,16 +1,18 @@
 ---
 import { AI_BOTS_POLICY, SITE_NAME, SITE_VERIFICATION } from '@/shared/config'
-import { isoDate, type Locale, localePath, t } from '@/shared/i18n'
+import { isoDate, type Locale, localeInfo, type Translations, t } from '@/shared/i18n'
 import { aiBotsMeta } from './ai-bots'
-import { defaultOgImage, OG_LOCALE, type OgImage, pageTitle } from './meta'
+import { defaultOgImage, type OgImage, pageTitle } from './meta'
 import { absoluteUrl, alternates } from './urls'
 
 interface Props {
   title: string
   description: string
   locale: Locale
-  // Путь перевода без префикса локали; без него hreflang не выводится.
-  alternatePath?: string | undefined
+  // Карта переводов страницы (своя версия — тоже); без второй версии hreflang не выводится.
+  translations?: Translations | undefined
+  // Фид блога языка страницы для автообнаружения; у языка без блога его нет.
+  feed?: string | undefined
   // Служебная или тонкая страница (404, /now, тег ниже порога): только noindex — без canonical,
   // OG и hreflang.
   noindex?: boolean | undefined
@@ -24,7 +26,8 @@ const {
   title,
   description,
   locale,
-  alternatePath,
+  translations = {},
+  feed,
   noindex = false,
   ogType = 'website',
   ogImage = defaultOgImage(locale),
@@ -35,9 +38,10 @@ const fullTitle = pageTitle(title)
 // Origin — runtime SITE_URL на on-demand; на prerender — плейсхолдер сборки, его штампует entrypoint.
 const path = Astro.url.pathname
 const canonical = absoluteUrl(path)
-const links = alternates({ locale, path, alternatePath })
-const otherLocale = links.find((link) => link.hreflang !== locale && link.hreflang !== 'x-default')
-const feedTitle = `${t(locale, 'blog.title')} — ${SITE_NAME}`
+const links = alternates(translations)
+const others = links.flatMap((link) =>
+  link.hreflang === 'x-default' || link.hreflang === locale ? [] : [localeInfo(link.hreflang).og],
+)
 ---
 
 <title>{fullTitle}</title>
@@ -54,10 +58,10 @@ const feedTitle = `${t(locale, 'blog.title')} — ${SITE_NAME}`
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content={SITE_NAME} />
-    <meta property="og:locale" content={OG_LOCALE[locale]} />
-    {otherLocale && (
-      <meta property="og:locale:alternate" content={OG_LOCALE[otherLocale.hreflang as Locale]} />
-    )}
+    <meta property="og:locale" content={localeInfo(locale).og} />
+    {others.map((og) => (
+      <meta property="og:locale:alternate" content={og} />
+    ))}
     <meta property="og:image" content={absoluteUrl(ogImage.path)} />
     <meta property="og:image:width" content={String(ogImage.width)} />
     <meta property="og:image:height" content={String(ogImage.height)} />
@@ -78,9 +82,11 @@ const feedTitle = `${t(locale, 'blog.title')} — ${SITE_NAME}`
     ))}
   </Fragment>
 )}
-<link
-  rel="alternate"
-  type="application/rss+xml"
-  title={feedTitle}
-  href={absoluteUrl(localePath(locale, '/rss.xml'))}
-/>
+{feed !== undefined && (
+  <link
+    rel="alternate"
+    type="application/rss+xml"
+    title={t(locale, 'blog.feed', { site: SITE_NAME })}
+    href={absoluteUrl(feed)}
+  />
+)}

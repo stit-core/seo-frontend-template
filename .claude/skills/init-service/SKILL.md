@@ -16,7 +16,7 @@ description: Оркестратор онбординга форка ssr-frontend
 - «/init-service» / «онбординг» / «развернул форк, что дальше»
 - Свежий форк — любой из признаков:
   - `package.json#name` ещё `@stit/ssr-frontend-template`
-  - `src/pages/legal/privacy.astro` содержит `{{OPERATOR_NAME}}`
+  - `src/pages/_privacy/privacy-page.astro` содержит `{{OPERATOR_NAME}}`
   - демо-идентичность в `src/shared/config/site.ts` и `src/entities/company/model/company.ts`
   - reference-набор на месте: `src/entities/post/content/**`, демо-строки `content/redirects.yaml`
 

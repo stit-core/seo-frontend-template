@@ -1,5 +1,14 @@
 export type { DictKey } from './dict'
 export { t } from './dict'
 export { formatDate, formatDateTime, isoDate } from './format'
-export type { Locale } from './locale'
-export { DEFAULT_LOCALE, localeOf, localePath, routeOf, SUPPORTED_LOCALES } from './locale'
+export type { Locale, Translations } from './locale'
+export {
+  DEFAULT_LOCALE,
+  localeInfo,
+  localeOf,
+  localeParam,
+  localePath,
+  localeRules,
+  routeOf,
+  SUPPORTED_LOCALES,
+} from './locale'

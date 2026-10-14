@@ -12,6 +12,8 @@ import { isJsonLd } from './html.mjs'
 /** @typedef {import('../../src/shared/config/islands.ts').Island} Island */
 
 export { FONTS } from '../../src/app/styles/fonts.ts'
+// Дескриптор локалей сайта: по нему скрипты гейта читают язык адреса, маршрут страницы и локаль OG.
+export { LOCALES } from '../../src/shared/i18n/locale.ts'
 // Реестр островов — данные приложения (src/shared/config/islands.ts): по нему оболочка печатает
 // острова, а политика сборки строит CSP и сверяет страницы. Так же — список шрифтов ДС: по нему
 // конфиг и оболочка подключают шрифты, seo:check сверяет `@font-face` страниц.
@@ -203,9 +205,10 @@ export function scriptsOf(html, islands = ISLANDS) {
  * @param {string} html
  * @param {string} path — путь страницы
  * @param {Record<string, Island>} [islands]
+ * @param {(path: string) => string} [route] — маршрут страницы по пути: локали проверяемого проекта
  * @returns {string[]}
  */
-export function scriptViolations(html, path, islands = ISLANDS) {
+export function scriptViolations(html, path, islands = ISLANDS, route = routeOf) {
   const problems = []
   const seen = new Set()
   for (const { attrs, src, jsonLd, inBody, island } of scriptsOf(html, islands)) {
@@ -221,7 +224,7 @@ export function scriptViolations(html, path, islands = ISLANDS) {
           : `внешний <script${attrs}>: файла-острова нет в списке ISLANDS (src/shared/config/islands.ts)`,
       )
     } else if (seen.has(island)) problems.push(`остров ${island} дважды`)
-    else if (!standsOn(row, routeOf(path))) {
+    else if (!standsOn(row, route(path))) {
       problems.push(
         `остров ${island} вне своих страниц (${row.pages.join(', ') || 'их нет'}): где он стоит, решает его строка ISLANDS (src/shared/config/islands.ts)`,
       )

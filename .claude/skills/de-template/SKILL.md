@@ -99,9 +99,9 @@ git grep -lF '@stit/ssr-frontend-template' -- ':!.claude' ':!docs/research' \
 | `SITE_VERIFICATION` | токены Search Console и Вебмастера; нет — пустые строки |
 | `AI_BOTS_POLICY` | политика ИИ-ботов из `seo.md § robots-политика`; решения нет — остаётся `allow-all` |
 | `CLEAN_PARAMS` | к меткам кликов рекламы — служебные параметры проекта из `seo.md § robots-политика` (сессия, `ref`); своих нет — список как есть |
-| `OG_DEFAULT_IMAGE.alt` | описание своей социальной карточки на обеих локалях |
+| `OG_DEFAULT_IMAGE` | своя социальная карточка (путь и размеры); её описание — строка `og.alt` словаря `src/shared/i18n/dict.ts` на каждой локали |
 
-### A.3 Политика ПДн → `src/pages/legal/privacy.astro`
+### A.3 Политика ПДн → `src/pages/_privacy/privacy-page.astro`
 
 Подставь четыре значения из Gate-4 вместо `{{OPERATOR_NAME}}`, `{{OPERATOR_INN}}`,
 `{{OPERATOR_ADDRESS}}`, `{{OPERATOR_EMAIL}}`. Прочитай текст целиком и приведи в
@@ -129,10 +129,10 @@ git grep -lF '@stit/ssr-frontend-template' -- ':!.claude' ':!docs/research' \
 
 ### A.6 Тексты reference-страниц
 
-Главная (`src/pages/{index,en/index}.astro`), «о компании»
+Главная (`src/pages/_home/home-page.astro`), «о компании»
 (`src/pages/_about/about-page.astro`), контакты (`src/pages/_contacts/*.astro`) написаны
 про шаблон. Перепиши под проект по `interface/<surface>/` и `screens/<surface>/` из
-strategy; врезки «это страница шаблона» удали. Тексты — на обеих локалях.
+strategy; врезки «это страница шаблона» удали. Тексты — на каждой локали страницы.
 
 ### A.7 Редиректы → `content/redirects.yaml`
 

@@ -1,4 +1,11 @@
-import { type Locale, localePath } from '@/shared/i18n'
+import {
+  DEFAULT_LOCALE,
+  type Locale,
+  localeParam,
+  localePath,
+  SUPPORTED_LOCALES,
+  type Translations,
+} from '@/shared/i18n'
 import {
   type CopyDeck,
   CopyDeckSchema,
@@ -9,14 +16,17 @@ import {
   fail,
   langOf,
   type Machine,
+  mapPage,
   type Plan,
   PlanSchema,
   type PlanSlot,
   type PlanTarget,
+  pageLanguages,
   parseFile,
   type SiteMap,
   SiteMapSchema,
   targetAddress,
+  untranslatedFallback,
 } from './contract'
 
 // Данные strategy одного проекта в раскладке снимка: карта, планы и copy deck поверхности, факты по языкам.
@@ -98,6 +108,68 @@ export function projectOf(files: Readonly<Record<string, unknown>>): Project {
 }
 
 const emptySlots = (): Slots => ({ text: {}, actions: {}, data: {} })
+
+const mapOf = (project: Project, id: string): SiteMap => project.map ?? fail(id, 'нет карты сайта')
+
+// Локали страницы карты — языки её версий; язык карты вне дескриптора локалей — ошибка сборки.
+export function localesOf(project: Project, id: string): Locale[] {
+  return pageLanguages(mapOf(project, id), id).map(
+    (lang) =>
+      SUPPORTED_LOCALES.find((locale) => locale === lang) ??
+      fail(id, `язык ${lang} карты вне дескриптора локалей`),
+  )
+}
+
+// Версии страницы карты по локалям — её карта переводов: адрес с префиксом языка.
+export function versionsOf(project: Project, id: string): Translations {
+  const { url } = mapPage(mapOf(project, id), id)
+  return Object.fromEntries(
+    localesOf(project, id).map((locale) => [locale, localePath(locale, url)]),
+  )
+}
+
+export interface PageLink {
+  href: string
+  // Язык цели, когда он не язык страницы: версии на нём нет, ссылка ведёт на версию основного языка.
+  hreflang: Locale | undefined
+}
+
+// Ссылка со страницы на языке `locale` на страницу карты по её адресу: версия на этом языке, без неё — версия основного
+// языка; страницы нет в карте или основной версии у неё нет — ссылки нет.
+export function linkOf(project: Project, route: string, locale: Locale): PageLink | undefined {
+  const page = project.map?.pages.find((candidate) => candidate.url === route)
+  if (page === undefined) return undefined
+  const locales = localesOf(project, page.id)
+  if (locales.includes(locale)) return { href: localePath(locale, route), hreflang: undefined }
+  if (!locales.includes(DEFAULT_LOCALE)) return undefined
+  return { href: localePath(DEFAULT_LOCALE, route), hreflang: DEFAULT_LOCALE }
+}
+
+export interface LanguageLink {
+  locale: Locale
+  href: string
+  // Ссылка — перевод этой страницы, а не главная языка.
+  translation: boolean
+}
+
+// Переключатель языка (site 06 §5.3): на каждый другой язык — эта страница на нём, без перевода — главная языка или
+// ничего, как решает `untranslated_fallback` его версии в карте.
+export function languagesOf(
+  project: Project,
+  locale: Locale,
+  translations: Translations,
+): LanguageLink[] {
+  return SUPPORTED_LOCALES.flatMap((other): LanguageLink[] => {
+    if (other === locale) return []
+    const href = translations[other]
+    if (href !== undefined) return [{ locale: other, href, translation: true }]
+    const home = linkOf(project, '/', other)
+    if (project.map === undefined || home === undefined || home.hreflang !== undefined) return []
+    return untranslatedFallback(project.map, other) === 'language-home'
+      ? [{ locale: other, href: home.href, translation: false }]
+      : []
+  })
+}
 
 function placeOf(project: Project, plan: Plan, locale: Locale) {
   const { id } = plan.page
@@ -231,3 +303,14 @@ export const snapshot = projectOf(
 
 export const strategyPage = (id: string, locale: Locale): StrategyPage =>
   readPage(snapshot, id, locale)
+
+export const pageLocales = (id: string): Locale[] => localesOf(snapshot, id)
+export const pageVersions = (id: string): Translations => versionsOf(snapshot, id)
+export const pageLink = (route: string, locale: Locale): PageLink | undefined =>
+  linkOf(snapshot, route, locale)
+export const languageLinks = (locale: Locale, translations: Translations): LanguageLink[] =>
+  languagesOf(snapshot, locale, translations)
+
+// Пути маршрута `[...locale]` страницы карты: по пути на локаль её версии, у дефолтной сегмента нет.
+export const localeRoutes = (id: string) =>
+  pageLocales(id).map((locale) => ({ params: { locale: localeParam(locale) }, props: { locale } }))

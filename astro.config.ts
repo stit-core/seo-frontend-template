@@ -8,6 +8,7 @@ import { load } from 'js-yaml'
 import { contentSecurityPolicy } from './scripts/lib/site-policy.mjs'
 import { writeSitemap } from './scripts/lib/sitemap.mjs'
 import { fontFamilies, fontStacks } from './src/app/styles/fonts.ts'
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from './src/shared/i18n/locale.ts'
 import { TRAILING_SLASH } from './src/shared/redirects/table.ts'
 import { slotSizes } from './src/shared/ui/section/sizes.ts'
 
@@ -120,7 +121,12 @@ export default defineConfig({
   trailingSlash: TRAILING_SLASH,
   // 'file' + node-адаптер = 404 на /blog и /en (статик-хендлер видит каталог); только 'directory'.
   build: { format: 'directory' },
-  i18n: { defaultLocale: 'ru', locales: ['ru', 'en'], routing: { prefixDefaultLocale: false } },
+  // Локали — дескриптор src/shared/i18n/locale.ts: дефолтная — без префикса адреса.
+  i18n: {
+    defaultLocale: DEFAULT_LOCALE,
+    locales: [...SUPPORTED_LOCALES],
+    routing: { prefixDefaultLocale: false },
+  },
   // fs-драйвер сессий адаптера пишет в cacheDir и ломает read-only контейнер.
   session: false,
   // Без островов — ни байта JS; prefetch и <ClientRouter/> не включать: переход между страницами

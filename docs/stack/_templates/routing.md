@@ -25,7 +25,8 @@ status: draft
 | `ru` | нет (дефолтная) | `/blog/<slug>` |
 | `en` | `/en` | `/en/blog/<slug>` |
 
-Физические каталоги `src/pages/en/**`; ru/en-обёртки делят одну разметку страницы.
+Локаль — строка дескриптора `src/shared/i18n/locale.ts` (первая — без префикса); страница — один файл маршрута
+на все локали (`src/pages/[...locale]/…`), её языки — версии карты сайта strategy.
 Авторедиректов по `Accept-Language` нет — язык выбирает человек ссылкой в шапке.
 
 ## Карта страниц
@@ -35,7 +36,7 @@ status: draft
 
 | путь | происхождение | локали |
 |---|---|---|
-| `/` | `src/pages/index.astro` | `ru`, `en` |
+| `/` | `src/pages/[...locale]/index.astro` | `ru`, `en` |
 | `/blog`, `/blog/page/N`, `/blog/<slug>`, `/blog/tag/<tag>` | коллекция `post` | `ru`, `en` |
 | `/about`, `/contacts`, `/contacts/spasibo` | статические страницы | `ru`, `en` |
 | `/legal/privacy` | статическая страница | `ru` |

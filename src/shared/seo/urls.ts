@@ -1,5 +1,5 @@
 import { getRuntimeConfig } from '@/shared/config'
-import { DEFAULT_LOCALE, type Locale, localePath, SUPPORTED_LOCALES } from '@/shared/i18n'
+import { type Locale, SUPPORTED_LOCALES, type Translations } from '@/shared/i18n'
 
 // Канонический вид пути: без query и фрагмента, без хвостового слеша (`trailingSlash: 'never'`).
 // Регистр не трогается: URL к нему чувствительны, canonical обязан совпадать с реальным адресом.
@@ -17,28 +17,18 @@ export function absoluteUrl(path: string): string {
 }
 
 export interface Alternate {
-  hreflang: string
+  hreflang: Locale | 'x-default'
   href: string
 }
 
-export interface AlternatesInput {
-  locale: Locale
-  // Путь текущей страницы (с префиксом локали).
-  path: string
-  // Путь перевода без префикса локали; нет перевода — нет hreflang вовсе.
-  alternatePath: string | undefined
-}
-
-// hreflang — только при реальном переводе: полный взаимный набор с self-ссылкой и x-default
-// (версия дефолтной локали). Две локали: «другая» — единственная кроме текущей.
-export function alternates({ locale, path, alternatePath }: AlternatesInput): Alternate[] {
-  const other = SUPPORTED_LOCALES.find((candidate) => candidate !== locale)
-  if (alternatePath === undefined || other === undefined) return []
-  const own = absoluteUrl(path)
-  const twin = absoluteUrl(localePath(other, alternatePath))
-  const hrefOf = (candidate: Locale) => (candidate === locale ? own : twin)
-  return [
-    ...SUPPORTED_LOCALES.map((candidate) => ({ hreflang: candidate, href: hrefOf(candidate) })),
-    { hreflang: 'x-default', href: hrefOf(DEFAULT_LOCALE) },
-  ]
+// hreflang — по карте переводов страницы: её версия на каждом языке, своя включительно, и x-default — версия первой
+// локали дескриптора (дефолтной), у которой версия есть. Версия одна — hreflang нет вовсе.
+export function alternates(translations: Translations): Alternate[] {
+  const versions = SUPPORTED_LOCALES.flatMap((locale): Alternate[] => {
+    const path = translations[locale]
+    return path === undefined ? [] : [{ hreflang: locale, href: absoluteUrl(path) }]
+  })
+  const [first] = versions
+  if (first === undefined || versions.length < 2) return []
+  return [...versions, { hreflang: 'x-default', href: first.href }]
 }

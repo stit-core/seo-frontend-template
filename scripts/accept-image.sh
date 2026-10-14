@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 # Приёмка собранного образа до пуша в registry: размер в бюджете, отказ без SITE_URL за конечное
-# время, штамповка origin (страницы, карта, фиды), статусы ключевых маршрутов, canonical, CSP, robots,
+# время, штамповка origin (страницы, карта, фиды), статус каждой страницы сборки, canonical, CSP, robots,
 # одна форма адреса (301 с неканонической, 404 на %2F), отказ 400 без падения на TRACE, контур staging,
 # дренаж по SIGTERM; заголовки и TTFB — печать без порога.
 # Использование: pnpm accept:image <image> [port]
@@ -85,10 +85,16 @@ wait_healthz || {
   exit 1
 }
 
-for path in / /en /about /contacts; do
+# Страницы — из сборки образа, а не из списка: набор локалей и страниц у форка свой.
+pages=$(docker exec "$NAME" sh -c 'cd /app/dist/client && find . -name index.html' |
+  sed -e 's#^\./##' -e 's#/*index\.html$##' -e 's#^#/#' | sort)
+count=0
+for path in $pages; do
+  count=$((count + 1))
   code=$(status "$path")
-  [ "$code" = "200" ] && ok "$path → 200" || fail "$path → $code (ждали 200)"
+  [ "$code" = "200" ] || fail "$path → $code (ждали 200)"
 done
+[ "$count" -gt 0 ] && ok "страницы сборки — $count, каждая отвечает 200" || fail "в сборке образа нет страниц"
 code=$(status /net-takogo-puti)
 [ "$code" = "404" ] && ok "несуществующий путь → 404" || fail "несуществующий путь → $code"
 
@@ -134,14 +140,19 @@ done
 # со спрятанным разделителем — 404. --path-as-is: curl сам не приводит путь.
 echo "== один адрес — одна форма =="
 hop() { curl -s -o /dev/null --path-as-is -w '%{http_code} %{redirect_url}' "http://127.0.0.1:$PORT$1"; }
-for pair in "/about/ /about" "//about /about" "/about/index.html /about" "/index.html /" "/en/./about/ /en/about"; do
+# Страница верхнего уровня и вложенная — из сборки: у второй есть сегмент, который можно обойти точками.
+flat=$(printf '%s\n' $pages | grep -E '^/[^/]+$' | head -1)
+nested=$(printf '%s\n' $pages | grep -E '^/[^/]+/' | head -1)
+parent=${nested%/*}
+leaf=${nested##*/}
+for pair in "$flat/ $flat" "/$flat $flat" "$flat/index.html $flat" "/index.html /" "$parent/./$leaf/ $nested"; do
   form=${pair% *}
   want="301 http://127.0.0.1:$PORT${pair#* }"
   got=$(hop "$form")
   [ "$got" = "$want" ] && ok "$form → 301 ${pair#* }" || fail "$form → $got (ждали $want)"
 done
-got=$(hop "/en%2Fabout")
-[ "$got" = "404 " ] && ok "/en%2Fabout → 404" || fail "/en%2Fabout → $got (ждали 404)"
+got=$(hop "$parent%2F$leaf")
+[ "$got" = "404 " ] && ok "$parent%2F$leaf → 404" || fail "$parent%2F$leaf → $got (ждали 404)"
 
 echo "== заголовки =="
 curl -sI "http://127.0.0.1:$PORT/" | grep -iE '^(cache-control|etag|content-type)' | sed 's/^/  /'

@@ -2,6 +2,7 @@
 import DocumentLayout from '@/app/layouts/document.astro'
 import { CompanyContacts } from '@/entities/company'
 import { type Locale, localePath, t } from '@/shared/i18n'
+import { pageVersions } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 
@@ -14,6 +15,7 @@ const { locale } = Astro.props
 
 <DocumentLayout
   locale={locale}
+  translations={pageVersions('thank-you')}
   title={t(locale, 'thanks.title')}
   description={t(locale, 'thanks.lead')}
   noindex

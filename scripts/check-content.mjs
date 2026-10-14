@@ -8,19 +8,23 @@
 // scripts/lib/content.mjs проверяемого корня.
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, extname, relative, resolve, sep } from 'node:path'
+import { pathToFileURL } from 'node:url'
 import { load, YAMLException } from 'js-yaml'
 import { htmlToHast, markdownToMdast } from 'satteri'
 import { z } from 'zod'
 import { SLUG_RE } from '../src/entities/post/model/schema.ts'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
-import { localePath, SUPPORTED_LOCALES } from '../src/shared/i18n/locale.ts'
+import { localeRules } from '../src/shared/i18n/locale.ts'
 import { buildRedirectTable, isExternalTarget } from '../src/shared/redirects/table.ts'
 import { collectionsOf, splitFrontmatter } from './lib/content.mjs'
-import { pageRoutes, walk } from './lib/routes.mjs'
+import { localizedRoute, pageRoutes, walk } from './lib/routes.mjs'
 
 // Корень проекта; другой корень — негативные фикстуры check:gate (`.gate-fixtures/<скрипт>`).
 const root = resolve(process.argv[2] ?? resolve(import.meta.dirname, '..'))
 const collections = await collectionsOf(root)
+// Локали — проверяемого проекта, из его политики сборки: гейт на гейт не зависит от локалей сайта.
+const { LOCALES } = await import(pathToFileURL(resolve(root, 'scripts/lib/site-policy.mjs')).href)
+const { SUPPORTED_LOCALES, localePath } = localeRules(LOCALES)
 const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.svg', '.gif'])
 // Голый хост плейсхолдера: ловит и полный URL, и упоминание без схемы.
 const PLACEHOLDER = new URL(SITE_ORIGIN_PLACEHOLDER).hostname
@@ -243,6 +247,13 @@ for (const field of ['title', 'description']) {
 const pagesDir = resolve(root, 'src/pages')
 const pages = pageRoutes(pagesDir)
 const routes = new Set(pages.filter((page) => !page.parametrized).map((page) => page.route))
+// Маршрут локалей (`[...locale]`) — адрес на каждой локали; на каких из них страница есть на самом деле, знает
+// сборка, и ссылку на несобранную версию ловит check:links.
+for (const page of pages) {
+  const route = localizedRoute(page.route)
+  if (route === undefined || route.includes('[')) continue
+  for (const locale of SUPPORTED_LOCALES) routes.add(localePath(locale, route))
+}
 // On-demand — решение о кеше и индексации: строка в карте маршрутов, а не только флаг в файле.
 const renderMap = resolve(root, 'docs/reference/rendering.md')
 const mapRows = (existsSync(renderMap) ? readFileSync(renderMap, 'utf8') : '')

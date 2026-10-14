@@ -3,11 +3,16 @@ import DocumentLayout from '@/app/layouts/document.astro'
 import { PRIVACY_POLICY_VERSION, SITE_NAME } from '@/shared/config'
 import { formatDate, type Locale, localePath, t } from '@/shared/i18n'
 import { breadcrumbList } from '@/shared/seo'
+import { pageVersions } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 import { Breadcrumbs } from '@/widgets/breadcrumbs'
 
-const locale: Locale = 'ru'
+interface Props {
+  locale: Locale
+}
+
+const { locale } = Astro.props
 
 // Реквизиты оператора — плейсхолдеры: их подставляет /de-template и падает, пока хоть один
 // остался. Литералы живут в строках, иначе фигурные скобки съел бы шаблонизатор.
@@ -27,6 +32,7 @@ const revision = formatDate(locale, new Date(PRIVACY_POLICY_VERSION))
 
 <DocumentLayout
   locale={locale}
+  translations={pageVersions('privacy')}
   title={title}
   description={description}
   jsonLd={[breadcrumbList(crumbs)]}

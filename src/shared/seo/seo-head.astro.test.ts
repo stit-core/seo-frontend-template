@@ -1,8 +1,22 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type * as SharedConfig from '@/shared/config'
 import type { SITE_VERIFICATION } from '@/shared/config'
+import type * as I18n from '@/shared/i18n'
 import { parseHtml } from '@/shared/lib/testing'
 import SeoHead from './seo-head.astro'
+
+// Три локали — свой дескриптор теста: версия страницы может быть на каждой.
+vi.mock('@/shared/i18n', async (importOriginal) => {
+  const i18n = await importOriginal<typeof I18n>()
+  return {
+    ...i18n,
+    ...i18n.localeRules([
+      { code: 'ru', intl: 'ru-RU', og: 'ru_RU', name: 'Русский' },
+      { code: 'en', intl: 'en-GB', og: 'en_US', name: 'English' },
+      { code: 'de', intl: 'de-DE', og: 'de_DE', name: 'Deutsch' },
+    ]),
+  }
+})
 
 const ORIGIN = 'https://demo.example'
 
@@ -79,28 +93,42 @@ describe('SeoHead', () => {
     expect(og(doc)['og:image:alt']).toBeTruthy()
     expect(og(doc)).not.toHaveProperty('og:locale:alternate')
     expect(content(doc, 'name="twitter:card"')).toBe('summary_large_image')
-    const feed = doc.querySelector('link[type="application/rss+xml"]')
-    expect(['rel', 'title', 'href'].map((name) => feed?.getAttribute(name))).toEqual([
-      'alternate',
-      'Блог — ssr-frontend-template',
-      `${ORIGIN}/rss.xml`,
-    ])
+    expect(doc.querySelector('link[type="application/rss+xml"]')).toBeNull()
     expect(doc.querySelector('meta[name="keywords"]')).toBeNull()
   })
 
-  it('перевод есть: hreflang взаимный с self и x-default, og:locale:alternate', async () => {
-    const doc = await render('/en/blog/x', { ...base, locale: 'en', alternatePath: '/blog/y' })
+  it('фид языка страницы: автообнаружение — его абсолютный адрес и имя блога с брендом', async () => {
+    const doc = await render('/en/blog/x', { ...base, locale: 'en', feed: '/en/rss.xml' })
+    const feed = doc.querySelector('link[type="application/rss+xml"]')
+    expect(['rel', 'title', 'href'].map((name) => feed?.getAttribute(name))).toEqual([
+      'alternate',
+      'Blog — ssr-frontend-template',
+      `${ORIGIN}/en/rss.xml`,
+    ])
+  })
+
+  it('переводы есть: hreflang по карте переводов с self и x-default, og:locale:alternate каждой другой версии', async () => {
+    const doc = await render('/en/blog/x', {
+      ...base,
+      locale: 'en',
+      translations: { ru: '/blog/y', en: '/en/blog/x', de: '/de/blog/z' },
+    })
     expect(hreflang(doc)).toEqual([
       ['ru', `${ORIGIN}/blog/y`],
       ['en', `${ORIGIN}/en/blog/x`],
+      ['de', `${ORIGIN}/de/blog/z`],
       ['x-default', `${ORIGIN}/blog/y`],
     ])
-    expect(og(doc)).toMatchObject({ 'og:locale': 'en_US', 'og:locale:alternate': 'ru_RU' })
-    expect(href(doc, 'type="application/rss+xml"')).toBe(`${ORIGIN}/en/rss.xml`)
+    expect(og(doc)['og:locale']).toBe('en_US')
+    expect(
+      [...doc.querySelectorAll('meta[property="og:locale:alternate"]')].map((meta) =>
+        meta.getAttribute('content'),
+      ),
+    ).toEqual(['ru_RU', 'de_DE'])
   })
 
   it('корень: canonical со слешем', async () => {
-    const doc = await render('/', { ...base, alternatePath: '/' })
+    const doc = await render('/', { ...base, translations: { ru: '/', en: '/en' } })
     expect(href(doc, 'rel="canonical"')).toBe(`${ORIGIN}/`)
     expect(hreflang(doc)).toEqual([
       ['ru', `${ORIGIN}/`],
@@ -149,7 +177,11 @@ describe('SeoHead', () => {
   })
 
   it('служебная страница: только noindex — без canonical, OG и hreflang', async () => {
-    const doc = await render('/xx', { ...base, noindex: true, alternatePath: '/' })
+    const doc = await render('/xx', {
+      ...base,
+      noindex: true,
+      translations: { ru: '/', en: '/en' },
+    })
     expect(content(doc, 'name="robots"')).toBe('noindex')
     expect(doc.querySelector('link[rel="canonical"], link[hreflang]')).toBeNull()
     expect(og(doc)).toEqual({})

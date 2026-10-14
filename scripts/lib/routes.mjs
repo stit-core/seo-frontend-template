@@ -62,25 +62,49 @@ export function builtPages(clientDir) {
     .sort()
 }
 
+// Сегмент маршрута в регулярном выражении пути: `[x]` — один сегмент, `[...x]` — ноль и больше сегментов (у маршрута
+// `[...locale]` дефолтная локаль сегмента не даёт).
+/** @param {string} segment */
+const segmentSource = (segment) =>
+  /^\[\.\.\.\w+\]$/.test(segment)
+    ? '(?:/[^/]+)*'
+    : `/${segment
+        .split(/(\[\w+\])/)
+        .map((part) =>
+          /^\[\w+\]$/.test(part) ? '[^/]+' : part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
+        )
+        .join('')}`
+
+/**
+ * Пути, которые порождает маршрут: `/[...locale]/about` — `/about` и `/en/about`.
+ * @param {string} route
+ * @returns {RegExp}
+ */
+export function routePattern(route) {
+  return new RegExp(`^${route.split('/').filter(Boolean).map(segmentSource).join('')}/?$`)
+}
+
+/**
+ * Маршрут без сегмента локали `[...locale]`, если он у маршрута первый: адрес страницы на дефолтной локали.
+ * @param {string} route
+ * @returns {string | undefined}
+ */
+export function localizedRoute(route) {
+  const match = /^\/\[\.\.\.locale\](\/.*)?$/.exec(route)
+  return match ? (match[1] ?? '/') : undefined
+}
+
 /**
  * Шаблоны страниц — по одной странице сборки на prerendered-маршрут src/pages: у маршрута с
- * параметром (`/blog/[slug]`) — первый собранный адрес. Ответ боту зависит от сервера и шаблона, а
- * не от записи: матрица ботов и GEO-проба ходят по шаблонам, а не по всей сборке.
+ * параметром (`/[...locale]/blog/[slug]`) — первый собранный адрес. Ответ боту зависит от сервера и
+ * шаблона, а не от записи: матрица ботов и GEO-проба ходят по шаблонам, а не по всей сборке.
  * @param {string} pagesDir
  * @param {string} clientDir
  * @returns {string[]}
  */
 export function pageTemplates(pagesDir, clientDir) {
   const built = builtPages(clientDir)
-  const matches = (/** @type {string} */ route, /** @type {string} */ path) => {
-    const pattern = route.split('/')
-    const segments = path.split('/')
-    return (
-      pattern.length === segments.length &&
-      pattern.every((segment, index) => segment.startsWith('[') || segment === segments[index])
-    )
-  }
   return pageRoutes(pagesDir)
     .filter((page) => page.prerender)
-    .flatMap((page) => built.filter((path) => matches(page.route, path)).slice(0, 1))
+    .flatMap((page) => built.filter((path) => routePattern(page.route).test(path)).slice(0, 1))
 }

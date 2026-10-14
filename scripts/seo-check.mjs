@@ -10,8 +10,8 @@
 //   порога записей (а от порога тег обязан индексироваться), и тогда без canonical, OG и hreflang;
 //   og:image и hreflang — на своём origin;
 // - hreflang — полный взаимный набор (self + x-default) у каждой пары переводов из источника
-//   (главные, списки и теги под обоими префиксами локалей; записи — twin по translationKey) и
-//   только у них;
+//   (главные, списки и теги под префиксами локалей; записи — twin по translationKey) и только у
+//   них; язык адреса и og:locale — по локалям проверяемого проекта;
 // - JSON-LD (любой <script> этого типа, какие бы ещё атрибуты ни стояли у тега): типы из списка
 //   политики, Organization/WebSite только на главной, правильный BreadcrumbList, разметка = видимое
 //   (headline = h1, даты = <time>, image — кадры 16:9, 4:3 и 1:1 мастера og:image, mainEntityOfPage =
@@ -33,8 +33,8 @@
 //   строки, остров — на своих страницах и в бюджете (brotli: инлайн — тег, файл — модуль и всё,
 //   что он импортирует), разметка острова — только вместе с ним; у строки реестра есть основание,
 //   бюджет и вид — инлайн или файл;
-// - сборка против источника: страница у каждой опубликованной записи и prerendered-маршрута,
-//   страниц черновиков нет;
+// - сборка против источника: страница у каждой опубликованной записи и prerendered-маршрута
+//   (маршрута локалей — хоть на одной локали), страниц черновиков нет;
 // - рантайм образа (dist/server и docker/*.mjs) импортирует ровно dependencies: пакета вне них,
 //   зависимости без импорта и имени модуля, которого не прочесть, нет; серверный бандл — без
 //   конвейера картинок Astro: модуля с импортом sharp в нём нет;
@@ -51,13 +51,7 @@ import { load } from 'js-yaml'
 import sharp from 'sharp'
 import ts from 'typescript'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
-import {
-  DEFAULT_LOCALE,
-  localeOf,
-  localePath,
-  routeOf,
-  SUPPORTED_LOCALES,
-} from '../src/shared/i18n/locale.ts'
+import { localeRules } from '../src/shared/i18n/locale.ts'
 import { collectionsOf, splitFrontmatter } from './lib/content.mjs'
 import {
   attributesOf,
@@ -69,7 +63,7 @@ import {
   normalizeSpace,
   textOf,
 } from './lib/html.mjs'
-import { pageRoutes, walk } from './lib/routes.mjs'
+import { localizedRoute, pageRoutes, routePattern, walk } from './lib/routes.mjs'
 import {
   ARTICLE_IMAGE_RATIOS,
   brotliBytes,
@@ -94,12 +88,16 @@ import { sitemapUrls } from './lib/sitemap.mjs'
 // Корень проекта; другой корень — негативные фикстуры check:gate (`.gate-fixtures/<скрипт>`).
 const root = resolve(process.argv[2] ?? resolve(import.meta.dirname, '..'))
 const collections = await collectionsOf(root)
-// Реестр островов и список шрифтов — тоже проверяемого проекта, из его политики сборки: у сайта она
-// отдаёт данные приложения (src/shared/config/islands.ts, src/app/styles/fonts.ts), у мини-проекта
-// check:gate — свои, и гейт на гейт не зависит от островов и шрифтов сайта.
-const { ISLANDS: islands, FONTS: fonts } = await import(
-  pathToFileURL(resolve(root, 'scripts/lib/site-policy.mjs')).href
-)
+// Реестр островов, список шрифтов и локали — тоже проверяемого проекта, из его политики сборки: у сайта
+// она отдаёт данные приложения (src/shared/config/islands.ts, src/app/styles/fonts.ts,
+// src/shared/i18n/locale.ts), у мини-проекта check:gate — свои, и гейт на гейт не зависит от островов,
+// шрифтов и локалей сайта.
+const {
+  ISLANDS: islands,
+  FONTS: fonts,
+  LOCALES: locales,
+} = await import(pathToFileURL(resolve(root, 'scripts/lib/site-policy.mjs')).href)
+const { SUPPORTED_LOCALES, localeInfo, localeOf, localePath, routeOf } = localeRules(locales)
 const client = resolve(root, 'dist/client')
 if (!existsSync(client)) {
   console.error('seo:check: dist/client не найден — сначала pnpm build')
@@ -137,8 +135,7 @@ const fileInDist = (path) => {
   return file.startsWith(client + sep) && existsSync(file) && statSync(file).isFile()
 }
 
-const isLocaleHome = (path) =>
-  SUPPORTED_LOCALES.some((locale) => path === (locale === DEFAULT_LOCALE ? '/' : `/${locale}`))
+const isLocaleHome = (path) => SUPPORTED_LOCALES.some((locale) => path === localePath(locale, '/'))
 
 // Сторона PNG из заголовка файла (IHDR); не PNG или не квадрат — undefined.
 function pngSide(path) {
@@ -793,7 +790,7 @@ for (const file of walk(client)) {
   const body = bodyOf(html)
   if (body.includes(OWN_HOST))
     fail(where, 'плейсхолдер origin в <body>: абсолютный URL своего сайта вне <head>')
-  for (const message of scriptViolations(html, path, islands)) fail(where, message)
+  for (const message of scriptViolations(html, path, islands, routeOf)) fail(where, message)
   for (const script of scriptsOf(html, islands)) {
     const island = islands[script.island]
     if (island === undefined || weighed.has(script.src ?? script.tag)) continue
@@ -897,7 +894,7 @@ for (const file of walk(client)) {
     if (!siteName) fail(where, 'og:site_name пуст')
     if (title) checkSnippet(where, title, description, siteName)
     const ogLocale = og('og:locale')
-    if (ogLocale !== undefined && !new RegExp(`^${locale}_[A-Z]{2}$`).test(ogLocale)) {
+    if (ogLocale !== undefined && ogLocale !== localeInfo(locale).og) {
       fail(where, `og:locale «${ogLocale}» не соответствует локали ${locale}`)
     }
     const image = og('og:image')
@@ -1125,8 +1122,9 @@ for (const [, page] of pages) {
 }
 
 // Сломанный набор ловят проверки выше, пропавший — только сверка с источником пар: главные,
-// списки и теги — один маршрут под обоими префиксами локалей; записи — twin по translationKey
-// из frontmatter (черновиков в сборке нет). Без неё страница без alternatePath теряет hreflang молча.
+// списки и теги — один маршрут под префиксами локалей; записи — twin по translationKey из
+// frontmatter (черновиков в сборке нет). Без неё страница, чей перевод выпал из карты переводов,
+// теряет hreflang молча.
 const groups = new Map()
 const pair = (key, locale, path) => {
   if (!groups.has(key)) groups.set(key, new Map())
@@ -1177,8 +1175,22 @@ for (const path of draftPaths) {
   const draft = pages.get(path)
   if (draft) fail(draft.where, 'страница черновика в сборке: черновик виден только в astro dev')
 }
+const builtFiles = walk(client).map((file) => `/${relative(client, file).split(sep).join('/')}`)
 for (const { route, prerender, parametrized } of pageRoutes(resolve(root, 'src/pages'))) {
-  if (!prerender || parametrized) continue
+  if (!prerender) continue
+  // Маршрут локалей (`[...locale]`) собирает страницу на языках её версий — хоть на одном.
+  const localized = localizedRoute(route)
+  if (localized !== undefined && !localized.includes('[')) {
+    const pattern = routePattern(route)
+    if (![...pages.keys(), ...builtFiles].some((path) => pattern.test(path))) {
+      fail(
+        `dist/client${route}`,
+        'страницы нет в сборке ни на одной локали, хотя маршрут есть в src/pages',
+      )
+    }
+    continue
+  }
+  if (parametrized) continue
   // Страницы ошибок Astro пишет файлом `<код>.html`, prerendered-эндпоинт (`feed.json.ts`) — самим
   // файлом, остальные — каталогом с index.html.
   const built = pages.has(route) || fileInDist(`${route}.html`) || fileInDist(route)

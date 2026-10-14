@@ -8,8 +8,9 @@ import Metrika from '@/app/analytics/metrika.astro'
 import { fontFamilies } from '@/app/styles/fonts'
 import { PreferencesInit } from '@/features/preferences'
 import { ISLANDS, standsOn, THEME } from '@/shared/config'
-import { type Locale, routeOf, t } from '@/shared/i18n'
+import { type Locale, localePath, routeOf, type Translations, t } from '@/shared/i18n'
 import { type JsonLd, JsonLdScript, type OgImage, SeoHead } from '@/shared/seo'
+import { pageLink } from '@/shared/strategy'
 import { SiteFooter } from '@/widgets/site-footer'
 import { SiteHeader } from '@/widgets/site-header'
 
@@ -18,8 +19,9 @@ interface Props {
   // Заголовок без имени сайта (шаблон добавит суффикс) и уникальный description страницы.
   title: string
   description: string
-  // Путь перевода без префикса локали; без него нет ни ссылки на другую локаль в шапке, ни hreflang.
-  alternatePath?: string | undefined
+  // Карта переводов страницы: локаль → адрес версии (своя — тоже). Из неё — hreflang и переводы в переключателе
+  // языка.
+  translations?: Translations | undefined
   // Служебная страница (404, /now, подтверждение заявки) и тонкая (тег ниже порога записей):
   // noindex, без canonical, OG и hreflang.
   noindex?: boolean | undefined
@@ -34,7 +36,7 @@ const {
   locale,
   title,
   description,
-  alternatePath,
+  translations,
   noindex,
   ogType,
   ogImage,
@@ -47,6 +49,10 @@ const theme = THEME.default === 'system' ? undefined : THEME.default
 // Острова оболочки — по строкам реестра: предпочтения с кнопкой темы — на всём сайте, без неё — на
 // страницах с переключателем движения; счётчик — при заданном идентификаторе.
 const route = routeOf(Astro.url.pathname)
+// Фид блога — у языка, где есть свой блог: фид другого языка в автообнаружении не нужен.
+const blog = pageLink('/blog', locale)
+const feed =
+  blog !== undefined && blog.hreflang === undefined ? localePath(locale, '/rss.xml') : undefined
 // Шрифты ДС — `<Font>` каждого семейства списка: `@font-face` и переменная семейства, на которую
 // ссылаются роли файла токенов; preload — начертания первого экрана. Тип CssVariable Astro выводит
 // из конфига, а конфиг — из того же списка.
@@ -71,7 +77,8 @@ const fonts = fontFamilies().map(({ variable, preload }) => ({
       title={title}
       description={description}
       locale={locale}
-      alternatePath={alternatePath}
+      translations={translations}
+      feed={feed}
       noindex={noindex}
       ogType={ogType}
       ogImage={ogImage}
@@ -96,7 +103,7 @@ const fonts = fontFamilies().map(({ variable, preload }) => ({
     >
       {t(locale, 'nav.skip')}
     </a>
-    <SiteHeader locale={locale} alternatePath={alternatePath} />
+    <SiteHeader locale={locale} translations={translations} />
     {/* Ширину, фон и ритм странице дают её секции (shared/ui/section): оболочка её не сужает. */}
     <main id="main" class="flex-1">
       <slot />

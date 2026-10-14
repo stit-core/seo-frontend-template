@@ -1,0 +1,13 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro'
+import { localeRoutes } from '@/shared/strategy'
+import HomePage from '../_home/home-page.astro'
+
+export const getStaticPaths = (() => localeRoutes('home')) satisfies GetStaticPaths
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>
+
+const { locale } = Astro.props
+---
+
+<HomePage locale={locale} />

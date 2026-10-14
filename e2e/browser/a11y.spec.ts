@@ -41,7 +41,7 @@ for (const theme of SITE_THEMES) {
         form.noValidate = true
       })
       await page.getByRole('button', { name: t('ru', 'form.submit') }).click()
-      await expect(page).toHaveTitle(new RegExp(`^${t('ru', 'form.failed')}: `))
+      await expect(page).toHaveTitle(new RegExp(`^${t('ru', 'form.failed', { title: '' })}`))
       await expect(page.getByRole('alert')).toBeFocused()
       expect(await violations(page)).toEqual([])
     })

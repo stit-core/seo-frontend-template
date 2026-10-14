@@ -27,7 +27,8 @@ afterEach(() => vi.unstubAllEnvs())
 const ru = (key: DictKey) => t('ru', key)
 const home = { name: ru('nav.home'), href: '/' }
 const blog = { name: ru('blog.title'), href: '/blog' }
-const page2 = `${ru('blog.page')} 2`
+const page2 = t('ru', 'blog.page', { page: 2 })
+const paged = (key: DictKey) => t('ru', 'blog.paged', { text: ru(key), page: 2 })
 
 const post = async (locale: 'ru' | 'en', slug: string): Promise<Post> => {
   const found = await getPost(locale, slug)
@@ -40,7 +41,7 @@ describe('страница записи', () => {
     const para = await post('ru', 'para')
     const model = await postPageModel(para)
     const author = { id: 'anna-smirnova', name: 'Анна Смирнова', jobTitle: 'редактор блога' }
-    expect(model.alternatePath).toBe('/blog/pair')
+    expect(model.translations).toEqual({ ru: '/blog/para', en: '/en/blog/pair' })
     expect(model.ogImage).toBeUndefined()
     expect(model.author).toEqual(author)
     expect(model.crumbs).toEqual([home, blog, { name: 'Запись с переводом' }])
@@ -57,7 +58,7 @@ describe('страница записи', () => {
     ])
 
     const pair = await postPageModel(await post('en', 'pair'))
-    expect(pair.alternatePath).toBe('/blog/para')
+    expect(pair.translations).toEqual({ ru: '/blog/para', en: '/en/blog/pair' })
     expect(pair.crumbs[1]).toEqual({ name: t('en', 'blog.title'), href: '/en/blog' })
   })
 
@@ -94,7 +95,7 @@ describe('страница записи', () => {
 
   it('правка без перевода: hreflang нет, dateModified и article:modified_time — из updatedDate', async () => {
     const model = await postPageModel(await post('ru', 'odna'))
-    expect(model.alternatePath).toBeUndefined()
+    expect(model.translations).toEqual({ ru: '/blog/odna' })
     expect(model.article).toEqual({
       published: new Date('2026-02-01'),
       modified: new Date('2026-02-10'),
@@ -138,7 +139,7 @@ describe('страница записи', () => {
 describe('страница списка', () => {
   it('первая страница: ссылка на перевод, крошка без ссылки, только «дальше»', async () => {
     const model = await blogListPageModel('ru', paginate(await listPosts('ru'), 1))
-    expect(model.alternatePath).toBe('/blog')
+    expect(model.translations).toEqual({ ru: '/blog', en: '/en/blog' })
     expect(model.heading).toBe(ru('blog.title'))
     expect(model.title).toBe(ru('blog.pageTitle'))
     expect(model.description).toBe(ru('blog.description'))
@@ -154,10 +155,11 @@ describe('страница списка', () => {
 
   it('страница 2: своё имя в сниппете; у английского блога её нет — и ссылки на перевод нет', async () => {
     const model = await blogListPageModel('ru', paginate(await listPosts('ru'), 2))
-    expect(model.alternatePath).toBeUndefined()
-    expect(model.heading).toBe(`${ru('blog.title')} — ${page2}`)
-    expect(model.title).toBe(`${ru('blog.pageTitle')} — ${page2}`)
-    expect(model.description).toBe(`${ru('blog.description')} — ${page2}`)
+    expect(model.translations).toEqual({ ru: '/blog/page/2' })
+    expect(model.heading).toBe(paged('blog.title'))
+    expect(model.title).toBe(paged('blog.pageTitle'))
+    expect(model.description).toBe(paged('blog.description'))
+    expect(model.heading).toContain('2')
     expect(model.crumbs).toEqual([home, blog, { name: page2 }])
     expect(model.pagination).toEqual({
       current: 2,
@@ -169,7 +171,7 @@ describe('страница списка', () => {
 
   it('английский список: перевод — русская первая страница', async () => {
     const model = await blogListPageModel('en', paginate(await listPosts('en'), 1))
-    expect(model.alternatePath).toBe('/blog')
+    expect(model.translations).toEqual({ ru: '/blog', en: '/en/blog' })
     expect(model.tags).toEqual(['i18n', 'seo'])
   })
 })
@@ -186,20 +188,25 @@ describe('страница тега', () => {
     expect((await tagPageModel('ru', 'almost')).noindex).toBe(true)
   })
 
-  it('ссылка на перевод — только на страницу тега другой локали от порога', async () => {
-    expect((await tagPageModel('ru', 'seo')).alternatePath).toBe('/blog/tag/seo')
-    expect((await tagPageModel('en', 'seo')).alternatePath).toBe('/blog/tag/seo')
+  it('перевод — только страница тега другой локали от порога', async () => {
+    const seo = { ru: '/blog/tag/seo', en: '/en/blog/tag/seo' }
+    expect((await tagPageModel('ru', 'seo')).translations).toEqual(seo)
+    expect((await tagPageModel('en', 'seo')).translations).toEqual(seo)
     // Английская страница тега — тонкая: русской ссылаться не на что; обратная ссылка есть.
-    expect((await tagPageModel('ru', 'i18n')).alternatePath).toBeUndefined()
-    expect((await tagPageModel('en', 'i18n')).alternatePath).toBe('/blog/tag/i18n')
-    expect((await tagPageModel('ru', 'astro')).alternatePath).toBeUndefined()
+    expect((await tagPageModel('ru', 'i18n')).translations).toEqual({ ru: '/blog/tag/i18n' })
+    expect((await tagPageModel('en', 'i18n')).translations).toEqual({
+      ru: '/blog/tag/i18n',
+      en: '/en/blog/tag/i18n',
+    })
+    expect((await tagPageModel('ru', 'astro')).translations).toEqual({ ru: '/blog/tag/astro' })
   })
 
   it('заголовок, сниппет и крошки', async () => {
     const model = await tagPageModel('ru', 'astro')
-    expect(model.heading).toBe(`${ru('blog.tagLead')} #astro`)
+    expect(model.heading).toBe(t('ru', 'blog.tag', { tag: 'astro' }))
     expect(model.title).toBe(model.heading)
-    expect(model.description).toBe(`${ru('blog.tagLead')} #astro — ${ru('blog.tagDescription')}`)
+    expect(model.description).toBe(t('ru', 'blog.tagDescription', { tag: 'astro' }))
+    expect([model.heading, model.description].every((text) => text.includes('astro'))).toBe(true)
     expect(model.crumbs).toEqual([home, blog, { name: '#astro' }])
     expect(model.jsonLd).toEqual([breadcrumbList(model.crumbs)])
   })

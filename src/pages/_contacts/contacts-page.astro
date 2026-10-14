@@ -4,6 +4,7 @@ import { COMPANY, CompanyContacts } from '@/entities/company'
 import { type ContactErrors, ContactForm, type ContactValues } from '@/features/contact-form'
 import { type DictKey, type Locale, localePath, t } from '@/shared/i18n'
 import { breadcrumbList } from '@/shared/seo'
+import { pageVersions } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 import { Breadcrumbs } from '@/widgets/breadcrumbs'
@@ -48,7 +49,7 @@ const place = `${copy.title} — ${address.locality}, ${address.street}`
 // Ответ с ошибками называет отказ первым словом заголовка окна: вкладка и чтец экрана сообщают о
 // нём раньше текста страницы.
 const failed = errors !== undefined || notice !== undefined
-const title = failed ? `${t(locale, 'form.failed')}: ${place}` : place
+const title = failed ? t(locale, 'form.failed', { title: place }) : place
 const crumbs = [
   { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
   { name: copy.title },
@@ -59,7 +60,7 @@ const crumbs = [
   locale={locale}
   title={title}
   description={copy.description}
-  alternatePath="/contacts"
+  translations={pageVersions('contacts')}
   noindex={noindex}
   jsonLd={noindex ? [] : [breadcrumbList(crumbs)]}
 >

@@ -30,15 +30,15 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 
 | путь | файл (`src/pages/`) | режим | `Cache-Control` | индексируется | в sitemap |
 |---|---|---|---|---|---|
-| `/`, `/en` | `index.astro`, `en/index.astro` | `static` | `public, max-age=0` + ETag | да | да |
-| `/blog`, `/en/blog` | `blog/index.astro`, `en/blog/index.astro` | `static` | то же | да | да |
-| `/blog/page/N`, `/en/blog/page/N` | `blog/page/[page].astro`, `en/blog/page/[page].astro` | `static`, пути из `getStaticPaths` | то же | да | да |
-| `/blog/<slug>`, `/en/blog/<slug>` | `blog/[slug].astro`, `en/blog/[slug].astro` | `static`, пути из контента (без черновиков) | то же | да | да |
-| `/blog/tag/<tag>`, `/en/blog/tag/<tag>` | `blog/tag/[tag].astro`, `en/blog/tag/[tag].astro` | `static`, теги видимых записей | то же | от трёх записей локали — да; ниже — `noindex` | от трёх записей — да |
-| `/about`, `/en/about` | `about.astro`, `en/about.astro` | `static` | то же | да | да |
-| `/contacts`, `/en/contacts` | `contacts/index.astro`, `en/contacts/index.astro` | `static` | то же | да | да |
-| `/contacts/spasibo`, `/en/contacts/spasibo` | `contacts/spasibo.astro`, `en/contacts/spasibo.astro` | `static` | то же | нет — `noindex` | нет |
-| `/legal/privacy` | `legal/privacy.astro` | `static` | то же | да | да |
+| `/`, `/en` | `[...locale]/index.astro` (один файл на все локали: пути — языки страницы в карте strategy) | `static` | `public, max-age=0` + ETag | да | да |
+| `/blog`, `/en/blog` | `[...locale]/blog/index.astro` | `static` | то же | да | да |
+| `/blog/page/N`, `/en/blog/page/N` | `[...locale]/blog/page/[page].astro` | `static`, пути из `getStaticPaths` | то же | да | да |
+| `/blog/<slug>`, `/en/blog/<slug>` | `[...locale]/blog/[slug].astro` | `static`, пути из контента (без черновиков) | то же | да | да |
+| `/blog/tag/<tag>`, `/en/blog/tag/<tag>` | `[...locale]/blog/tag/[tag].astro` | `static`, теги видимых записей | то же | от трёх записей локали — да; ниже — `noindex` | от трёх записей — да |
+| `/about`, `/en/about` | `[...locale]/about.astro` | `static` | то же | да | да |
+| `/contacts`, `/en/contacts` | `[...locale]/contacts/index.astro` | `static` | то же | да | да |
+| `/contacts/spasibo`, `/en/contacts/spasibo` | `[...locale]/contacts/spasibo.astro` | `static` | то же | нет — `noindex` | нет |
+| `/legal/privacy` | `[...locale]/legal/privacy.astro` (в карте — только дефолтный язык) | `static` | то же | да | да |
 | `/api/contact` | `api/contact.astro` (страница: без JS ответ на POST — разметка) | `dynamic` | `private, no-store` (роут) | нет — `noindex` | нет |
 | `/500.html` | `500.astro` (адаптер читает файл с диска при исключении в on-demand; по `/500` — 404) | `static` | `public, max-age=0` + ETag | нет — `noindex` | нет |
 | `/now` | `now.astro` | `dynamic` | `private, no-store` (роут) | нет — `noindex` | нет |
@@ -46,7 +46,7 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 | `/_image` | `_image.ts` (endpoint изображений: маршрут вводит сам Astro, `image.endpoint` в `astro.config.ts` подменяет его для сборки; в `astro dev` — штатный) | `dynamic` | `no-cache` (роут) | — (404 текстом, `X-Robots-Tag: noindex`: картинки готовит сборка, трансформация на запрос наружу закрыта, на edge — тоже) | нет |
 | `/robots.txt` | `robots.txt.ts` (endpoint) | `dynamic` | `public, max-age=300` (роут) | — (текст; `X-Robots-Tag: noindex`) | нет |
 | `/sitemap.xml` | файла маршрута нет: карту пишет интеграция `sitemap-from-build` (`astro.config.ts`, `scripts/lib/sitemap.mjs`) по страницам `dist/client` | `static`, файл сборки | `public, max-age=0` + ETag | — (XML) | сам — карта |
-| `/rss.xml`, `/en/rss.xml` | `rss.xml.ts`, `en/rss.xml.ts` (prerendered-эндпоинт, общий `_blog/feed.ts`) | `static` | то же | — (XML) | нет |
+| `/rss.xml`, `/en/rss.xml` | `[...locale]/rss.xml.ts` (prerendered-эндпоинт `_blog/feed.ts`: фид — у каждой локали блога в карте) | `static` | то же | — (XML) | нет |
 | `/<INDEXNOW_KEY>.txt` и любой другой корневой `/*.txt` | `[key].txt.ts` (endpoint; параметризованный — перехватывает весь корневой `*.txt`, кроме статического `robots.txt`) | `dynamic` | `public, max-age=300` (роут); пустой ключ или чужое имя — 404 `text/plain` с `no-cache`, не `404.astro` | — (`X-Robots-Tag: noindex` на обоих ответах) | нет |
 | любой путь без файла → 404 | `404.astro` — на языке префикса пути | `dynamic` | `no-cache` (middleware) | нет — статус 404 + `noindex` | нет |
 | адреса из `content/redirects.yaml` и неканоническая форма любого адреса | таблица `app/middleware/redirects.ts`: 301/308 отдаёт обёртка процесса `docker/server.mjs` до статик-хендлера, 410 — middleware до роутинга, телом на языке префикса пути | `dynamic` | 301/308 — без кеш-заголовка; 410 — `no-cache` | нет | нет |

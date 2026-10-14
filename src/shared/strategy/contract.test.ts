@@ -1,4 +1,14 @@
-import { chosenText, type DeckSlot, type Fact, langOf, targetAddress } from './contract'
+import {
+  chosenText,
+  type DeckSlot,
+  type Fact,
+  langOf,
+  mapLanguages,
+  pageLanguages,
+  SiteMapSchema,
+  targetAddress,
+  untranslatedFallback,
+} from './contract'
 
 const slot = (variants: DeckSlot['variants'], chosen?: string): DeckSlot => ({
   slot_id: 'headline',
@@ -95,5 +105,39 @@ describe('strategy/contract', () => {
   it('язык файла — первый подтег', () => {
     expect(langOf('ru')).toBe('ru')
     expect(langOf('en-GB')).toBe('en')
+  })
+
+  describe('языки карты', () => {
+    // Основной язык без своей строки версии, вторая версия — частичная, третья — со всеми страницами.
+    const map = SiteMapSchema.parse({
+      languages: {
+        primary: 'ru-RU',
+        versions: [
+          { lang: 'en-GB', scope: 'selected-pages', pages: ['home', 'about'] },
+          { lang: 'kk', scope: 'all-pages', untranslated_fallback: 'hide-link' },
+        ],
+      },
+      pages: [
+        { id: 'home', url: '/', parent: null },
+        { id: 'about', url: '/about', parent: 'home' },
+        { id: 'privacy', url: '/legal/privacy', parent: null, lang_versions: ['ru'] },
+      ],
+    })
+
+    it('основной язык первым, затем версии по порядку карты; язык — первый подтег', () => {
+      expect(mapLanguages(map)).toEqual(['ru', 'en', 'kk'])
+    })
+
+    it('страница — в версиях со всеми страницами и в тех, где она в списке; lang_versions сужает набор', () => {
+      expect(pageLanguages(map, 'about')).toEqual(['ru', 'en', 'kk'])
+      expect(pageLanguages(map, 'privacy')).toEqual(['ru'])
+      expect(() => pageLanguages(map, 'blog')).toThrow('strategy: blog — страницы нет в карте')
+    })
+
+    it('переключатель без перевода — по untranslated_fallback версии, по умолчанию на главную языка', () => {
+      expect(untranslatedFallback(map, 'en')).toBe('language-home')
+      expect(untranslatedFallback(map, 'kk')).toBe('hide-link')
+      expect(untranslatedFallback(map, 'ru')).toBe('language-home')
+    })
   })
 })

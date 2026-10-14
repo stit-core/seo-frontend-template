@@ -99,7 +99,27 @@ const FactSchema = z.object({
 export const FactsSchema = z.object({ lang: z.string(), facts: z.array(FactSchema) })
 
 export const SiteMapSchema = z.object({
-  pages: z.array(z.object({ id: z.string(), url: z.string(), parent: z.string().nullable() })),
+  languages: z.object({
+    primary: z.string(),
+    versions: z
+      .array(
+        z.object({
+          lang: z.string(),
+          scope: z.enum(['all-pages', 'selected-pages']),
+          pages: z.array(z.string()).default([]),
+          untranslated_fallback: z.enum(['language-home', 'hide-link']).default('language-home'),
+        }),
+      )
+      .default([]),
+  }),
+  pages: z.array(
+    z.object({
+      id: z.string(),
+      url: z.string(),
+      parent: z.string().nullable(),
+      lang_versions: z.array(z.string()).optional(),
+    }),
+  ),
 })
 
 export type Plan = z.infer<typeof PlanSchema>
@@ -130,6 +150,35 @@ export function fail(key: string, why: string): never {
 
 // Язык файла — первый подтег: copy deck и факты пишут `ru` или `ru-RU`.
 export const langOf = (lang: string): string => lang.slice(0, 2)
+
+// Языки карты: основной — первым, затем версии в порядке карты.
+export function mapLanguages(map: SiteMap): string[] {
+  const { primary, versions } = map.languages
+  return [...new Set([primary, ...versions.map((version) => version.lang)].map(langOf))]
+}
+
+const versionOf = (map: SiteMap, lang: string) =>
+  map.languages.versions.find((version) => langOf(version.lang) === lang)
+
+export const mapPage = (map: SiteMap, id: string) =>
+  map.pages.find((page) => page.id === id) ?? fail(id, 'страницы нет в карте')
+
+// Языки страницы карты: версия со всеми страницами или с этой страницей в списке (основной язык без строки версии — со
+// всеми), и `lang_versions` страницы сужает набор.
+export function pageLanguages(map: SiteMap, id: string): string[] {
+  const own = mapPage(map, id).lang_versions?.map(langOf)
+  return mapLanguages(map).filter((lang) => {
+    const version = versionOf(map, lang)
+    const listed =
+      version === undefined || version.scope === 'all-pages' || version.pages.includes(id)
+    return listed && (own === undefined || own.includes(lang))
+  })
+}
+
+// Куда ведёт переключатель на язык со страницы без версии на нём (`untranslated_fallback` версии): на главную языка
+// или никуда.
+export const untranslatedFallback = (map: SiteMap, lang: string) =>
+  versionOf(map, lang)?.untranslated_fallback ?? 'language-home'
 
 // Текст слота — выбранный вариант `variants[id == chosen]`; у слота без `chosen` — его единственный вариант (так
 // выбирает и copydeck.py strategy). Невыбранные варианты код не читает.

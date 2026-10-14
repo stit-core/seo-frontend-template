@@ -1,8 +1,8 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { t } from '@/shared/i18n'
 import { parseHtml } from '@/shared/lib/testing'
+import Contacts from '../[...locale]/contacts/index.astro'
 import Contact from '../api/contact.astro'
-import Contacts from '../contacts/index.astro'
 
 const ORIGIN = 'https://demo.example'
 
@@ -129,6 +129,7 @@ describe('/api/contact', () => {
 
   it('страница с формой до отправки — заголовок окна без слова об ошибке', async () => {
     const html = await container.renderToString(Contacts, {
+      props: { locale: 'ru' },
       request: new Request(`${ORIGIN}/contacts`),
       partial: false,
     })

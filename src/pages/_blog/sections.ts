@@ -1,7 +1,6 @@
 import { AUTHORS } from '@/entities/author'
 import {
   blogPath,
-  blogRoute,
   findTranslation,
   isTagIndexable,
   listByTag,
@@ -11,17 +10,28 @@ import {
   type Post,
   pageCount,
   postPath,
-  postRoute,
-  tagRoute,
+  tagPath,
 } from '@/entities/post'
-import { type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import { type Locale, localePath, type Translations, t } from '@/shared/i18n'
 import { invariant } from '@/shared/lib'
 import { blogPosting, breadcrumbList, type Crumb } from '@/shared/seo'
+import { pageLocales } from '@/shared/strategy'
 import { articleImagesOf, ogImageOf } from './images'
 
-// Логика секций блога — здесь, разметка — в .astro: ru- и en-страницы делят и то и другое.
-const otherLocale = (locale: Locale): Locale | undefined =>
-  SUPPORTED_LOCALES.find((candidate) => candidate !== locale)
+// Логика секций блога — здесь, разметка — в .astro: страницы всех локалей делят и то и другое.
+
+// Карта переводов из версий страницы по локалям её строки карты: адрес версии или ничего.
+async function translationsOf(
+  id: string,
+  versionIn: (locale: Locale) => Promise<string | undefined>,
+): Promise<Translations> {
+  const versions = await Promise.all(
+    pageLocales(id).map(async (locale) => [locale, await versionIn(locale)] as const),
+  )
+  return Object.fromEntries(
+    versions.flatMap(([locale, path]) => (path === undefined ? [] : [[locale, path] as const])),
+  )
+}
 
 // Автор записи на языке страницы: одни и те же строки уходят в видимую подпись и в Person.
 function authorOf({ id, locale, data }: Post) {
@@ -34,9 +44,11 @@ function authorOf({ id, locale, data }: Post) {
 export async function postPageModel(post: Post) {
   const { locale, data } = post
   const author = authorOf(post)
-  // Ссылка на перевод — только при реальном twin по translationKey; slug перевода может отличаться.
-  const other = otherLocale(locale)
-  const twin = other ? await findTranslation(post, other) : undefined
+  // Перевод — только реальный twin по translationKey; slug перевода может отличаться.
+  const translations = await translationsOf('post', async (other) => {
+    const twin = await findTranslation(post, other)
+    return twin && postPath(other, twin.slug)
+  })
   // Превью ссылки и кадры разметки — из обложки записи; без обложки превью — карточка сайта.
   const cover = data.cover && data.coverAlt ? { src: data.cover, alt: data.coverAlt } : undefined
   const ogImage = cover && (await ogImageOf(cover.src, cover.alt))
@@ -47,7 +59,7 @@ export async function postPageModel(post: Post) {
     { name: data.title },
   ]
   return {
-    alternatePath: twin ? postRoute(twin.slug) : undefined,
+    translations,
     ogImage,
     article: { published: data.pubDate, modified: data.updatedDate },
     author,
@@ -69,28 +81,31 @@ export async function postPageModel(post: Post) {
 }
 
 export async function blogListPageModel(locale: Locale, page: Page<Post>) {
-  // Ссылка на другую локаль — только если у неё есть такая же страница списка.
-  const other = otherLocale(locale)
-  const alternatePath =
-    other && page.current <= pageCount((await listPosts(other)).length)
-      ? blogRoute(page.current)
-      : undefined
-  // Страницы 2…N — свой сниппет выдачи: суффикс «— страница N» в h1, title и description.
-  const pageSuffix = page.current === 1 ? '' : ` — ${t(locale, 'blog.page')} ${page.current}`
+  // Перевод — та же страница списка у локали, где она есть.
+  const translations = await translationsOf('blog', async (other) =>
+    page.current <= pageCount((await listPosts(other)).length)
+      ? blogPath(other, page.current)
+      : undefined,
+  )
+  // Страницы 2…N — свой сниппет выдачи: номер страницы в h1, title и description.
+  const paged = (key: 'blog.pageTitle' | 'blog.title' | 'blog.description') =>
+    page.current === 1
+      ? t(locale, key)
+      : t(locale, 'blog.paged', { text: t(locale, key), page: page.current })
   const crumbs: Crumb[] = [
     { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
     ...(page.current === 1
       ? [{ name: t(locale, 'blog.title') }]
       : [
           { name: t(locale, 'blog.title'), href: blogPath(locale) },
-          { name: `${t(locale, 'blog.page')} ${page.current}` },
+          { name: t(locale, 'blog.page', { page: page.current }) },
         ]),
   ]
   return {
-    alternatePath,
-    title: `${t(locale, 'blog.pageTitle')}${pageSuffix}`,
-    heading: `${t(locale, 'blog.title')}${pageSuffix}`,
-    description: `${t(locale, 'blog.description')}${pageSuffix}`,
+    translations,
+    title: paged('blog.pageTitle'),
+    heading: paged('blog.title'),
+    description: paged('blog.description'),
     crumbs,
     jsonLd: [breadcrumbList(crumbs)],
     tags: await listTags(locale),
@@ -107,10 +122,12 @@ export async function tagPageModel(locale: Locale, tag: string) {
   // Тег с записями ниже порога — тонкая страница: она закрыта noindex. Перевод — страница тега
   // другой локали, и только от того же порога: hreflang на закрытую страницу не взаимен.
   const indexable = isTagIndexable((await listByTag(locale, tag)).length)
-  const other = otherLocale(locale)
-  const alternatePath =
-    other && isTagIndexable((await listByTag(other, tag)).length) ? tagRoute(tag) : undefined
-  const heading = `${t(locale, 'blog.tagLead')} #${tag}`
+  const translations = await translationsOf('tag', async (other) =>
+    other === locale || isTagIndexable((await listByTag(other, tag)).length)
+      ? tagPath(other, tag)
+      : undefined,
+  )
+  const heading = t(locale, 'blog.tag', { tag })
   const crumbs: Crumb[] = [
     { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
     { name: t(locale, 'blog.title'), href: blogPath(locale) },
@@ -118,10 +135,10 @@ export async function tagPageModel(locale: Locale, tag: string) {
   ]
   return {
     noindex: !indexable,
-    alternatePath,
+    translations,
     title: heading,
     heading,
-    description: `${heading} — ${t(locale, 'blog.tagDescription')}`,
+    description: t(locale, 'blog.tagDescription', { tag }),
     crumbs,
     jsonLd: [breadcrumbList(crumbs)],
   }

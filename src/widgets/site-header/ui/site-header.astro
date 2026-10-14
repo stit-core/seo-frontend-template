@@ -1,28 +1,39 @@
 ---
 import { ThemeToggle } from '@/features/preferences'
 import { SITE_NAME, THEME } from '@/shared/config'
-import { type DictKey, type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import {
+  type DictKey,
+  type Locale,
+  localeInfo,
+  localePath,
+  type Translations,
+  t,
+} from '@/shared/i18n'
+import { languageLinks, pageLink } from '@/shared/strategy'
 import { Container } from '@/shared/ui/section'
 
 interface Props {
   locale: Locale
-  alternatePath?: string | undefined
+  translations?: Translations | undefined
 }
 
-const { locale, alternatePath } = Astro.props
-const other = SUPPORTED_LOCALES.find((candidate) => candidate !== locale)
+const { locale, translations = {} } = Astro.props
 
 // Путь страницы: на prerendered это её собственный маршрут, на on-demand — запрошенный.
 const path = Astro.url.pathname
-const items: Array<{ route: string; key: DictKey }> = [
-  { route: '/blog', key: 'nav.blog' },
-  { route: '/about', key: 'nav.about' },
-  { route: '/contacts', key: 'nav.contacts' },
-]
-const isCurrent = (route: string): boolean => {
-  const href = localePath(locale, route)
-  return path === href || path.startsWith(`${href}/`)
-}
+// Меню версии — только её разделы: страницы без версии на языке страницы в нём нет.
+const items = (
+  [
+    { route: '/blog', key: 'nav.blog' },
+    { route: '/about', key: 'nav.about' },
+    { route: '/contacts', key: 'nav.contacts' },
+  ] satisfies Array<{ route: string; key: DictKey }>
+).flatMap(({ route, key }) => {
+  const link = pageLink(route, locale)
+  return link === undefined || link.hreflang !== undefined ? [] : [{ href: link.href, key }]
+})
+const isCurrent = (href: string): boolean => path === href || path.startsWith(`${href}/`)
+const languages = languageLinks(locale, translations)
 ---
 
 <header class="border-b border-subtle">
@@ -42,11 +53,11 @@ const isCurrent = (route: string): boolean => {
         {items.map((item) => (
           <li>
             <a
-              href={localePath(locale, item.route)}
-              aria-current={isCurrent(item.route) ? 'page' : undefined}
+              href={item.href}
+              aria-current={isCurrent(item.href) ? 'page' : undefined}
               class:list={[
                 'touch-target no-underline hover:text-primary',
-                isCurrent(item.route)
+                isCurrent(item.href)
                   ? 'text-primary underline decoration-accent decoration-thick underline-offset-marker'
                   : 'text-secondary',
               ]}
@@ -55,19 +66,19 @@ const isCurrent = (route: string): boolean => {
             </a>
           </li>
         ))}
-        {other !== undefined && alternatePath !== undefined && (
+        {languages.map((language) => (
           <li>
             <a
-              href={localePath(other, alternatePath)}
-              hreflang={other}
-              lang={other}
-              rel="alternate"
+              href={language.href}
+              hreflang={language.locale}
+              lang={language.locale}
+              rel={language.translation ? 'alternate' : undefined}
               class="touch-target text-secondary no-underline hover:text-primary"
             >
-              {t(other, 'lang.name')}
+              {localeInfo(language.locale).name}
             </a>
           </li>
-        )}
+        ))}
         {THEME.switcher && (
           <li class="flex items-center">
             <ThemeToggle locale={locale} />

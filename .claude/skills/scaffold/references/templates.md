@@ -12,6 +12,7 @@
 import DocumentLayout from '@/app/layouts/document.astro'
 import { type Locale, localePath, t } from '@/shared/i18n'
 import { breadcrumbList } from '@/shared/seo'
+import { pageVersions } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 import { Breadcrumbs } from '@/widgets/breadcrumbs'
@@ -46,7 +47,7 @@ const crumbs = [
   locale={locale}
   title={copy.title}
   description={copy.description}
-  alternatePath="/<path>"
+  translations={pageVersions('<id>')}
   jsonLd={[breadcrumbList(crumbs)]}
 >
   <Section labelledby="page-title">
@@ -60,7 +61,7 @@ const crumbs = [
 ```
 
 Страница верхнего уровня — без `<Breadcrumbs>` и без `breadcrumbList`.
-Служебная — проп `noindex` вместо `alternatePath`/`jsonLd`.
+Служебная — проп `noindex` вместо `jsonLd`.
 
 Страница собрана из секций: каждый раздел — свой `<Section>` с подписью лендмарка
 (`labelledby` — id своего `<Heading>`, без видимого заголовка — `label`). Ширину даёт `width`
@@ -76,36 +77,38 @@ const crumbs = [
 </Section>
 ```
 
-## page — обёртки локалей
+## page — маршрут `src/pages/[...locale]/<path>.astro`
 
-`src/pages/<path>.astro`:
+Один файл на все локали: пути — языки версий страницы `<id>` в карте, сегмент дефолтной локали пуст.
 
 ```astro
 ---
-import NamePage from './_<name>/<name>-page.astro'
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro'
+import { localeRoutes } from '@/shared/strategy'
+import NamePage from '../_<name>/<name>-page.astro'
 
-const locale = 'ru' as const
+export const getStaticPaths = (() => localeRoutes('<id>')) satisfies GetStaticPaths
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>
+
+const { locale } = Astro.props
 ---
 
 <NamePage locale={locale} />
 ```
 
-`src/pages/en/<path>.astro` — то же с `locale = 'en'` и путём `../_<name>/<name>-page.astro`.
-
 ## page — тест
 
-`src/pages/_tests/pages.astro.test.ts`: импорт обёрток и строка на локаль в таблице
-индексируемых страниц (служебная — в таблице служебных, только путь и страница):
+`src/pages/_tests/pages.astro.test.ts`: импорт маршрута и строка в таблице индексируемых страниц —
+шаблон маршрута, модуль и типы JSON-LD (служебная — свой тест по образцу подтверждения заявки):
 
 ```ts
-import NamePage from '../<path>.astro'
-import NamePageEn from '../en/<path>.astro'
+import * as NamePage from '../[...locale]/<path>.astro'
 
-['/<path>', NamePage, pair('/<path>', '/en/<path>'), ['BreadcrumbList']],
-['/en/<path>', NamePageEn, pair('/<path>', '/en/<path>'), ['BreadcrumbList']],
+['/[...locale]/<path>', NamePage, () => ['BreadcrumbList']],
 ```
 
-Без перевода вместо `pair(…)` — `{}`.
+Адреса, языки и hreflang тест берёт из getStaticPaths маршрута: страница на одном языке — без hreflang.
 
 ---
 

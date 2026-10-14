@@ -1,0 +1,13 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro'
+import BlogListPage from '../../_blog/blog-list-page.astro'
+import { listPaths } from '../../_blog/static-paths'
+
+export const getStaticPaths = (() => listPaths()) satisfies GetStaticPaths
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>
+
+const { locale, page } = Astro.props
+---
+
+<BlogListPage locale={locale} page={page} />

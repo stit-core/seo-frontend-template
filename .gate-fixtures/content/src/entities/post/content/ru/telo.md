@@ -24,8 +24,8 @@ translationKey: telo
 
 <meta http-equiv="refresh" content="0">
 
-Ссылки: [главная](/), [относительная](./drugaya.md), [нет маршрута](/net),
-[черновик](/blog/chernovik), [со слешем](/blog/), [с html](/blog.html).
+Ссылки: [главная](/), [о нас по-английски](/en/o-nas), [относительная](./drugaya.md), [нет маршрута](/net),
+[черновик](/blog/chernovik), [со слешем](/blog/), [с html](/blog.html), [чужая локаль](/de/o-nas).
 
 Литерал плейсхолдера: https://__site_origin__/x.
 

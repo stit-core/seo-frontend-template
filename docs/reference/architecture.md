@@ -32,16 +32,17 @@ app → pages → widgets → features → entities → shared
 
 ## `src/pages` = роутинг
 
-`index.astro` → `/`, `en/index.astro` → `/en`, `healthz.ts` → `/healthz`. Подпапки —
-сегменты URL, а не слайсы, поэтому правила Steiger о public API и сегментах слайсов
+Страница — один файл на все локали: `[...locale]/index.astro` → `/` и `/en`, `[...locale]/about.astro` →
+`/about` и `/en/about` (сегмент дефолтной локали пуст, языки страницы — строка карты strategy);
+служебный маршрут — свой файл (`healthz.ts` → `/healthz`). Подпапки — сегменты URL, а не слайсы, поэтому правила Steiger о public API и сегментах слайсов
 (`public-api`, `no-layer-public-api`, `no-segmentless-slices`, `no-segments-on-sliced-layers`) на
 `pages` выключены.
 
 Страница — это `DocumentLayout` и секции `Section` из `@/shared/ui/section`: ширину, фон и ритм
 задаёт секция, оболочка страницу не сужает (rule `shared-ui`). Файлы одной страницы живут рядом
-с ней: `src/pages/_<name>/` — префикс `_` исключает каталог из роутинга. Widget заводится, когда блок нужен ≥ 2 страницам. Локали делят одну
-разметку: `pages/about.astro` и `pages/en/about.astro` — тонкие обёртки над
-`pages/_about/about-page.astro` с разным `locale`.
+с ней: `src/pages/_<name>/` — префикс `_` исключает каталог из роутинга. Widget заводится, когда блок нужен ≥ 2 страницам. Маршрут
+`pages/[...locale]/about.astro` — тонкий файл над `pages/_about/about-page.astro`: пути и `locale` — из
+`getStaticPaths` (`localeRoutes`, `shared/strategy`).
 
 ## Навязанные Astro точки входа
 
@@ -80,14 +81,14 @@ Frontmatter и модули `.ts` исполняются на сервере (с
 ```
 src/
 ├─ app/           layouts/document.astro · middleware/ · styles/{tokens,index}.css · analytics/
-├─ pages/         index · about · contacts/{index,spasibo} · legal/privacy · blog/**
-│                 en/** · 404 · 500 · now · healthz · robots.txt · rss.xml
-│                 [key].txt · api/contact · файлы страниц _about/ _blog/ _contacts/
+├─ pages/         [...locale]/{index,about,contacts/{index,spasibo},legal/privacy,blog/**,rss.xml}
+│                 · 404 · 500 · now · healthz · robots.txt · [key].txt · api/contact
+│                 · файлы страниц _home/ _about/ _contacts/ _privacy/ _blog/
 │                 · тесты маршрутов _tests/
 ├─ widgets/       site-header · site-footer · post-list · breadcrumbs
 ├─ features/      contact-form · preferences
 ├─ entities/      post (content/{ru,en}/*.md + covers, model, api, lib, ui) · company · author
-└─ shared/        config · i18n · seo · redirects · observability · antispam · lib
+└─ shared/        config · i18n · seo · redirects · strategy · observability · antispam · lib
                   · ui/{section,heading,term-list,media}
 ```
 

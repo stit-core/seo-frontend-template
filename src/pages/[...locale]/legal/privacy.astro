@@ -1,0 +1,13 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro'
+import { localeRoutes } from '@/shared/strategy'
+import PrivacyPage from '../../_privacy/privacy-page.astro'
+
+export const getStaticPaths = (() => localeRoutes('privacy')) satisfies GetStaticPaths
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>
+
+const { locale } = Astro.props
+---
+
+<PrivacyPage locale={locale} />

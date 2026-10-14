@@ -8,6 +8,7 @@ import { headTags, isJsonLd, isNoindex } from '../scripts/lib/html.mjs'
 import {
   builtPages,
   pageRoutes,
+  routePattern,
   pageTemplates as templatesOf,
   walk,
 } from '../scripts/lib/routes.mjs'
@@ -112,12 +113,16 @@ export function onDemandRoutes(): string[] {
     .map((page) => page.route)
 }
 
-// Фиды блога — по одному на локаль: маршруты `rss.xml` в src/pages. Режим не спрашивается: фид
-// обязан быть файлом сборки, и это проверяет спек, а не отбор целей.
-export const feedPaths = (): string[] =>
-  pageRoutes(resolve(root, 'src/pages'))
-    .map((page) => page.route)
-    .filter((route) => route.endsWith('/rss.xml'))
+// Фиды блога — файлы сборки маршрутов `rss.xml` src/pages: по одному на локаль, где есть блог. Фид on-demand файла в
+// сборке не оставил бы, а такой маршрут без строки в карте режимов не пропускает check:content.
+export function feedPaths(): string[] {
+  const feeds = pageRoutes(resolve(root, 'src/pages'))
+    .filter((page) => page.route.endsWith('/rss.xml'))
+    .map((page) => routePattern(page.route))
+  return walk(clientDir)
+    .map((file) => `/${relative(clientDir, file).split(sep).join('/')}`)
+    .filter((path) => feeds.some((feed) => feed.test(path)))
+}
 
 // Файлы сборки для краулеров и читалок: карта сайта, которую пишет интеграция сборки, и фиды. Их,
 // как и страницы, отдаёт статик-хендлер.

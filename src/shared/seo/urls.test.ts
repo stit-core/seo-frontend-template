@@ -1,5 +1,16 @@
 import { SITE_ORIGIN_PLACEHOLDER } from '@/shared/config'
+import type * as I18n from '@/shared/i18n'
 import { absoluteUrl, alternates, normalizePath } from './urls'
+
+// hreflang — на своём дескрипторе локалей из трёх строк, а не на локалях сайта.
+vi.mock('@/shared/i18n', async (importOriginal) => {
+  const i18n = await importOriginal<typeof I18n>()
+  const row = (code: string) => ({ code, intl: code, og: code, name: code })
+  return { ...i18n, ...i18n.localeRules([row('ru'), row('en'), row('de')]) }
+})
+
+// Карта переводов фикстуры: коды её локалей — не локали сайта, поэтому тип — строковый.
+const versions = (map: Record<string, string>) => map
 
 describe('seo/urls', () => {
   beforeEach(() => vi.stubEnv('SITE_URL', 'https://demo.example'))
@@ -26,25 +37,25 @@ describe('seo/urls', () => {
     expect(absoluteUrl('/blog')).toBe(`${SITE_ORIGIN_PLACEHOLDER}/blog`)
   })
 
-  it('alternates: взаимный набор с self и x-default на дефолтную локаль', () => {
-    expect(alternates({ locale: 'ru', path: '/blog/a', alternatePath: '/blog/b' })).toEqual([
+  it('alternates: версия на каждом языке карты переводов, x-default — версия дефолтной локали', () => {
+    expect(alternates(versions({ de: '/de/c', ru: '/blog/a', en: '/en/blog/b' }))).toEqual([
       { hreflang: 'ru', href: 'https://demo.example/blog/a' },
       { hreflang: 'en', href: 'https://demo.example/en/blog/b' },
+      { hreflang: 'de', href: 'https://demo.example/de/c' },
       { hreflang: 'x-default', href: 'https://demo.example/blog/a' },
-    ])
-    expect(alternates({ locale: 'en', path: '/en/blog/b', alternatePath: '/blog/a' })).toEqual([
-      { hreflang: 'ru', href: 'https://demo.example/blog/a' },
-      { hreflang: 'en', href: 'https://demo.example/en/blog/b' },
-      { hreflang: 'x-default', href: 'https://demo.example/blog/a' },
-    ])
-    expect(alternates({ locale: 'en', path: '/en', alternatePath: '/' })).toEqual([
-      { hreflang: 'ru', href: 'https://demo.example/' },
-      { hreflang: 'en', href: 'https://demo.example/en' },
-      { hreflang: 'x-default', href: 'https://demo.example/' },
     ])
   })
 
-  it('alternates: без перевода — пусто, не self-only', () => {
-    expect(alternates({ locale: 'ru', path: '/blog/a', alternatePath: undefined })).toEqual([])
+  it('alternates: без версии дефолтной локали x-default — версия первой по порядку дескриптора', () => {
+    expect(alternates(versions({ de: '/de/c', en: '/en/b' }))).toEqual([
+      { hreflang: 'en', href: 'https://demo.example/en/b' },
+      { hreflang: 'de', href: 'https://demo.example/de/c' },
+      { hreflang: 'x-default', href: 'https://demo.example/en/b' },
+    ])
+  })
+
+  it('alternates: версия одна или ни одной — hreflang нет вовсе, не self-only', () => {
+    expect(alternates(versions({ ru: '/blog/a' }))).toEqual([])
+    expect(alternates({})).toEqual([])
   })
 })

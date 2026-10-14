@@ -1,0 +1,13 @@
+---
+import type { GetStaticPaths, InferGetStaticPropsType } from 'astro'
+import PostPage from '../../_blog/post-page.astro'
+import { postPaths } from '../../_blog/static-paths'
+
+export const getStaticPaths = (() => postPaths()) satisfies GetStaticPaths
+
+type Props = InferGetStaticPropsType<typeof getStaticPaths>
+
+const { post } = Astro.props
+---
+
+<PostPage post={post} />

@@ -1,11 +1,20 @@
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { type Locale, SUPPORTED_LOCALES } from '@/shared/i18n'
-import { langOf } from './contract'
+import type * as I18n from '@/shared/i18n'
+import type { Locale } from '@/shared/i18n'
 import deck from './package-landing/site/promo/copy/spasibo.yaml'
 import plan from './package-landing/site/promo/plans/spasibo.yaml'
-import { projectOf, readPage, snapshot, strategyPage } from './page'
+import { languagesOf, linkOf, localesOf, projectOf, readPage, versionsOf } from './page'
+
+// Чтение проверяется на своём дескрипторе локалей — ru, en и de, — а не на локалях сайта: фикстура проекта от них не
+// зависит. Снимок сайта — на дескрипторе сайта (snapshot.test.ts).
+vi.mock('@/shared/i18n', async (importOriginal) => {
+  const i18n = await importOriginal<typeof I18n>()
+  const row = (code: string) => ({ code, intl: code, og: code, name: code })
+  return { ...i18n, ...i18n.localeRules([row('ru'), row('en'), row('de')]) }
+})
+const lang = (code: string) => code as Locale
 
 // Проект в раскладке снимка: страница услуги под главной и разделом, на двух языках.
 const site = () => ({
@@ -42,6 +51,14 @@ const site = () => ({
     ],
   },
   'site/web/site-map.yaml': {
+    languages: {
+      primary: 'ru',
+      versions: [
+        { lang: 'ru', scope: 'all-pages' },
+        { lang: 'en-GB', scope: 'all-pages' },
+        { lang: 'de', scope: 'selected-pages', pages: ['home', 'repair'] },
+      ],
+    },
     pages: [
       { id: 'home', url: '/', parent: null },
       { id: 'services', url: '/uslugi', parent: 'home' },
@@ -178,7 +195,7 @@ const site = () => ({
 })
 
 type Files = ReturnType<typeof site>
-const read = (files: Files, locale: Locale = 'ru') => readPage(projectOf(files), 'repair', locale)
+const read = (files: Files, code = 'ru') => readPage(projectOf(files), 'repair', lang(code))
 // Проект с правкой на копии.
 const edited = (change: (files: Files) => void): Files => {
   const files = structuredClone(site())
@@ -353,6 +370,69 @@ describe('strategy/page', () => {
     ).toThrow('strategy/site: поверхностей 2 — сайт собирается из одной')
   })
 
+  describe('локали страниц карты', () => {
+    const project = () => projectOf(site())
+
+    it('локали страницы — языки её версий в карте; язык карты вне дескриптора — ошибка', () => {
+      expect(localesOf(project(), 'repair')).toEqual(['ru', 'en', 'de'])
+      expect(localesOf(project(), 'services')).toEqual(['ru', 'en'])
+      const french = edited((files) => {
+        files['site/web/site-map.yaml'].languages.versions.push({ lang: 'fr', scope: 'all-pages' })
+      })
+      expect(() => localesOf(projectOf(french), 'home')).toThrow(
+        'strategy: home — язык fr карты вне дескриптора локалей',
+      )
+      const landing = edited((files) => Reflect.deleteProperty(files, 'site/web/site-map.yaml'))
+      expect(() => localesOf(projectOf(landing), 'repair')).toThrow('repair — нет карты сайта')
+    })
+
+    it('карта переводов страницы — её адрес на каждой локали версии, со своим префиксом', () => {
+      expect(versionsOf(project(), 'repair')).toEqual({
+        ru: '/uslugi/remont',
+        en: '/en/uslugi/remont',
+        de: '/de/uslugi/remont',
+      })
+      expect(versionsOf(project(), 'home')).toEqual({ ru: '/', en: '/en', de: '/de' })
+    })
+
+    it('ссылка на страницу карты: её версия на языке страницы, без неё — версия основного языка с его кодом', () => {
+      expect(linkOf(project(), '/uslugi', lang('en'))).toEqual({
+        href: '/en/uslugi',
+        hreflang: undefined,
+      })
+      expect(linkOf(project(), '/uslugi', lang('de'))).toEqual({ href: '/uslugi', hreflang: 'ru' })
+      expect(linkOf(project(), '/net-takoy', lang('de'))).toBeUndefined()
+      const withoutPrimary = edited((files) => {
+        for (const page of files['site/web/site-map.yaml'].pages) {
+          if (page.id === 'services') Object.assign(page, { lang_versions: ['en'] })
+        }
+      })
+      expect(linkOf(projectOf(withoutPrimary), '/uslugi', lang('de'))).toBeUndefined()
+    })
+
+    it('переключатель — перевод на каждый другой язык; без перевода — главная языка или ничего по карте', () => {
+      expect(languagesOf(project(), lang('ru'), versionsOf(project(), 'repair'))).toEqual([
+        { locale: 'en', href: '/en/uslugi/remont', translation: true },
+        { locale: 'de', href: '/de/uslugi/remont', translation: true },
+      ])
+      // У «услуг» нет немецкой версии: по умолчанию переключатель ведёт на немецкую главную.
+      expect(languagesOf(project(), lang('en'), versionsOf(project(), 'services'))).toEqual([
+        { locale: 'ru', href: '/uslugi', translation: true },
+        { locale: 'de', href: '/de', translation: false },
+      ])
+      const hidden = edited((files) => {
+        for (const version of files['site/web/site-map.yaml'].languages.versions) {
+          Object.assign(version, { untranslated_fallback: 'hide-link' })
+        }
+      })
+      expect(languagesOf(projectOf(hidden), lang('en'), versionsOf(project(), 'services'))).toEqual(
+        [{ locale: 'ru', href: '/uslugi', translation: true }],
+      )
+      const landing = edited((files) => Reflect.deleteProperty(files, 'site/web/site-map.yaml'))
+      expect(languagesOf(projectOf(landing), lang('ru'), {})).toEqual([])
+    })
+  })
+
   // Фикстура базы strategy (scripts/tests/fixtures/package-landing скилла design-deep-dive, тег v0.2.2): план и
   // copy deck страницы «спасибо» лендинга без карты — в форме, которую пишет strategy, байт в байт.
   describe('фикстура базы package-landing', () => {
@@ -374,7 +454,7 @@ describe('strategy/page', () => {
         'site/promo/plans/spasibo.yaml': plan,
         'site/promo/copy/spasibo.yaml': deck,
       })
-      expect(readPage(landing, 'spasibo', 'ru')).toEqual({
+      expect(readPage(landing, 'spasibo', lang('ru'))).toEqual({
         id: 'spasibo',
         url: '/spasibo',
         parents: [],
@@ -427,27 +507,6 @@ describe('strategy/page', () => {
           },
         ],
       })
-    })
-  })
-
-  describe('снимок сайта strategy/', () => {
-    it('каждая страница copy deck читается на своём языке: у слотов плана есть тексты, факты и адреса', () => {
-      const pages = SUPPORTED_LOCALES.flatMap((locale) =>
-        snapshot.decks
-          .filter((file) => langOf(file.copy_deck.lang) === locale)
-          .flatMap((file) => file.copy_deck.pages.map((page) => [page.page_id, locale] as const)),
-      )
-      expect(pages.length).toBeGreaterThan(0)
-      for (const [id, locale] of pages) {
-        expect(() => strategyPage(id, locale), `${id} (${locale})`).not.toThrow()
-      }
-    })
-
-    it('маршрут действия главной — на языке страницы', () => {
-      for (const locale of SUPPORTED_LOCALES) {
-        const hero = strategyPage('home', locale).sections.find((section) => section.id === 'hero')
-        expect(hero?.actions.cta?.href).toBe(locale === 'ru' ? '/contacts' : `/${locale}/contacts`)
-      }
     })
   })
 })

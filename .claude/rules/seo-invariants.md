@@ -44,10 +44,14 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   staging закрывают `ROBOTS_POLICY` (`robots.txt` + `X-Robots-Tag: noindex, nofollow`, который
   обёртка процесса ставит на каждый ответ, статику включительно) и Traefik (`basicAuth` +
   `X-Robots-Tag`) — три контура
-- hreflang — только при реальном переводе (`alternatePath` из `findTranslation` и списков):
-  полный взаимный набор `ru`, `en`, `x-default` (дефолтная локаль) с self-ссылкой, все на своём
-  origin; без перевода —
-  ни одной `<link hreflang>`; canonical внутри локали; авторедиректов по `Accept-Language` нет
+- hreflang — только при реальном переводе, по карте переводов страницы (проп `translations`: версии
+  страницы карты strategy, twin записи по `findTranslation`, та же страница списка или тега от порога
+  на другой локали): полный взаимный набор всех версий и `x-default` (версия первой локали
+  дескриптора, у которой версия есть — дефолтной) с self-ссылкой, все на своём origin; версия одна —
+  ни одной `<link hreflang>`; `og:locale` — строка дескриптора, `og:locale:alternate` — у каждой другой
+  версии; canonical внутри локали; авторедиректов по `Accept-Language` нет. Переключатель языка в
+  шапке — каждый перевод самоназванием языка; без перевода — главная языка или ничего, по
+  `untranslated_fallback` версии в карте
 - `og:image` — превью ссылки 1200×630: у записи с обложкой — её кадр JPEG (`ogImageOf` модуля сборки
   блога `src/pages/_blog/images.ts`: конвейер картинок Astro серверному бандлу не нужен; файл `_astro/`,
   `immutable`), иначе `public/og-default.png` (`OG_DEFAULT_IMAGE`,
@@ -60,7 +64,7 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   `METRIKA_ID` — счётчик (пусто — ни одного стороннего скрипта), `AI_BOTS_POLICY` — политика
   ИИ-ботов (§ robots.txt)
 - `<meta name="keywords">` — никогда; RSS autodiscovery `<link rel="alternate"
-  type="application/rss+xml">` — на каждой странице, фид своей локали
+  type="application/rss+xml">` — на каждой странице языка с блогом, фид своей локали
 - Иконки сайта печатает layout, первой — PNG 192×192 (`public/icon-192.png`), следом ICO и SVG
   браузерам. Для выдачи Google принимает растр (SVG в списке его форматов нет) от 8×8 и советует
   крупнее 48×48; какую из нескольких иконок он возьмёт, справка не говорит — первой стоит та, что
@@ -151,8 +155,9 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   карте не дублируется. `@astrojs/sitemap` не подключается: `lastmod` у него не из дат записи,
   отбор страниц — `filter`, а не `noindex` самой страницы, карта — шардами `sitemap-index.xml`. В
   `astro dev` карты нет
-- `rss.xml`, `en/rss.xml` — prerendered-эндпоинты: `@astrojs/rss` через `buildFeed`, анонс + ссылка,
-  ≤ 20 записей, `atom:link rel="self"`, `language`, абсолютные `link`/`guid`; черновиков нет
+- `[...locale]/rss.xml` — prerendered-эндпоинт, фид на каждой локали блога в карте (`/rss.xml`,
+  `/en/rss.xml`): `@astrojs/rss` через `buildFeed`, анонс + ссылка, ≤ 20 записей, `atom:link rel="self"`,
+  `language`, абсолютные `link`/`guid`; черновиков нет
 - Карта и фиды несут плейсхолдер origin и штампуются при старте контейнера вместе со страницами
   (`docker/stamp.mjs` берёт `*.xml`); отдаёт их статик-хендлер, как страницы: `public, max-age=0` +
   ETag, без `X-Robots-Tag` в прод-профиле
@@ -172,11 +177,12 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
 ## Гейты
 
 - `pnpm seo:check` (после `build`, внутри `pnpm check`): по `dist/client` — один `<title>` и
-  `<h1>`, description с непустым `content`, self-canonical, `lang` по локали пути, OG с
+  `<h1>`, description с непустым `content`, self-canonical, `lang` и `og:locale` по локали пути (локали
+  проверяемого проекта — его политика сборки), OG с
   существующей картинкой — превью ссылки по норме (`OG_IMAGE`: 1200×630, JPEG или PNG, до 300 КБ),
   уникальность title/description, иконка сайта (первая — PNG от 48 px с
   файлом того же размера, на главных обязательна); hreflang — полный взаимный набор у
-  каждой пары переводов (главные, списки и индексируемые теги под обоими префиксами локалей; записи — twin по
+  каждой пары переводов (главные, списки и индексируемые теги под префиксами локалей; записи — twin по
   `translationKey` из frontmatter, реестр коллекций `scripts/lib/content.mjs`) и ни одной ссылки
   на отсутствующую страницу; JSON-LD (любой блок этого типа; типы, `Organization`/`WebSite` только
   на главной, форма `BreadcrumbList`, разметка = видимое без скрытых поддеревьев (картинка статьи —
@@ -198,7 +204,7 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   `font-display` swap/fallback/optional, и он только от Fonts API по списку шрифтов (семейство списка в
   `<style>` страницы; в CSS сборки — нет), preload шрифтов — не больше двух;
   страниц черновиков нет; сборка против источника — страница у каждой опубликованной записи и
-  prerendered-маршрута `src/pages`, hreflang только у страниц сверенных пар. Сам скрипт под
+  prerendered-маршрута `src/pages` (маршрута локалей `[...locale]` — хоть на одной локали), hreflang только у страниц сверенных пар. Сам скрипт под
   гейтом: фикстура `.gate-fixtures/seo` обязана давать ровно нарушения из `expected.json`
   (`pnpm check:gate`)
 - unit `shared/seo/*.test.ts` (urls, robots, ai-bots, sitemap, rss, json-ld со схемой) и Container

@@ -10,7 +10,6 @@ const ru = {
   'nav.about': 'О компании',
   'nav.contacts': 'Контакты',
   'nav.breadcrumbs': 'Хлебные крошки',
-  'lang.name': 'Русский',
   'theme.dark': 'Тёмная тема',
   'motion.label': 'Движение',
   'motion.system': 'Как в системе',
@@ -21,6 +20,7 @@ const ru = {
   'footer.now': 'время сервера',
   'footer.privacy': 'Обработка персональных данных',
   'footer.rss': 'RSS',
+  'og.alt': '{site} — шаблон индексируемого сайта',
   'notFound.title': 'Страница не найдена',
   'notFound.lead': 'Проверьте адрес или вернитесь на главную.',
   'notFound.home': 'На главную',
@@ -33,7 +33,9 @@ const ru = {
   'blog.description':
     'Короткие заметки о контентных сайтах: prerender, ноль JavaScript, честные статусы, canonical и hreflang, картинки, sitemap и один образ на все среды',
   'blog.lead': 'Заметки о том, как делать быстрые индексируемые сайты.',
-  'blog.page': 'страница',
+  'blog.feed': 'Блог — {site}',
+  'blog.page': 'страница {page}',
+  'blog.paged': '{text} — страница {page}',
   'blog.pagination': 'Страницы блога',
   'blog.newer': 'Новее',
   'blog.older': 'Старее',
@@ -41,8 +43,9 @@ const ru = {
   'blog.all': 'Все заметки',
   'blog.latest': 'Свежие заметки',
   'blog.tags': 'Теги',
-  'blog.tagLead': 'Записи с тегом',
-  'blog.tagDescription': 'заметки блога о быстрых индексируемых сайтах, от новых к старым.',
+  'blog.tag': 'Записи с тегом #{tag}',
+  'blog.tagDescription':
+    'Записи с тегом #{tag} — заметки блога о быстрых индексируемых сайтах, от новых к старым.',
   'post.published': 'Опубликовано',
   'post.updated': 'обновлено',
   'post.draft': 'Черновик',
@@ -60,7 +63,7 @@ const ru = {
   'form.submit': 'Отправить заявку',
   'form.honeypot': 'Не заполняйте это поле',
   'form.summary': 'Заявка не отправлена',
-  'form.failed': 'Ошибка',
+  'form.failed': 'Ошибка: {title}',
   'form.error.name': 'Имя — от 2 до 80 знаков.',
   'form.error.email': 'Адрес почты с @ и доменом: на него придёт ответ.',
   'form.error.message': 'Сообщение — от 10 до 2000 знаков.',
@@ -83,7 +86,6 @@ const en: Dict = {
   'nav.about': 'About',
   'nav.contacts': 'Contacts',
   'nav.breadcrumbs': 'Breadcrumbs',
-  'lang.name': 'English',
   'theme.dark': 'Dark theme',
   'motion.label': 'Motion',
   'motion.system': 'System',
@@ -94,6 +96,7 @@ const en: Dict = {
   'footer.now': 'server time',
   'footer.privacy': 'Personal data policy',
   'footer.rss': 'RSS',
+  'og.alt': '{site} — indexable site template',
   'notFound.title': 'Page not found',
   'notFound.lead': 'Check the address or go back to the home page.',
   'notFound.home': 'Home',
@@ -106,7 +109,9 @@ const en: Dict = {
   'blog.description':
     'Short notes on content sites: prerendering, zero JavaScript, honest status codes, canonical and hreflang, images, sitemaps and one image for every environment',
   'blog.lead': 'Notes on building fast, indexable sites.',
-  'blog.page': 'page',
+  'blog.feed': 'Blog — {site}',
+  'blog.page': 'page {page}',
+  'blog.paged': '{text} — page {page}',
   'blog.pagination': 'Blog pages',
   'blog.newer': 'Newer',
   'blog.older': 'Older',
@@ -114,8 +119,9 @@ const en: Dict = {
   'blog.all': 'All notes',
   'blog.latest': 'Latest notes',
   'blog.tags': 'Tags',
-  'blog.tagLead': 'Posts tagged',
-  'blog.tagDescription': 'notes from the blog on fast, indexable sites, newest first.',
+  'blog.tag': 'Posts tagged #{tag}',
+  'blog.tagDescription':
+    'Posts tagged #{tag} — notes from the blog on fast, indexable sites, newest first.',
   'post.published': 'Published',
   'post.updated': 'updated',
   'post.draft': 'Draft',
@@ -133,7 +139,7 @@ const en: Dict = {
   'form.submit': 'Send the request',
   'form.honeypot': 'Leave this field empty',
   'form.summary': 'The request was not sent',
-  'form.failed': 'Error',
+  'form.failed': 'Error: {title}',
   'form.error.name': 'Name — from 2 to 80 characters.',
   'form.error.email': 'An email address with @ and a domain: the reply goes there.',
   'form.error.message': 'Message — from 10 to 2000 characters.',
@@ -146,8 +152,18 @@ const en: Dict = {
   'thanks.back': 'Back to contacts',
 }
 
-const DICTS: Record<Locale, Dict> = { ru, en }
+export const DICTS: Readonly<Record<Locale, Dict>> = { ru, en }
 
-export function t(locale: Locale, key: DictKey): string {
-  return DICTS[locale][key]
+// Строка словаря на языке страницы. `{имя}` в строке — подстановка из `params`: порядок слов и место числа задаёт
+// словарь языка, а не склейка в коде. Подстановки нет — ошибка сборки.
+export function t(
+  locale: Locale,
+  key: DictKey,
+  params: Readonly<Record<string, string | number>> = {},
+): string {
+  return DICTS[locale][key].replace(/\{(\w+)\}/g, (_, name: string) => {
+    const value = params[name]
+    if (value === undefined) throw new Error(`i18n: ${key} — нет подстановки {${name}}`)
+    return String(value)
+  })
 }
