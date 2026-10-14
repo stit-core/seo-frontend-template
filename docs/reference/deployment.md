@@ -202,8 +202,8 @@ prerendered-страница печатается на сборке, а обра
 
 Liveness без зависимостей: `200 ok`, `Cache-Control: no-store`, версия не раскрывается.
 Его же ждёт `HEALTHCHECK` образа и `webServer.url` Playwright. За Traefik от него зависит и
-маршрутизация: роутеры контейнера docker-провайдер строит после первой удачной пробы healthcheck и
-снимает при `unhealthy` (`infra-handoff.md § Среда`).
+трафик: в контейнер Traefik пускает его после первой удачной пробы healthcheck и снимает при
+`unhealthy` (`infra-handoff.md § Среда`).
 
 ## Локально как в контейнере
 
