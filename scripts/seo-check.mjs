@@ -35,17 +35,21 @@
 //   бюджет и вид — инлайн или файл;
 // - сборка против источника: страница у каждой опубликованной записи и prerendered-маршрута,
 //   страниц черновиков нет;
-// - серверный бандл (dist/server) — без конвейера картинок Astro: модуля с импортом sharp в нём нет;
+// - рантайм образа (dist/server и docker/*.mjs) импортирует ровно dependencies: пакета вне них и
+//   зависимости без импорта нет; серверный бандл — без конвейера картинок Astro: модуля с импортом
+//   sharp в нём нет;
 // - карта сайта sitemap.xml: ровно индексируемые страницы сборки своим self-canonical, lastmod —
 //   дата последнего изменения записи из frontmatter (правка, без неё — публикация), у остальных
 //   страниц его нет.
 // On-demand ответы (robots.txt, /now, 404) и проштампованные карту и фиды проверяет HTTP-набор
 // (`pnpm test:http`) — им нужен сервер.
 import { existsSync, readFileSync, statSync } from 'node:fs'
+import { isBuiltin } from 'node:module'
 import { basename, relative, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { load } from 'js-yaml'
 import sharp from 'sharp'
+import ts from 'typescript'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
 import {
   DEFAULT_LOCALE,
@@ -960,18 +964,68 @@ for (const file of walk(client).filter((path) => path.endsWith('.css'))) {
   checkCss(`dist/client/${relative(client, file).split(sep).join('/')}`, readFileSync(file, 'utf8'))
 }
 
-// Серверный бандл — код on-demand маршрутов и обёртки. Картинки на запросе не преобразуются (`/_image`
-// закрыт), поэтому конвейер картинок Astro — getImage и сервис sharp — живёт только в модулях сборки:
-// модуль dist/server с импортом sharp значит, что on-demand маршрут дотянулся до него через общий модуль
-// (баррель, `astro:assets`). Бюджет серверного бандла в size-limit ловит то же только по объёму.
-const SHARP_IMPORT =
-  /\bimport\s*\(\s*["']sharp["']\s*\)|\bfrom\s*["']sharp["']|\bimport\s*["']sharp["']/
-const server = resolve(root, 'dist/server')
-for (const file of existsSync(server) ? walk(server).filter((path) => path.endsWith('.mjs')) : []) {
-  if (SHARP_IMPORT.test(readFileSync(file, 'utf8'))) {
+// Пакеты, которые импортирует модуль: import и export … from, import() и require() буквальной строкой.
+// Разбор синтаксиса, а не текста: слово «import» или имя пакета в строке и комментарии — не импорт.
+function packageOf(specifier) {
+  if (isBuiltin(specifier) || /^[./#]|:/.test(specifier)) return undefined
+  const [first, second] = specifier.split('/')
+  return first.startsWith('@') ? `${first}/${second}` : first
+}
+
+function packagesOf(file) {
+  const found = new Set()
+  const visit = (node) => {
+    const specifier =
+      ts.isImportDeclaration(node) || ts.isExportDeclaration(node)
+        ? node.moduleSpecifier
+        : ts.isCallExpression(node) &&
+            (node.expression.kind === ts.SyntaxKind.ImportKeyword ||
+              (ts.isIdentifier(node.expression) && /^_*require$/.test(node.expression.text)))
+          ? node.arguments[0]
+          : undefined
+    const name = specifier && ts.isStringLiteralLike(specifier) && packageOf(specifier.text)
+    if (name) found.add(name)
+    ts.forEachChild(node, visit)
+  }
+  visit(ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest))
+  return found
+}
+
+// Рантайм образа — серверный бандл и обёртка процесса docker/*.mjs; стадия prod-deps ставит ему только
+// dependencies. Импорт пакета вне них — модуль, который в контейнере не загрузится, хотя сборка, тесты
+// и HTTP-набор зелёные: они берут node_modules репо со всеми зависимостями. Зависимость без импорта —
+// вес образа: фреймворк и адаптер сборка встраивает в бандл, их место — devDependencies.
+// Картинки на запросе не преобразуются (`/_image` закрыт), поэтому конвейер картинок Astro — getImage и
+// сервис sharp — живёт только в модулях сборки: импорт sharp в dist/server значит, что on-demand маршрут
+// дотянулся до него через общий модуль (баррель, `astro:assets`), — нарушение и при sharp в dependencies.
+// Бюджет серверного бандла в size-limit ловит то же только по объёму.
+const dependencies = new Set(
+  Object.keys(JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf8')).dependencies ?? {}),
+)
+const imported = new Set()
+for (const dir of ['dist/server', 'docker']) {
+  const base = resolve(root, dir)
+  for (const file of existsSync(base) ? walk(base).filter((path) => path.endsWith('.mjs')) : []) {
+    const where = `${dir}/${relative(base, file).split(sep).join('/')}`
+    for (const name of packagesOf(file)) {
+      imported.add(name)
+      if (name === 'sharp' && dir === 'dist/server') {
+        fail(
+          where,
+          'импорт sharp — конвейер картинок Astro в серверном бандле: getImage и astro:assets — только модулям сборки',
+        )
+      }
+      if (!dependencies.has(name)) {
+        fail(where, `импорт ${name} — пакета нет в dependencies, а образ ставит только их`)
+      }
+    }
+  }
+}
+for (const name of dependencies) {
+  if (!imported.has(name)) {
     fail(
-      `dist/server/${relative(server, file).split(sep).join('/')}`,
-      'импорт sharp — конвейер картинок Astro в серверном бандле: getImage и astro:assets — только модулям сборки',
+      'package.json',
+      `${name} в dependencies, а рантайм (dist/server, docker/*.mjs) его не импортирует — пакет сборки и инструментов живёт в devDependencies`,
     )
   }
 }

@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "dependencies": {
+    "@astrojs/rss": "*",
+    "@sentry/node": "*",
+    "astro": "*",
+    "sharp": "*",
+    "zod": "*"
+  }
+}

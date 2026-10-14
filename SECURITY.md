@@ -17,8 +17,9 @@
 
 Вне скоупа: уязвимости в upstream-зависимостях (Astro, Vite, sharp и т.д.) — их
 репортить их мейнтейнерам; здесь — только если наш код или дефолт-конфиг делает их
-эксплуатируемыми. Известные уязвимости прод-дерева шаблон проверяет сам: `pnpm audit --prod
---audit-level=high` — шаг `/release`, исключение — строкой `auditConfig.ignoreGhsas` в
+эксплуатируемыми. Известные уязвимости зависимостей шаблон проверяет сам — по всему lockfile: в образ
+едут и `dependencies`, и код фреймворка и адаптера, который сборка встраивает в `dist/server`.
+`pnpm audit --audit-level=high` — шаг `/release`, исключение — строкой `auditConfig.ignoreGhsas` в
 `pnpm-workspace.yaml` с причиной; версия моложе трёх суток не ставится (`minimumReleaseAge`), кроме
 исправления уязвимости — строкой `minimumReleaseAgeExclude` там же. Правило обновлений —
 `docs/stack/_templates/dependencies.md § Обновления`.
