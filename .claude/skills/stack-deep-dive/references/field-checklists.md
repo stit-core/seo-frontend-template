@@ -138,10 +138,10 @@
 `Внешние источники данных`, `Generates`.
 
 **Generates**: `src/pages/api/**`, слайс формы, шов капчи, строки в карте маршрутов и в
-чек-листе прокси `deployment.md`, `e2e/{http,browser}/forms.spec.ts`, env формы в `config.md`.
+требованиях к edge `infra-handoff.md`, `e2e/{http,browser}/forms.spec.ts`, env формы в `config.md`.
 
 **Cross-kind**: rate-limit на публичный POST — **требование деплоя**, строка в
-`deployment.md`; согласие на ПДн ⇒ страница политики в `routing.md`; внешний источник,
+`infra-handoff.md § Edge`; согласие на ПДн ⇒ страница политики в `routing.md`; внешний источник,
 читаемый на запрос ⇒ `cached`/`dynamic` в `rendering.md`.
 
 **Anti-patterns**: обработчик формы как `.ts`-endpoint (без JS ответом на POST обязана быть

@@ -32,7 +32,7 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 - HTML на сборке не предсжимается: штамповка не заглянет внутрь `.br`/`.gz`
 - `public/` — только файлы, без симлинков: статик-хендлер адаптера идёт по симлинку внутри
   `dist/client`, и ссылка наружу отдала бы чужой файл; метод запроса он не смотрит — лишние
-  методы режет edge (`docs/reference/deployment.md`)
+  методы режет edge (`docs/reference/infra-handoff.md § Edge`)
 
 ## Запрос (on-demand)
 

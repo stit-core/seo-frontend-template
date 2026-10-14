@@ -41,22 +41,15 @@ Prerendered-страницы, карту сайта, фиды, `public/*` и `/_
 ### Боты в access-log
 
 Страницы боту отдаёт статик-хендлер, поэтому в логе процесса визита нет — он виден только в
-access-log Traefik, и только когда в нём есть `User-Agent`
-(`infra-handoff.md § 1.4`: `fields.headers.names.User-Agent: keep`). Раз в неделю — отчёт «бот ×
-статус»: кто приходил и что получил.
-
-```bash
-# В <org>/site: токены ботов реестра одной строкой через «|»
-BOTS=$(node -e "const {load}=require('js-yaml');console.log(load(require('fs').readFileSync('src/shared/seo/crawlers.yaml','utf8')).bots.filter(b=>b.ua_substring).map(b=>b.user_agent_token).join('|'))")
-# На хосте с логом: число ответов по боту и статусу
-jq -r --arg bots "$BOTS" '(."request_User-Agent" // "" | capture("(?<bot>" + $bots + ")").bot) as $bot
-  | [$bot, .DownstreamStatus] | @tsv' /var/log/traefik/access.log | sort | uniq -c | sort -rn
-```
+журнале доступа Traefik: запись несёт `User-Agent` запроса (`infra-handoff.md § Edge`). Раз в
+неделю — отчёт «бот × статус»: кто приходил и что получил. Команда — на VPS, по журналу и копиям
+его ротации, без проб `make accept`: `docs/reference/runbook.md § Отчёт «бот × статус»` в
+`<org>/infra`.
 
 Читать так: `429` сериями у поискового или user-fetch бота — его держит лимит или бан CrowdSec
 (отказ WAF — тоже 429): edge режет того, кто приносит трафик из ответов, — сверить
-`cscli decisions list` и allowlist (`infra-handoff.md § 1.5`). `403` у бота — отказ WAF не
-переведён на 429 (§ 1.3). `5xx` сериями — бот видит сайт недоступным и снижает обход.
+`cscli decisions list` и allowlist (`infra-handoff.md § Боты`). `403` у бота — отказ WAF не 429
+(`infra-handoff.md § Edge`). `5xx` сериями — бот видит сайт недоступным и снижает обход.
 User-Agent подделывают: подозрительную строку сверяют по списку сетей вендора (`ip_list_url`,
 `rdns_suffix` записи реестра) до того, как делать выводы.
 

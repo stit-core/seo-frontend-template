@@ -56,8 +56,8 @@
    дизайна по ходу — тоже агентом из хаба, в `../strategy` и скиллами strategy: этот репо
    карту не правит.
 3. **Прямой заход сюда** — нормальный режим: та же обвязка, а то, что задевает соседей,
-   оформляется handoff-блоком для хаба — его печатает `/release`, требования к compose и
-   прокси — [`infra-handoff.md`](./infra-handoff.md).
+   оформляется handoff-блоком для хаба — его печатает `/release`; контракт сервиса `site` с хабом —
+   [`infra-handoff.md`](./infra-handoff.md).
 
 ## Что репо берёт и отдаёт
 
@@ -67,8 +67,8 @@
 | `strategy: projects/<slug>/{interface,screens}/<surface>/` | `site/` | контекст: аудитории, ситуации, экраны, блоки — из них растут тексты страниц |
 | `strategy: .claude/skills/design-deep-dive/` (база знаний и утилиты) | `site/` | нормы SEO и GEO: реестр ботов `crawlers.yaml` — копией в `src/shared/seo` (сверяет `pnpm geo:probe`), `geo_probe.py` — шаг `/seo-audit`, `copy_lint.py` — шаг `/content`; утилиты запускаются из чекаута соседа его окружением, без соседа шаги пропускаются |
 | `docs/stack/**` (здесь) | `/de-template`, `/scaffold` | платформенные решения: источник контента, маршруты, режимы, env |
-| `docs/reference/deployment.md` (здесь) | `infra/` | env-контракт образа и требования к прокси |
-| `docs/reference/infra-handoff.md` (здесь) | `infra/`, соседние шаблоны | рабочее задание cross-repo: `compose/site.yml`, Traefik, CrowdSec, приёмка первого деплоя |
+| `docs/reference/deployment.md` (здесь) | `infra/` | env-контракт образа |
+| `docs/reference/infra-handoff.md` (здесь) | `infra/` | контракт сервиса `site`: что гарантирует образ, требования к среде и edge, боты, приёмка; исполняет стек хаба |
 | образ `<registry>/<org>/site:vX.Y.Z` | `infra/` | `/release` пушит (registry — `REGISTRY_HOST`, дефолт `git.stit.tech`); выкатка — `make bump SVC=site TAG=<v>` там (правит `SITE_TAG` в `.env` VPS) |
 
 Резолв путей соседа — поля `project-slug` / `strategy-path` (дефолт `../strategy`) /
@@ -77,8 +77,8 @@
 
 Этот репо **останавливается на образе в registry**: деплой-команды чужих репо (`make bump`,
 `make ship`, ssh) отсюда не запускаются — `/release` печатает handoff-блок, применяет его
-агент или оператор в `<org>/infra`. Короткая версия требований к прокси и env-контракт
-образа — `deployment.md`.
+агент или оператор в `<org>/infra` по канону хаба (`docs/reference/ecosystem.md § Handoff-блок
+релиза` там). Контракт сервиса `site` — `infra-handoff.md`, env-контракт образа — `deployment.md`.
 
 ## Родство с `spa-frontend-template`
 

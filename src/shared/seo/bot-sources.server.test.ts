@@ -3,7 +3,7 @@ import { resolve } from 'node:path'
 import { CRAWLERS_SHA256 } from '../../../scripts/lib/site-policy.mjs'
 
 // `pnpm bots:sources` — норма печати источников ботов для allowlist edge: её вывод хаб <org>/infra
-// кладёт в свой файл как есть (docs/reference/infra-handoff.md § 1.5), поэтому формат — контракт.
+// кладёт в свой файл как есть (docs/reference/infra-handoff.md § Боты), поэтому формат — контракт.
 describe('pnpm bots:sources', () => {
   const run = spawnSync(
     process.execPath,

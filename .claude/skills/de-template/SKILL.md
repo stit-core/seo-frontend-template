@@ -212,5 +212,5 @@ pnpm check
 ```
 
 Зелёный `pnpm check`, ни одного плейсхолдера, а шаблон упоминается только как
-происхождение форка (карта соседей в `docs/reference/ecosystem.md`, `infra-handoff.md`) →
+происхождение форка (карта соседей в `docs/reference/ecosystem.md`) →
 сообщи юзеру: онбординг закрыт, дальше `/smartdev` → `/plan` → `/scaffold` → `/content`.

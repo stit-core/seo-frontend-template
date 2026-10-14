@@ -33,7 +33,7 @@ status: draft
 4. **валидация** — Zod; `consent: z.literal(true)` и на сервере
 5. **капча** — `CAPTCHA_PROVIDER`; `none` пропускает всё (реализаций провайдеров нет)
 6. **rate-limit** — на Traefik, не в приложении: счётчик в памяти процесса не переживает
-   рестарт и не виден второй реплике. Строка в чек-листе `docs/reference/deployment.md`
+   рестарт и не виден второй реплике. Требование контракта `docs/reference/infra-handoff.md § Edge`
 
 ## Доставка заявки
 
@@ -64,7 +64,7 @@ status: draft
 - `src/pages/api/**` — обработчики
 - `src/features/<name>/{model/schema.ts,api/{handler,delivery}.ts,ui/*.astro}`
 - `src/shared/antispam/*` — шов капчи
-- строки в `rendering.md § Карта маршрутов` и в чек-листе прокси `deployment.md`
+- строки в `rendering.md § Карта маршрутов` и в требованиях к edge `infra-handoff.md`
 - `e2e/http/forms.spec.ts` — HTTP-контракт обработчика, `e2e/browser/forms.spec.ts` — путь без JavaScript в браузере
 - `config.md` — env `FORM_DELIVERY`, `SMTP_URL`, `FORM_TO`, `FORM_FROM`, `FORM_BACKEND_URL`,
   `CAPTCHA_PROVIDER`, `CAPTCHA_SECRET`, `CAPTCHA_FAIL_MODE`

@@ -249,7 +249,7 @@ export function cspProblems(html: string, header: string | undefined): string[] 
   return problems
 }
 
-// Заголовки безопасности поделены (docs/reference/infra-handoff.md § 1.3): HSTS, nosniff,
+// Заголовки безопасности поделены (docs/reference/infra-handoff.md § Edge): HSTS, nosniff,
 // Referrer-Policy и Permissions-Policy ставит edge, X-Frame-Options и X-XSS-Protection — никто.
 // Приложение ставит из них только CSP: второй источник дал бы дубль заголовка.
 const EDGE_HEADERS = [

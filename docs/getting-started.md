@@ -97,10 +97,10 @@ pnpm check            # полный гейт
 /release              # аудит зависимостей, образ, приёмка (pnpm accept:image), тег, пуш, handoff в <org>/infra
 ```
 
-Сайт живёт за Traefik в `<org>/infra`; что ему нужно от прокси (rate-limit на форму, строгий
-`Host` и методы, закрытый staging) — `docs/reference/deployment.md`. Первый релиз там — профиль
-`site` в `.env` VPS, затем `make bump SVC=site TAG=vX.Y.Z`: тег образа ставит он
-(`docs/reference/infra-handoff.md § 1.7`).
+Сайт живёт за Traefik в `<org>/infra`; что он требует от среды и edge (лимит формы, строгий `Host`
+и методы, закрытый не-прод, allowlist ботов) — контракт `docs/reference/infra-handoff.md`. Первый
+релиз на среде — канон хаба: профиль `site` и сразу `make bump SVC=site TAG=vX.Y.Z` (тег образа
+ставит он), затем `make status` и `make accept SVC=site`; `ACTION` печатает `/release`.
 
 ## Гейт перед push
 

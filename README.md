@@ -77,7 +77,7 @@ pnpm kin:diff         # сверка обвязки с ../spa-frontend-template 
 pnpm ttfb <origin> …  # TTFB запущенного сервера: медиана/p90 20 запросов
 pnpm indexnow <origin> [карта-до.xml] --key <ключ>   # IndexNow после выката: адреса, которые изменил релиз
 pnpm geo:probe <origin>     # GEO-шаг /seo-audit: проба соседнего strategy по шаблонам страниц (advisory)
-pnpm bots:sources           # источники сетей ботов реестра — файл allowlist для <org>/infra
+pnpm bots:sources           # источники сетей ботов реестра — configs/crowdsec/ai-bots.sources хаба <org>/infra
 pnpm accept:image <image>   # приёмка собранного образа до пуша в registry
 pnpm check            # gate — состав: .claude/rules/tests-pipeline.md § Gate
 ```
@@ -144,8 +144,8 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 обработку ПДн проверяется и на сервере) → шов капчи и доставляет заявку одним каналом
 (`FORM_DELIVERY=smtp|backend`, три попытки). Успех — 303 на `/contacts/spasibo`, ошибка — та же
 страница с сохранёнными полями, сбой канала — честный 500; отказ до разбора заявки — короткий
-текст (403, 400, 413). Тело заявки не логируется. Rate-limit на этот путь ставится на прокси —
-строка в чек-листе [`deployment.md`](docs/reference/deployment.md). Правило —
+текст (403, 400, 413). Тело заявки не логируется. Rate-limit на этот путь ставится на edge —
+требование контракта [`infra-handoff.md`](docs/reference/infra-handoff.md). Правило —
 `.claude/rules/forms-antispam.md`; политика обработки ПДн — `/legal/privacy` с плейсхолдерами
 реквизитов оператора.
 
@@ -218,10 +218,10 @@ shutdown под Traefik и отказывается стартовать, есл
 | [`docs/reference/architecture.md`](docs/reference/architecture.md) | FSD под Astro: слои, public API, кто держит границы |
 | [`docs/reference/rendering.md`](docs/reference/rendering.md) | режимы рендера, карта маршрутов, кеш-заголовки, рецепт кеша процесса |
 | [`docs/reference/seo.md`](docs/reference/seo.md) | что держит шаблон, чек-лист страницы, три контура staging |
-| [`docs/reference/deployment.md`](docs/reference/deployment.md) | образ, entrypoint, server.mjs, env-контракт, требования к прокси |
+| [`docs/reference/deployment.md`](docs/reference/deployment.md) | образ, entrypoint, server.mjs, env-контракт |
 | [`docs/reference/observability.md`](docs/reference/observability.md) | JSON-лог, `X-Request-Id`, `/healthz`, Sentry |
 | [`docs/reference/ecosystem.md`](docs/reference/ecosystem.md) | место среди шаблонов stit, флоу работы из хаба `<org>/infra` и контракты с соседями |
-| [`docs/reference/infra-handoff.md`](docs/reference/infra-handoff.md) | задание для соседних репо: сервис `site` в compose, Traefik, CrowdSec, приёмка |
+| [`docs/reference/infra-handoff.md`](docs/reference/infra-handoff.md) | контракт сервиса `site` с `<org>/infra`: образ, требования к среде и edge, боты, приёмка |
 | [`docs/reference/kinship.md`](docs/reference/kinship.md) | родство с `spa-frontend-template` |
 | [`.claude/rules/forms-antispam.md`](.claude/rules/forms-antispam.md) | форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка |
 | [`CLAUDE.md`](CLAUDE.md) | гайд для агента (ядро + роутер) |

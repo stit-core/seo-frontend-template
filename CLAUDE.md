@@ -87,7 +87,7 @@ origin штампуется при старте.
 | `pnpm ttfb <origin> <path…>` | TTFB запущенного сервера: медиана/p90 20 запросов (`scripts/ttfb.mjs`) |
 | `pnpm indexnow <origin> [карта-до.xml] --key <ключ>` | после выката: адреса, которые изменил релиз, — новые, изменённые и удалённые против карты до выката; ключ сверяется с живым `/<ключ>.txt`; сухой прогон, отправка — `--send` (`scripts/indexnow.mjs`, шаг `/release`) |
 | `pnpm geo:probe <origin> [strategy-path]` | GEO-шаг `/seo-audit` (вне gate): `geo_probe.py --ua-probe` соседнего strategy по шаблонам страниц сборки, флаги B и S — «чинить», кроме ожидаемых политикой сайта; сверка копии реестра ботов с базой; без соседа — строка пропуска |
-| `pnpm bots:sources` | источники сетей ботов для allowlist edge (вне gate): первой строкой — версия реестра `crawlers.yaml`, дальше по строке на бота — назначение, токен, список сетей вендора, суффиксы rDNS; вывод — файл хаба `<org>/infra` (`infra-handoff.md § 1.5`) |
+| `pnpm bots:sources` | источники сетей ботов для allowlist edge (вне gate): первой строкой — версия реестра `crawlers.yaml`, дальше по строке на бота — назначение, токен, список сетей вендора, суффиксы rDNS; вывод — файл хаба `configs/crowdsec/ai-bots.sources` (`infra-handoff.md § Боты`) |
 | `pnpm accept:image <image>` | приёмка собранного образа до пуша: отказ без `SITE_URL` за 20 с, штамповка (страницы, карта, фиды), статусы, canonical, robots, одна форма адреса, отказ 400 без падения на `TRACE`, staging, дренаж по SIGTERM быстрее `SHUTDOWN_TIMEOUT_MS`; TTFB — печать без порога |
 | `pnpm check` | **gate**: шаги по порядку до первого красного — состав и что держит каждый: rule `tests-pipeline` § Gate |
 
@@ -105,14 +105,14 @@ origin штампуется при старте.
 | Тесты: два проекта Vitest, Container API, axe, Playwright, покрытие и пороги | rule `tests-pipeline` |
 | UI на токенах: облик — роли и проза ДС (и для плагина `frontend-design`), страница из секций, шрифты ДС (Fonts API по списку), остров предпочтений (тема и движение), картинки, ролики и LCP, scoped-CSS, 0 JS | rule `shared-ui` |
 | Форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка | rule `forms-antispam` |
-| Deployment: образ, entrypoint, `server.mjs`, env-контракт, требования к прокси | `docs/reference/deployment.md` |
+| Deployment: образ, entrypoint, `server.mjs`, env-контракт | `docs/reference/deployment.md` |
 | SEO: head через `DocumentLayout`, hreflang, OG, JSON-LD, `robots.txt`/`sitemap.xml`/фиды/ключ IndexNow, staging в три контура, гейты `seo:check` и HTTP-набор | rule `seo-invariants` + `docs/reference/seo.md` |
 | GEO (видимость в ИИ-ответах): политика ИИ-ботов из реестра базы, ботам тот же ответ, одна организация и авторы, текст записи без скрытой разметки, проба `geo:probe` | rules `seo-invariants`, `content-invariants` + скиллы `/content`, `/seo-audit` |
 | Наблюдаемость: JSON-лог, `X-Request-Id`, `/healthz`, Sentry по DSN | `docs/reference/observability.md` |
 | Платформа проекта: 12 kinds, порядок волн, гейт `stable` | `docs/stack/README.md` |
 | Обновления стека: ритм, мажоры N / N−1, аудит, условия пересмотра | `docs/stack/dependencies.md § Обновления` (в шаблоне — `docs/stack/_templates/`) |
 | Экосистема: соседи, флоу (хаб `<org>/infra` или прямой заход), контракты, STOP на image-in-registry | `docs/reference/ecosystem.md` |
-| Что инфра обязана сделать под сервис `site`: `compose/site.yml`, Traefik, CrowdSec, приёмка | `docs/reference/infra-handoff.md` |
+| Контракт сервиса `site` с `<org>/infra`: что гарантирует образ, требования к среде и edge (Traefik, CrowdSec, журнал доступа, боты), приёмка | `docs/reference/infra-handoff.md` |
 | Путь потребителя шаблона: форк → свой сайт | `docs/getting-started.md` |
 | Устройство `.claude`-системы (правила, скиллы, план) | `docs/contributing.md` |
 | Родство с SPA-шаблоном | `docs/reference/kinship.md` + `pnpm kin:diff` |

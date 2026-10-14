@@ -25,7 +25,7 @@ const comparable = (headers: Record<string, string>) =>
 
 // Боту — тот же ответ, что человеку: ни отказа по User-Agent, ни отдельной версии страницы, ни
 // своего заголовка. Кого пускать, решает robots.txt (политика ИИ-ботов сайта), а не сервер; тот же
-// принцип edge держит по контракту (docs/reference/infra-handoff.md § 1.5).
+// принцип edge держит по контракту (docs/reference/infra-handoff.md § Боты).
 test.describe('ответ ботам реестра', () => {
   const agents = botUserAgents()
   const templates = pageTemplates()

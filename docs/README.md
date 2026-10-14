@@ -19,10 +19,10 @@
 | [`reference/architecture.md`](./reference/architecture.md) | FSD под Astro: слои, роутинг как слой, public API, кто держит границы |
 | [`reference/rendering.md`](./reference/rendering.md) | режимы `static` / `dynamic`, карта маршрутов, кеш-заголовки, абсолютные URL, рецепт `cached` |
 | [`reference/seo.md`](./reference/seo.md) | что шаблон держит сам, чек-лист страницы, три контура staging, чем проверяется |
-| [`reference/deployment.md`](./reference/deployment.md) | Node-образ, штамповка `SITE_URL`, `server.mjs`, env-контракт, требования к прокси |
+| [`reference/deployment.md`](./reference/deployment.md) | Node-образ, штамповка `SITE_URL`, `server.mjs`, env-контракт |
 | [`reference/observability.md`](./reference/observability.md) | JSON-лог, `X-Request-Id`, `/healthz`, Sentry по DSN, чем меряется скорость |
 | [`reference/ecosystem.md`](./reference/ecosystem.md) | место сайта среди шаблонов stit, флоу (хаб `<org>/infra` или прямой заход), контракты с соседями, STOP на image-in-registry |
-| [`reference/infra-handoff.md`](./reference/infra-handoff.md) | задание для соседних репо: `compose/site.yml`, Traefik, CrowdSec, приёмка первого деплоя |
+| [`reference/infra-handoff.md`](./reference/infra-handoff.md) | контракт сервиса `site` с `<org>/infra`: что гарантирует образ, требования к среде и edge (Traefik, CrowdSec, журнал доступа), боты, приёмка |
 | [`reference/kinship.md`](./reference/kinship.md) | родство с `spa-frontend-template`, `pnpm kin:diff` |
 
 ## Для потребителя шаблона

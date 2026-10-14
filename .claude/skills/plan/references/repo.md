@@ -11,8 +11,8 @@
   `pnpm build` → собрано · `pnpm check:links` → без битых ссылок · `pnpm seo:check` → OK ·
   `pnpm test:http` → passed (после build) · `pnpm test:e2e` → passed (браузерный набор) ·
   `pnpm check` → зелёный.
-- **Handoff:** в хаб `<org>/infra` — новый образ, runtime-env и маршруты сервиса `site` (их печатает
-  `/release`, контракт — `docs/reference/infra-handoff.md`); в `<org>/strategy` — расхождение с
+- **Handoff:** в хаб `<org>/infra` — новый образ, runtime-env и требования к edge сервиса `site` (их
+  печатает `/release`, контракт — `docs/reference/infra-handoff.md`); в `<org>/strategy` — расхождение с
   FSD-картой (карта правится только там, её скиллами).
 - **Разбор падений:** отдельного скилла нет — сначала воспроизводящий тест, потом фикс.
 - **Родство с SPA:** файлы из блока `identical` в `docs/reference/kinship.md` меняются одновременно в

@@ -1,7 +1,8 @@
-// Источники сетей ботов для allowlist edge (docs/reference/infra-handoff.md § 1.5): по строке на
+// Источники сетей ботов для allowlist edge (docs/reference/infra-handoff.md § Боты): по строке на
 // бота реестра, который ходит в сеть за поиском, по запросу человека или за обучением, — назначение,
 // токен User-Agent, адрес списка сетей вендора и суффиксы обратного DNS; первой строкой — версия
-// реестра. Хаб <org>/infra кладёт вывод в свой файл источников как есть: норма печати одна — здесь.
+// реестра. Хаб <org>/infra кладёт вывод в configs/crowdsec/ai-bots.sources как есть: норма печати
+// одна — здесь.
 // usage: pnpm bots:sources
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
