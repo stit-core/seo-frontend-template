@@ -1,0 +1,348 @@
+# Карта сайта проекта шаблона site-template — форма site-map v1 базы strategy (kb/site/10-playbooks-contracts/schemas/
+# site-map.schema.json): все страницы reference-набора, шаблоны, коллекция записей блога, общие шапка и подвал.
+site_map_version: '1'
+checked: '2026-10-14'
+status: draft
+site: site-template
+site_type: corporate-site
+refs:
+  brief: site-brief.yaml
+  facts: ../../facts.yaml
+  vocabulary: ../../../../../.claude/skills/design-deep-dive/kb/site/02-site-types/vocabulary.yaml
+  blocks: ../../../../../.claude/skills/design-deep-dive/kb/site/04-blocks/blocks.yaml
+  page_plans: plans/
+  head_kit: ../../../../../.claude/skills/design-deep-dive/kb/site/07-seo-geo-performance-analytics/head-kit.yaml
+derived_from:
+  pages_mode: by-type
+  added:
+    - blog
+    - post
+    - tag
+  why: >-
+    reference-набор шаблона: главная, «О компании», контакты с формой и «спасибо», политика обработки ПДн, 404 и блог —
+    список, записи и страницы тегов
+languages:
+  primary: ru
+  structure: subdirectory
+  primary_prefix: false
+  versions:
+    - lang: ru
+      role: primary
+      scope: all-pages
+    - lang: en
+      role: adaptation
+      scope: selected-pages
+      pages:
+        - home
+        - about
+        - contacts
+        - thank-you
+        - not-found
+        - blog
+        - post
+        - tag
+      base: /en/
+      untranslated_fallback: language-home
+  switcher:
+    placement: header-utility
+    label: native-name
+    same_page: true
+    auto_redirect: false
+url_policy:
+  case: lower
+  word_separator: '-'
+  slug_source: translit
+  translit_scheme: одна схема на сайт
+  trailing_slash: false
+  max_depth: 3
+  section_prefixes: true
+  ids_in_urls: false
+  dates_in_urls: false
+  file_extensions: false
+templates:
+  - id: home
+    page_type: home-multipage
+    instances: single
+    page_plan: plans/home.yaml
+    breadcrumbs: false
+    indexable: true
+    package:
+      order: 1
+      builds_chrome: true
+    level: L0
+  - id: contacts
+    page_type: contacts-page
+    instances: single
+    page_plan: plans/contacts.yaml
+    breadcrumbs: false
+    indexable: true
+    package:
+      order: 2
+      depends_on:
+        - home
+    level: L0
+  - id: thank-you
+    page_type: thank-you-page
+    instances: single
+    page_plan: plans/thank-you.yaml
+    breadcrumbs: false
+    indexable: false
+    package:
+      order: 2
+      depends_on:
+        - contacts
+    level: L0
+  - id: about
+    page_type: about-page
+    instances: single
+    page_plan: plans/about.yaml
+    breadcrumbs: false
+    indexable: true
+    package:
+      order: 3
+      depends_on:
+        - home
+    level: L0
+  - id: blog
+    page_type: blog-index-page
+    instances: single
+    page_plan: plans/blog.yaml
+    breadcrumbs: false
+    indexable: true
+    package:
+      order: 5
+      depends_on:
+        - post
+    level: L0
+  - id: post
+    page_type: article-page
+    instances: collection
+    collection: posts
+    page_plan: plans/post.yaml
+    breadcrumbs: true
+    related: post-tags
+    indexable: true
+    package:
+      order: 4
+      depends_on:
+        - home
+      sample_instances: 2
+    level: L0
+  - id: tag
+    page_type: blog-index-page
+    instances: collection
+    collection: tags
+    page_plan: plans/tag.yaml
+    breadcrumbs: true
+    indexable: true
+    package:
+      order: 6
+      depends_on:
+        - blog
+    level: L0
+  - id: legal
+    page_type: legal-page
+    instances: single
+    page_plan: plans/privacy.yaml
+    breadcrumbs: false
+    indexable: true
+    package:
+      order: 7
+      depends_on:
+        - home
+    level: L0
+  - id: not-found
+    page_type: not-found-page
+    instances: single
+    page_plan: plans/not-found.yaml
+    breadcrumbs: false
+    indexable: false
+    package:
+      order: 8
+      depends_on:
+        - home
+    level: L0
+pages:
+  - id: home
+    page_type: home-multipage
+    template: home
+    url: /
+    parent: null
+    priority: must
+  - id: about
+    page_type: about-page
+    template: about
+    url: /about
+    parent: home
+    priority: must
+  - id: contacts
+    page_type: contacts-page
+    template: contacts
+    url: /contacts
+    parent: home
+    priority: must
+    action: lead-request
+  - id: thank-you
+    page_type: thank-you-page
+    template: thank-you
+    url: /contacts/spasibo
+    parent: contacts
+    priority: must
+    indexable: false
+  - id: privacy
+    page_type: legal-page
+    template: legal
+    url: /legal/privacy
+    parent: null
+    priority: must
+    lang_versions:
+      - ru
+  - id: not-found
+    page_type: not-found-page
+    template: not-found
+    url: /404
+    parent: null
+    priority: must
+    indexable: false
+    note: отдаётся по любому несуществующему адресу с кодом 404; сам путь /404 не в карте сайта
+  - id: blog
+    page_type: blog-index-page
+    template: blog
+    url: /blog
+    parent: home
+    priority: should
+  - id: post
+    page_type: article-page
+    template: post
+    url: /blog/{slug}
+    parent: blog
+    priority: should
+  - id: tag
+    page_type: blog-index-page
+    template: tag
+    url: /blog/tag/{slug}
+    parent: blog
+    also_listed_in:
+      - post
+    priority: could
+collections:
+  - id: posts
+    name: Записи блога
+    template: post
+    url_pattern: /blog/{slug}
+    hub_page: blog
+    sort: дата публикации, новые первыми
+    pagination: pages
+    fields:
+      - {id: title, type: text, required: true, slot: article-title}
+      - {id: slug, type: slug, required: true, unique: true}
+      - {id: description, type: text, required: true, slot: meta-description}
+      - {id: pub-date, type: date, required: true, slot: article-date}
+      - {id: updated-date, type: date, required: false}
+      - {id: tags, type: reference-list, required: true, ref: tags}
+      - {id: author, type: text, required: false, slot: article-author}
+      - {id: cover, type: media, required: false, slot: cover-image}
+      - {id: body, type: rich-text, required: true, slot: article-paragraph}
+  - id: tags
+    name: Теги блога
+    template: tag
+    url_pattern: /blog/tag/{slug}
+    hub_page: blog
+    sort: дата публикации записей, новые первыми
+    fields:
+      - {id: slug, type: slug, required: true, unique: true}
+chrome:
+  header:
+    block: header
+    archetype: bar-links
+    items:
+      - {page: blog, label_hint: Блог, presentation: link}
+      - {page: about, label_hint: О компании, presentation: link}
+      - {page: contacts, label_hint: Контакты, presentation: link}
+    utilities:
+      phone: false
+      messenger: false
+      address_or_city: false
+      search: false
+      lang_switch: true
+      login: false
+    sticky: none
+    mobile:
+      pattern: visible-links
+      keep_visible:
+        - logo
+        - lang_switch
+  footer:
+    block: footer
+    variant: site
+    groups:
+      - label_hint: Сайт
+        pages:
+          - blog
+          - about
+          - contacts
+    legal:
+      - privacy
+    requisites_fact: fact:company-name
+    contacts: true
+    html_sitemap_link: false
+    mobile: open-list
+  breadcrumbs:
+    block: breadcrumbs
+    rule: depth-2-plus
+    mobile: parent-only
+    structured_data: H
+  search:
+    enabled: false
+    why: страниц меньше двух десятков, коллекция одна — меню, подвал и список блога дают два пути к каждой странице
+linking:
+  min_inbound_links: 1
+  hubs:
+    - page: blog
+      lists: posts
+  related_rules:
+    - id: post-tags
+      from: post
+      to: posts
+      by: shared-tag
+      max: 3
+      block: related-links
+      placement: after-final-cta
+  contextual_links: true
+  orphans_allowed:
+    - thank-you
+utility_pages:
+  not_found: not-found
+  thank_you:
+    - after: contacts
+      page: thank-you
+  legal_set:
+    - privacy
+build_order:
+  - step: 1
+    template: home
+    why: главная задаёт общие шапку и подвал
+  - step: 2
+    template: contacts
+    why: целевое действие — форма заявки — сразу со страницей «спасибо»
+  - step: 3
+    template: thank-you
+    why: «спасибо» проверяется вместе с формой
+  - step: 4
+    template: about
+    why: оператор сайта и его реквизиты
+  - step: 5
+    template: post
+    why: записи блога — образец коллекции
+  - step: 6
+    template: blog
+    why: список записей — после образца записи
+  - step: 7
+    template: tag
+    why: страницы тегов — после списка
+  - step: 8
+    template: legal
+    why: политика обработки ПДн до публикации формы
+  - step: 9
+    template: not-found
+    why: 404 с путями на хабы

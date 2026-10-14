@@ -1,0 +1,153 @@
+# ПРИМЕР v1 · служебная страница spasibo; факты — демо text.
+page_plan_version: '1'
+checked: '2026-09-24'
+status: approved
+example: true
+site: otves-remont-nn
+refs:
+  brief: ../site-brief.yaml
+  facts: ../../../facts.yaml
+  blocks: ../../../../04-blocks/blocks.yaml
+  vocabulary: ../../../../02-site-types/vocabulary.yaml
+  events: ../../../../07-seo-geo-performance-analytics/events.yaml
+  asset_plan: ../../../design/promo/assets/plans/spasibo.yaml
+page:
+  id: spasibo
+  page_type: thank-you-page
+  url: /spasibo
+  lang: ru
+  locale: ru-RU
+  jurisdiction:
+  - ru
+  goal: подтвердить заявку, сказать, что и когда будет, дать канал для срочного вопроса
+  primary_action: booking
+  cta_target:
+    kind: anchor
+    value: '#lead-form'
+  awareness: product-aware
+  awareness_basis:
+    from: assumption
+    rule: уровень по главному источнику страницы (C 01 §3.1)
+  traffic:
+  - traffic_source: internal
+    temperature: hot
+    device: mixed
+  macrostructure: long-document
+  macrostructure_family: document
+  first_screen_policy: offer-cta-header
+  budget_profile: thank-you-page@L0
+  ambition_level: L0
+  navigation:
+    header: landing-minimal
+    archetype: minimal-cta
+    logo_link: /
+    breadcrumbs: false
+    footer: minimal
+  seo:
+    indexable: false
+    canonical: self
+    h1: confirmation.title
+    structured_data: []
+    ssr_required: false
+    sitemap: false
+  legal:
+    pd_consent: not-collected
+    privacy_policy: /privacy
+    cookie_banner: required
+    cookie_mode: opt-in
+    analytics_before_consent: false
+    withdraw_link: footer
+    requisites: footer
+    operator_ref: missing:legal-details
+  analytics:
+    systems:
+    - yandex-metrica
+    goals: []
+    load_after_consent: true
+sections:
+- id: header
+  role: header
+  question: куда вернуться и как связаться
+  job: логотип → главная, призыв, телефон
+  block: header
+  variant: landing-minimal
+  next_step: шапка и подвал сайта
+  slots:
+    text:
+    - id: cta-label
+      slot: cta-label
+      intent: 'cta-label: по иерархии сообщений text'
+    media:
+    - id: logo
+      slot: brand-logo
+      media_role: informational
+      goal: показать brand-logo
+      source: generate
+      authenticity: real-or-generated
+    action:
+    - id: cta
+      slot: cta-primary
+      action: booking
+      style: primary
+      target:
+        kind: anchor
+        value: '#lead-form'
+      event: event:cta-click
+      label: cta-label
+    - id: phone
+      slot: phone-link
+      action: call
+      style: channel
+      target:
+        kind: tel
+        value: tel:+79000000001
+      event: event:phone-click
+- id: confirmation
+  role: confirmation
+  question: заявка дошла? что дальше?
+  job: статус первым, затем кто и когда перезвонит, канал, одно следующее действие
+  block: thank-you
+  variant: page
+  next_step: главное действие страницы
+  slots:
+    text:
+    - id: title
+      slot: form-success
+      heading: h1
+      intent: подтверждение словами действия
+    - id: next-steps
+      slot: form-next-steps
+      intent: кто, когда, каким каналом свяжется — по факту срока ответа
+  events:
+  - trigger: view
+    target: confirmation
+    event: event:thank-you-view
+- id: footer
+  role: footer
+  question: кто продавец и где документы
+  job: реквизиты, правовые ссылки, контакты
+  block: footer
+  variant: minimal
+  next_step: шапка и подвал сайта
+  slots:
+    text:
+    - id: legal
+      slot: footer-legal
+      intent: 'footer-legal: по иерархии сообщений text'
+    - id: privacy-label
+      slot: nav-label
+      intent: подписи правовых ссылок
+    data:
+    - id: company
+      slot: fact-ref
+      fact: missing:legal-details
+      anatomy: company
+      on_missing: placeholder
+    action:
+    - id: privacy
+      slot: link
+      action: read-more
+      style: link
+      target:
+        kind: anchor
+        value: '#lead-form'

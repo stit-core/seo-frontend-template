@@ -1,0 +1,253 @@
+# Тексты главной проекта шаблона site-template на английском — copy deck второго языка: те же id секций и слотов,
+# что у copy/home.yaml.
+copy_deck:
+  version: 1
+  date: '2026-10-14'
+  site: site-template
+  product_name: ssr-frontend-template
+  lang: en
+  source_lang: ru
+  source_ref: home.yaml
+  adaptation: {mode: adaptation}
+  facts_ref: ../../../facts.en.yaml
+  page_plan_ref: ../plans/home.yaml
+  jurisdiction: ru
+  legal_category: [general]
+  authors: [template maintainer]
+  pages:
+    - page_id: home
+      page_type: home-multipage
+      status: assumed
+      meta:
+        title: Indexable site template — ssr-frontend-template
+        description: >-
+          An Astro site template that builds its pages ahead of time: JavaScript only as islands by decision, one
+          Docker image for every environment.
+        og_title: Indexable site template
+        og_description: Pages are built ahead of time; the server ships them as files and renders only on request.
+        fact_ids: []
+      sections:
+        - section_id: header
+          section_role: header
+          block: header
+          slots:
+            - slot_id: nav-link-1
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Blog, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-2
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: About, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-3
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Contacts, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: hero
+          section_role: hero
+          block: hero-text
+          slots:
+            - slot_id: headline
+              slot_type: headline
+              variants:
+                - {id: a, text: Indexable site template, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: subheadline
+              slot_type: subheadline
+              variants:
+                - id: a
+                  text: >-
+                    Pages are built ahead of time and served by the Node process as files. Server rendering turns on
+                    where a request is unavoidable: redirects, robots.txt, the contact form.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: cta-label
+              slot_type: cta-label
+              variants:
+                - {id: a, text: Send a request, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: cta-secondary-label
+              slot_type: cta-secondary-label
+              variants:
+                - {id: a, text: All notes, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: benefits
+          section_role: benefits
+          block: feature-grid
+          slots:
+            - slot_id: title
+              slot_type: section-title
+              variants:
+                - {id: a, text: What is inside, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: card-1-title
+              slot_type: card-title
+              site_slot_id: card.title
+              group: card-1
+              variants:
+                - {id: a, text: Rendering, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: card-1-body
+              slot_type: card-body
+              site_slot_id: card.body
+              group: card-1
+              variants:
+                - id: a
+                  text: >-
+                    Pages are ready before the first request. On-demand rendering only where the answer depends on the
+                    request.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: card-2-title
+              slot_type: card-title
+              site_slot_id: card.title
+              group: card-2
+              variants:
+                - {id: a, text: JavaScript, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: card-2-body
+              slot_type: card-body
+              site_slot_id: card.body
+              group: card-2
+              variants:
+                - id: a
+                  text: >-
+                    Only islands, each by a decision with a reason and a budget. Here there is one: the theme and motion
+                    choice, inline, with nothing to download.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: card-3-title
+              slot_type: card-title
+              site_slot_id: card.title
+              group: card-3
+              variants:
+                - {id: a, text: Search, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: card-3-body
+              slot_type: card-body
+              site_slot_id: card.body
+              group: card-3
+              variants:
+                - id: a
+                  text: >-
+                    The first HTML carries canonical, hreflang, OG and JSON-LD; the sitemap, feeds and robots.txt live on
+                    the site's live address.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: card-4-title
+              slot_type: card-title
+              site_slot_id: card.title
+              group: card-4
+              variants:
+                - {id: a, text: Deployment, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: card-4-body
+              slot_type: card-body
+              site_slot_id: card.body
+              group: card-4
+              variants:
+                - id: a
+                  text: >-
+                    One Docker image for every environment: the canonical site address is stamped in at container
+                    start.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: card-5-title
+              slot_type: card-title
+              site_slot_id: card.title
+              group: card-5
+              variants:
+                - {id: a, text: Architecture, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: card-5-body
+              slot_type: card-body
+              site_slot_id: card.body
+              group: card-5
+              variants:
+                - id: a
+                  text: >-
+                    Feature-Sliced Design under lint: ESLint guards the layer boundaries, Steiger the structure, pnpm
+                    check the rest.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: card-6-title
+              slot_type: card-title
+              site_slot_id: card.title
+              group: card-6
+              variants:
+                - {id: a, text: Content, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: card-6-body
+              slot_type: card-body
+              site_slot_id: card.body
+              group: card-6
+              variants:
+                - id: a
+                  text: >-
+                    Markdown in git next to the code: a frontmatter schema, snippet budgets and link checks run before
+                    publishing.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+        - section_id: related
+          section_role: related
+          block: article-cards
+          slots:
+            - slot_id: title
+              slot_type: section-title
+              variants:
+                - {id: a, text: Latest notes, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: all-label
+              slot_type: cta-secondary-label
+              variants:
+                - {id: a, text: All notes, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: footer
+          section_role: footer
+          block: footer
+          slots:
+            - slot_id: legal
+              slot_type: footer-legal
+              variants:
+                - {id: a, text: 'Primer LLC, OGRN 1000000000001, INN 7700000000', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-name', 'fact:company-ogrn', 'fact:company-inn']
+            - slot_id: privacy-label
+              slot_type: nav-label
+              variants:
+                - {id: a, text: Personal data policy, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-1-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-1
+              variants:
+                - {id: a, text: Blog, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-2-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-2
+              variants:
+                - {id: a, text: About, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-3-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-3
+              variants:
+                - {id: a, text: Contacts, status: assumed, source: ai-self}
+              chosen: a

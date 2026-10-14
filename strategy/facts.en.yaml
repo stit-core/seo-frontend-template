@@ -1,0 +1,133 @@
+# Факты проекта шаблона site-template на английском — те же id, что у facts.yaml (второй язык — свой файл фактов).
+facts_version: 1
+date: '2026-10-14'
+site: site-template
+lang: en
+jurisdiction: ru
+status: draft
+owner: {role: template owner, contact: template repository}
+collected_by: template maintainer from the repository README and code
+never_claim_defaults: ru-default-1
+
+entities:
+  - {id: product-template, type: product, names: [ssr-frontend-template, indexable site template]}
+  - {id: company-primer, type: company, names: [Primer LLC, Primer]}
+  - {id: city-moscow, type: place, names: [Moscow]}
+  - {id: tech-astro, type: other, names: [Astro]}
+  - {id: tech-node, type: other, names: [Node.js, Node]}
+  - {id: tech-docker, type: other, names: [Docker]}
+  - {id: tech-javascript, type: other, names: [JavaScript]}
+  - {id: tech-html, type: other, names: [HTML]}
+  - {id: tech-json-ld, type: other, names: [JSON-LD]}
+  - {id: tech-markdown, type: other, names: [Markdown]}
+  - {id: tech-eslint, type: other, names: [ESLint]}
+  - {id: tech-steiger, type: other, names: [Steiger]}
+  - {id: tech-fsd, type: other, names: [Feature-Sliced Design]}
+
+facts:
+  - id: company-name
+    kind: company
+    claim_class: [company-details]
+    verbatim:
+      - Primer LLC
+    canonical: The site is operated by Primer LLC.
+    entities: [company-primer]
+    source: {type: customer-document, who: template owner, where: demo details of the template, date: '2026-10-14', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: en
+
+  - id: company-ogrn
+    kind: company
+    claim_class: [company-details]
+    verbatim:
+      - OGRN 1000000000001
+    canonical: 'Primer LLC: OGRN (ОГРН 1000000000001).'
+    machine: {type: legal-id, scheme: ogrn, value: '1000000000001'}
+    entities: [company-primer]
+    source: {type: customer-document, who: template owner, where: demo details of the template, date: '2026-10-14', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: en
+
+  - id: company-inn
+    kind: company
+    claim_class: [company-details]
+    verbatim:
+      - INN 7700000000
+    canonical: 'Primer LLC: INN (ИНН 7700000000).'
+    machine: {type: legal-id, scheme: inn, value: '7700000000'}
+    entities: [company-primer]
+    source: {type: customer-document, who: template owner, where: demo details of the template, date: '2026-10-14', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: en
+
+  - id: company-email
+    kind: company
+    claim_class: [company-details]
+    verbatim:
+      - hello@example.com
+    canonical: 'Primer LLC email: hello@example.com.'
+    machine: {type: email, value: hello@example.com}
+    entities: [company-primer]
+    source: {type: customer-document, who: template owner, where: demo details of the template, date: '2026-10-14', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: en
+
+  - id: company-phone
+    kind: company
+    claim_class: [company-details]
+    verbatim:
+      - +7 495 000-00-00
+    canonical: 'Primer LLC phone: +7 495 000-00-00.'
+    machine: {type: telephone, value: '+74950000000'}
+    entities: [company-primer]
+    source: {type: customer-document, who: template owner, where: demo details of the template, date: '2026-10-14', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: en
+
+  - id: company-address
+    kind: company
+    claim_class: [company-details]
+    verbatim:
+      - 1 Primernaya st., office 2, Moscow, 101000
+    canonical: 'Primer LLC address: 1 Primernaya st., office 2, Moscow, 101000.'
+    machine: {type: postal-address, country: RU, locality: Moscow, street: '1 Primernaya st., office 2', postal_code: '101000'}
+    entities: [company-primer, city-moscow]
+    source: {type: customer-document, who: template owner, where: demo details of the template, date: '2026-10-14', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: en
+
+  - id: company-hours
+    kind: company
+    claim_class: [company-details]
+    verbatim:
+      - Mon–Fri, 10:00–19:00 (MSK)
+    canonical: Primer LLC works Monday to Friday, 10:00 to 19:00 Moscow time.
+    machine:
+      type: opening-hours
+      hours:
+        - {days: [mo, tu, we, th, fr], opens: '10:00', closes: '19:00'}
+    entities: [company-primer]
+    source: {type: customer-document, who: template owner, where: demo details of the template, date: '2026-10-14', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: en

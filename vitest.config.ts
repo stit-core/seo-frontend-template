@@ -29,7 +29,7 @@ export default getViteConfig({
       ],
       reporter: [['text', { skipFull: true }]],
       // Храповик (rule tests-pipeline): факт, округлённый вниз; пол — 90 %, потолок — 99 %.
-      thresholds: { statements: 99, branches: 97, functions: 99, lines: 99 },
+      thresholds: { statements: 99, branches: 98, functions: 99, lines: 99 },
     },
     projects: [
       {

@@ -94,6 +94,8 @@ entities → shared`); между слайсами одного слоя — з�
 
 ```
 content/redirects.yaml   адреса как данные: переезды старого сайта и 410, один хоп с любой формы адреса
+strategy/         данные страниц в форме strategy на месте снимка: проект шаблона (бриф, карта, планы,
+                  copy deck по языкам, факты) и копии каталогов базы kb/ — читает shared/strategy
 public/           иконки, manifest, og-default.png (социальная карточка 1200×630)
 src/app/          layouts/document.astro (<head> из props: SeoHead + JSON-LD), middleware, styles/{tokens,index}.css
 src/pages/        роутинг Astro = слой pages: index, about, contacts/{index,spasibo},
@@ -108,8 +110,9 @@ src/entities/     post: content/{ru,en}/*.md + covers/, model, api, lib, ui; com
                   оператора для «О компании» и LocalBusiness; author: реестр авторов (в шаблоне
                   пуст) и подпись под заголовком записи
 src/shared/       config (runtime env, Zod; идентичность сайта), i18n, lib (+ testing), redirects,
-                  seo (absoluteUrl, hreflang, SeoHead, JSON-LD, robots/sitemap/rss), antispam
-                  (шов капчи), observability (JSON-лог с порогом LOG_LEVEL, Sentry по DSN), ui
+                  seo (absoluteUrl, hreflang, SeoHead, JSON-LD, robots/sitemap/rss), strategy (чтение
+                  снимка: секции плана, тексты по ключу, факты, мета), antispam (шов капчи),
+                  observability (JSON-лог с порогом LOG_LEVEL, Sentry по DSN), ui
 src/{content.config,middleware,env.d}.ts   навязанные Astro entry — тонкие входы
 docker/           Dockerfile (4 стадии), entrypoint.sh + stamp.mjs (штамповка SITE_URL), server.mjs
 e2e/              Playwright на prod-сборке: http/ — в гейте, browser/ — в /release

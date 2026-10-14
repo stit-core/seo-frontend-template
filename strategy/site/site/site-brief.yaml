@@ -1,0 +1,112 @@
+# Бриф проекта шаблона site-template — форма site-brief v1 базы strategy (kb/site/10-playbooks-contracts/schemas/
+# site-brief.schema.json). Сайт шаблона — reference-набор: страницы показывают сам шаблон, оператор вымышлен.
+version: 1
+checked: '2026-10-14'
+intake:
+  received: '2026-10-14'
+  channel: репозиторий шаблона
+  what_ordered: multipage
+  notes: >-
+    Данные reference-набора ssr-frontend-template в форме strategy: шаблон держит их на месте снимка, форк заменяет
+    своим проектом. Оператор сайта и его реквизиты вымышлены.
+project:
+  slug: site-template
+  status: draft
+  prepared_by: исполнитель шаблона
+site_type: corporate-site
+primary_page_type: home-multipage
+business:
+  name: ssr-frontend-template
+  what: Шаблон индексируемого сайта и демо-студия, которая делает сайты, заметные в поиске
+  kind: service
+  goal:
+    primary: leads
+    note: заявка через форму на странице контактов; блог — второй путь
+  geography:
+    regions:
+      - Москва
+    remote: true
+conversion:
+  action: lead-request
+  target:
+    kind: route
+    value: /contacts
+  channels:
+    - form
+    - email
+    - phone
+  thank_you: /contacts/spasibo
+traffic:
+  sources:
+    - source: search-category
+      temperature: warm
+      device: mixed
+    - source: direct
+      temperature: hot
+      device: mixed
+proof:
+  facts_ref: ../../facts.yaml
+  required_kinds:
+    - company
+constraints:
+  jurisdiction:
+    - ru
+  legal_category:
+    - general
+  cms: static
+  stack: Astro и Node.js — сайт ssr-frontend-template
+  hosting: VPS в РФ — хаб <org>/infra
+  accessibility: wcag22-aa
+  legal_intake:
+    rkn_registry: unknown
+    leads_storage: ru
+    sends_marketing: false
+    license: not-needed
+    sells_online: false
+    optional_cookies: false
+    medical: false
+policies:
+  capture_popup: 'off'
+  exit_intent: 'off'
+  chat_widget: 'off'
+  preloader: 'off'
+  cookie_banner: none
+  rationale: счётчика и необязательных cookie нет — баннеру нечего спрашивать
+analytics:
+  system: none
+  ab_testing: none
+search:
+  engines:
+    - yandex
+    - google
+  ai_answers:
+    - yandex-alice
+    - google-ai
+    - chatgpt-search
+    - perplexity
+  ai_bots_policy: allow-all
+  regions:
+    - Москва
+languages:
+  - lang: ru
+    role: primary
+  - lang: en
+    role: adaptation
+    scope: selected-pages
+    note: все страницы, кроме политики обработки ПДн — она опубликована по-русски
+pages:
+  mode: by-type
+  note: карта — site-map.yaml
+ambition:
+  level: L0
+  source: claude
+  note: >-
+    reference-набор шаблона — L0: облик даёт ДС, моментов движения и эффектов у страниц нет; главная и «О компании» —
+    ниже умолчания L1 своего типа
+themes:
+  default: system
+  dark:
+    needed: true
+    why: тема по настройке системы и переключатель — шаблон показывает обе темы ДС
+  switcher: true
+questions: []

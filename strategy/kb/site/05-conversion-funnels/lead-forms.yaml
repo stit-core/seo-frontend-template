@@ -1,0 +1,497 @@
+# lead-forms.yaml — наборы полей и шагов лид-форм сайта (site)
+# Ссылка из page-plan: action-слот `form.ref: lead-forms.yaml#<form-set-id>` (10-playbooks-contracts/schemas/page-plan.schema.json, $defs.action-slot.form).
+# Канон формы (раскладка, подписи, валидация, ошибки, кнопка) — ../ux/04-components-patterns/05-forms-and-validation.md;
+# право (согласия, политика, трансграничная передача) — ../08-legal-trust-a11y/; тексты у формы и письма — text
+# ../text/04-copy-by-block/04-form-emails-notifications.md; события — ../07-seo-geo-performance-analytics/events.yaml: здесь — id словаря событий.
+# Обоснования и метки — 01-cta-and-lead-capture.md (раздел указан в поле `why`). Не юридическое заключение.
+version: 1.0
+checked: 2026-09-24
+status: v1
+owner: "site"
+ref_format: "lead-forms.yaml#<form-set-id>"
+vocabulary: ../02-site-types/vocabulary.yaml   # action, block, slot — id словаря и каталога блоков
+blocks_catalog: ../04-blocks/blocks.yaml
+
+# ---------------------------------------------------------------------------------------------------------------
+# 1. Умолчания для любого набора (набор может переопределить поле явно и с причиной)
+# ---------------------------------------------------------------------------------------------------------------
+defaults:
+  layout: {columns: 1, labels: visible-above, placeholder_as_label: false, why: "ux 04-05 §2.1, §3.1–3.2 [консенсус]"}
+  autocomplete: required-per-field          # ux 04-05 §6.2; Zuko: автозаполнение коррелирует с завершением [данные вендора]
+  required_marking: minority-rule           # помечать меньшую группу словом «(необязательно)»; ux 04-05 §3.4 [спорно]
+  submit:
+    enabled_before_click: true              # не disabled до нажатия — ux 04-05 §5.2 [спорно]; см. противоречие с Метрикой (01 §9.3)
+    lock_after_click: true                  # защита от двойной отправки — ux 04-05 §5.3
+    label: result-of-action                 # «Получить расчёт», не «Отправить»; слова — text slot:cta-label
+  validation:
+    known_answer: on-submit                 # имя, телефон, город — по кнопке (GOV.UK)
+    system_dependent: on-blur               # промокод, ИНН, адрес по справочнику
+    server_side: required                   # ux 04-05 §4.6
+    keep_input_on_error: true               # ux 04-05 §6.1
+    forgiving_input: true                   # пробелы, скобки, дефисы, 8/+7 — нормализует сервер (ux 04-05 §3.5)
+  consent:                                  # механика — здесь; норма и формулировки — site 08 и text 08 (COPY-L-CONS-01)
+    pd:
+      control: checkbox
+      prechecked: false
+      required: true
+      separate_from_other_documents: true   # 152-ФЗ ст. 9 ч. 1 в ред. 156-ФЗ (с 01.09.2025) — через ux 06-04 §7.3, I
+      bundled_with_offer_or_marketing: false
+      link: consent-document-and-policy     # ссылка на текст согласия и политику ПД (site 08)
+      store_record: true                    # факт и текст согласия фиксируются с формой (152-ФЗ ст. 9 ч. 3 — бремя доказывания)
+    record: [consent_version, consent_at, page_url, form_id, marketing_consent]   # v1: журнал согласия в записи заявки CRM (req:LR-RU-04; site 05/03 §6.1)
+    marketing:
+      control: checkbox
+      prechecked: false
+      required: false                       # реклама по почте и в мессенджерах — только с предварительного согласия (38-ФЗ ст. 18 ч. 1; text 04 §4)
+      when: only-if-business-sends-marketing
+    page_plan_enum: separate-checkbox       # page-plan form.consent: separate-checkbox | link-only | none; link-only/none — только без сбора ПД
+    jurisdiction: ru                        # профиль eu — site 08
+  antispam:                                 # 01 §8; W3C «Inaccessibility of CAPTCHA» (2021): honeypot, пока хватает
+    layers: [honeypot, time-trap, rate-limit, server-validation, content-filter]
+    without_js: [honeypot, rate-limit, server-validation, content-filter]   # форма без JS на клиенте: слои, которые
+                                            # исполняет сервер (поле-ловушка скрыто CSS); time-trap — с JS или на
+                                            # странице, которую сервер отдаёт по запросу (время выдачи — подписанным
+                                            # скрытым полем): у страницы из сборки времени выдачи нет; правила
+                                            # content-filter — по объёму спама, настройка сайта (01 §8)
+    honeypot: {field: company-website, hidden: "css + aria-hidden + tabindex=-1 + autocomplete=off", reject_if_filled: true}
+    time_trap_seconds: 3                    # отправка раньше 3 с после загрузки — подозрение; 7 с — перебор ([V:qktwIWZNFY4 1:09:01])
+    rate_limit: {per_ip_per_hour: 5, per_phone_per_day: 3, on_exceed: soft-block-and-log}   # ориентир [практика], настраивать по логам
+    captcha: {default: off, escalate_to: yandex-smartcaptcha-invisible, when: "подтверждённая атака ботов по логам", recaptcha_ru_default: false}
+    why: "01 §8 [документация W3C] + [практика]; reCAPTCHA — передача данных Google (трансграничная — site 08)"
+  hidden_fields:                            # 03 §6; значения — из URL и cookie на клиенте, проверяются на сервере; в URL «спасибо» ПД не класть
+    - utm_source
+    - utm_medium
+    - utm_campaign
+    - utm_content
+    - utm_term
+    - yclid                                 # автоматическая метка Директа
+    - gclid                                 # Google Ads (если есть)
+    - ym_client_id                          # Метрика getClientID — для офлайн-конверсий
+    - landing_url                           # страница входа (первая в визите)
+    - page_url                              # страница с формой
+    - form_id                               # id набора из этого файла + id секции page-plan
+    - variant                               # вариант A/B или подстановки hero
+  hidden_fields_without_js:                 # форма без JS на клиенте: кто ставит значение без кода в браузере; каждое
+                                            # поле hidden_fields — ровно в одном перечне
+    build: [form_id, page_url, variant]     # пишет сборка в HTML страницы: известны при сборке; variant — у страницы с
+                                            # вариантами первого экрана или экспериментом, без них поля нет
+    server: [utm_source, utm_medium, utm_campaign, utm_content, utm_term, yclid, gclid]   # сервер при приёме — из
+                                            # query заголовка Referer (страница с формой, тот же сайт: Referrer-Policy
+                                            # сайта отдаёт своим запросам полный адрес)
+    js_only: [ym_client_id, landing_url]    # только с JS: client id Метрики и первая страница визита — у формы без JS
+                                            # этих полей нет
+  success:
+    default: thank-you-page                 # отдельная страница; inline — на месте формы (по плану). Профиль формы
+                                            # решает план: form.success: inline — остров формы, успех на месте, только
+                                            # с JS; иначе форма без JS с успехом without_js. success.default набора —
+                                            # умолчание для плана, код читает form.success плана
+    without_js: thank-you-page              # форма без JS — PRG: сервер отвечает 303 на «спасибо» только принятой
+                                            # заявке, адрес — form.thank_you_page плана; inline без JS адреса успеха
+                                            # не даёт — только с JS
+    must_show: [status-first, what-happens-next, who-and-when, response-time-fact, channels, one-next-action, save-record]
+    why: "GOV.UK Confirmation pages; 01 §10"
+  events:                                   # id словаря событий (07-seo-geo-performance-analytics/events.yaml); конверсия — только подтверждённый сервером успех
+    view: event:form-view
+    start: event:form-start                 # первый ввод или фокус в первом поле
+    step: event:form-step                   # номер шага — параметр
+    error: event:form-error                 # поле и тип ошибки — параметры, без значений ПД
+    submit_attempt: null                    # кандидат form_submit_attempt в словарь событий не вошёл (site 05/03 §1.1) — не размечать
+    success: event:lead-submit              # конверсия; из ответа сервера или загрузки страницы «спасибо» (у наборов со своим действием — событие действия из events.yaml); у формы без JS — цель визита «спасибо» (events.yaml#defaults.without_js)
+  channels_ru_default: [form, phone]        # мессенджеры — по fields.contact-channel и блоку contact-channels
+  modal_max_fields: 4                       # форма в окне — меньше пяти полей, без прокрутки (ux 04-05 §7.5)
+
+# ---------------------------------------------------------------------------------------------------------------
+# 2. Библиотека полей (id — kebab-case; набор ссылается `field: <id>`)
+# ---------------------------------------------------------------------------------------------------------------
+fields:
+  name:
+    why: "Кто использует: менеджер обращается по имени при звонке. Без него: звонок всё равно возможен — поэтому необязательное."   # question protocol (GOV.UK; Джаррет)
+    label: "Имя"
+    type: text
+    autocomplete: name
+    one_field_full_name: true               # одно поле, не «Имя»+«Фамилия»: 42 % вводили ФИО в «Имя» (Baymard 2024)
+    required_default: false                 # для звонка имя полезно, но не обязательно
+  phone:
+    why: "Кто использует: менеджер или замерщик для звонка (канал по умолчанию в РФ). Без него: ответ только в мессенджер или почту — если это каналы бизнеса, телефон можно сделать необязательным."   # question protocol (GOV.UK; Джаррет)
+    label: "Телефон"
+    type: tel
+    inputmode: tel
+    autocomplete: tel
+    mask: forgiving                         # маска подсказывает формат, но принимает «8…», «+7…», пробелы, скобки; нормализация на сервере
+    country_default: "+7"
+    hint_why: "Зачем номер: позвоним один раз, чтобы …"   # Zuko: без объяснения ждут спам-звонков; слова — text
+    required_default: true
+  email:
+    why: "Кто использует: отправка расчёта, материала, подтверждения. Без неё: в лидогенерации РФ достаточно телефона — необязательная."   # question protocol (GOV.UK; Джаррет)
+    label: "Почта"
+    type: email
+    autocomplete: email
+    spellcheck: false
+    confirm_field: false                    # «повторите e-mail» не нужен (~70 % копируют — [V:qktwIWZNFY4 33:27])
+    required_default: false
+  contact-channel:
+    why: "Кто использует: менеджер выбирает канал ответа. Без него: ответ звонком по умолчанию."   # question protocol (GOV.UK; Джаррет)
+    label: "Как удобнее связаться"
+    type: radio
+    options_ru_2026: [call, max, telegram, whatsapp, email]   # только каналы, которые бизнес ведёт; порядок — по аудитории; 01 §7
+    default: none                           # без предвыбора (или «звонок», если это единственный канал)
+    required_default: false
+  preferred-time:
+    why: "Кто использует: колл-центр планирует звонок. Без него: звонок в ближайшее рабочее время."   # question protocol (GOV.UK; Джаррет)
+    label: "Когда удобно принять звонок"
+    type: radio
+    options: [now-working-hours, morning, afternoon, evening]
+    required_default: false
+  task:
+    why: "Кто использует: менеджер готовится к звонку. Без него: спросит при звонке — поэтому необязательное."   # question protocol (GOV.UK; Джаррет)
+    label: "Что нужно сделать"
+    type: textarea
+    required_default: false
+    note: "не обязательно; ИИ-формы часто делают обязательным — дефект"
+  city:
+    why: "Кто использует: распределение заявки по филиалу или отсев вне зоны. Без него: уточнит менеджер."   # question protocol (GOV.UK; Джаррет)
+    label: "Город или район"
+    type: text
+    autocomplete: address-level2
+    required_default: false
+    note: "обязателен, только если зона обслуживания ограничена и это отсеивает заявки"
+  address:
+    why: "Кто использует: замерщик. Без него в заявке: адрес уточняется при подтверждении замера."   # question protocol (GOV.UK; Джаррет)
+    label: "Адрес объекта"
+    type: text
+    autocomplete: street-address
+    required_default: false
+    note: "в заявке — не просить; нужен для замера — спросить при подтверждении звонком"
+  company:
+    why: "Кто использует: B2B-продажи (квалификация, CRM). Без него: B2B-заявку не обработать — обязательна только в b2b-request."   # question protocol (GOV.UK; Джаррет)
+    label: "Компания"
+    type: text
+    autocomplete: organization
+    required_default: false
+  role:
+    why: "Кто использует: B2B-продажи (кто принимает решение). Без него: уточнят на звонке."   # question protocol (GOV.UK; Джаррет)
+    label: "Должность"
+    type: text
+    autocomplete: organization-title
+    required_default: false
+  company-size:
+    why: "Кто использует: маршрутизация B2B-заявки. Без него: маршрут по умолчанию."   # question protocol (GOV.UK; Джаррет)
+    label: "Размер команды"
+    type: radio
+    options: ["1–10", "11–50", "51–250", "251+"]
+    required_default: false
+  budget:
+    why: "Кто использует: продажи (квалификация по brief.conversion.qualification_note). Без него: квалификация на звонке."   # question protocol (GOV.UK; Джаррет)
+    label: "Ориентировочный бюджет"
+    type: radio
+    options: by-offer                       # 3–4 диапазона из цен заказчика (facts); «пока не знаю» — всегда вариант
+    required_default: false
+    purpose: qualification                  # квалификация продаж: вход brief.conversion.qualification_note
+  timeline:
+    why: "Кто использует: продажи (приоритет заявки). Без него: приоритет по умолчанию."   # question protocol (GOV.UK; Джаррет)
+    label: "Когда планируете"
+    type: radio
+    options: [this-month, one-to-three-months, later, just-looking]
+    required_default: false
+    purpose: qualification
+  file:
+    why: "Кто использует: сметчик (фото, план). Без него: смета после замера."   # question protocol (GOV.UK; Джаррет)
+    label: "Фото, план или смета (необязательно)"
+    type: file
+    required_default: false
+  promo-code:
+    why: "Кто использует: учёт акции. Без него: скидка применяется по условиям акции автоматически."   # question protocol (GOV.UK; Джаррет)
+    label: "Промокод"
+    type: text
+    hidden_behind_link: true                # открытое поле уводит искать промокод (Baymard 2024)
+    required_default: false
+  event-session:
+    why: "Кто использует: организатор (рассадка, ссылка). Без него: один поток по умолчанию."   # question protocol (GOV.UK; Джаррет)
+    label: "Какой день или поток"
+    type: radio
+    options: by-event-facts
+    required_default: false
+  company-website:
+    why: "Ловушка для ботов (honeypot); люди его не видят и не заполняют."   # question protocol (GOV.UK; Джаррет)
+    label: "Не заполняйте это поле"         # honeypot: скрыт от людей и вспомогательных технологий
+    type: text
+    honeypot: true
+
+# ---------------------------------------------------------------------------------------------------------------
+# 3. Наборы форм по задачам
+# fields: [{field, required}] — порядок = порядок на экране; visible_max — сколько полей видно сразу;
+# steps — число шагов (квиз: вопросы + контакт); commitment — порог для посетителя (словарь action.commitment)
+# ---------------------------------------------------------------------------------------------------------------
+form_sets:
+
+  - id: callback
+    name: "Обратный звонок"
+    action: callback-request
+    blocks: [callback-request, cta-band, contact-channels, capture-popup]   # capture-popup — только вариант on-click
+    page_types: [landing-lead-services, service-page, contacts-page]
+    commitment: medium
+    fields:
+      - {field: phone, required: true}
+      - {field: name, required: false}
+      - {field: preferred-time, required: false}
+    visible_max: 2
+    steps: 1
+    offer: "звонок в рабочее время; срок — только фактом (response-time)"
+    requires_facts: [response-time]         # срок перезвона из регламента заказчика; нет факта — «перезвоним в рабочее время»
+    success: {default: inline, must_show: [who-and-when, working-hours]}
+    avoid: ["окно «перезвоним за 30 секунд» по таймеру", "обещание срока, которого нет в регламенте"]
+    why: "01 §6.4"
+
+  - id: consultation-request
+    name: "Заявка на консультацию или замер"
+    action: lead-request
+    blocks: [lead-form, hero-form, cta-band]
+    page_types: [landing-lead-services, service-page]
+    commitment: medium
+    fields:
+      - {field: phone, required: true}
+      - {field: name, required: false}
+      - {field: contact-channel, required: false}
+      - {field: task, required: false}
+    visible_max: 3
+    steps: 1
+    offer: "что именно получит человек: консультация, замер, смета — и стоит ли это денег"
+    success: {default: thank-you-page}
+    temperature:
+      hot: "2 поля (телефон + имя) в hero или рядом с ценой"
+      warm: "2–3 поля после «как работаем» и цены"
+      cold: "не форма в hero, а мягкий шаг (пример сметы, расчёт) — 01 §4"
+    why: "01 §5.1; медиана 2 поля у лендингов лидогенерации РФ [проверено]"
+
+  - id: quote-request
+    name: "Запрос расчёта стоимости (форма)"
+    action: request-quote
+    blocks: [lead-form, hero-form]
+    page_types: [landing-lead-services, service-page, pricing-page]
+    commitment: medium
+    fields:
+      - {field: phone, required: true}
+      - {field: name, required: false}
+      - {field: task, required: false}
+      - {field: file, required: false}
+      - {field: contact-channel, required: false}
+    visible_max: 3
+    steps: 1
+    note: "параметры цены лучше спросить квизом (quiz-quote) или показать цены типовых случаев (block:pricing-table)"
+    success: {default: thank-you-page, must_show: [when-quote-arrives, channel]}
+    why: "01 §5.2"
+
+  - id: quiz-quote
+    name: "Квиз: расчёт или подбор с контактом в конце"
+    action: request-quote
+    blocks: [quiz, hero-form]               # hero-form — вариант со стартом квиза в первом экране
+    page_types: [landing-lead-services]
+    commitment: medium
+    questions:
+      min: 3
+      max: 7                                # рынок РФ 4–7 (n 5); > 7 — это бриф, а не квиз
+      per_step: 1
+      kinds: [price-parameter, preference, qualification]
+      answerable_without_measuring: true    # вопрос, на который нельзя ответить («стандарт хрупкости»), — дефект ([V:b2VdPF9svEU 36:43])
+      always_option_unknown: true           # «не знаю» / «подскажите» — валидный ответ
+      qualification_max: 2                  # бюджет и срок — не больше двух вопросов
+    contact_step:
+      fields:
+        - {field: phone, required: true}
+        - {field: name, required: false}
+        - {field: contact-channel, required: false}
+      position: last
+      send_partial_before_consent: false    # не отправлять ответы и контакт до согласия и нажатия
+    result:
+      show_on_screen: preferred             # итог диапазоном «от–до» из фактов; «пришлём» — честно сказать, когда и куда
+      price_facts_required: true
+    progress:
+      show: "шаг N из M текстом"
+      fake_acceleration: false              # fast-to-slow — обман (Villar 2013); не рисовать «90 %» на втором шаге
+    incentive:
+      allowed: real-only                    # скидка или подарок — факт с valid.until; «растущая скидка» — только если реально даётся всем, кто прошёл
+      rolling_deadline: forbidden           # «акция до завтра» скриптом — ложная срочность (2 из 5 квизов)
+    back_keeps_answers: true
+    success: {default: thank-you-page, must_show: [result-or-when, who-and-when]}
+    why: "01 §5.3–5.4 [проверено]; Villar et al. 2013 [исследование]; Habr 510984 [кейс]"
+
+  - id: calculator-inline
+    name: "Калькулятор с итогом на странице (без контакта)"
+    action: explore-product                 # micro; заявка — отдельным призывом рядом (quote-request или callback)
+    blocks: [calculator]
+    page_types: [landing-lead-services, service-page, pricing-page, landing-saas]
+    commitment: low
+    params:
+      max: 3                                # норма каталога блоков; до 5 — если каждый параметр известен без замера
+      hard_max: 5
+      units_visible: true
+      defaults: typical-case                # значения по умолчанию = типовой случай, итог виден сразу
+    result: {on_screen: true, contact_required: false, range_with_disclaimer: true}
+    next_action: {form_set: quote-request, label_slot: cta-label}
+    requires_facts: [price-formula]         # нет формулы или прайса — калькулятора нет, есть pricing-table typical-scenarios
+    why: "01 §5.2; NN/g Show Price 2013 [исследование]; у рынка 8–14 параметров и итог только за телефон [проверено]"
+
+  - id: booking
+    name: "Запись на время"
+    action: booking
+    blocks: [booking-widget, lead-form]
+    page_types: [landing-lead-services, service-page, landing-course]
+    commitment: medium
+    fields:
+      - {field: phone, required: true}
+      - {field: name, required: true}       # запись — на человека
+      - {field: email, required: false}
+    slot_selection: {service: optional, specialist: optional, date_time: required}
+    visible_max: 3
+    steps: 2                                # 1 — слот; 2 — контакт
+    success: {default: inline, must_show: [date-time-timezone, address, how-to-cancel, add-to-calendar]}
+    avoid: ["запись без реальных слотов — тогда consultation-request", "отмена сложнее записи (ux 06-04 §1.4)"]
+    why: "01 §6.4"
+
+  - id: b2b-request
+    name: "Заявка B2B или запрос демо"
+    action: request-demo
+    blocks: [lead-form, cta-band]
+    page_types: [landing-saas, landing-lead-services, service-page, form-page]
+    commitment: medium
+    fields:
+      - {field: email, required: true}      # рабочая почта
+      - {field: name, required: true}
+      - {field: company, required: true}
+      - {field: phone, required: false}
+      - {field: company-size, required: false}
+      - {field: task, required: false}
+    visible_max: 5
+    steps: 1                                # больше 5 полей — два шага: контакт → квалификация (после отправки контакта)
+    qualification: {fields: [company-size, budget, timeline], max: 2, position: after-contact}
+    success: {default: thank-you-page, must_show: [who-and-when, calendar-link-if-any, materials-to-forward]}
+    why: "01 §5.1; NN/g B2B 2016 (через site 01/01 §6); CXL: квалифицирующее поле — если продажам нужно [кейс]"
+
+  - id: event-registration
+    name: "Регистрация на мероприятие или вебинар"
+    action: event-registration
+    blocks: [lead-form, email-capture, hero-form]
+    page_types: [landing-event]
+    commitment: low
+    fields:
+      - {field: email, required: true}
+      - {field: name, required: true}
+      - {field: event-session, required: false}
+      - {field: company, required: false}
+      - {field: role, required: false}
+    visible_max: 3
+    steps: 1
+    success:
+      default: thank-you-page
+      must_show: [date-time-timezone, how-to-join-or-address, add-to-calendar, reminder-schedule, recording-policy]
+    emails: [confirmation, reminder-day-before, reminder-hour-before, recording-if-promised]   # тексты — text 04 §2.4
+    why: "03 §3"
+
+  - id: waitlist
+    name: "Лист ожидания"
+    action: join-waitlist
+    blocks: [email-capture, hero-form]
+    page_types: [landing-waitlist]
+    commitment: low
+    fields:
+      - {field: email, required: true}
+    visible_max: 1
+    steps: 1
+    double_opt_in: recommended              # подтверждение адреса — доказательство согласия и чистота списка (text 04 §2.2)
+    success: {default: inline, must_show: [what-and-when-we-send, confirm-email-if-double-opt-in]}
+    counter: live-only                      # счётчик листа — только из системы с датой (text 03 §5.5)
+    why: "03 §4"
+
+  - id: lead-magnet
+    name: "Материал за контакт"
+    action: download
+    blocks: [lead-magnet]
+    page_types: [landing-lead-magnet, article-page, service-page]
+    commitment: low
+    fields:
+      - {field: email, required: true}
+      - {field: name, required: false}
+    visible_max: 2
+    steps: 1
+    delivery: [on-page-and-email]           # материал сразу на странице «спасибо» и копией на почту; не «только на почту» без причины
+    marketing_consent: separate-optional     # выдача материала ≠ согласие на рекламу (text 04 §4)
+    ungated_variant: allowed                # материал без формы — когда цель страницы доверие, а не база (NN/g: гейт до ценности бьёт по доверию)
+    success: {default: thank-you-page, must_show: [download-link, what-else-we-will-send]}
+    why: "03 §5"
+
+  - id: newsletter-subscribe
+    name: "Подписка на рассылку"
+    action: subscribe
+    blocks: [email-capture]
+    page_types: [article-page, blog-index-page, home-multipage]
+    commitment: low
+    fields:
+      - {field: email, required: true}
+    visible_max: 1
+    steps: 1
+    consent: {marketing: required-for-this-form}  # здесь согласие на рассылку — суть формы; отдельный пустой чекбокс
+    double_opt_in: recommended
+    success: {default: inline, must_show: [frequency, confirm-email, how-to-unsubscribe]}
+    why: "01 §9"
+
+  - id: contact-message
+    name: "Сообщение со страницы контактов"
+    action: message
+    blocks: [lead-form, contact-details, contact-channels]
+    page_types: [contacts-page]
+    commitment: low
+    fields:
+      - {field: name, required: false}
+      - {field: email, required: false}
+      - {field: phone, required: false}
+      - {field: contact-channel, required: false}
+      - {field: task, required: true}
+    one_of_required: [email, phone]         # хотя бы один способ ответа
+    visible_max: 5                          # NN/g «Contact Us» 2019: 3–5 полей; форма — только в дополнение к телефону и почте
+    steps: 1
+    success: {default: inline, must_show: [response-window]}
+    why: "01 §6.1; NN/g Contact Us 2019 [исследование]"
+
+  - id: trial-start
+    name: "Начать пробный период (переход в продукт)"
+    action: start-trial
+    blocks: [hero-form, email-capture, cta-band]
+    page_types: [landing-saas, pricing-page, feature-page]
+    commitment: medium
+    fields:
+      - {field: email, required: true}      # первый шаг регистрации — только идентификатор (прогрессивная аутентификация, ux 05-01 §7.3)
+    visible_max: 1
+    steps: 1                                # дальше — регистрация в продукте по канону ux 05-01 §7
+    handoff: {pass: [plan-id, billing-period, utm, variant], via: query-or-server-session, pd_in_url: false}
+    card_required_disclosure: before-click  # если нужна карта — сказать до нажатия: сумма, период, дата первого списания, как отменить (ux 06-04 §3.11)
+    why: "03 §4"
+
+# ---------------------------------------------------------------------------------------------------------------
+# 4. Где ставить форму: выбор по типу страницы (кратко; подробно — 01 §3–§4, site 03/03 §3.2)
+# ---------------------------------------------------------------------------------------------------------------
+placement_defaults:
+  landing-lead-services: {primary: consultation-request, alt: [quiz-quote, callback, booking], hero_form: "по site 03/03 §3.2", repeat: [after-price, final]}
+  service-page: {primary: consultation-request, alt: [quote-request, callback]}
+  landing-saas: {primary: trial-start, alt: [b2b-request]}
+  landing-event: {primary: event-registration}
+  landing-waitlist: {primary: waitlist}
+  landing-lead-magnet: {primary: lead-magnet}
+  contacts-page: {primary: contact-message, channels_required: [phone, email]}
+  landing-course: {primary: consultation-request, alt: [booking, event-registration]}
+
+# ---------------------------------------------------------------------------------------------------------------
+# 5. Запреты (проверяются по DOM и сценарию; источник — 01 «Частые ошибки»)
+# ---------------------------------------------------------------------------------------------------------------
+forbidden:
+  - {id: prechecked-consent, rule: "Чекбокс согласия или рассылки отмечен заранее", check: "DOM: input[type=checkbox][checked] у согласий", evidence: "2/10; 1/12–1/13 (два замера)"}
+  - {id: consent-by-button, rule: "«Нажимая кнопку, вы соглашаетесь…» вместо отдельного согласия при сборе ПД (РФ)", check: "DOM + текст у кнопки", evidence: "3/10"}
+  - {id: bundled-consent, rule: "Одно согласие на ПД + оферту/рассылку/политику", check: "текст метки чекбокса"}
+  - {id: disabled-submit, rule: "Кнопка отправки disabled до нажатия", check: "DOM"}
+  - {id: repeat-email, rule: "Поле «повторите почту»", check: "DOM"}
+  - {id: required-comment, rule: "Обязательный комментарий или адрес в первичной заявке", check: "DOM required"}
+  - {id: rolling-deadline, rule: "Срок акции у формы вычисляется от текущей даты («до завтра», «до воскресенья»)", check: "скрипт setDate(today+N) / перезагрузка на следующий день", evidence: "2/5 квизов"}
+  - {id: autocomplete-off, rule: "autocomplete=off на полях контакта", check: "DOM"}
+  - {id: modal-long-form, rule: "Форма в окне из 5+ полей или с прокруткой", check: "DOM"}
+  - {id: timed-capture-popup, rule: "Окно с формой по таймеру, прокрутке или уходу без решения заказчика", check: "сценарий без кликов 30 с + движение к верху окна"}
+  - {id: blocked-messenger-only, rule: "Единственный канал — мессенджер, недоступный части аудитории РФ (WhatsApp, Telegram на 2026-09)", check: "brief.conversion.channels"}
+  - {id: foreign-messenger-regulated, rule: "Иностранный мессенджер для общения с клиентами у банка, НФО, страховой, МФО, оператора связи, маркетплейса, госоргана (41-ФЗ, с 01.06.2025)", check: "brief.business.kind + channels", owner: I}

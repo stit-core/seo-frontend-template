@@ -1,0 +1,134 @@
+# Факты проекта шаблона site-template — форма facts.schema.yaml базы strategy (facts_version 1). Оператор сайта и его
+# реквизиты вымышлены (example: true): форк заменяет их своими фактами, публикация с ними закрыта воротами strategy.
+facts_version: 1
+date: '2026-10-14'
+site: site-template
+lang: ru
+jurisdiction: ru
+status: draft
+owner: {role: владелец шаблона, contact: репозиторий шаблона}
+collected_by: исполнитель шаблона по README и коду репозитория
+never_claim_defaults: ru-default-1
+
+entities:
+  - {id: product-template, type: product, names: [ssr-frontend-template, шаблон индексируемого сайта]}
+  - {id: company-primer, type: company, names: [ООО «Пример», «Пример»]}
+  - {id: city-moscow, type: place, names: [Москва, Москве]}
+  - {id: tech-astro, type: other, names: [Astro]}
+  - {id: tech-node, type: other, names: [Node.js, Node]}
+  - {id: tech-docker, type: other, names: [Docker]}
+  - {id: tech-javascript, type: other, names: [JavaScript]}
+  - {id: tech-html, type: other, names: [HTML]}
+  - {id: tech-json-ld, type: other, names: [JSON-LD]}
+  - {id: tech-markdown, type: other, names: [Markdown]}
+  - {id: tech-eslint, type: other, names: [ESLint]}
+  - {id: tech-steiger, type: other, names: [Steiger]}
+  - {id: tech-fsd, type: other, names: [Feature-Sliced Design]}
+
+facts:
+  - id: company-name
+    kind: company
+    claim_class: [company-details]
+    verbatim:
+      - ООО «Пример»
+    canonical: Оператор сайта — ООО «Пример».
+    entities: [company-primer]
+    source: {type: customer-document, who: владелец шаблона, where: демо-реквизиты шаблона, date: '2026-10-14', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: ru
+
+  - id: company-ogrn
+    kind: company
+    claim_class: [company-details]
+    verbatim:
+      - ОГРН 1000000000001
+    canonical: 'ООО «Пример»: ОГРН 1000000000001.'
+    machine: {type: legal-id, scheme: ogrn, value: '1000000000001'}
+    entities: [company-primer]
+    source: {type: customer-document, who: владелец шаблона, where: демо-реквизиты шаблона, date: '2026-10-14', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: ru
+
+  - id: company-inn
+    kind: company
+    claim_class: [company-details]
+    verbatim:
+      - ИНН 7700000000
+    canonical: 'ООО «Пример»: ИНН 7700000000.'
+    machine: {type: legal-id, scheme: inn, value: '7700000000'}
+    entities: [company-primer]
+    source: {type: customer-document, who: владелец шаблона, where: демо-реквизиты шаблона, date: '2026-10-14', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: ru
+
+  - id: company-email
+    kind: company
+    claim_class: [company-details]
+    verbatim:
+      - hello@example.com
+    canonical: 'Почта ООО «Пример»: hello@example.com.'
+    machine: {type: email, value: hello@example.com}
+    entities: [company-primer]
+    source: {type: customer-document, who: владелец шаблона, where: демо-реквизиты шаблона, date: '2026-10-14', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: ru
+
+  - id: company-phone
+    kind: company
+    claim_class: [company-details]
+    verbatim:
+      - +7 495 000-00-00
+    canonical: 'Телефон ООО «Пример»: +7 495 000-00-00.'
+    machine: {type: telephone, value: '+74950000000'}
+    entities: [company-primer]
+    source: {type: customer-document, who: владелец шаблона, where: демо-реквизиты шаблона, date: '2026-10-14', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: ru
+
+  - id: company-address
+    kind: company
+    claim_class: [company-details]
+    verbatim:
+      - 101000, Москва, ул. Примерная, 1, офис 2
+    canonical: 'Адрес ООО «Пример»: 101000, Москва, ул. Примерная, 1, офис 2.'
+    machine: {type: postal-address, country: RU, locality: Москва, street: 'ул. Примерная, 1, офис 2', postal_code: '101000'}
+    entities: [company-primer, city-moscow]
+    source: {type: customer-document, who: владелец шаблона, where: демо-реквизиты шаблона, date: '2026-10-14', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: ru
+
+  - id: company-hours
+    kind: company
+    claim_class: [company-details]
+    verbatim:
+      - Пн–Пт, 10:00–19:00 (МСК)
+    canonical: ООО «Пример» работает с понедельника по пятницу с 10:00 до 19:00 по московскому времени.
+    machine:
+      type: opening-hours
+      hours:
+        - {days: [mo, tu, we, th, fr], opens: '10:00', closes: '19:00'}
+    entities: [company-primer]
+    source: {type: customer-document, who: владелец шаблона, where: демо-реквизиты шаблона, date: '2026-10-14', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: ru

@@ -1,0 +1,314 @@
+# План главной проекта шаблона site-template — форма page-plan v1 базы strategy (kb/site/10-playbooks-contracts/
+# schemas/page-plan.schema.json): секции — блоки каталога в порядке страницы, тексты слотов — copy deck главной.
+page_plan_version: '1'
+checked: '2026-10-14'
+status: draft
+site: site-template
+refs:
+  brief: ../site-brief.yaml
+  facts: ../../../facts.yaml
+  site_map: ../site-map.yaml
+  copy_deck: ../copy/home.yaml
+  blocks: ../../../../../../.claude/skills/design-deep-dive/kb/site/04-blocks/blocks.yaml
+  vocabulary: ../../../../../../.claude/skills/design-deep-dive/kb/site/02-site-types/vocabulary.yaml
+  head_kit: ../../../../../../.claude/skills/design-deep-dive/kb/site/07-seo-geo-performance-analytics/head-kit.yaml
+page:
+  id: home
+  page_type: home-multipage
+  template: false
+  template_id: home
+  url: /
+  lang: ru
+  locale: ru-RU
+  jurisdiction:
+    - ru
+  goal: показать, что умеет шаблон, и привести к заявке или в блог
+  primary_action: lead-request
+  secondary_actions:
+    - read-more
+  cta_target:
+    kind: route
+    value: /contacts
+  awareness: solution-aware
+  awareness_basis:
+    from: assumption
+    rule: уровень по главному источнику страницы — поиск по задаче
+  traffic:
+    - traffic_source: search-category
+      temperature: warm
+      device: mixed
+    - traffic_source: direct
+      temperature: hot
+      device: mixed
+  macrostructure: directory
+  macrostructure_family: grid
+  first_screen_policy: offer-cta
+  budget_profile: home-multipage@L0
+  ambition_level: L0
+  navigation:
+    header: site
+    archetype: bar-links
+    logo_link: /
+    breadcrumbs: false
+    footer: site
+  seo:
+    indexable: true
+    canonical: self
+    h1: hero.headline
+    structured_data:
+      - Organization
+      - WebSite
+    ssr_required: true
+    sitemap: true
+  legal:
+    pd_consent: not-collected
+    privacy_policy: /legal/privacy
+    cookie_banner: not-needed
+    cookie_mode: none
+    analytics_before_consent: false
+    requisites: footer
+    operator_ref: fact:company-name
+page_slots:
+  text:
+    - id: meta-title
+      slot: meta-title
+    - id: meta-description
+      slot: meta-description
+    - id: og-title
+      slot: og-title
+    - id: og-description
+      slot: og-description
+  media:
+    - id: og-image
+      slot: og-image
+      media_role: informational
+      goal: превью ссылки на главную
+      source: code
+      authenticity: code
+sections:
+  - id: header
+    role: header
+    block: header
+    variant: site-nav
+    slots:
+      text:
+        - id: nav-link-1
+          slot: nav-label
+          anatomy: nav-link
+        - id: nav-link-2
+          slot: nav-label
+          anatomy: nav-link
+        - id: nav-link-3
+          slot: nav-label
+          anatomy: nav-link
+      media:
+        - id: logo
+          slot: brand-logo
+          media_role: informational
+          goal: знак сайта — ссылка на главную
+          source: code
+          authenticity: code
+      action:
+        - id: lang-switch
+          slot: link
+          action: read-more
+          style: link
+  - id: hero
+    role: hero
+    question: что это и что с ним делать
+    job: назвать шаблон и его главную мысль, дать путь к заявке и в блог
+    block: hero-text
+    variant: statement-cta
+    next_step: главное действие страницы
+    slots:
+      text:
+        - id: headline
+          slot: headline
+          heading: h1
+        - id: subheadline
+          slot: subheadline
+        - id: cta-label
+          slot: cta-label
+        - id: cta-secondary-label
+          slot: cta-secondary-label
+      action:
+        - id: cta
+          slot: cta-primary
+          action: lead-request
+          style: primary
+          target:
+            kind: route
+            value: /contacts
+          label: cta-label
+        - id: cta-secondary
+          slot: cta-secondary
+          action: read-more
+          style: secondary
+          target:
+            kind: route
+            value: /blog
+          label: cta-secondary-label
+  - id: benefits
+    role: benefits
+    question: что внутри шаблона
+    job: шесть опор шаблона — рендер, JavaScript, поиск, развёртывание, архитектура, контент
+    block: feature-grid
+    variant: cards
+    next_step: главное действие страницы
+    slots:
+      text:
+        - id: title
+          slot: section-title
+          heading: h2
+        - id: card-1-title
+          slot: card-title
+          anatomy: card.title
+          group: card-1
+          heading: h3
+        - id: card-1-body
+          slot: card-body
+          anatomy: card.body
+          group: card-1
+        - id: card-2-title
+          slot: card-title
+          anatomy: card.title
+          group: card-2
+          heading: h3
+        - id: card-2-body
+          slot: card-body
+          anatomy: card.body
+          group: card-2
+        - id: card-3-title
+          slot: card-title
+          anatomy: card.title
+          group: card-3
+          heading: h3
+        - id: card-3-body
+          slot: card-body
+          anatomy: card.body
+          group: card-3
+        - id: card-4-title
+          slot: card-title
+          anatomy: card.title
+          group: card-4
+          heading: h3
+        - id: card-4-body
+          slot: card-body
+          anatomy: card.body
+          group: card-4
+        - id: card-5-title
+          slot: card-title
+          anatomy: card.title
+          group: card-5
+          heading: h3
+        - id: card-5-body
+          slot: card-body
+          anatomy: card.body
+          group: card-5
+        - id: card-6-title
+          slot: card-title
+          anatomy: card.title
+          group: card-6
+          heading: h3
+        - id: card-6-body
+          slot: card-body
+          anatomy: card.body
+          group: card-6
+  - id: related
+    role: related
+    question: что почитать
+    job: свежие записи блога и путь ко всем
+    block: article-cards
+    variant: list
+    next_step: записи блога
+    slots:
+      text:
+        - id: title
+          slot: section-title
+          heading: h2
+        - id: all-label
+          slot: cta-secondary-label
+      action:
+        - id: all
+          slot: link
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /blog
+          label: all-label
+  - id: footer
+    role: footer
+    block: footer
+    variant: site
+    slots:
+      text:
+        - id: legal
+          slot: footer-legal
+        - id: privacy-label
+          slot: nav-label
+        - id: nav-1-label
+          slot: nav-label
+          anatomy: nav.label
+          group: nav-1
+        - id: nav-2-label
+          slot: nav-label
+          anatomy: nav.label
+          group: nav-2
+        - id: nav-3-label
+          slot: nav-label
+          anatomy: nav.label
+          group: nav-3
+      data:
+        - id: company
+          slot: fact-ref
+          fact: fact:company-name
+          anatomy: company
+          binds:
+            - legal
+      action:
+        - id: privacy
+          slot: link
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /legal/privacy
+          label: privacy-label
+        - id: email
+          slot: email-link
+          action: message
+          style: channel
+          target:
+            kind: url
+            value: mailto:hello@example.com
+        - id: nav-1-link
+          slot: link
+          anatomy: nav.link
+          group: nav-1
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /blog
+          label: nav-1-label
+        - id: nav-2-link
+          slot: link
+          anatomy: nav.link
+          group: nav-2
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /about
+          label: nav-2-label
+        - id: nav-3-link
+          slot: link
+          anatomy: nav.link
+          group: nav-3
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /contacts
+          label: nav-3-label

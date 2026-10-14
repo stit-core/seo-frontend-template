@@ -1,0 +1,535 @@
+# head-kit.yaml — обязательный head, доступ для ботов и структурированные данные по типам страниц.
+# Владелец: site (07-seo-geo-performance-analytics).
+# Правила — в 01-seo-google-yandex.md (SEO) и 02-geo-ai-search.md (GEO).
+# Поля плана страницы: ../10-playbooks-contracts/schemas/page-plan.schema.json → page.seo.{indexable, canonical, h1, structured_data, ssr_required, notes}.
+# Поля брифа: ../10-playbooks-contracts/schemas/site-brief.schema.json → search.{engines, ai_answers, ai_bots_policy, regions, existing_site, profiles}.
+# Слова title, description, FAQ, «ответ первым» — text: ../../text/07-seo-geo-copy/meta-rules.yaml, geo-checklist.yaml.
+# Картинки OG и фавиконы — ai-media; скорость и вес — budgets.yaml, page-gates.yaml; боты и robots.txt — crawlers.yaml.
+# Серьёзность: B — блокер (страница не попадает в поиск или ответы ИИ), S — серьёзно (теряется показ или сниппет),
+# D — желательно. Соответствие шкале чек-листа SITE- — 09-ai-generation-evaluation/02-site-checklist.md.
+
+version: 1.0
+checked: 2026-09-24
+status: released
+owner: site
+
+plan_fields:
+  # Как заполнять page.seo в page-plan (10-playbooks-contracts/schemas/page-plan.schema.json). Умолчания по типам — раздел page_types.
+  indexable:
+    type: boolean
+    rule: false → <meta name="robots" content="noindex"> в сыром HTML; страница остаётся доступной для обхода (не Disallow), иначе noindex не прочтут
+  canonical:
+    type: string
+    values: ["self", "<абсолютный URL>"]
+    rule: >-
+      self — абсолютный URL самой страницы без параметров и фрагментов, совпадает с og:url и URL в sitemap; другой URL —
+      только для дубля (варианты под рекламу, параметры); у Яндекса — только в пределах домена
+  h1:
+    type: string
+    format: "<секция>.<слот>"
+    rule: ровно один H1 в сыром HTML; текст H1 — слот плана (обычно hero.headline); JS его не меняет
+  structured_data:
+    type: array
+    values: [Organization, LocalBusiness, WebSite, Service, BreadcrumbList, Article, BlogPosting, ProfilePage, Person, Event,
+             Course, SoftwareApplication, WebApplication, MobileApplication, Product, Offer, AggregateOffer, VideoObject,
+             ContactPage, AboutPage, CollectionPage, JobPosting, FAQPage]
+    rule: >-
+      только типы из page_types этой страницы и подтипы её structured_data_subtypes; каждое значение в разметке видно
+      на странице и совпадает с канонической
+      формулировкой факта (fact:<id>, ../../text/02-strategy-messaging/facts.schema.yaml); лишние типы «на всякий
+      случай» не добавлять (раздувают HTML, не дают эффекта)
+  ssr_required:
+    type: boolean
+    default: true
+    rule: >-
+      true для любой индексируемой страницы: H1, смысловой текст, цены, условия, главный CTA, навигация (<a href>),
+      canonical, meta robots, OG и JSON-LD — в HTML ответа сервера до JS; false допустим только для noindex-страниц
+      (спасибо, личный кабинет)
+  notes:
+    type: string
+    rule: свободные заметки для исполнителя (например, «вариант hero по UTM — сервером, canonical без параметров»)
+
+head_base:
+  # Для каждой индексируемой страницы. check — флаг geo_probe.py (../../scripts/site/geo_probe.py) или способ проверки.
+  - id: hk-lang
+    element: '<html lang="ru">'
+    rule: 'BCP 47: ru, en, ru-RU; не ru_RU (подчёркивание — формат og:locale, не lang); язык страницы, а не аудитории'
+    severity: D
+    check: 'flag no-lang; значение без «_»'
+    evidence: '[документация] Google не определяет язык по lang (hreflang doc 2026-09-21) — lang нужен людям, чтению вслух, переводчику, агентам'
+  - id: hk-charset-viewport
+    element: '<meta charset="utf-8"> первым в head; <meta name="viewport" content="width=device-width, initial-scale=1">'
+    rule: без maximum-scale=1 и user-scalable=no (доступность — ux)
+    severity: S
+    check: 'head.viewport'
+  - id: hk-title
+    element: '<title>…</title>'
+    rule: >-
+      один, в сыром HTML, уникален на сайте, JS не переписывает; слова и длина — text (copy-rule:meta-title-long,
+      copy-rule:meta-title-generic и др.)
+    severity: S
+    check: 'flag no-title; сравнение title между страницами сайта (дубли)'
+  - id: hk-description
+    element: '<meta name="description" content="…">'
+    rule: один, в сыром HTML, уникален; Google и Яндекс могут взять и текст страницы; слова — text (copy-rule:meta-desc-long, copy-rule:meta-desc-short)
+    severity: D
+    check: 'flag no-description'
+  - id: hk-canonical
+    element: '<link rel="canonical" href="https://…">'
+    rule: >-
+      один, в <head>, абсолютный, на себя у индексируемой страницы; без UTM, gclid, yclid и фрагментов; одинаков в сыром и
+      отрисованном HTML; совпадает с URL в sitemap и og:url; не использовать robots.txt и noindex для выбора канонической
+    severity: S
+    check: 'flags no-canonical, multiple-canonical, canonical-elsewhere; head.canonical_relative'
+    evidence: '[документация] Google consolidate-duplicate-urls 2026-07-10; Яндекс canonical — только внутри домена'
+  - id: hk-robots-meta
+    element: '<meta name="robots" content="noindex"> — только на неиндексируемых'
+    rule: >-
+      индексируемым — ничего не писать (index, follow — умолчание); не смешивать разрешающие и запрещающие директивы: у
+      Яндекса разрешающая побеждает, у Google — более строгая; meta robots в <body> Google тоже исполняет — проверять виджеты;
+      nosnippet и max-snippet выключают и ИИ-ответы Google (использовать только по решению заказчика)
+    severity: B
+    check: 'flags noindex, nosnippet, noarchive-or-nocache; X-Robots-Tag в заголовках; 10–20 повторов запроса — одинаковые директивы (crawlers.yaml rt-cdn-directives-stable)'
+    evidence: '[V:0yedoWKPgo4 13:29] ложный noindex из кэша CDN примерно на каждом 10-м ответе — одного плохого ответа хватает, чтобы страница выпала'
+  - id: hk-og
+    element: 'og:title, og:description, og:type, og:url, og:image (+ og:image:width/height/alt), og:site_name, og:locale'
+    rule: >-
+      og:url = canonical; og:image — абсолютный https-URL (картинка 1200×630 — ai-media); og:locale — ru_RU; все og:* — в
+      первых 1 МБ документа (facebookexternalhit не читает дальше; Telegram и VK строят превью по тем же тегам)
+    severity: D
+    check: 'flags no-og-image, og-image-relative, og-after-1mb'
+  - id: hk-twitter
+    element: '<meta name="twitter:card" content="summary_large_image">'
+    rule: достаточно twitter:card; title и image X берёт из OG
+    severity: D
+    check: 'head.twitter'
+  - id: hk-hreflang
+    element: '<link rel="alternate" hreflang="ru" href="…"> на каждую версию + x-default'
+    rule: >-
+      только если есть языковые версии (структура — site 06); на каждой версии ссылки на все, включая себя; взаимные; коды ISO 639-1
+      (+ ISO 3166-1); для Яндекса — только в HTML (sitemap с hreflang Яндекс больше не поддерживает); canonical — на свою
+      языковую версию
+    severity: S
+    check: 'head.hreflang_n, hreflang_xdefault; взаимность — ia_probe.py'
+    evidence: '[проверено] hreflang в <head> — у 6 из 19 многостраничников; в sitemap — у heisenbug (196 из 196 URL), такие связи Яндекс не читает (../06-multipage-ia/02-navigation-linking-i18n.md §5.5, §6)'
+  - id: hk-jsonld-placement
+    element: '<script type="application/ld+json">…</script>'
+    rule: >-
+      в сыром HTML (не вставлять JS'ом — ИИ-боты его не увидят, Google — с задержкой рендера); один @graph с @id; абсолютные
+      URL; значения = видимый текст и факты брифа
+    severity: S
+    check: 'flags no-jsonld, jsonld-parse-error, jsonld-missing-required, jsonld-js-only (с --render)'
+  - id: hk-icons
+    element: 'favicon, apple-touch-icon, manifest, theme-color'
+    rule: 'набор и форматы — ai-media (фавиконы в выдаче Google — документация Google 2026-08-28); здесь только наличие'
+    severity: D
+    check: 'head.favicon, head.manifest'
+
+access_gates:
+  # Доступ для поисковых и ИИ-ботов. Строки для page-gates.yaml. Боты и их поведение — crawlers.yaml.
+  - id: hk-access-status
+    rule: 'индексируемая страница отдаёт 200 без редиректа по UA и JS; удалённая — 404 или 410; перенос — 301 (302 только на время)'
+    severity: B
+    check: 'page.status; flag page-status-*'
+  - id: hk-access-404
+    rule: >-
+      несуществующий URL → HTTP 404 со страницей 404 (не 200 и не редирект на главную — soft 404); в SPA — серверный 404 или
+      noindex через JS (Google JS SEO basics)
+    severity: B
+    check: 'запрос к /h-probe-<случайное> → 404 (ia_probe.py; ручная проверка)'
+    evidence: '[проверено] мягкая 404 — linear, ilyabirman (2 из 19); SPA: серверный 404 или JS-редирект на URL с серверным 404 [V:0yedoWKPgo4 21:36]'
+  - id: hk-access-robots-file
+    rule: >-
+      GET /robots.txt → 200 + text/plain (или 404, если ограничений нет); не 5xx (RFC 9309: полный запрет; Google — стоп на
+      12 ч, дальше старая копия до 30 дней), не HTML-заглушка SPA, не редирект на главную; ≤ 500 KiB; UTF-8
+    severity: B
+    check: 'robots.status, robots.effective, flags robots-is-html, robots-5xx-or-unreachable'
+  - id: hk-access-bots-allowed
+    rule: >-
+      YandexBot, Googlebot и боты поверхностей из search.ai_answers брифа разрешены для страницы (crawlers.yaml
+      brief_mapping); политика обучения — search.ai_bots_policy (crawlers.yaml policies)
+    severity: B
+    check: 'robots.bots.<id>.allowed; flags blocked-*'
+  - id: hk-access-waf
+    rule: >-
+      антибот (Cloudflare, Qrator, DDoS-Guard, JS-проверка) не отдаёт ботам нужных поверхностей заглушку: белый список по
+      IP-спискам и обратному DNS из crawlers.yaml; у Cloudflare проверить «Block AI bots», managed robots.txt и умолчания с
+      2026-09-15 (многоцелевые Googlebot, Applebot, bingbot блокируются при запрете Training)
+    severity: B
+    check: 'flag antibot-challenge (заглушка для клиента без JS); page.cdn; «Проверка URL» Search Console и Вебмастера'
+    evidence: '[проверено] alfabank.ru, t-j.ru (Qrator + noindex), invitro.ru'
+  - id: hk-access-tls
+    rule: >-
+      сертификат проверяется общепризнанными корнями; сертификат НУЦ Минцифры («Russian Trusted Sub CA») — только вторым,
+      не единственным: зарубежные боты и браузеры без этого корня не установят TLS
+    severity: B
+    check: 'flag tls-untrusted-chain; openssl s_client с зарубежного адреса'
+    evidence: '[проверено] tbank.ru, tochka.com, alfabank.ru с российского адреса; взгляд зарубежного бота — [не проверено]'
+  - id: hk-access-html-limit
+    rule: >-
+      несжатый HTML ≤ 2 МБ (Googlebot читает первые 2 МБ каждого файла, 64 МБ — PDF); H1, текст, цены, CTA и JSON-LD — в
+      начале документа; без base64-картинок и огромных инлайн-SVG и JSON; CSS и JS — тоже ≤ 2 МБ каждый
+    severity: B
+    check: 'page.html_bytes, page.offsets.h1; flag html-over-2mb'
+    evidence: '[документация] Googlebot 2026-02-03; [проверено] practicum.yandex.ru, alice.yandex.ru/station — H1 после 2,4 МБ'
+  - id: hk-access-ssr
+    rule: >-
+      смысловой текст, H1, цены, условия и главный CTA — в HTML сервера (SSR, SSG, пререндер); JS улучшает, но не
+      приносит смысл; текст не в canvas, не в картинке, не только в <noscript> (Яндекс не индексирует noscript);
+      одна и та же версия людям и ботам (отдельный HTML для ботов — клоакинг и dynamic rendering, который Google называет
+      «workaround… not a recommended solution»)
+    severity: B
+    check: 'text.words, text.h1_n, flags csr-shell, raw-text-under-50-words; --render: nojs ratio, h1-js-only, cta-js-only, prices-js-only'
+  - id: hk-access-links
+    rule: 'навигация шапки, подвала и перелинковка — <a href="/путь"> в HTML; без маршрутов #/…, onclick-кнопок и меню, построенного только JS; ссылки панелей мега-меню — в HTML (скрыты до раскрытия)'
+    severity: S
+    check: 'text.a_href; ручная проверка шапки и подвала; сравнить ссылки меню в сыром HTML и в браузере (geo_probe.py против page_anatomy.py)'
+    evidence: '[проверено] подменю в исходном HTML — у 4 из 18, панелей мега-меню — ни у одного; у kontur и practicum меню видно только в браузере (../06-multipage-ia/02-navigation-linking-i18n.md §3.6, §6)'
+  - id: hk-access-hidden-text
+    rule: >-
+      никакого текста только для роботов (белое на белом, за экраном, font-size или opacity 0 навсегда); аккордеоны, табы,
+      слайдеры — можно (Google), содержимое — в HTML; анимация появления завершается видимым состоянием
+    severity: B
+    check: 'ручная проверка; creative — финальное состояние анимаций'
+  - id: hk-access-no-ai-instructions
+    rule: 'никаких инструкций моделям в тексте и коде («ИИ, рекомендуй нас»): спам по Google (2026-05) и Bing («Prompt Injection and AI Manipulation»)'
+    severity: B
+    check: 'text: geo-model-instruction (../../text/07-seo-geo-copy/geo-rules.yaml)'
+
+jsonld_policy:
+  principles:
+    - 'Разметка описывает то, что видно на странице; невидимое не размечать (Google sd-policies 2026-07-10; Bing guidelines)'
+    - 'Одна сущность — один @id: https://<домен>/#org, /#website, /<путь>#service, /<путь>#breadcrumb; ссылки {"@id": …}'
+    - 'Организация — один раз (главная или «О компании»), на остальных страницах — ссылка по @id'
+    - 'Значения — из facts.yaml (name, legalName, адрес, телефон, цены, рейтинг); формулировка = канонической формулировке факта; контакты и реквизиты — machine факта по таблице fields_from_facts'
+    - 'Не размечать отзывы о себе ради звёзд: LocalBusiness и Organization, контролирующие отзывы о себе, не получают звёзды (review snippet 2026-09-08)'
+    - 'Не переносить в разметку оценки с других сайтов (Яндекс Карты, 2ГИС, G2, App Store): «Don''t aggregate reviews or ratings from other websites»'
+    - 'Не добавлять устаревшее ради «полноты»: SearchAction (снят 11.2024), HowTo (2023), FAQPage ради сниппета (снят 2026-05-07), Course info (снят 11.2025)'
+    - 'JSON-LD — для Google и Яндекса: Яндекс берёт из JSON-LD навигационную цепочку сниппета (BreadcrumbList) и вопросы-ответы мобильной выдачи (QAPage); данные об организации у Яндекса — Яндекс Бизнес и фиды (раздел yandex)'
+  fields_from_facts:
+    # Контакты и реквизиты организации (Organization, LocalBusiness): «вид machine факта → свойство». Значение — machine
+    # факта (../../text/02-strategy-messaging/facts.schema.yaml, $defs/machine) среди фактов, которые называет страница
+    # (ссылка fact:<id> в любом поле плана, fact_ids её текстов); строку canonical код не разбирает. Несколько разных
+    # значений одного вида — списком в порядке facts[]; вида у фактов страницы нет — свойства нет. Вида нет в таблице —
+    # в разметку он не идёт: url и messenger — адреса ссылок страницы, legal-id схем ogrn, ogrnip, kpp, other — текст
+    # страницы.
+    telephone: {property: telephone}                    # значение — value: E.164
+    email: {property: email}                            # значение — value
+    postal-address:
+      property: address
+      type: PostalAddress
+      fields: {country: addressCountry, region: addressRegion, locality: addressLocality, street: streetAddress, postal_code: postalCode}
+    opening-hours:
+      property: openingHoursSpecification
+      type: OpeningHoursSpecification                   # узел на элемент hours; формат времени — recipes.local_business
+      fields: {days: dayOfWeek, opens: opens, closes: closes}
+      days: {mo: Monday, tu: Tuesday, we: Wednesday, th: Thursday, fr: Friday, sa: Saturday, su: Sunday}
+    geo:
+      property: geo
+      type: GeoCoordinates
+      fields: {lat: latitude, lon: longitude}
+    legal-id:
+      property_by_scheme: {inn: taxID, vat: vatID}      # значение — value
+  recipes:
+    organization:
+      where: главная или about-page
+      google: 'обязательных свойств нет; рекомендовано name, alternateName, legalName, url, logo, sameAs, description, address, contactPoint, telephone, email, foundingDate, taxID, vatID'
+      fields_from_brief: 'brand.name → name; business.legal_name → legalName (реквизиты подвала — site 08); search.profiles[].url → sameAs — единственный источник sameAs; контакты и ИНН — fields_from_facts'
+      same_as_rule: 'только профили, которыми владеет организация и которые открываются: Яндекс Бизнес, Google Business Profile, 2ГИС, VK, Telegram, YouTube, Wikidata (если есть элемент), Википедия (если статья о ней)'
+      example: |
+        {"@context":"https://schema.org","@graph":[
+         {"@type":"Organization","@id":"https://otves.example/#org","name":"Отвес","legalName":"ООО «Отвес»",
+          "url":"https://otves.example/","logo":"https://otves.example/logo.png","taxID":"5260000000",
+          "sameAs":["https://yandex.ru/maps/org/otves/0000000000/","https://vk.com/otves"]},
+         {"@type":"WebSite","@id":"https://otves.example/#website","url":"https://otves.example/","name":"Отвес",
+          "publisher":{"@id":"https://otves.example/#org"},"inLanguage":"ru"}]}
+    local_business:
+      where: главная или contacts-page сайта услуг с адресом или зоной обслуживания; landing-lead-services с адресом
+      google: 'обязательно name, address; рекомендовано telephone (с кодом страны), url, geo (≥ 5 знаков), openingHoursSpecification (hh:mm:ss), priceRange (< 100 знаков); aggregateRating и review — не для отзывов о себе'
+      subtype: самый конкретный подтип schema.org (HomeAndConstructionBusiness, MovingCompany, Dentist, LegalService, AccountingService, ProfessionalService…)
+      nap_rule: 'название, адрес, телефон — те же, что на странице, в Яндекс Бизнесе, Google Business Profile и Bing Places: название и адрес — буква в букву (части адреса machine — слова формулировки факта), телефон — тот же номер (в разметке — E.164 из machine, на странице — формулировка факта); телефон и адрес — в HTML сервера: коллтрекинг подменяет номер поверх серверного, а не вставляет его с нуля ([проверено] телефон stamus есть только в браузере)'
+    website:
+      where: главная
+      google: 'name, url, alternateName — для названия сайта в выдаче; SearchAction не нужен'
+    service:
+      where: service-page, seo-landing-page, landing-lead-services
+      google: 'отдельного rich result нет; тип даёт однозначность сущности (provider → @id организации, areaServed, serviceType, offers с ценой «от» из facts)'
+      rule: 'цена в Offer только если та же цена видна на странице; priceCurrency=RUB'
+    breadcrumb:
+      where: 'страницы многостраничника, где видны крошки (правило site 06 — глубина ≥ 2 у разделов с хабом, ../06-multipage-ia/02-navigation-linking-i18n.md §2.1)'
+      google: 'itemListElement → ListItem(position, name, item; у последнего item можно опустить); показ в выдаче — только на десктопе (с 01.2025)'
+      rule: >-
+        разметка = видимые крошки: видимые крошки без BreadcrumbList — добавить разметку; разметка без видимого блока — убрать
+        ([проверено] 4 сайта и 1 сайт). Несколько трейлов (../06-multipage-ia/02-navigation-linking-i18n.md
+        §2.1): Google их допускает — «If there are multiple ways to navigate to a page on your site, you can specify multiple
+        breadcrumb trails», в его примере в разметке два трейла, а видимый блок один (Breadcrumb, просмотр 2026-09-24); польза не
+        измерена. По умолчанию генератор пишет один трейл — по parent, равный видимому; второй — только для страницы в двух
+        хабах (also_listed_in) по решению заказчика, первым идёт видимый [документация + практика]
+      yandex: 'цепочка в сниппете — из BreadcrumbList только в JSON-LD; в справке поля name, url, position и до трёх элементов рекомендовано, у длинной цепочки показываются последние (Навигационная цепочка, просмотр 2026-10-06)'
+    article:
+      where: article-page, case-page, blog
+      google: 'обязательных нет; headline, image, datePublished, dateModified, author (Person с url профиля) — рекомендованы'
+      rule: 'author — реальный человек из facts (person); ИИ-текст не подписывать живым или вымышленным автором (text COPY-GEO-19)'
+    profile_page:
+      where: страница одного человека (команда, автор)
+      google: 'ProfilePage + mainEntity (Person или Organization) + name'
+    event:
+      where: landing-event, одна страница — одно событие
+      google: 'обязательно name, startDate, location (+ location.address); только офлайн-события с открытой продажей; регионы показа — без России (2026-09-08)'
+      rule: 'онлайн-вебинар и событие в РФ — разметку можно оставить для однозначности, эффекта в Google не ждать; Яндекс «Рекомендации событий» закрыты 2025-06-16'
+    course:
+      where: school-site, список курсов провайдера
+      google: 'Course list (карусель) — несколько курсов одного провайдера; «Course info» снят 11.2025'
+      yandex: 'образовательные курсы — фид (…/search-appearance/education), не schema.org'
+    software_application:
+      where: landing-saas, landing-app
+      google: 'обязательно name, offers.price и оценка (aggregateRating или review); рекомендовано applicationCategory, operatingSystem; WebApplication, MobileApplication'
+      rule: 'без собственных оценок пользователей на сайте — разметка для однозначности, без rich result; оценки сторов и G2 не переносить'
+    product:
+      where: landing-product (промо товара)
+      google: 'name + одно из offers, review, aggregateRating; Offer: price (или priceSpecification.price), priceCurrency ISO 4217, availability'
+      yandex: 'товарный сниппет — Product + Offer/AggregateOffer (для магазинов); вне рамок базы'
+    faq_page:
+      where: только faq-page и только если вопросы и ответы видны
+      google: 'FAQ rich result не показывается с 2026-05-07, документация удалена 2026-06-15'
+      rule: 'не добавлять ради сниппета; разметка не вредит, если совпадает с видимым текстом; пользы для ИИ-ответов не доказано'
+
+page_types:
+  # Умолчания для page.seo по page_type (../02-site-types/vocabulary.yaml). sitemap: включать ли в sitemap.xml.
+  # structured_data_subtypes: {тип: [подтипы]} — подтипы, допустимые в плане вместо типа из structured_data
+  # (site_validate.py, PL-SEO01, принимает их наравне с типами страницы).
+  landing-lead-services: {indexable: true, canonical: self, structured_data: [LocalBusiness, WebSite, Service], ssr_required: true, sitemap: true,
+    notes: 'лендинг — главная сайта-лендинга: организация здесь; варианты под Директ и Ads — один URL с параметрами, canonical без них; AdsBot и YaDirectFetcher не закрывать'}
+  landing-saas: {indexable: true, canonical: self, structured_data: [Organization, WebSite, SoftwareApplication], ssr_required: true, sitemap: true,
+    notes: 'цены тарифов — текстом в HTML; SoftwareApplication без оценок — без rich result'}
+  landing-product: {indexable: true, canonical: self, structured_data: [Organization, Product], ssr_required: true, sitemap: true,
+    notes: 'Product + Offer с ценой, видимой на странице; merchant listing — для магазинов'}
+  landing-campaign: {indexable: true, canonical: self, structured_data: [Organization], ssr_required: true, sitemap: true,
+    notes: 'после кампании — 301 на актуальную страницу или 410; сюжетные сцены — HTML-текст, не canvas'}
+  landing-event: {indexable: true, canonical: self, structured_data: [Organization, Event], ssr_required: true, sitemap: true,
+    notes: 'Event — одна страница на событие; онлайн и РФ — без rich result Google; после события — прошедшее (eventStatus) или 301 на следующее'}
+  landing-course: {indexable: true, canonical: self, structured_data: [Organization, Course], ssr_required: true, sitemap: true,
+    notes: 'Course info Google снят; программа и цена — текстом; для Яндекса — фид курсов'}
+  landing-app: {indexable: true, canonical: self, structured_data: [Organization, MobileApplication], ssr_required: true, sitemap: true,
+    notes: 'оценки сторов в разметку не переносить'}
+  landing-waitlist: {indexable: true, canonical: self, structured_data: [Organization], ssr_required: true, sitemap: true,
+    notes: 'после запуска — 301 на страницу продукта'}
+  landing-lead-magnet: {indexable: true, canonical: self, structured_data: [Organization], ssr_required: true, sitemap: true,
+    notes: 'сам материал за формой не индексируется; описание материала — текстом'}
+  home-multipage: {indexable: true, canonical: self, structured_data: [Organization, WebSite], ssr_required: true, sitemap: true,
+    structured_data_subtypes: {Organization: [LocalBusiness]},
+    notes: 'для сайта услуг — подтип из structured_data_subtypes (LocalBusiness) вместо Organization'}
+  services-index-page: {indexable: true, canonical: self, structured_data: [BreadcrumbList, CollectionPage], ssr_required: true, sitemap: true}
+  service-page: {indexable: true, canonical: self, structured_data: [Service, BreadcrumbList], ssr_required: true, sitemap: true,
+    notes: 'Service.provider → @id организации; цена «от» — если видна'}
+  seo-landing-page: {indexable: true, canonical: self, structured_data: [Service, BreadcrumbList], ssr_required: true, sitemap: true,
+    notes: 'только с локальными фактами (работы, отзывы, цены, сроки в этом городе); клоны «услуга × город» с заменой топонима — doorway (спам-политики Google)'}
+  feature-page: {indexable: true, canonical: self, structured_data: [BreadcrumbList], ssr_required: true, sitemap: true}
+  use-case-page: {indexable: true, canonical: self, structured_data: [BreadcrumbList], ssr_required: true, sitemap: true}
+  pricing-page: {indexable: true, canonical: self, structured_data: [BreadcrumbList, SoftwareApplication], ssr_required: true, sitemap: true,
+    notes: 'цены и условия — текстом; Offer с ценами только если совпадают с видимыми'}
+  comparison-page: {indexable: true, canonical: self, structured_data: [BreadcrumbList], ssr_required: true, sitemap: true,
+    notes: 'оценки конкурентов не размечать; корректность сравнения — site 08 (38-ФЗ ст. 5)'}
+  alternatives-page: {indexable: true, canonical: self, structured_data: [Article, BreadcrumbList], ssr_required: true, sitemap: true}
+  case-page: {indexable: true, canonical: self, structured_data: [Article, BreadcrumbList], ssr_required: true, sitemap: true}
+  case-list-page: {indexable: true, canonical: self, structured_data: [CollectionPage, BreadcrumbList], ssr_required: true, sitemap: true}
+  portfolio-page: {indexable: true, canonical: self, structured_data: [CollectionPage], ssr_required: true, sitemap: true,
+    notes: 'подписи работ текстом; работы в canvas или WebGL — дубль текстом в HTML'}
+  about-page: {indexable: true, canonical: self, structured_data: [AboutPage, Organization], ssr_required: true, sitemap: true,
+    notes: 'Organization — здесь или на главной, не в двух местах с разными данными'}
+  team-page: {indexable: true, canonical: self, structured_data: [BreadcrumbList], ssr_required: true, sitemap: true,
+    notes: 'ProfilePage — на странице одного человека; реальные люди с разрешением (site 08)'}
+  reviews-page: {indexable: true, canonical: self, structured_data: [BreadcrumbList], ssr_required: true, sitemap: true,
+    notes: 'отзывы о себе не размечать Review/AggregateRating ради звёзд; источник и дата — текстом (site 05, site 08); рейтинг в Яндексе — через Яндекс Бизнес'}
+  faq-page: {indexable: true, canonical: self, structured_data: [BreadcrumbList], ssr_required: true, sitemap: true,
+    notes: 'FAQPage — по желанию, без ожидания сниппета (Google снял 2026-05-07); ответы — текстом, открыты в HTML'}
+  contacts-page: {indexable: true, canonical: self, structured_data: [ContactPage, LocalBusiness], ssr_required: true, sitemap: true,
+    notes: 'адрес, телефон, часы — как в Яндекс Бизнесе; карта-виджет — не единственный носитель адреса'}
+  careers-page: {indexable: true, canonical: self, structured_data: [BreadcrumbList], ssr_required: true, sitemap: true,
+    notes: 'JobPosting — только на странице одной вакансии'}
+  form-page: {indexable: false, canonical: self, structured_data: [], ssr_required: true, sitemap: false,
+    notes: 'отдельная страница формы без содержания — noindex; с описанием услуги — как service-page'}
+  blog-index-page: {indexable: true, canonical: self, structured_data: [CollectionPage, BreadcrumbList], ssr_required: true, sitemap: true,
+    notes: 'пагинация — отдельные URL с self-canonical'}
+  article-page: {indexable: true, canonical: self, structured_data: [Article, BreadcrumbList], ssr_required: true, sitemap: true,
+    notes: 'автор — реальный человек; datePublished и dateModified — правдивые'}
+  thank-you-page: {indexable: false, canonical: self, structured_data: [], ssr_required: false, sitemap: false,
+    notes: 'noindex в meta; не закрывать в robots.txt (иначе noindex не прочтут); цель аналитики — events.yaml'}
+  not-found-page: {indexable: false, canonical: none, structured_data: [], ssr_required: false, sitemap: false,
+    notes: 'HTTP-код 404 обязателен (не 200, не редирект на главную); ссылки на главные разделы'}
+  legal-page: {indexable: true, canonical: self, structured_data: [], ssr_required: true, sitemap: true,
+    notes: 'без nofollow (ничего не даёт); доступны из подвала каждой страницы (site 08)'}
+  # + 5 активных типов словаря v1 (site 06/01 §2); 5 типов proposed — после решения владельца
+  specialist-page: {indexable: true, canonical: self, structured_data: [ProfilePage, Person, BreadcrumbList], ssr_required: true, sitemap: true,
+    notes: 'один реальный человек с разрешением (site 08); ProfilePage + mainEntity Person (recipes.profile_page); данные совпадают с видимыми'}
+  location-page: {indexable: true, canonical: self, structured_data: [LocalBusiness, BreadcrumbList], ssr_required: true, sitemap: true,
+    notes: 'только при ≥ 2 адресах; у филиала свой LocalBusiness с @id; адрес, телефон, часы — как в Яндекс Бизнесе (recipes.local_business)'}
+  program-catalog-page: {indexable: true, canonical: self, structured_data: [CollectionPage, BreadcrumbList], ssr_required: true, sitemap: true,
+    notes: 'программы — ссылками <a href> в HTML; фильтры (направление, уровень, длительность) — Disallow шаблона или noindex, не оба (crawlers.yaml rt-infinite-spaces); ItemList нет в перечне plan_fields'}
+  documents-page: {indexable: true, canonical: self, structured_data: [BreadcrumbList], ssr_required: true, sitemap: true,
+    notes: 'лицензии, сертификаты, СРО — факты credential (site 08); номера и даты текстом, сканы — с подписью'}
+  search-results-page: {indexable: false, canonical: none, structured_data: [], ssr_required: false, sitemap: false,
+    notes: 'новый сайт — Disallow шаблона поиска одним правилом (site_checks hk-site-search-pages); уже в индексе — сначала noindex, Disallow после выпадения; не оба; ботам не 5xx'}
+
+positions_2026:
+  # Частые решения генератора. Подробно — 01-seo-google-yandex.md §4.
+  faq_markup: >-
+    FAQ rich result Google не показывается с 2026-05-07, документация удалена 2026-06-15; у Яндекса FAQ-сниппета из
+    schema.org нет. Блок FAQ живёт ради людей и ответов на возражения; FAQPage — по желанию, только на видимом тексте;
+    доказательств пользы разметки для ИИ-ответов нет [документация + спорно].
+  event_markup: >-
+    Google: только офлайн-события с открытой записью, уникальный URL на событие, показ в 9 регионах без России; онлайн-
+    вебинары не поддерживаются (с 2025-06-11). Яндекс: «Рекомендации событий» закрыты 2025-06-16. Для RU-мероприятия —
+    Event для однозначности сущности, без ожидания эффекта [документация].
+  self_reviews: >-
+    Отзывы о своей организации на своём сайте (в JSON-LD или виджетом Яндекс Карт/Google) не дают звёзд: «ineligible for star
+    review feature». Разметку Review/AggregateRating для себя не добавлять; рейтинг в Яндексе — через Яндекс Бизнес; отзывы на
+    странице — текстом с источником и датой (site 05, site 08) [документация].
+  not_found: 'Страница 404 отдаёт HTTP 404; soft 404 (200 или редирект на главную) — дефект B [документация].'
+  sitelinks_search_box: 'SearchAction не нужен (Google снял 11.2024); не вредит [документация].'
+  howto_course_info_learning_video: 'Сняты Google (2023, 2025-11); не добавлять [документация].'
+  llms_txt: 'Не часть head-kit; статус «emerging» — crawlers.yaml emerging.llms-txt, 02-geo-ai-search.md §5 [документация + спорно].'
+  breadcrumb_trails: 'Один трейл = видимому (по parent); несколько трейлов Google допускает, польза не измерена — второй только для страницы в двух хабах по решению заказчика (jsonld_policy.recipes.breadcrumb) [документация + практика].'
+
+yandex:
+  - id: hk-ya-business
+    rule: 'организация с адресом или зоной обслуживания — профиль в Яндекс Бизнесе с сайтом; название, адрес, телефон, часы — как на сайте'
+    evidence: '[документация] форматы «Контакты», «Рейтинг», «Услуги» (…/search-appearance/*, 2022–2026)'
+  - id: hk-ya-services-feed
+    rule: 'сайт услуг — фид YML «Услуги» в Вебмастере (исполнители, услуги, один тип цены: exact | from | is_free | is_negotiable) — по решению заказчика'
+    evidence: '[документация] …/search-appearance/offices/about, 2026-09-11'
+  - id: hk-ya-meta-yandex
+    rule: '<meta name="yandex" content="disallow-extended-services-display"> — скрыть страницу из темы «Услуги» (поиск остаётся); по умолчанию не ставить'
+  - id: hk-ya-noindex-tag
+    rule: '<noindex>…</noindex> скрывает часть текста только от Яндекса; не прятать им основной текст; содержимое <noscript> Яндекс не индексирует'
+  - id: hk-ya-clean-param
+    rule: >-
+      Clean-param в robots.txt — для служебных параметров на Яндексе: yclid, gclid, openstat, параметры сессий и ref; utm_*,
+      ysclid, yrclid Яндекс, как правило, удаляет сам; не сочетать с Disallow тех же адресов; Google строку игнорирует
+      (kUnsupportedTags) — ему canonical. Синтаксис — crawlers.yaml rt-yandex-clean-param
+    evidence: '[документация] Яндекс Вебмастер «Директива Clean-param», просмотр 2026-09-24'
+  - id: hk-ya-get-params
+    rule: >-
+      «Настройка GET-параметров» Вебмастера (Индексирование) — тот же выбор «учитывать параметр или нет», что Clean-param,
+      в кабинете; вступает в силу в течение недели; при расхождении с robots.txt робот выполняет правило, которое запрещает
+      индексировать адрес с параметром. Правило параметров — Clean-param в robots.txt сайта (hk-ya-clean-param): оно в коде
+      и одно на все среды; кабинет — сверка: служебный параметр, который нашёл робот, а в Clean-param его нет, дописывается туда
+    evidence: '[документация] Яндекс Вебмастер «Настройка GET-параметров», просмотр 2026-10-06; блог Вебмастера 2025-12-11'
+  - id: hk-ya-webmaster
+    rule: 'сайт добавлен в Вебмастер: регион (при локальном бизнесе), «Видимость сайта в Алисе AI», рендеринг JS — «не выполнять», если SSR/SSG'
+
+checks:
+  # Что geo_probe.py проверяет автоматически (флаг → правило → серьёзность). Остальное — ручная проверка или ia_probe.py.
+  - {flag: page-status-*, rule: hk-access-status, severity: B}
+  - {flag: antibot-challenge, rule: hk-access-waf, severity: B}
+  - {flag: tls-untrusted-chain, rule: hk-access-tls, severity: B}
+  - {flag: html-over-2mb, rule: hk-access-html-limit, severity: B}
+  - {flag: robots-5xx-or-unreachable, rule: hk-access-robots-file, severity: B}
+  - {flag: robots-is-html, rule: hk-access-robots-file, severity: B}
+  - {flag: blocked-google-googlebot, rule: hk-access-bots-allowed, severity: B}
+  - {flag: blocked-yandex-yandexbot, rule: hk-access-bots-allowed, severity: B}
+  - {flag: blocked-yandex-additional, rule: hk-access-bots-allowed, severity: S, note: 'ошибка, только если ai_bots_policy не deny-all'}
+  - {flag: blocked-openai-oai-searchbot, rule: hk-access-bots-allowed, severity: S}
+  - {flag: blocked-perplexity-perplexitybot, rule: hk-access-bots-allowed, severity: S}
+  - {flag: blocked-google-adsbot, rule: hk-access-bots-allowed, severity: B, note: 'для посадочных под Google Ads'}
+  - {flag: csr-shell, rule: hk-access-ssr, severity: B}
+  - {flag: raw-text-under-50-words, rule: hk-access-ssr, severity: B}
+  - {flag: no-h1-in-raw, rule: hk-access-ssr, severity: S}
+  - {flag: multiple-h1, rule: plan_fields.h1, severity: D}
+  - {flag: noindex, rule: hk-robots-meta, severity: B, note: 'если plan_fields.indexable = true'}
+  - {flag: nosnippet, rule: hk-robots-meta, severity: S}
+  - {flag: noarchive-or-nocache, rule: hk-robots-meta, severity: S, note: 'Bing: вне ответов Copilot; Яндекс: без сохранённой копии'}
+  - {flag: no-canonical, rule: hk-canonical, severity: S}
+  - {flag: multiple-canonical, rule: hk-canonical, severity: S}
+  - {flag: canonical-elsewhere, rule: hk-canonical, severity: S, note: 'допустимо для дубля; иначе — ошибка'}
+  - {flag: no-title, rule: hk-title, severity: S}
+  - {flag: no-description, rule: hk-description, severity: D}
+  - {flag: no-lang, rule: hk-lang, severity: D}
+  - {flag: no-og-image, rule: hk-og, severity: D}
+  - {flag: og-image-relative, rule: hk-og, severity: D}
+  - {flag: og-after-1mb, rule: hk-og, severity: S}
+  - {flag: no-jsonld, rule: hk-jsonld-placement, severity: D, note: 'ошибка, только если plan_fields.structured_data не пуст'}
+  - {flag: jsonld-parse-error, rule: hk-jsonld-placement, severity: S}
+  - {flag: jsonld-missing-required, rule: jsonld_policy.recipes, severity: D}
+  - {flag: nojs-ratio-under-0.5, rule: hk-access-ssr, severity: S, needs: --render}
+  - {flag: h1-js-only, rule: hk-access-ssr, severity: B, needs: --render}
+  - {flag: cta-js-only, rule: hk-access-ssr, severity: S, needs: --render}
+  - {flag: prices-js-only, rule: hk-access-ssr, severity: S, needs: --render}
+  - {flag: jsonld-js-only, rule: hk-jsonld-placement, severity: S, needs: --render}
+  - {flag: raw-text-under-200-words, rule: hk-access-ssr, severity: D, note: 'ориентир «≥ 200 слов» — на страницу, не на hero (01 §6.1)'}
+  - {flag: robots-star-disallow-all, rule: hk-access-bots-allowed, severity: S, note: 'B, если у Googlebot и YandexBot нет своих групп (тогда сработают blocked-*)'}
+  - {flag: blocked-anthropic-claude-searchbot, rule: hk-access-bots-allowed, severity: S, note: 'ошибка, если claude в search.ai_answers и ai_bots_policy не deny-all'}
+  - {flag: blocked-microsoft-bingbot, rule: hk-access-bots-allowed, severity: S, note: 'Bing питает Copilot и ChatGPT search'}
+  - {flag: 'ua-<бот>-status-<код>', rule: hk-access-waf, severity: S, needs: --ua-probe, note: 'сигнал: подтвердить «Проверкой URL» Search Console и «Проверкой ответа сервера» Вебмастера'}
+  - {flag: 'ua-<бот>-text-differs', rule: hk-access-ssr, severity: S, needs: --ua-probe, note: 'разный текст по UA — антибот или клоакинг; подтвердить вручную'}
+
+info_flags:
+  # Флаги geo_probe.py без серьёзности — сведения для решения, не дефект.
+  - {flag: llms-txt, note: 'валидный /llms.txt; решение — crawlers.yaml emerging.llms-txt'}
+  - {flag: content-signal, note: 'строка Content-Signal в robots.txt; Google её не исполняет — crawlers.yaml emerging.content-signal'}
+  - {flag: cloudflare-managed-robots, note: 'managed-блок Cloudflare запрещает обучение восьми ботам — сверить с search.ai_bots_policy; при allow-all это S'}
+
+site_checks:
+  # Уровень сайта (многостраничник): ia_probe.py + geo_probe.py. Структура — ../06-multipage-ia/, техника — здесь.
+  - id: hk-site-sitemap
+    rule: >-
+      sitemap.xml отвечает 200 и XML (не 301 на главную), объявлен строкой Sitemap в robots.txt; в нём только абсолютные
+      канонические URL с ответом 200 (без редиректов и noindex) и честным lastmod; ≤ 50 000 URL и 50 МБ на файл (01 §2.4)
+    severity: S
+    check: 'ia_probe.py: sitemap, коды URL, относительные <loc>'
+    evidence: '[проверено] не объявлен в robots.txt — 4 из 20; URL с редиректом — 6; относительные <loc> — ilyabirman (241 из 241); sitemap kontur — 301 на главную'
+  - id: hk-site-soft-404
+    rule: 'случайный несуществующий URL → 404 на каждом шаблоне сайта, не только на главной (hk-access-404)'
+    severity: B
+    check: 'ia_probe.py; запрос /<шаблон>/h-probe-<случайное>'
+    evidence: '[проверено] мягкая 404 — linear, ilyabirman (2 из 19)'
+  - id: hk-site-breadcrumbs
+    rule: 'BreadcrumbList = видимым крошкам (jsonld_policy.recipes.breadcrumb)'
+    severity: D
+    evidence: '[проверено] видимые крошки без разметки — lewagon, linear, medsi, severstal; разметка без видимого блока — thoughtworks'
+  - id: hk-site-hreflang
+    rule: 'hreflang — ссылками в <head> каждой версии (Яндекс не читает hreflang из sitemap), взаимно, с x-default (hk-hreflang)'
+    severity: S
+    evidence: '[проверено] в <head> — 6 из 19; в sitemap — heisenbug'
+  - id: hk-site-search-pages
+    rule: 'поиск по сайту, календари, фильтры — crawlers.yaml rt-infinite-spaces: одно Disallow на шаблон; уже в индексе — сначала noindex; не 5xx'
+    severity: S
+    check: '/search?q=<случайная строка> (и /?s= у WordPress) → закрыт robots.txt или несёт noindex; ответ не 5xx'
+    evidence: '[V:cfIQ_ksB61U 04:16–16:59]'
+  - id: hk-site-nav-in-html
+    rule: 'меню (включая панели мега-меню) и телефон шапки — в HTML сервера на каждом шаблоне (hk-access-links, recipes.local_business.nap_rule)'
+    severity: S
+    evidence: '[проверено] подменю в исходном HTML — 4 из 18, мега-меню — 0; телефон stamus — только в браузере'
+
+sources:
+  - {id: google-js-seo, title: 'Understand the JavaScript SEO basics', date: 2026-03-04, url: 'https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics'}
+  - {id: googlebot, title: 'Googlebot (2 MB limit)', date: 2026-02-03, url: 'https://developers.google.com/search/docs/crawling-indexing/googlebot'}
+  - {id: google-robots-meta, title: 'Robots meta tag, data-nosnippet, X-Robots-Tag', date: 2026-03-24, url: 'https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag'}
+  - {id: google-canonical, title: 'How to specify a canonical URL', date: 2026-07-10, url: 'https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls'}
+  - {id: google-hreflang, title: 'Localized versions of your pages', date: 2026-09-21, url: 'https://developers.google.com/search/docs/specialty/international/localized-versions'}
+  - {id: google-sitemap, title: 'Build and submit a sitemap', date: 2026-07-08, url: 'https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap'}
+  - {id: google-sd-policies, title: 'General structured data guidelines', date: 2026-07-10, url: 'https://developers.google.com/search/docs/appearance/structured-data/sd-policies'}
+  - {id: google-gallery, title: 'Search gallery', date: 2026-06-15, url: 'https://developers.google.com/search/docs/appearance/structured-data/search-gallery'}
+  - {id: google-review-snippet, title: 'Review snippet', date: 2026-09-08, url: 'https://developers.google.com/search/docs/appearance/structured-data/review-snippet'}
+  - {id: google-event, title: 'Event', date: 2026-09-08, url: 'https://developers.google.com/search/docs/appearance/structured-data/event'}
+  - {id: google-organization, title: 'Organization', date: 2026-09-08, url: 'https://developers.google.com/search/docs/appearance/structured-data/organization'}
+  - {id: google-local-business, title: 'Local business', date: 2026-09-08, url: 'https://developers.google.com/search/docs/appearance/structured-data/local-business'}
+  - {id: google-software-app, title: 'Software app', date: 2026-09-08, url: 'https://developers.google.com/search/docs/appearance/structured-data/software-app'}
+  - {id: google-updates, title: 'Latest documentation updates (FAQ deprecation 2026-05-08, removal 2026-06-15)', date: 2026-09-18, url: 'https://developers.google.com/search/updates'}
+  - {id: yandex-metatags, title: 'Метатеги', date: 2026-09-24, url: 'https://yandex.ru/support/webmaster/ru/controlling-robot/metatags'}
+  - {id: yandex-canonical, title: 'Канонический адрес страницы', date: 2026-09-24, url: 'https://yandex.ru/support/webmaster/ru/robot-workings/canonical'}
+  - {id: yandex-locale, title: 'Индексирование локализованных страниц', date: 2026-09-24, url: 'https://yandex.ru/support/webmaster/ru/yandex-indexing/locale-pages'}
+  - {id: yandex-prohibition, title: 'Как запретить индексирование (noindex, noscript, Алиса)', date: 2026-09-24, url: 'https://yandex.ru/support/webmaster/ru/adding-site/indexing-prohibition'}
+  - {id: yandex-services, title: 'Услуги (фид YML)', date: 2026-09-11, url: 'https://yandex.ru/support/webmaster/ru/search-appearance/offices/about'}
+  - {id: meta-crawlers, title: 'Meta Web Crawlers (OG в первых 1 МБ)', date: 2026-05-21, url: 'https://developers.facebook.com/docs/sharing/webmasters/web-crawlers'}
+  - {id: h01, title: 'Замер geo_probe.py на 116 страницах корпуса text', date: 2026-09-24}
+  - {id: h02, title: 'Замер geo_probe.py на 52 посадочных из замера живых страниц (пересчёт — 69 из 70 итоговой выборки)', date: 2026-09-24}
+  - {id: g01, title: 'Замер ia_probe.py на 20 многостраничниках', date: 2026-09-24}
+  - {id: g-06-02, title: 'Навигация, перелинковка, языки (крошки §2.1, ссылки §3.6, языки §5.5, живые сайты §6)', date: 2026-09-24, url: '../06-multipage-ia/02-navigation-linking-i18n.md'}
+  - {id: google-breadcrumb, title: 'Breadcrumb (BreadcrumbList) structured data — multiple breadcrumb trails', date: 2026-09-24, url: 'https://developers.google.com/search/docs/appearance/structured-data/breadcrumb'}
+  - {id: yandex-clean-param, title: 'Директива Clean-param (параметры, которые удаляются автоматически)', date: 2026-09-24, url: 'https://yandex.ru/support/webmaster/ru/robot-workings/clean-param'}
+  - {id: yandex-crawl-delay, title: 'Директива Crawl-delay (не учитывается с 2018-02-22)', date: 2026-09-24, url: 'https://yandex.ru/support/webmaster/ru/robot-workings/crawl-delay'}
+  - {id: yandex-json-ld, title: 'JSON-LD (навигационная цепочка, вопросы и ответы, Почта)', date: 2026-10-06, url: 'https://yandex.ru/support/webmaster/ru/json-ld/about'}
+  - {id: yandex-breadcrumbs, title: 'Навигационная цепочка (BreadcrumbList в JSON-LD)', date: 2026-10-06, url: 'https://yandex.ru/support/webmaster/ru/supported-schemas/navigation-links'}
+  - {id: yandex-get-params, title: 'Настройка GET-параметров', date: 2026-10-06, url: 'https://yandex.ru/support/webmaster/ru/indexing-options/get-parameters'}
+  - {id: w2-digests, title: 'Видео: Splitt «Maybe it isn’t JavaScript» (2024-10-23), SOTR 113 «Should you block your Search result pages?» (2026-07-30)', date: 2026-09-24}

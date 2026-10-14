@@ -1,0 +1,248 @@
+# Тексты главной проекта шаблона site-template — copy deck v1 базы strategy (kb/text/10-templates-recipes/
+# copy-deck.schema.json): секции и слоты — id плана plans/home.yaml, текст слота — выбранный вариант.
+copy_deck:
+  version: 1
+  date: '2026-10-14'
+  site: site-template
+  product_name: ssr-frontend-template
+  lang: ru
+  facts_ref: ../../../facts.yaml
+  page_plan_ref: ../plans/home.yaml
+  jurisdiction: ru
+  legal_category: [general]
+  authors: [исполнитель шаблона]
+  pages:
+    - page_id: home
+      page_type: home-multipage
+      status: assumed
+      meta:
+        title: Шаблон индексируемого сайта — ssr-frontend-template
+        description: >-
+          Шаблон сайта на Astro, который собирает страницы заранее: JavaScript — только острова по решению, один
+          Docker-образ на все среды.
+        og_title: Шаблон индексируемого сайта
+        og_description: Страницы собираются заранее, сервер отдаёт их как файлы и включает рендер только по запросу.
+        fact_ids: []
+      sections:
+        - section_id: header
+          section_role: header
+          block: header
+          slots:
+            - slot_id: nav-link-1
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Блог, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-2
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: О компании, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-3
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Контакты, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: hero
+          section_role: hero
+          block: hero-text
+          slots:
+            - slot_id: headline
+              slot_type: headline
+              variants:
+                - {id: a, text: Шаблон индексируемого сайта, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: subheadline
+              slot_type: subheadline
+              variants:
+                - id: a
+                  text: >-
+                    Страницы собираются заранее и отдаются Node-процессом как файлы. Серверный рендер включается там,
+                    где без запроса не обойтись: редиректы, robots.txt, форма.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: cta-label
+              slot_type: cta-label
+              variants:
+                - {id: a, text: Оставить заявку, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: cta-secondary-label
+              slot_type: cta-secondary-label
+              variants:
+                - {id: a, text: Все заметки, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: benefits
+          section_role: benefits
+          block: feature-grid
+          slots:
+            - slot_id: title
+              slot_type: section-title
+              variants:
+                - {id: a, text: Что внутри, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: card-1-title
+              slot_type: card-title
+              site_slot_id: card.title
+              group: card-1
+              variants:
+                - {id: a, text: Рендер, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: card-1-body
+              slot_type: card-body
+              site_slot_id: card.body
+              group: card-1
+              variants:
+                - id: a
+                  text: >-
+                    Страницы готовы до первого запроса. Рендер по запросу — только там, где ответ зависит от
+                    запроса.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: card-2-title
+              slot_type: card-title
+              site_slot_id: card.title
+              group: card-2
+              variants:
+                - {id: a, text: JavaScript, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: card-2-body
+              slot_type: card-body
+              site_slot_id: card.body
+              group: card-2
+              variants:
+                - id: a
+                  text: >-
+                    Только острова по решению — с основанием и бюджетом. Здесь один: выбор темы и движения, инлайн,
+                    без загрузки.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: card-3-title
+              slot_type: card-title
+              site_slot_id: card.title
+              group: card-3
+              variants:
+                - {id: a, text: Поиск, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: card-3-body
+              slot_type: card-body
+              site_slot_id: card.body
+              group: card-3
+              variants:
+                - id: a
+                  text: >-
+                    В первом HTML — canonical, hreflang, OG и JSON-LD; карта сайта, фиды и robots.txt — на живом
+                    адресе сайта.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: card-4-title
+              slot_type: card-title
+              site_slot_id: card.title
+              group: card-4
+              variants:
+                - {id: a, text: Развёртывание, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: card-4-body
+              slot_type: card-body
+              site_slot_id: card.body
+              group: card-4
+              variants:
+                - id: a
+                  text: >-
+                    Один Docker-образ на все среды: канонический адрес сайта штампуется при старте контейнера.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: card-5-title
+              slot_type: card-title
+              site_slot_id: card.title
+              group: card-5
+              variants:
+                - {id: a, text: Архитектура, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: card-5-body
+              slot_type: card-body
+              site_slot_id: card.body
+              group: card-5
+              variants:
+                - id: a
+                  text: >-
+                    Feature-Sliced Design под линтером: границы слоёв держит ESLint, структуру — Steiger, гейт —
+                    pnpm check.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: card-6-title
+              slot_type: card-title
+              site_slot_id: card.title
+              group: card-6
+              variants:
+                - {id: a, text: Контент, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: card-6-body
+              slot_type: card-body
+              site_slot_id: card.body
+              group: card-6
+              variants:
+                - id: a
+                  text: >-
+                    Markdown в git рядом с кодом: схема frontmatter, бюджеты сниппета и проверка ссылок — до публикации.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+        - section_id: related
+          section_role: related
+          block: article-cards
+          slots:
+            - slot_id: title
+              slot_type: section-title
+              variants:
+                - {id: a, text: Свежие заметки, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: all-label
+              slot_type: cta-secondary-label
+              variants:
+                - {id: a, text: Все заметки, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: footer
+          section_role: footer
+          block: footer
+          slots:
+            - slot_id: legal
+              slot_type: footer-legal
+              variants:
+                - {id: a, text: 'ООО «Пример», ОГРН 1000000000001, ИНН 7700000000', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-name', 'fact:company-ogrn', 'fact:company-inn']
+            - slot_id: privacy-label
+              slot_type: nav-label
+              variants:
+                - {id: a, text: Обработка персональных данных, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-1-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-1
+              variants:
+                - {id: a, text: Блог, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-2-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-2
+              variants:
+                - {id: a, text: О компании, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-3-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-3
+              variants:
+                - {id: a, text: Контакты, status: assumed, source: ai-self}
+              chosen: a

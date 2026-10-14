@@ -1,0 +1,87 @@
+# ru-otves-case.yaml — пример copy deck v1.1 (10-templates-recipes, J3, 2026-09-24): страница кейса (case-page) «Отвеса».
+# Тексты — ai-self J3. Факты — ../../02-strategy-messaging/examples/facts-service-renovation.yaml (вымышленная студия B2,
+# синтетические данные: не публиковать). Эта страница проходит весь путь: check --update --promote → approve →
+# validate --final (демо-факты примера — error: публикация только на фактах заказчика) → export --stage mockup (вход
+# холста: copy.md и facts.md).
+copy_deck:
+  version: 1
+  date: '2026-09-24'
+  site: otves-remont-nn
+  product_name: Отвес
+  lang: ru
+  voice_ref: ../../../voice.yaml
+  facts_ref: ../../../facts.yaml
+  copy_slots_ref: ../../04-copy-by-block/copy-slots.yaml
+  meaning_ref: ../meaning.yaml
+  jurisdiction: ru
+  legal_category: [general]
+  authors: ['J3 (ai-self, 2026-09-24)']
+  notes: >-
+    Страница «спасибо» после заявки на замер: статус заявки первым, затем кто и когда свяжется, одно следующее
+    действие. Реквизиты продавца — пробел legal-details: в подвале — имя студии и город до ответа заказчика.
+  pages:
+  - page_id: spasibo
+    page_type: thank-you-page
+    status: draft
+    awareness: product-aware
+    primary_action: Вызвать замерщика
+    cta_primary: spasibo/header/cta-label
+    promise:
+      from: spasibo/confirmation/title
+      basis: 'подтверждение заявки — первое, что видит человек после формы'
+    meta:
+      title: 'Заявка на замер принята — студия «Отвес»'
+      description: 'Заявка на замер принята. Студия ремонта «Отвес», Нижний Новгород.'
+      og_title: 'Заявка на замер принята'
+      og_description: 'Прораб позвонит и договорится о дне замера.'
+      fact_ids: []
+      notes: 'Служебная страница: не индексируется (seo.indexable плана — false).'
+    sections:
+    - section_id: header
+      section_role: header
+      message: 'Куда вернуться и как связаться'
+      slots:
+      - slot_id: cta-label
+        slot_type: cta-label
+        variants:
+        - {id: a, text: 'Вызвать замерщика', status: assumed, source: ai-self}
+        chosen: a
+        fact_ids: []
+        claim_flags: []
+    - section_id: confirmation
+      section_role: confirmation
+      message: 'Заявка дошла; прораб позвонит и договорится о замере'
+      question: 'Заявка дошла? Что дальше?'
+      slots:
+      - slot_id: title
+        slot_type: form-success
+        variants:
+        - {id: a, text: 'Заявка на замер принята', status: assumed, source: ai-self}
+        chosen: a
+        fact_ids: []
+        claim_flags: []
+      - slot_id: next-steps
+        slot_type: form-next-steps
+        variants:
+        - {id: a, text: 'Прораб позвонит и договорится о дне замера', status: assumed, source: ai-self}
+        chosen: a
+        fact_ids: []
+        claim_flags: []
+    - section_id: footer
+      section_role: footer
+      message: 'Кто продавец и где документы'
+      slots:
+      - slot_id: legal
+        slot_type: footer-legal
+        variants:
+        - {id: a, text: 'Студия ремонта «Отвес», Нижний Новгород', status: assumed, source: ai-self}
+        chosen: a
+        fact_ids: []
+        claim_flags: []
+      - slot_id: privacy-label
+        slot_type: nav-label
+        variants:
+        - {id: a, text: 'Политика обработки персональных данных', status: assumed, source: ai-self}
+        chosen: a
+        fact_ids: []
+        claim_flags: []
