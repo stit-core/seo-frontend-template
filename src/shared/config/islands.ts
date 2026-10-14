@@ -13,7 +13,7 @@ import { METRIKA_ID, THEME } from './site.ts'
 //   Правка тела — новый хеш здесь (его печатает тест острова): изменение кода видно в диффе реестра;
 // - `file` — остров-файл: компонент, чей `<script>` Astro собирает в модуль
 //   `_astro/<имя>.astro_astro_type_script_…js`; CSP пропускает его как свой файл;
-// - `markup` — атрибут элементов, которые остров обслуживает: на странице без него они мертвы;
+// - `markup` — атрибуты элементов, которые остров обслуживает: на странице без него они мертвы;
 // - `sources` — чужие origin острова по директивам CSP.
 // Реестр читают оболочка (где печатать остров), политика сборки (CSP) и seo:check; модуль исполняет и
 // Node без сборки — поэтому импорт с расширением.
@@ -23,19 +23,19 @@ export interface Island {
   readonly budget: number
   readonly hash?: string
   readonly file?: string
-  readonly markup?: string
+  readonly markup?: readonly string[]
   readonly sources?: Readonly<Partial<Record<string, readonly string[]>>>
 }
 
 export const ISLANDS = {
   preferences: {
-    hash: 'sha256-7VLt8Eq26z3tjG+dABk3Fdq6PMYYS8H+Cdc135LnYxQ=',
+    hash: 'sha256-Yzebn4pYJtvCqrXa+AvV0p64VtbbaJ3lP4GYz8VArk8=',
     basis:
       'выбор темы и движения встаёт до первой отрисовки: кнопка темы — поле THEME, переключатель движения — эффект motion-toggle базы strategy',
     // Без кнопки темы остров нужен только страницам с переключателем движения — их пути и встают сюда.
     pages: THEME.switcher ? ['*'] : [],
-    markup: 'data-preference',
-    budget: 725,
+    markup: ['data-theme-toggle', 'data-motion-set'],
+    budget: 750,
   },
   // Счётчик стоит только при заданном идентификаторе: пусто — сторонних скриптов на сайте нет.
   // tag.js, хиты и пиксель счётчика — с его origin. Вебвизору, карте кликов и региональным доменам

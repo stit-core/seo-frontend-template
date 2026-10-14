@@ -77,7 +77,7 @@ async function render(
     root: document.documentElement,
     main: document.querySelector('main'),
     island: (name: string) => document.head.querySelector(`script[data-island="${name}"]`),
-    toggle: document.body.querySelector('[data-preference="theme"]'),
+    toggle: document.body.querySelector('[data-theme-toggle]'),
     colorScheme: document.querySelector('meta[name="color-scheme"]'),
   }
 }

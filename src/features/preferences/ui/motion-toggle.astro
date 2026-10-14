@@ -7,7 +7,9 @@ interface Props {
 }
 
 const { locale, class: className } = Astro.props
-// Значение кнопки остров пишет в `data-motion` на <html>; пустое — как в системе, без атрибута.
+// Значение кнопки — атрибут контракта базы strategy `data-motion-set`: по нему кнопку находят и остров, и
+// ворота (детектор паузы). Остров пишет значение в `data-motion` на <html>; пустое — как в системе, без
+// атрибута.
 const options: ReadonlyArray<{ value: '' | 'reduced' | 'full'; key: DictKey }> = [
   { value: '', key: 'motion.system' },
   { value: 'reduced', key: 'motion.reduced' },
@@ -29,8 +31,7 @@ const options: ReadonlyArray<{ value: '' | 'reduced' | 'full'; key: DictKey }> =
   {options.map((option) => (
     <button
       type="button"
-      data-preference="motion"
-      value={option.value}
+      data-motion-set={option.value}
       class="touch-target text-secondary hover:text-primary aria-pressed:text-primary aria-pressed:underline aria-pressed:decoration-accent aria-pressed:decoration-thick aria-pressed:underline-offset-marker"
     >
       {t(locale, option.key)}

@@ -83,7 +83,7 @@ describe('остров-файл в сборке сайта', () => {
       file: COMPONENT,
       basis: 'момент плана страницы: адрес страницы — в буфер обмена',
       pages: ['/'],
-      markup: 'data-copy-link',
+      markup: ['data-copy-link'],
       budget: 400,
     }
     expect(scriptViolations(html, '/', { copyLink })).toEqual([])

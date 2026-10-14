@@ -6,7 +6,7 @@ export const ISLANDS = {
     hash: 'sha256-fixture',
     basis: 'выбор темы и движения до первой отрисовки',
     pages: ['*'],
-    markup: 'data-preference',
+    markup: ['data-preference'],
     budget: 200,
   },
   // Законный остров-файл: модуль с импортом в бюджете — на главных обеих локалей и на /ostrova.

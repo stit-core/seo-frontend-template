@@ -237,10 +237,12 @@ export function scriptViolations(html, path, islands = ISLANDS) {
     }
   }
   // Кнопку острова без него некому показать и обслужить: посетитель её не увидит.
-  for (const [name, { markup: attribute }] of Object.entries(islands)) {
-    if (attribute === undefined || seen.has(name)) continue
-    if (new RegExp(`<[a-z][^>]*\\s${attribute}(?:[\\s=>]|/>)`, 'i').test(markup)) {
-      problems.push(`разметка острова ${name} (${attribute}) на странице без него`)
+  for (const [name, { markup: attributes = [] }] of Object.entries(islands)) {
+    if (seen.has(name)) continue
+    for (const attribute of attributes) {
+      if (new RegExp(`<[a-z][^>]*\\s${attribute}(?:[\\s=>]|/>)`, 'i').test(markup)) {
+        problems.push(`разметка острова ${name} (${attribute}) на странице без него`)
+      }
     }
   }
   return problems

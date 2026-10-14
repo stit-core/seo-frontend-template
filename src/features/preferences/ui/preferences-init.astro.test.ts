@@ -128,16 +128,16 @@ function open({
     ready: () => page.waitUntilComplete(),
     dataset: () => ({ ...document.documentElement.dataset }),
     // Клик приходит на иконку внутри кнопки — как от человека.
-    toggleTheme: () => click('[data-preference="theme"] svg'),
-    chooseMotion: (value: Motion) => click(`[data-preference="motion"][value="${value}"]`),
+    toggleTheme: () => click('[data-theme-toggle] svg'),
+    chooseMotion: (value: Motion) => click(`[data-motion-set="${value}"]`),
     click,
-    darkPressed: () => pressed('[data-preference="theme"]'),
+    darkPressed: () => pressed('[data-theme-toggle]'),
     // Значения нажатых кнопок движения: у объявленного состояния она ровно одна.
     motionPressed: () =>
-      [...document.querySelectorAll('[data-preference="motion"][aria-pressed="true"]')].map(
-        (button) => button.getAttribute('value'),
+      [...document.querySelectorAll('[data-motion-set][aria-pressed="true"]')].map((button) =>
+        button.getAttribute('data-motion-set'),
       ),
-    undeclared: () => document.querySelectorAll('[data-preference]:not([aria-pressed])').length,
+    undeclared: () => document.querySelectorAll('button:not([aria-pressed])').length,
     stored: () =>
       Object.fromEntries(
         ['theme', 'motion'].flatMap((key) => {
@@ -209,7 +209,7 @@ function parsing() {
     frame: () => {
       for (const frame of frames.splice(0)) frame()
     },
-    undeclared: () => document.querySelectorAll('[data-preference]:not([aria-pressed])').length,
+    undeclared: () => document.querySelectorAll('button:not([aria-pressed])').length,
   }
 }
 
@@ -271,7 +271,7 @@ describe('PreferencesInit', () => {
         ? classes.filter((name) => display.test(name.split(':').at(-1) ?? ''))
         : ['без hidden']
     }
-    expect(shownBy(markup.querySelector('[data-preference="theme"]'))).toEqual([
+    expect(shownBy(markup.querySelector('[data-theme-toggle]'))).toEqual([
       'aria-[pressed]:inline-flex',
     ])
     expect(shownBy(markup.querySelector('fieldset'))).toEqual(['has-aria-pressed:flex'])

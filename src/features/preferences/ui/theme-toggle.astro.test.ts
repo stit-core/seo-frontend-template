@@ -10,7 +10,7 @@ describe('ThemeToggle', () => {
     const html = await render('ru')
     const button = parseHtml(html).querySelector('button')
     expect(button?.getAttribute('type')).toBe('button')
-    expect(button?.getAttribute('data-preference')).toBe('theme')
+    expect(button?.hasAttribute('data-theme-toggle')).toBe(true)
     expect(button?.getAttribute('aria-label')).toBe('Тёмная тема')
     expect(button?.querySelectorAll('svg[aria-hidden="true"]')).toHaveLength(2)
     // Обработчик живёт в острове (в <head>): здесь только разметка.

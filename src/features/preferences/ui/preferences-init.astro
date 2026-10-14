@@ -1,7 +1,8 @@
 ---
 // Остров предпочтений целиком — скрипт в <head>. Выбор темы и движения (localStorage: ключи и
 // значения — как у атрибутов ДС `data-theme` и `data-motion`) встаёт на <html> до первой
-// отрисовки. Кнопки `[data-preference]` обслуживает делегирование; их состояние (`aria-pressed`)
+// отрисовки. Кнопки обслуживает делегирование: `[data-theme-toggle]` — тема, `[data-motion-set]` (атрибут
+// контракта базы strategy, значение — выбор движения) — движение. Их состояние (`aria-pressed`)
 // объявляется каждый кадр, пока документ разбирается, и когда он разобран: кнопка получает его
 // раньше своей отрисовки.
 // Страница из кеша переходов «назад» применяет хранилище целиком: ключа нет — атрибут разметки (`M`)
@@ -15,11 +16,12 @@
 // ISLANDS (shared/config/islands.ts).
 ---
 
-<script is:inline data-island="preferences">{const d=document,s=d.documentElement.dataset,M={...s},K={theme:/^(light|dark)$/,motion:/^(reduced|full)$/},D=matchMedia('(prefers-color-scheme:dark)'),R=matchMedia('(prefers-reduced-motion:reduce)')
+<script is:inline data-island="preferences">{const d=document,s=d.documentElement.dataset,M={...s},K={theme:/^(light|dark)$/,motion:/^(reduced|full)$/},B='[data-theme-toggle],[data-motion-set]',D=matchMedia('(prefers-color-scheme:dark)'),R=matchMedia('(prefers-reduced-motion:reduce)')
 const dark=()=>s.theme?s.theme==='dark':D.matches
 const still=()=>s.motion?s.motion==='reduced':R.matches
 let w=false,S=0
-const show=()=>{for(const b of d.querySelectorAll('[data-preference]'))b.setAttribute('aria-pressed',b.dataset.preference==='theme'?dark():b.value===(s.motion||''))
+const show=()=>{for(const b of d.querySelectorAll(B)){const v=b.dataset.motionSet
+b.setAttribute('aria-pressed',v===undefined?dark():v===(s.motion||''))}
 const m=still()
 for(const v of d.querySelectorAll('video[loop]')){if(m){if(v.autoplay){v.autoplay=false
 if(v.currentSrc)v.load()}continue}
@@ -42,5 +44,6 @@ load()
 for(const q of[D,R])q.addEventListener?.('change',show)
 d.addEventListener('readystatechange',show)
 addEventListener('pageshow',e=>{if(e.persisted)load()})
-d.addEventListener('click',e=>{const b=e.target.closest?.('[data-preference]'),k=b?.dataset.preference
-if(k)set(k,k==='theme'?dark()?'light':'dark':b.value)})}</script>
+d.addEventListener('click',e=>{const b=e.target.closest?.(B),v=b?.dataset.motionSet
+if(v!==undefined)set('motion',v)
+else if(b)set('theme',dark()?'light':'dark')})}</script>

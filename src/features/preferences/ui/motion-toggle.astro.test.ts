@@ -12,12 +12,12 @@ async function render(props: Record<string, unknown> = { locale: 'ru' }) {
     html,
     group,
     label: label?.textContent?.trim(),
-    buttons: [...(group?.querySelectorAll('button[data-preference="motion"]') ?? [])],
+    buttons: [...(group?.querySelectorAll('button') ?? [])],
   }
 }
 
 describe('MotionToggle', () => {
-  it('группа подписана видимым словом, три кнопки острова предпочтений — по состоянию data-motion', async () => {
+  it('группа подписана видимым словом, три кнопки — значения data-motion по контракту базы', async () => {
     const { html, label, buttons } = await render()
     expect(label).toBe('Движение')
     expect(buttons.map((button) => button.getAttribute('type'))).toEqual([
@@ -25,8 +25,9 @@ describe('MotionToggle', () => {
       'button',
       'button',
     ])
-    // Пустое значение — «как в системе»: атрибута на <html> нет.
-    expect(buttons.map((button) => button.getAttribute('value') ?? '')).toEqual([
+    // Значение — атрибут `data-motion-set` контракта базы strategy: по нему кнопку узнают остров и ворота.
+    // Пустое — «как в системе»: атрибута на <html> нет.
+    expect(buttons.map((button) => button.getAttribute('data-motion-set'))).toEqual([
       '',
       'reduced',
       'full',

@@ -61,7 +61,7 @@ test.describe('явный выбор темы', () => {
     const context = await browser.newContext({ javaScriptEnabled: false })
     const page = await context.newPage()
     await page.goto('/')
-    await expect(page.locator('[data-preference="theme"]')).toBeHidden()
+    await expect(page.locator('[data-theme-toggle]')).toBeHidden()
     await context.close()
   })
 })

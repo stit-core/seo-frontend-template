@@ -21,9 +21,7 @@ describe('SiteHeader', () => {
     Object.assign(theme, site)
     const container = await AstroContainer.create()
     const html = await container.renderToString(SiteHeader, { props: { locale: 'ru' } })
-    expect(parseHtml(html).querySelectorAll('button[data-preference="theme"]')).toHaveLength(
-      buttons,
-    )
+    expect(parseHtml(html).querySelectorAll('button[data-theme-toggle]')).toHaveLength(buttons)
     Object.assign(theme, { default: 'system', switcher: true })
   })
 
