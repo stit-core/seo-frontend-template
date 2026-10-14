@@ -202,7 +202,7 @@ RUM-скрипт на контентной странице ради метри�
 стека — подтверждается, отличие проекта — с причиной), `Проектные добавления`, `Запрещено`,
 `Бюджеты`, `Generates`.
 
-**Generates**: `package.json`, строки `.size-limit.cjs`, прунинг в `docker/Dockerfile`.
+**Generates**: `package.json`, строки `.size-limit.cjs`.
 
 **Cross-kind**: каждый пакет, упомянутый другим kind'ом, — строка здесь; бюджеты ↔
 `styling.md` и `rendering.md`.

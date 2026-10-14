@@ -29,25 +29,14 @@ COPY . .
 RUN pnpm build
 
 # ── prod-deps ───────────────────────────────────────────────────────
-# Выход Astro не self-contained: entry.mjs импортит astro/zod, сервис картинок — sharp.
-# Ставим только dependencies.
+# Выход Astro не self-contained: фреймворк и адаптер сборка встроила в dist/server, а пакеты,
+# которые импортируют бандл и обёртка, Node ищет в node_modules. Ставим только dependencies —
+# ровно эти импорты (их держит seo:check).
 FROM pnpm AS prod-deps
 
 RUN --mount=type=secret,id=npmrc,target=/root/.npmrc \
     --mount=type=cache,id=pnpm-store,target=/pnpm/store \
     pnpm install --frozen-lockfile --prod --ignore-scripts
-# Build-машинерия, которую `astro` тянет в dependencies, но которая не нужна рантайму
-# (alpine ставит обе libc-вариации нативных бинарников; рантайму нужна только musl).
-RUN rm -rf \
-      node_modules/.pnpm/@rolldown+binding-linux-x64-gnu* \
-      node_modules/.pnpm/@img+sharp-libvips-linux-x64* \
-      node_modules/.pnpm/@img+sharp-linux-x64* \
-      node_modules/.pnpm/lightningcss-linux-x64-gnu* \
-      node_modules/.pnpm/@astrojs+compiler-binding-linux-x64-gnu* \
-      node_modules/.pnpm/@bruits+satteri-linux-x64-gnu* \
-      node_modules/.pnpm/@types+node* \
-      node_modules/.pnpm/caniuse-lite* \
-      node_modules/.pnpm/prismjs*
 
 # ── runtime ─────────────────────────────────────────────────────────
 FROM node:${NODE_VERSION}-alpine

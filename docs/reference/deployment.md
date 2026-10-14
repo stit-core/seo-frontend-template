@@ -26,11 +26,11 @@ Dockerfile монтирует его необязательно. Мажор Node
   требует git),
   `pnpm build` без `SITE_URL` — `astro.config.ts` подставляет плейсхолдер
   `https://__site_origin__`
-- **prod-deps** — `pnpm install --prod --ignore-scripts` + прунинг build-машинерии,
-  которую `astro` тянет в `dependencies` (gnu-варианты rolldown / sharp-libvips /
-  lightningcss / `@astrojs/compiler` / satteri, `@types/node`, `caniuse-lite`, `prismjs`):
-  выход Astro не self-contained — серверный бандл импортирует `zod` и `@astrojs/rss`, канал формы и
-  Sentry (`nodemailer`, `@sentry/node`) — динамически
+- **prod-deps** — `pnpm install --prod --ignore-scripts`: только `dependencies` — ровно то, что
+  импортируют серверный бандл и обёртка (держит `seo:check`). Выход Astro не self-contained:
+  фреймворк и адаптер сборка встроила в `dist/server`, а `zod` и `@astrojs/rss`, канал формы и
+  Sentry (`nodemailer`, `@sentry/node`, динамически) бандл берёт из `node_modules`; сборочной
+  машинерии (`astro`, Vite, `sharp`) в образе нет
 - **runtime** — `node_modules` из prod-deps, `dist/`, `package.json`, `docker/{entrypoint.sh,
   stamp.mjs,server.mjs}`; `USER node`, `EXPOSE 3000`, `HEALTHCHECK wget …:${PORT:-3000}/healthz`,
   `ENTRYPOINT entrypoint.sh`, `CMD node ./docker/server.mjs`

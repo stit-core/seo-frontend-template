@@ -30,9 +30,14 @@ blocked-by: —
     `seo:check`, рантайм его не импортирует; `import('js-yaml')` в on-demand маршруте — `seo:check` (шаги до него
     зелёные), в `docker/server.mjs` — `test` и `seo:check`; `check:gate` зелёный и ловит 6 мутаций самой проверки
     (`require`, обёртка, лишняя зависимость, `import()`, scope, текст за импорт) — `M/deps/`
-- [ ] **AC2** — Образ без сборочной машинерии: стадия prod-deps ставит только `dependencies`, ручная чистка снята,
+- [x] **AC2** — Образ без сборочной машинерии: стадия prod-deps ставит только `dependencies`, ручная чистка снята,
   комментарии — правда; размер образа и его `node_modules` — до и после. Проверка: сборка образа,
   `pnpm accept:image` → зелёный; в `node_modules` образа нет `astro`, `vite`, `esbuild`, `rollup`, `sharp`, `@img/*`
+  - Подтверждено: образ кода `main` — 359,1 МБ, его `node_modules` — 189,7 МБ (16 002 файла, 244 пакета); после
+    S2 — 229,2 МБ и 59,7 МБ (7 901 файл, 33 пакета: `zod`, `@astrojs/rss`, `nodemailer`, `@sentry/node` с деревом);
+    `astro`, `vite`, `esbuild`, `rollup`, `rolldown`, `sharp`, `@img/*` в образе нет; `pnpm accept:image` — зелёный,
+    24 проверки; импорты рантайма грузятся в образе из `dist/server/chunks`, `astro`, `sharp` и `vite` — нет
+    (`ERR_MODULE_NOT_FOUND`) — `M/deps/`
 - [ ] **AC3** — Проза — правда: `docs/reference/deployment.md`, `docs/stack/_templates/dependencies.md`, шаг аудита
   прод-зависимостей `/release` и правила, которые называют состав образа. Проверка: чтение; `pnpm check` → зелёный
 
@@ -45,9 +50,13 @@ blocked-by: —
     `docker/server.mjs`, законные формы в `entry.mjs`) — 6 новых строк `expected.json`; `astro`, `@astrojs/node`,
     `sharp` — в `devDependencies`; аудит `/release` — по всему lockfile. `check:gate` зелёный, мутации AC1 —
     красный `pnpm check`, `pnpm check` — зелёный
-- [ ] **S2** — Dockerfile: prod-deps без ручной чистки, комментарии по факту; замер образа до и после
+- [x] **S2** — Dockerfile: prod-deps без ручной чистки, комментарии по факту; замер образа до и после
   - Проверка: сборка образа, `pnpm accept:image` → зелёный; список `node_modules` образа · Закрывает: AC2
     · Зависит от: S1
+  - Сделано: стадия prod-deps — один `pnpm install --prod`, ручная чистка (`rm -rf` девяти путей) снята, комментарий —
+    по факту; описание стадии в `deployment.md` и строка «Generates» (`dependencies.md`, чек-лист `/stack-deep-dive`)
+    — тоже. Образ 359,1 → 229,2 МБ, его `node_modules` 189,7 → 59,7 МБ; `accept:image` — зелёный, `pnpm check` —
+    зелёный
 - [ ] **S3** — Проза и гейт: документы AC3; `pnpm check` на чистом дереве
   - Проверка: `pnpm check` → зелёный · Закрывает: AC3 · Зависит от: S2
 
@@ -72,8 +81,7 @@ blocked-by: —
   целиком.
 
 ## Где мы сейчас
-S1 сделан: гейт держит состав `dependencies`, `astro`, `@astrojs/node` и `sharp` — в `devDependencies`, аудит — по
-всему lockfile. Следующий шаг — S2: стадия prod-deps без ручной чистки и с комментариями по факту (сейчас она чистит то,
-чего `--prod` уже не ставит, а `deployment.md` называет `astro` в `dependencies`), образ `rd-site:after` против
-`rd-site:before` (код `main`: 359 МБ, его `node_modules` — 190 МБ), `pnpm accept:image`. Затем S3 — проза AC3, после —
-валидатор и push. Материалы — `M/deps/` (скан, логи мутаций), эксперименты — worktree `M/wt-rd-x`.
+S1 и S2 сделаны: гейт держит состав `dependencies`, образ ставит только их — 229,2 МБ против 359,1 МБ, без сборочной
+машинерии и ручной чистки; аудит — по всему lockfile. Следующий шаг — S3: сверка прозы AC3 целиком (`deployment.md`,
+`dependencies.md`, аудит `/release`, правила о составе образа) и `pnpm check` на чистом дереве; затем валидатор и push.
+Материалы — `M/deps/`: скан импортов, логи мутаций, размеры и списки пакетов образов, приёмка.

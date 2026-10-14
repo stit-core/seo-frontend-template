@@ -128,7 +128,6 @@ typescript-eslint объявляет peer `<6.1` — с 7 падают `typechec
 - `package.json#dependencies` / `#devDependencies`, `packageManager`
 - `pnpm-workspace.yaml` — выдержка релиза, разрешённые скрипты установки, строгие peer, исключения аудита
 - `.size-limit.cjs` — строки бюджетов
-- `docker/Dockerfile` — прунинг build-машинерии в стадии `prod-deps`
 
 ## Открытые вопросы
 
