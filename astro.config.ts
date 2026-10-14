@@ -9,6 +9,7 @@ import { contentSecurityPolicy } from './scripts/lib/site-policy.mjs'
 import { writeSitemap } from './scripts/lib/sitemap.mjs'
 import { fontFamilies, fontStacks } from './src/app/styles/fonts.ts'
 import { TRAILING_SLASH } from './src/shared/redirects/table.ts'
+import { slotSizes } from './src/shared/ui/section/sizes.ts'
 
 // Один образ на все среды: на сборке в prerendered-выход попадает плейсхолдер
 // (валидный URL — голый __SITE_ORIGIN__ Astro отвергает), при старте контейнера
@@ -26,6 +27,23 @@ const yamlModules = {
   transform(code: string, id: string) {
     if (!id.endsWith('.yaml')) return null
     return { code: `export default ${JSON.stringify(load(code) ?? null)}`, map: null }
+  },
+}
+
+// `sizes` картинки по ширине контейнера секции — длины ролей файла токенов: `var()` в `sizes` браузер
+// не читает, поэтому их выводит сборка (src/shared/ui/section/sizes.ts), и замена файла токенов меняет
+// `sizes` сама. Модуль собирается, когда его импортируют: роль, из которой `sizes` не вывести, роняет
+// сборку и тесты, которым он нужен, а не загрузку конфига — тест токен-слоя называет все недостающие
+// роли.
+const SLOT_SIZES = 'virtual:slot-sizes'
+const slotSizesModule = {
+  name: 'slot-sizes',
+  resolveId: (id: string) => (id === SLOT_SIZES ? `\0${SLOT_SIZES}` : null),
+  load(id: string) {
+    if (id !== `\0${SLOT_SIZES}`) return null
+    const read = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8')
+    const sizes = slotSizes(read('./src/app/styles/index.css'), read('./src/app/styles/tokens.css'))
+    return `export default ${JSON.stringify(sizes)}`
   },
 }
 
@@ -120,6 +138,7 @@ export default defineConfig({
     plugins: [
       tailwindcss(),
       yamlModules,
+      slotSizesModule,
       // docker/* работают раньше приложения и берут его модули по имени файла: схему env (env
       // проверяется до старта той же схемой, что его читает) и таблицу адресов (обёртка отвечает
       // на адрес раньше статик-хендлера). Каждый — отдельный файл серверной сборки со стабильным

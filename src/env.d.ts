@@ -23,6 +23,13 @@ declare module '*.yaml' {
   export default data
 }
 
+// `sizes` картинки по ширине контейнера секции: его выводит сборка из ролей файла токенов (плагин
+// slot-sizes из astro.config.ts, разбор — shared/ui/section/sizes.ts).
+declare module 'virtual:slot-sizes' {
+  const sizes: Readonly<Record<'reading' | 'page' | 'wide' | 'full', string>>
+  export default sizes
+}
+
 // Ленивая загрузка ролика — атрибут `loading` у <video> (Chromium): в типах разметки Astro его пока нет.
 declare namespace astroHTML.JSX {
   interface VideoHTMLAttributes {

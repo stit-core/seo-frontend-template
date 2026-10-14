@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { parseHtml } from '@/shared/lib/testing'
-import Container from './container.astro'
-import { SLOT_SIZES } from './sizes'
+import { Container, SLOT_SIZES } from '.'
 
 const astro = await AstroContainer.create()
 
@@ -11,7 +10,8 @@ const layer = readFileSync(new URL('../../../app/styles/index.css', import.meta.
 const tokens = readFileSync(new URL('../../../app/styles/tokens.css', import.meta.url), 'utf8')
 const px = (key: string) => {
   const role = new RegExp(`${key}:\\s*var\\((--[\\w-]+)\\)`).exec(layer)?.[1]
-  return 16 * Number(new RegExp(`${role}:\\s*([\\d.]+)rem`).exec(tokens)?.[1])
+  const [, number, unit] = new RegExp(`${role}:\\s*([\\d.]+)(rem|px);`).exec(tokens) ?? []
+  return Number(number) * (unit === 'rem' ? 16 : 1)
 }
 
 // Ширина слота по `sizes` на окне шириной `vw`: длина первой записи, чьё условие выполнено.
@@ -63,7 +63,8 @@ describe('Container', () => {
     expect(full.centered).toBe(false)
   })
 
-  // Литералы `sizes` повторяют роли файла токенов: ДС с другой колонкой чтения тест называет здесь.
+  // `sizes` выводит сборка из ролей файла токенов: на любом окне он равен ширине, которую контейнеру дают
+  // его классы, — у ДС с другими значениями тоже.
   it('слот картинки (sizes) — ширина контейнера без полей страницы на любом окне', async () => {
     const pageX = px('--spacing-page-x')
     for (const width of ['reading', 'page', 'wide', 'full'] as const) {
