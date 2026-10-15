@@ -62,26 +62,40 @@ export function builtPages(clientDir) {
     .sort()
 }
 
-// Сегмент маршрута в регулярном выражении пути: `[x]` — один сегмент, `[...x]` — ноль и больше сегментов (у маршрута
-// `[...locale]` дефолтная локаль сегмента не даёт).
-/** @param {string} segment */
-const segmentSource = (segment) =>
-  /^\[\.\.\.\w+\]$/.test(segment)
-    ? '(?:/[^/]+)*'
-    : `/${segment
-        .split(/(\[\w+\])/)
-        .map((part) =>
-          /^\[\w+\]$/.test(part) ? '[^/]+' : part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),
-        )
-        .join('')}`
+/** @param {string} text */
+const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+// Сегмент маршрута в регулярном выражении пути: `[x]` — один сегмент, `[...locale]` — ни одного (дефолтная локаль) или
+// код локали с префиксом, `[...x]` — ноль и больше сегментов.
+/**
+ * @param {string} segment
+ * @param {readonly string[]} prefixes
+ */
+const segmentSource = (segment, prefixes) => {
+  if (segment === '[...locale]') {
+    return prefixes.length === 0 ? '' : `(?:/(?:${prefixes.map(escapeRegExp).join('|')}))?`
+  }
+  if (/^\[\.\.\.\w+\]$/.test(segment)) return '(?:/[^/]+)*'
+  return `/${segment
+    .split(/(\[\w+\])/)
+    .map((part) => (/^\[\w+\]$/.test(part) ? '[^/]+' : escapeRegExp(part)))
+    .join('')}`
+}
 
 /**
- * Пути, которые порождает маршрут: `/[...locale]/about` — `/about` и `/en/about`.
+ * Пути, которые порождает маршрут: `/[...locale]/about` — `/about` и `/en/about`, где `prefixes` — коды локалей с
+ * префиксом адреса (все, кроме дефолтной) проверяемого проекта.
  * @param {string} route
+ * @param {readonly string[]} [prefixes]
  * @returns {RegExp}
  */
-export function routePattern(route) {
-  return new RegExp(`^${route.split('/').filter(Boolean).map(segmentSource).join('')}/?$`)
+export function routePattern(route, prefixes = []) {
+  const source = route
+    .split('/')
+    .filter(Boolean)
+    .map((segment) => segmentSource(segment, prefixes))
+    .join('')
+  return new RegExp(`^${source}/?$`)
 }
 
 /**
@@ -100,11 +114,14 @@ export function localizedRoute(route) {
  * шаблона, а не от записи: матрица ботов и GEO-проба ходят по шаблонам, а не по всей сборке.
  * @param {string} pagesDir
  * @param {string} clientDir
+ * @param {readonly string[]} [prefixes] коды локалей с префиксом адреса — как у `routePattern`
  * @returns {string[]}
  */
-export function pageTemplates(pagesDir, clientDir) {
+export function pageTemplates(pagesDir, clientDir, prefixes = []) {
   const built = builtPages(clientDir)
   return pageRoutes(pagesDir)
     .filter((page) => page.prerender)
-    .flatMap((page) => built.filter((path) => routePattern(page.route).test(path)).slice(0, 1))
+    .flatMap((page) =>
+      built.filter((path) => routePattern(page.route, prefixes).test(path)).slice(0, 1),
+    )
 }

@@ -12,6 +12,7 @@ import { homedir, tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { load } from 'js-yaml'
 import { AI_BOTS_POLICY } from '../src/shared/config/site.ts'
+import { localeParam, SUPPORTED_LOCALES } from '../src/shared/i18n/locale.ts'
 import { flagGroups, policyMeta } from './lib/geo-flags.mjs'
 import { headTags, isNoindex } from './lib/html.mjs'
 import { pageTemplates } from './lib/routes.mjs'
@@ -67,7 +68,8 @@ if (copy === sha256(join(base, KB, 'crawlers.yaml'))) {
   )
 }
 
-const pages = pageTemplates(resolve(root, 'src/pages'), client).map((path, index) => ({
+const prefixes = SUPPORTED_LOCALES.flatMap((locale) => localeParam(locale) ?? [])
+const pages = pageTemplates(resolve(root, 'src/pages'), client, prefixes).map((path, index) => ({
   id: `page-${String(index + 1).padStart(2, '0')}`,
   path,
   noindex: isNoindex(headTags(readFileSync(join(client, path, 'index.html'), 'utf8'))),

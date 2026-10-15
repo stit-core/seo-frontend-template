@@ -13,11 +13,18 @@ import {
   walk,
 } from '../scripts/lib/routes.mjs'
 import { cspHash, ISLANDS, RESOURCE_ORIGINS } from '../scripts/lib/site-policy.mjs'
-import { type Locale, localePath } from '../src/shared/i18n/locale.ts'
+import {
+  type Locale,
+  localeParam,
+  localePath,
+  SUPPORTED_LOCALES,
+} from '../src/shared/i18n/locale.ts'
 import { buildRedirectTable, type RedirectRule } from '../src/shared/redirects/table.ts'
 
 const root = resolve(import.meta.dirname, '..')
 const clientDir = resolve(root, 'dist/client')
+// Сегменты `[...locale]` маршрутов — коды локалей с префиксом адреса (все, кроме дефолтной).
+const LOCALE_PREFIXES = SUPPORTED_LOCALES.flatMap((locale) => localeParam(locale) ?? [])
 
 // Демо-ключ IndexNow прод-профиля: сервер поднимается с ним, спек ждёт файл /<ключ>.txt.
 export const E2E_INDEXNOW_KEY = 'e2e-indexnow-key-0123456789'
@@ -77,7 +84,8 @@ export function indexablePaths(): string[] {
 
 // Шаблоны страниц — по одной странице сборки на prerendered-маршрут src/pages: по ним ходит
 // матрица ботов.
-export const pageTemplates = (): string[] => templatesOf(resolve(root, 'src/pages'), clientDir)
+export const pageTemplates = (): string[] =>
+  templatesOf(resolve(root, 'src/pages'), clientDir, LOCALE_PREFIXES)
 
 interface Crawler {
   user_agent_token: string
@@ -118,7 +126,7 @@ export function onDemandRoutes(): string[] {
 export function feedPaths(): string[] {
   const feeds = pageRoutes(resolve(root, 'src/pages'))
     .filter((page) => page.route.endsWith('/rss.xml'))
-    .map((page) => routePattern(page.route))
+    .map((page) => routePattern(page.route, LOCALE_PREFIXES))
   return walk(clientDir)
     .map((file) => `/${relative(clientDir, file).split(sep).join('/')}`)
     .filter((path) => feeds.some((feed) => feed.test(path)))

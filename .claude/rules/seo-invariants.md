@@ -204,7 +204,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   `font-display` swap/fallback/optional, и он только от Fonts API по списку шрифтов (семейство списка в
   `<style>` страницы; в CSS сборки — нет), preload шрифтов — не больше двух;
   страниц черновиков нет; сборка против источника — страница у каждой опубликованной записи и
-  prerendered-маршрута `src/pages` (маршрута локалей `[...locale]` — хоть на одной локали), hreflang только у страниц сверенных пар. Сам скрипт под
+  prerendered-маршрута `src/pages` (маршрута локалей `[...locale]` — хоть на одной локали: сегмент локали — ни одного
+  или код локали проверяемого проекта), hreflang только у страниц сверенных пар. Сам скрипт под
   гейтом: фикстура `.gate-fixtures/seo` обязана давать ровно нарушения из `expected.json`
   (`pnpm check:gate`)
 - unit `shared/seo/*.test.ts` (urls, robots, ai-bots, sitemap, rss, json-ld со схемой) и Container

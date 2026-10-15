@@ -97,7 +97,10 @@ const {
   FONTS: fonts,
   LOCALES: locales,
 } = await import(pathToFileURL(resolve(root, 'scripts/lib/site-policy.mjs')).href)
-const { SUPPORTED_LOCALES, localeInfo, localeOf, localePath, routeOf } = localeRules(locales)
+const { SUPPORTED_LOCALES, localeInfo, localeOf, localeParam, localePath, routeOf } =
+  localeRules(locales)
+// Сегменты `[...locale]` маршрутов — коды локалей с префиксом адреса (все, кроме дефолтной).
+const LOCALE_PREFIXES = SUPPORTED_LOCALES.flatMap((locale) => localeParam(locale) ?? [])
 const client = resolve(root, 'dist/client')
 if (!existsSync(client)) {
   console.error('seo:check: dist/client не найден — сначала pnpm build')
@@ -1181,7 +1184,7 @@ for (const { route, prerender, parametrized } of pageRoutes(resolve(root, 'src/p
   // Маршрут локалей (`[...locale]`) собирает страницу на языках её версий — хоть на одном.
   const localized = localizedRoute(route)
   if (localized !== undefined && !localized.includes('[')) {
-    const pattern = routePattern(route)
+    const pattern = routePattern(route, LOCALE_PREFIXES)
     if (![...pages.keys(), ...builtFiles].some((path) => pattern.test(path))) {
       fail(
         `dist/client${route}`,
