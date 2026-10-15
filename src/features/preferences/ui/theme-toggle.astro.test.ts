@@ -1,9 +1,10 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import { type Locale, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import ThemeToggle from './theme-toggle.astro'
 
 const container = await AstroContainer.create()
-const render = (locale: 'ru' | 'en') => container.renderToString(ThemeToggle, { props: { locale } })
+const render = (locale: Locale) => container.renderToString(ThemeToggle, { props: { locale } })
 
 describe('ThemeToggle', () => {
   it('кнопка острова предпочтений: подпись называет тёмную тему, иконки скрыты от чтеца', async () => {
@@ -22,9 +23,11 @@ describe('ThemeToggle', () => {
     expect(parseHtml(await render('ru')).querySelector('[aria-pressed]')).toBeNull()
   })
 
-  it('подпись переводится', async () => {
-    const button = parseHtml(await render('en')).querySelector('button')
-    expect(button?.getAttribute('aria-label')).toBe('Dark theme')
+  it('подпись — на языке страницы', async () => {
+    for (const locale of SUPPORTED_LOCALES) {
+      const button = parseHtml(await render(locale)).querySelector('button')
+      expect(button?.getAttribute('aria-label'), locale).toBe(t(locale, 'theme.dark'))
+    }
   })
 
   it('не имеет нарушений доступности', async () => {

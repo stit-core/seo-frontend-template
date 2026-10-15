@@ -1,3 +1,4 @@
+import { testLocale } from '@/shared/lib/testing'
 import { buildFeed, FEED_ITEMS_LIMIT } from './rss'
 
 const item = (index: number) => ({
@@ -16,7 +17,7 @@ describe('seo/rss', () => {
     const xml = await buildFeed({
       title: 'Блог — demo',
       description: 'Заметки',
-      language: 'ru',
+      language: testLocale('ru'),
       homePath: '/',
       feedPath: '/rss.xml',
       items: [item(0)],
@@ -34,11 +35,11 @@ describe('seo/rss', () => {
     expect(xml).not.toContain('content:encoded')
   })
 
-  it('фид локали en: ссылки под /en', async () => {
+  it('фид локали с префиксом: ссылки под ним', async () => {
     const xml = await buildFeed({
       title: 'Blog — demo',
       description: 'Notes',
-      language: 'en',
+      language: testLocale('en'),
       homePath: '/en',
       feedPath: '/en/rss.xml',
       items: [{ ...item(0), path: '/en/blog/post-0' }],
@@ -53,7 +54,7 @@ describe('seo/rss', () => {
     const xml = await buildFeed({
       title: 't',
       description: 'd',
-      language: 'ru',
+      language: testLocale('ru'),
       homePath: '/',
       feedPath: '/rss.xml',
       items,

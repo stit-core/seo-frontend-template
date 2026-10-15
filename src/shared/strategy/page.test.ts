@@ -1,20 +1,16 @@
 import { createHash } from 'node:crypto'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import type * as I18n from '@/shared/i18n'
-import type { Locale } from '@/shared/i18n'
+import { testLocale } from '@/shared/lib/testing'
 import deck from './package-landing/site/promo/copy/spasibo.yaml'
 import plan from './package-landing/site/promo/plans/spasibo.yaml'
 import { languagesOf, linkOf, localesOf, projectOf, readPage, versionsOf } from './page'
 
-// Чтение проверяется на своём дескрипторе локалей — ru, en и de, — а не на локалях сайта: фикстура проекта от них не
-// зависит. Снимок сайта — на дескрипторе сайта (snapshot.test.ts).
-vi.mock('@/shared/i18n', async (importOriginal) => {
-  const i18n = await importOriginal<typeof I18n>()
-  const row = (code: string) => ({ code, intl: code, og: code, name: code })
-  return { ...i18n, ...i18n.localeRules([row('ru'), row('en'), row('de')]) }
-})
-const lang = (code: string) => code as Locale
+// Чтение проверяется на локалях теста — ru, en и de, — а не на локалях сайта: фикстура проекта от них не зависит.
+// Снимок сайта — на дескрипторе сайта (snapshot.test.ts).
+vi.mock('@/shared/i18n', async (importOriginal) =>
+  (await import('@/shared/lib/testing')).withTestLocales(importOriginal),
+)
 
 // Проект в раскладке снимка: страница услуги под главной и разделом, на двух языках.
 const site = () => ({
@@ -195,7 +191,8 @@ const site = () => ({
 })
 
 type Files = ReturnType<typeof site>
-const read = (files: Files, code = 'ru') => readPage(projectOf(files), 'repair', lang(code))
+const read = (files: Files, code: 'ru' | 'en' = 'ru') =>
+  readPage(projectOf(files), 'repair', testLocale(code))
 // Проект с правкой на копии.
 const edited = (change: (files: Files) => void): Files => {
   const files = structuredClone(site())
@@ -396,27 +393,30 @@ describe('strategy/page', () => {
     })
 
     it('ссылка на страницу карты: её версия на языке страницы, без неё — версия основного языка с его кодом', () => {
-      expect(linkOf(project(), '/uslugi', lang('en'))).toEqual({
+      expect(linkOf(project(), '/uslugi', testLocale('en'))).toEqual({
         href: '/en/uslugi',
         hreflang: undefined,
       })
-      expect(linkOf(project(), '/uslugi', lang('de'))).toEqual({ href: '/uslugi', hreflang: 'ru' })
-      expect(linkOf(project(), '/net-takoy', lang('de'))).toBeUndefined()
+      expect(linkOf(project(), '/uslugi', testLocale('de'))).toEqual({
+        href: '/uslugi',
+        hreflang: 'ru',
+      })
+      expect(linkOf(project(), '/net-takoy', testLocale('de'))).toBeUndefined()
       const withoutPrimary = edited((files) => {
         for (const page of files['site/web/site-map.yaml'].pages) {
           if (page.id === 'services') Object.assign(page, { lang_versions: ['en'] })
         }
       })
-      expect(linkOf(projectOf(withoutPrimary), '/uslugi', lang('de'))).toBeUndefined()
+      expect(linkOf(projectOf(withoutPrimary), '/uslugi', testLocale('de'))).toBeUndefined()
     })
 
     it('переключатель — перевод на каждый другой язык; без перевода — главная языка или ничего по карте', () => {
-      expect(languagesOf(project(), lang('ru'), versionsOf(project(), 'repair'))).toEqual([
+      expect(languagesOf(project(), testLocale('ru'), versionsOf(project(), 'repair'))).toEqual([
         { locale: 'en', href: '/en/uslugi/remont', translation: true },
         { locale: 'de', href: '/de/uslugi/remont', translation: true },
       ])
       // У «услуг» нет немецкой версии: по умолчанию переключатель ведёт на немецкую главную.
-      expect(languagesOf(project(), lang('en'), versionsOf(project(), 'services'))).toEqual([
+      expect(languagesOf(project(), testLocale('en'), versionsOf(project(), 'services'))).toEqual([
         { locale: 'ru', href: '/uslugi', translation: true },
         { locale: 'de', href: '/de', translation: false },
       ])
@@ -425,11 +425,11 @@ describe('strategy/page', () => {
           Object.assign(version, { untranslated_fallback: 'hide-link' })
         }
       })
-      expect(languagesOf(projectOf(hidden), lang('en'), versionsOf(project(), 'services'))).toEqual(
-        [{ locale: 'ru', href: '/uslugi', translation: true }],
-      )
+      expect(
+        languagesOf(projectOf(hidden), testLocale('en'), versionsOf(project(), 'services')),
+      ).toEqual([{ locale: 'ru', href: '/uslugi', translation: true }])
       const landing = edited((files) => Reflect.deleteProperty(files, 'site/web/site-map.yaml'))
-      expect(languagesOf(projectOf(landing), lang('ru'), {})).toEqual([])
+      expect(languagesOf(projectOf(landing), testLocale('ru'), {})).toEqual([])
     })
   })
 
@@ -454,7 +454,7 @@ describe('strategy/page', () => {
         'site/promo/plans/spasibo.yaml': plan,
         'site/promo/copy/spasibo.yaml': deck,
       })
-      expect(readPage(landing, 'spasibo', lang('ru'))).toEqual({
+      expect(readPage(landing, 'spasibo', testLocale('ru'))).toEqual({
         id: 'spasibo',
         url: '/spasibo',
         parents: [],

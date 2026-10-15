@@ -1,22 +1,14 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type * as SharedConfig from '@/shared/config'
-import type { SITE_VERIFICATION } from '@/shared/config'
-import type * as I18n from '@/shared/i18n'
-import { parseHtml } from '@/shared/lib/testing'
+import { SITE_NAME, type SITE_VERIFICATION } from '@/shared/config'
+import { t } from '@/shared/i18n'
+import { parseHtml, testLocale } from '@/shared/lib/testing'
 import SeoHead from './seo-head.astro'
 
-// Три локали — свой дескриптор теста: версия страницы может быть на каждой.
-vi.mock('@/shared/i18n', async (importOriginal) => {
-  const i18n = await importOriginal<typeof I18n>()
-  return {
-    ...i18n,
-    ...i18n.localeRules([
-      { code: 'ru', intl: 'ru-RU', og: 'ru_RU', name: 'Русский' },
-      { code: 'en', intl: 'en-GB', og: 'en_US', name: 'English' },
-      { code: 'de', intl: 'de-DE', og: 'de_DE', name: 'Deutsch' },
-    ]),
-  }
-})
+// Локали теста — ru, en и de: версия страницы может быть на каждой.
+vi.mock('@/shared/i18n', async (importOriginal) =>
+  (await import('@/shared/lib/testing')).withTestLocales(importOriginal),
+)
 
 const ORIGIN = 'https://demo.example'
 
@@ -102,7 +94,7 @@ describe('SeoHead', () => {
     const feed = doc.querySelector('link[type="application/rss+xml"]')
     expect(['rel', 'title', 'href'].map((name) => feed?.getAttribute(name))).toEqual([
       'alternate',
-      'Blog — ssr-frontend-template',
+      t(testLocale('en'), 'blog.feed', { site: SITE_NAME }),
       `${ORIGIN}/en/rss.xml`,
     ])
   })

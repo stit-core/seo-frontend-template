@@ -1,13 +1,10 @@
 import { SITE_ORIGIN_PLACEHOLDER } from '@/shared/config'
-import type * as I18n from '@/shared/i18n'
 import { absoluteUrl, alternates, normalizePath } from './urls'
 
-// hreflang — на своём дескрипторе локалей из трёх строк, а не на локалях сайта.
-vi.mock('@/shared/i18n', async (importOriginal) => {
-  const i18n = await importOriginal<typeof I18n>()
-  const row = (code: string) => ({ code, intl: code, og: code, name: code })
-  return { ...i18n, ...i18n.localeRules([row('ru'), row('en'), row('de')]) }
-})
+// hreflang — на локалях теста (ru, en, de), а не на локалях сайта.
+vi.mock('@/shared/i18n', async (importOriginal) =>
+  (await import('@/shared/lib/testing')).withTestLocales(importOriginal),
+)
 
 // Карта переводов фикстуры: коды её локалей — не локали сайта, поэтому тип — строковый.
 const versions = (map: Record<string, string>) => map

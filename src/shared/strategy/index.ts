@@ -15,5 +15,7 @@ export {
   pageLink,
   pageLocales,
   pageVersions,
+  projectOf,
+  siteOf,
   strategyPage,
 } from './page'

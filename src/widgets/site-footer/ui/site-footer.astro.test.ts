@@ -1,20 +1,20 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
-import type { Locale } from '@/shared/i18n'
-import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
-import type * as Strategy from '@/shared/strategy'
+import { type Locale, t } from '@/shared/i18n'
+import { expectNoA11yViolations, parseHtml, testLocale } from '@/shared/lib/testing'
 import SiteFooter from './site-footer.astro'
 
-// Разделы, которых нет на языке страницы (версия основного языка), и страницы вне карты.
-const pages = vi.hoisted(() => ({ untranslated: new Set<string>(), absent: new Set<string>() }))
+// Локали и карта теста: контакты и блог — на ru и en, у немецкой версии — главная и «О компании», политика ПДн — только
+// на ru; страница вне карты (политика у сайта без формы) — `absent`.
+const absent = vi.hoisted(() => new Set<string>())
+vi.mock('@/shared/i18n', async (importOriginal) =>
+  (await import('@/shared/lib/testing')).withTestLocales(importOriginal),
+)
 vi.mock('@/shared/strategy', async (importOriginal) => {
-  const strategy = await importOriginal<typeof Strategy>()
+  const strategy = await (await import('@/shared/lib/testing')).withTestSite(importOriginal)
   return {
     ...strategy,
-    pageLink: (route: string, locale: Locale) => {
-      if (pages.absent.has(route)) return undefined
-      if (pages.untranslated.has(route)) return { href: route, hreflang: 'ru' }
-      return strategy.pageLink(route, locale)
-    },
+    pageLink: (route: string, locale: Locale) =>
+      absent.has(route) ? undefined : strategy.pageLink(route, locale),
   }
 })
 
@@ -29,10 +29,12 @@ const links = (html: string) =>
   ])
 
 describe('SiteFooter', () => {
+  afterEach(() => absent.clear())
+
   it('копирайт с годом; ссылки — контакты, политика, фид и время сервера на языке страницы', async () => {
     const html = await render('ru')
     expect(html).toContain(`© ${new Date().getFullYear()}`)
-    expect(html).toContain('шаблон индексируемого сайта')
+    expect(html).toContain(t(testLocale('ru'), 'footer.note'))
     expect(links(html)).toEqual([
       ['/contacts', null],
       ['/legal/privacy', null],
@@ -51,15 +53,16 @@ describe('SiteFooter', () => {
       ['/en/rss.xml', null],
       ['/now', 'ru'],
     ])
-    expect(html).toContain('server time')
+    expect(html).toContain(t(testLocale('en'), 'footer.now'))
   })
 
   it('раздела нет на языке страницы — ни контактов, ни фида; политики нет в карте — нет и ссылки', async () => {
-    pages.untranslated.add('/contacts').add('/blog')
-    pages.absent.add('/legal/privacy')
-    expect(links(await render('en'))).toEqual([['/now', 'ru']])
-    pages.untranslated.clear()
-    pages.absent.clear()
+    expect(links(await render('de'))).toEqual([
+      ['/legal/privacy', 'ru'],
+      ['/now', 'ru'],
+    ])
+    absent.add('/legal/privacy')
+    expect(links(await render('de'))).toEqual([['/now', 'ru']])
   })
 
   it('не имеет нарушений доступности', async () => {

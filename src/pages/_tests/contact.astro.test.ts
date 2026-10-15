@@ -1,6 +1,7 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
-import { t } from '@/shared/i18n'
+import { localePath, t } from '@/shared/i18n'
 import { parseHtml } from '@/shared/lib/testing'
+import { pageLocales } from '@/shared/strategy'
 import Contacts from '../[...locale]/contacts/index.astro'
 import Contact from '../api/contact.astro'
 
@@ -60,13 +61,18 @@ const filled = {
 }
 
 describe('/api/contact', () => {
+  // Форма стоит на версиях страницы контактов: локаль отправителя — одна из них.
   it('принятая заявка — 303 на подтверждение своей локали (PRG)', async () => {
-    const ru = await send(post({ ...filled, locale: 'ru' }))
-    // У 303 только Location: тело и кеш-заголовки редиректа не нужны — его никто не кеширует.
-    expect([ru.status, [...ru.headers]]).toEqual([303, [['location', '/contacts/spasibo']]])
-    const en = await send(post({ ...filled, locale: 'en' }))
-    expect([en.status, en.headers.get('location')]).toEqual([303, '/en/contacts/spasibo'])
-    expect(fetchMock).toHaveBeenCalledTimes(2)
+    const locales = pageLocales('contacts')
+    for (const locale of locales) {
+      const response = await send(post({ ...filled, locale }))
+      // У 303 только Location: тело и кеш-заголовки редиректа не нужны — его никто не кеширует.
+      expect([response.status, [...response.headers]], locale).toEqual([
+        303,
+        [['location', localePath(locale, '/contacts/spasibo')]],
+      ])
+    }
+    expect(fetchMock).toHaveBeenCalledTimes(locales.length)
   })
 
   it('GET обработчика — 303 обратно на форму', async () => {
@@ -98,19 +104,23 @@ describe('/api/contact', () => {
     },
   )
 
-  it('ошибка валидации — 200 с той же формой и полями; ответ персональный', async () => {
-    const response = await send(post({ ...filled, consent: '', locale: 'en' }))
-    expect(response.status).toBe(200)
-    expect(response.headers.get('cache-control')).toBe('private, no-store')
-    const html = await response.text()
-    const doc = parseHtml(html)
-    expect(doc.documentElement.getAttribute('lang')).toBe('en')
-    expect(doc.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex')
-    expect(html).toContain('role="alert"')
-    expect(html).toContain('value="Мария"')
-    // Отказ — первое слово заголовка окна: вкладка и чтец экрана называют его раньше страницы.
-    expect(doc.title).toMatch(/^Error: Contacts — /)
-    expect(outlineFaults(headingLevels(doc))).toEqual([])
+  it('ошибка валидации — 200 с той же формой и полями на языке отправителя; ответ персональный', async () => {
+    for (const locale of pageLocales('contacts')) {
+      const response = await send(post({ ...filled, consent: '', locale }))
+      expect(response.status, locale).toBe(200)
+      expect(response.headers.get('cache-control'), locale).toBe('private, no-store')
+      const html = await response.text()
+      const doc = parseHtml(html)
+      expect(doc.documentElement.getAttribute('lang'), locale).toBe(locale)
+      expect(doc.querySelector('meta[name="robots"]')?.getAttribute('content'), locale).toBe(
+        'noindex',
+      )
+      expect(html, locale).toContain('role="alert"')
+      expect(html, locale).toContain('value="Мария"')
+      // Отказ — первое слово заголовка окна: вкладка и чтец экрана называют его раньше страницы.
+      expect(doc.title.startsWith(t(locale, 'form.failed', { title: '' })), locale).toBe(true)
+      expect(outlineFaults(headingLevels(doc)), locale).toEqual([])
+    }
     expect(fetchMock).not.toHaveBeenCalled()
   })
 

@@ -1,4 +1,5 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import { SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import { SLOT_SIZES } from '@/shared/ui/section'
 import type { Post } from '../api/queries'
@@ -89,12 +90,14 @@ describe('PostArticle', () => {
     for (const element of candidates) expect(element.getAttribute('sizes')).toBe(SLOT_SIZES.reading)
   })
 
-  it('черновик (astro dev) помечен', async () => {
+  it('черновик (astro dev) помечен на языке записи', async () => {
     const container = await AstroContainer.create()
-    const html = await container.renderToString(PostArticle, {
-      props: { post: { ...post, locale: 'en', data: { ...post.data, draft: true } } },
-    })
-    expect(html).toContain('Draft')
+    for (const locale of SUPPORTED_LOCALES) {
+      const html = await container.renderToString(PostArticle, {
+        props: { post: { ...post, locale, data: { ...post.data, draft: true } } },
+      })
+      expect(html, locale).toContain(t(locale, 'post.draft'))
+    }
   })
 
   it('не имеет нарушений доступности', async () => {

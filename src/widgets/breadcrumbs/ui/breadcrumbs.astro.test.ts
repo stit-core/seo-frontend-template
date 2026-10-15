@@ -1,4 +1,5 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import { localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import Breadcrumbs from './breadcrumbs.astro'
 
@@ -29,12 +30,16 @@ describe('Breadcrumbs', () => {
     expect(doc.querySelector('script')).toBeNull()
   })
 
-  it('локаль en: подпись навигации по-английски', async () => {
-    const doc = parseHtml(
-      await render({ locale: 'en', items: [{ name: 'Home', href: '/en' }, { name: 'Blog' }] }),
-    )
-    const home = doc.querySelector('nav[aria-label="Breadcrumbs"] a')
-    expect([home?.getAttribute('href'), home?.textContent]).toEqual(['/en', 'Home'])
+  it('подпись навигации — на языке страницы', async () => {
+    for (const locale of SUPPORTED_LOCALES) {
+      const home = { name: t(locale, 'nav.home'), href: localePath(locale, '/') }
+      const doc = parseHtml(await render({ locale, items: [home, { name: 'Запись' }] }))
+      const link = doc.querySelector(`nav[aria-label="${t(locale, 'nav.breadcrumbs')}"] a`)
+      expect([link?.getAttribute('href'), link?.textContent], locale).toEqual([
+        home.href,
+        home.name,
+      ])
+    }
   })
 
   it('не имеет нарушений доступности', async () => {

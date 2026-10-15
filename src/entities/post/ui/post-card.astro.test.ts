@@ -1,4 +1,5 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import { formatDate, localePath, SUPPORTED_LOCALES } from '@/shared/i18n'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import type { Post } from '../api/queries'
 import PostCard from './post-card.astro'
@@ -41,16 +42,16 @@ describe('PostCard', () => {
     expect(html).toContain('Черновик')
   })
 
-  it('английская запись ссылается под /en', async () => {
+  it('запись ссылается под префиксом своей локали, дата — в её формате', async () => {
     const container = await AstroContainer.create()
-    const html = await container.renderToString(PostCard, {
-      props: {
-        post: { ...post, id: 'en/honest-404-and-410', locale: 'en', slug: 'honest-404-and-410' },
-      },
-    })
-    expect(html).toContain('href="/en/blog/honest-404-and-410"')
-    expect(html).toContain('href="/en/blog/tag/seo"')
-    expect(html).toContain('14 July 2026')
+    for (const locale of SUPPORTED_LOCALES) {
+      const html = await container.renderToString(PostCard, {
+        props: { post: { ...post, id: `${locale}/${post.slug}`, locale } },
+      })
+      expect(html, locale).toContain(`href="${localePath(locale, `/blog/${post.slug}`)}"`)
+      expect(html, locale).toContain(`href="${localePath(locale, '/blog/tag/seo')}"`)
+      expect(html, locale).toContain(formatDate(locale, post.data.pubDate))
+    }
   })
 
   it('миниатюра обложки — слот 160×90: размеры заданы, файлы — по плотности экрана до 2x', async () => {

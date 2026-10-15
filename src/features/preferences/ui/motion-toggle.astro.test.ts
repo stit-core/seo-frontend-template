@@ -1,4 +1,5 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import { SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import MotionToggle from './motion-toggle.astro'
 
@@ -45,14 +46,15 @@ describe('MotionToggle', () => {
     expect((await render()).group?.querySelector('[aria-pressed]')).toBeNull()
   })
 
-  it('подписи переводятся', async () => {
-    const { label, buttons } = await render({ locale: 'en' })
-    expect(label).toBe('Motion')
-    expect(buttons.map((button) => button.textContent?.trim())).toEqual([
-      'System',
-      'Reduced',
-      'Full',
-    ])
+  it('подписи — на языке страницы', async () => {
+    for (const locale of SUPPORTED_LOCALES) {
+      const { label, buttons } = await render({ locale })
+      expect(label, locale).toBe(t(locale, 'motion.label'))
+      expect(
+        buttons.map((button) => button.textContent?.trim()),
+        locale,
+      ).toEqual([t(locale, 'motion.system'), t(locale, 'motion.reduced'), t(locale, 'motion.full')])
+    }
   })
 
   it('класс страницы — рядом со своими', async () => {

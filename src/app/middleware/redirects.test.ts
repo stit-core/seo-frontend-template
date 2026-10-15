@@ -64,7 +64,8 @@ describe('app/middleware/redirects', () => {
       expect(html).toContain(
         `<a href="${localePath(locale, '/')}">${t(locale, 'notFound.home')}</a>`,
       )
-      for (const other of SUPPORTED_LOCALES.filter((candidate) => candidate !== locale)) {
+      // Другие локали — filter с явным boolean: вывод предиката TS при одной локали сузил бы список до never.
+      for (const other of SUPPORTED_LOCALES.filter((candidate): boolean => candidate !== locale)) {
         expect(html, other).not.toContain(t(other, 'gone.lead'))
         expect(html, other).not.toContain(t(other, 'gone.title'))
         expect(html, other).not.toContain(`lang="${other}"`)

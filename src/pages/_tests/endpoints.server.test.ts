@@ -2,12 +2,9 @@ import type { APIContext, APIRoute } from 'astro'
 import type * as SharedConfig from '@/shared/config'
 import { CLEAN_PARAMS } from '@/shared/config'
 import { ALL as imageEndpoint } from '../_image.ts'
-import { GET as feed, getStaticPaths as feedPaths } from '../[...locale]/rss.xml.ts'
 import { GET as indexNowKey } from '../[key].txt.ts'
 import { GET as healthz } from '../healthz.ts'
 import { GET as robotsTxt } from '../robots.txt.ts'
-
-vi.mock('astro:content', () => import('./fixtures').then((fixtures) => fixtures.astroContent))
 
 // Политика ИИ-ботов — поле сборки, а не env: кейс задаёт её здесь.
 const { site } = vi.hoisted(() => ({ site: { aiBots: 'allow-all' } }))
@@ -33,8 +30,6 @@ beforeEach(() => {
   // Профиль — прод-умолчания, а не окружение оболочки: staging и ключ задают сами кейсы.
   vi.stubEnv('ROBOTS_POLICY', 'index')
   vi.stubEnv('INDEXNOW_KEY', '')
-  // Vitest работает в dev-режиме Vite; режим сборки, где черновиков нет, задаётся явно.
-  vi.stubEnv('DEV', false)
 })
 afterEach(() => {
   vi.unstubAllEnvs()
@@ -78,40 +73,6 @@ describe('robots.txt', () => {
     vi.stubEnv('ROBOTS_POLICY', 'noindex')
     site.aiBots = 'deny-all'
     expect(await (await get(robotsTxt)).text()).toBe('User-agent: *\nDisallow: /\n')
-  })
-})
-
-describe('фиды', () => {
-  const links = (xml: string) =>
-    [...xml.matchAll(/<item>[\s\S]*?<link>([^<]+)<\/link>/g)].map(([, link]) => link)
-
-  it('фид — у каждой локали блога в карте: свои записи без черновика, свой язык и self-ссылка', async () => {
-    const feeds = feedPaths()
-    expect(feeds.map(({ params }) => params.locale)).toEqual([undefined, 'en'])
-    const [ruFeed, enFeed] = feeds.map(({ props }) => get(feed, {}, props))
-    const ru = await ruFeed
-    const ruXml = (await ru?.text()) ?? ''
-    expect(links(ruXml)).toEqual([
-      `${ORIGIN}/blog/para`,
-      `${ORIGIN}/blog/odna`,
-      `${ORIGIN}/blog/zametka-4`,
-      `${ORIGIN}/blog/zametka-3`,
-      `${ORIGIN}/blog/zametka-2`,
-      `${ORIGIN}/blog/zametka-1`,
-    ])
-    expect(ruXml).toContain('<language>ru</language>')
-    expect(ruXml).toContain(`<atom:link href="${ORIGIN}/rss.xml" rel="self"`)
-
-    const enXml = (await (await enFeed)?.text()) ?? ''
-    expect(links(enXml)).toEqual([
-      `${ORIGIN}/en/blog/pair`,
-      `${ORIGIN}/en/blog/note-2`,
-      `${ORIGIN}/en/blog/note-1`,
-    ])
-    expect(enXml).toContain('<language>en</language>')
-    expect(enXml).toContain(`<atom:link href="${ORIGIN}/en/rss.xml" rel="self"`)
-
-    expect(ru?.headers.get('content-type')).toBe('application/rss+xml; charset=utf-8')
   })
 })
 

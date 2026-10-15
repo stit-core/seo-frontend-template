@@ -210,7 +210,7 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
 - unit `shared/seo/*.test.ts` (urls, robots, ai-bots, sitemap, rss, json-ld со схемой) и Container
   API (`seo-head`, `json-ld.astro`, `widgets/breadcrumbs`); генератор карты на временном каталоге
   страниц — `shared/seo/sitemap.server.test.ts`; маршруты `robots.txt` (прод, staging, политика
-  ИИ-ботов), фиды и ключ — `src/pages/_tests/endpoints.server.test.ts`.
+  ИИ-ботов) и ключ — `src/pages/_tests/endpoints.server.test.ts`, фиды — `blog.astro.test.ts`.
   `robots.test.ts` — матрица доступа «политика × бот реестра» по RFC 9309: доступ каждого бота —
   как в политике базы, а ожидания независимы от печатаемой группы — классический поиск открыт
   всегда, обучающие боты (`bots[].purpose`) закрыты во втором и третьем режимах, поисковые

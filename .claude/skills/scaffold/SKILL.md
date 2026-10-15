@@ -105,10 +105,11 @@ src/entities/<name>/
 - `model/schema.test.ts` — валидный и невалидный frontmatter, дефолт `draft`, бюджеты
   граничными литералами (не константами модуля)
 - `api/queries.test.ts` — по образцу `entities/post/api/queries.test.ts`: `vi.mock('astro:content')`
-  через `vi.hoisted`, фильтр черновиков и локали, сортировка, перевод — в обоих режимах `DEV`
+  через `vi.hoisted`, записи на локалях теста (`withTestLocales`), фильтр черновиков и локали,
+  сортировка, перевод — в обоих режимах `DEV`
 - записи коллекции — строкой в `COLLECTIONS` общих фикстур `src/pages/_tests/fixtures.ts` (без
-  неё — ошибка typecheck); страницы списка и записи — строки в
-  `src/pages/_tests/pages.astro.test.ts`
+  неё — ошибка typecheck); страница списка — строка в `src/pages/_tests/pages.astro.test.ts`,
+  маршруты записей — на локалях и карте теста по образцу `src/pages/_tests/blog.astro.test.ts`
 
 ## feature
 

@@ -1,5 +1,13 @@
 import type { Locale } from '@/shared/i18n'
+import { testLocale } from '@/shared/lib/testing'
 import type { Post, PostEntry } from './queries'
+
+// Записи фикстур — на локалях теста (ru и en), а не на локалях сайта.
+vi.mock('@/shared/i18n', async (importOriginal) =>
+  (await import('@/shared/lib/testing')).withTestLocales(importOriginal),
+)
+const ru = testLocale('ru')
+const en = testLocale('en')
 
 const { fixtures } = vi.hoisted(() => {
   const entry = (id: string, data: Record<string, unknown>) =>
@@ -77,35 +85,35 @@ describe('post queries: сборка (import.meta.env.DEV = false)', () => {
   afterEach(() => vi.unstubAllEnvs())
 
   it('listPosts: только опубликованные записи локали, новые сверху', async () => {
-    expect(await slugs(listPosts('ru'))).toEqual(['novyj', 'bez-perevoda', 'staryj'])
-    expect((await listPosts('ru'))[0]).toMatchObject({
+    expect(await slugs(listPosts(ru))).toEqual(['novyj', 'bez-perevoda', 'staryj'])
+    expect((await listPosts(ru))[0]).toMatchObject({
       id: 'ru/novyj',
       locale: 'ru',
       slug: 'novyj',
     })
-    expect(await slugs(listPosts('en'))).toEqual(['new-post'])
+    expect(await slugs(listPosts(en))).toEqual(['new-post'])
   })
 
   it('getPost: черновик и чужая локаль — не найдены', async () => {
-    expect((await found('ru', 'novyj')).data.title).toBe('Новый')
-    expect(await getPost('ru', 'chernovik')).toBeUndefined()
-    expect(await getPost('en', 'novyj')).toBeUndefined()
-    expect(await getPost('ru', 'net-takogo')).toBeUndefined()
+    expect((await found(ru, 'novyj')).data.title).toBe('Новый')
+    expect(await getPost(ru, 'chernovik')).toBeUndefined()
+    expect(await getPost(en, 'novyj')).toBeUndefined()
+    expect(await getPost(ru, 'net-takogo')).toBeUndefined()
   })
 
   it('listByTag и listTags: без черновиков и их тегов, теги отсортированы и уникальны', async () => {
-    expect(await slugs(listByTag('ru', 'astro'))).toEqual(['novyj', 'bez-perevoda'])
-    expect(await listByTag('ru', 'draft-only')).toEqual([])
-    expect(await listByTag('ru', 'nope')).toEqual([])
-    expect(await listTags('ru')).toEqual(['astro', 'seo'])
-    expect(await listTags('en')).toEqual(['seo'])
+    expect(await slugs(listByTag(ru, 'astro'))).toEqual(['novyj', 'bez-perevoda'])
+    expect(await listByTag(ru, 'draft-only')).toEqual([])
+    expect(await listByTag(ru, 'nope')).toEqual([])
+    expect(await listTags(ru)).toEqual(['astro', 'seo'])
+    expect(await listTags(en)).toEqual(['seo'])
   })
 
   it('findTranslation: twin по translationKey, черновик-twin не считается', async () => {
-    const novyj = await found('ru', 'novyj')
-    expect((await findTranslation(novyj, 'en'))?.slug).toBe('new-post')
-    expect(await findTranslation(novyj, 'ru')).toBe(novyj)
-    expect(await findTranslation(await found('ru', 'bez-perevoda'), 'en')).toBeUndefined()
+    const novyj = await found(ru, 'novyj')
+    expect((await findTranslation(novyj, en))?.slug).toBe('new-post')
+    expect(await findTranslation(novyj, ru)).toBe(novyj)
+    expect(await findTranslation(await found(ru, 'bez-perevoda'), en)).toBeUndefined()
   })
 })
 
@@ -114,12 +122,12 @@ describe('post queries: astro dev (import.meta.env.DEV = true)', () => {
   afterEach(() => vi.unstubAllEnvs())
 
   it('черновики видны в списках, по URL и в тегах; флаг draft остаётся для пометки', async () => {
-    expect(await slugs(listPosts('ru'))).toEqual(['chernovik', 'novyj', 'bez-perevoda', 'staryj'])
-    const draft = await found('ru', 'chernovik')
+    expect(await slugs(listPosts(ru))).toEqual(['chernovik', 'novyj', 'bez-perevoda', 'staryj'])
+    const draft = await found(ru, 'chernovik')
     expect(draft.data.draft).toBe(true)
-    expect(await listTags('ru')).toEqual(['astro', 'draft-only', 'seo'])
-    expect(await slugs(listByTag('ru', 'draft-only'))).toEqual(['chernovik'])
-    expect((await findTranslation(draft, 'en'))?.slug).toBe('draft-twin')
+    expect(await listTags(ru)).toEqual(['astro', 'draft-only', 'seo'])
+    expect(await slugs(listByTag(ru, 'draft-only'))).toEqual(['chernovik'])
+    expect((await findTranslation(draft, en))?.slug).toBe('draft-twin')
   })
 })
 

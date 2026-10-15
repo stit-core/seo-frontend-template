@@ -214,8 +214,9 @@ it('title — 25…65 знаков', () => {
 
 `src/pages/_tests/fixtures.ts` — массив `readonly CollectionEntry<'<name>'>[]` и строка в
 `COLLECTIONS` (мок `astro:content` отдаёт записи по имени коллекции; коллекция без строки —
-ошибка typecheck); страницы списка и записи — строки в
-`pages.astro.test.ts` (как у page).
+ошибка typecheck); страница списка — строка в `pages.astro.test.ts` (как у page), маршруты записей
+и пары переводов — на локалях и карте теста по образцу `blog.astro.test.ts` (rule `tests-pipeline`
+§ Локали).
 
 ---
 

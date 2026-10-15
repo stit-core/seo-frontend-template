@@ -1,5 +1,6 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { Post } from '@/entities/post'
+import { SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import PostList from './post-list.astro'
 
@@ -44,8 +45,10 @@ describe('PostList', () => {
       },
     })
     expect(single).not.toContain('<nav')
-    const empty = await container.renderToString(PostList, { props: { locale: 'en', posts: [] } })
-    expect(empty).toContain('No posts yet.')
+    for (const locale of SUPPORTED_LOCALES) {
+      const empty = await container.renderToString(PostList, { props: { locale, posts: [] } })
+      expect(empty, locale).toContain(t(locale, 'blog.empty'))
+    }
   })
 
   it('не имеет нарушений доступности', async () => {

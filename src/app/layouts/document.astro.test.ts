@@ -1,6 +1,7 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type * as Fonts from '@/app/styles/fonts'
 import type * as Config from '@/shared/config'
+import { localePath, SUPPORTED_LOCALES } from '@/shared/i18n'
 import { parseHtml } from '@/shared/lib/testing'
 import DocumentLayout from './document.astro'
 
@@ -109,8 +110,9 @@ describe('DocumentLayout', () => {
       }
       expect(await printed(['*'], '/stranica')).toBe(true)
       expect(await printed([], '/stranica')).toBe(false)
-      expect(await printed(['/video'], '/video')).toBe(true)
-      expect(await printed(['/video'], '/en/video')).toBe(true)
+      for (const locale of SUPPORTED_LOCALES) {
+        expect(await printed(['/video'], localePath(locale, '/video')), locale).toBe(true)
+      }
       expect(await printed(['/video'], '/stranica')).toBe(false)
       expect(await printed(['/kejsy/*'], '/kejsy/dom')).toBe(true)
       expect(await printed(['/kejsy/*'], '/kejsy')).toBe(false)

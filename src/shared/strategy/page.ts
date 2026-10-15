@@ -301,16 +301,26 @@ export const snapshot = projectOf(
   Object.fromEntries(Object.entries(files).map(([path, data]) => [path.slice(ROOT.length), data])),
 )
 
-export const strategyPage = (id: string, locale: Locale): StrategyPage =>
-  readPage(snapshot, id, locale)
+// Страницы, языки и переводы — по проекту: у сайта это снимок, у тестов — проект фикстуры (как правила адреса — по
+// списку локалей).
+export function siteOf(project: Project) {
+  const pageLocales = (id: string): Locale[] => localesOf(project, id)
+  return {
+    strategyPage: (id: string, locale: Locale): StrategyPage => readPage(project, id, locale),
+    pageLocales,
+    pageVersions: (id: string): Translations => versionsOf(project, id),
+    pageLink: (route: string, locale: Locale): PageLink | undefined =>
+      linkOf(project, route, locale),
+    languageLinks: (locale: Locale, translations: Translations): LanguageLink[] =>
+      languagesOf(project, locale, translations),
+    // Пути маршрута `[...locale]` страницы карты: по пути на локаль её версии, у дефолтной сегмента нет.
+    localeRoutes: (id: string) =>
+      pageLocales(id).map((locale) => ({
+        params: { locale: localeParam(locale) },
+        props: { locale },
+      })),
+  }
+}
 
-export const pageLocales = (id: string): Locale[] => localesOf(snapshot, id)
-export const pageVersions = (id: string): Translations => versionsOf(snapshot, id)
-export const pageLink = (route: string, locale: Locale): PageLink | undefined =>
-  linkOf(snapshot, route, locale)
-export const languageLinks = (locale: Locale, translations: Translations): LanguageLink[] =>
-  languagesOf(snapshot, locale, translations)
-
-// Пути маршрута `[...locale]` страницы карты: по пути на локаль её версии, у дефолтной сегмента нет.
-export const localeRoutes = (id: string) =>
-  pageLocales(id).map((locale) => ({ params: { locale: localeParam(locale) }, props: { locale } }))
+export const { strategyPage, pageLocales, pageVersions, pageLink, languageLinks, localeRoutes } =
+  siteOf(snapshot)

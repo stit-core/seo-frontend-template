@@ -1,9 +1,10 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import { type Locale, SUPPORTED_LOCALES } from '@/shared/i18n'
 import { expectNoA11yViolations } from '@/shared/lib/testing'
 import { COMPANY } from '../model/company'
 import CompanyContacts from './company-contacts.astro'
 
-const render = async (locale: 'ru' | 'en') => {
+const render = async (locale: Locale) => {
   const container = await AstroContainer.create()
   return container.renderToString(CompanyContacts, { props: { locale } })
 }
@@ -18,10 +19,12 @@ describe('CompanyContacts', () => {
     expect(html).toContain('<address')
   })
 
-  it('адрес и часы работы переводятся', async () => {
-    const html = await render('en')
-    expect(html).toContain('Moscow')
-    expect(html).toContain(COMPANY.hours.en)
+  it('адрес и часы работы — на языке страницы', async () => {
+    for (const locale of SUPPORTED_LOCALES) {
+      const html = await render(locale)
+      expect(html, locale).toContain(COMPANY.address[locale].locality)
+      expect(html, locale).toContain(COMPANY.hours[locale])
+    }
   })
 
   it('не имеет нарушений доступности', async () => {

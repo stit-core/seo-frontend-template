@@ -1,5 +1,5 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
-import type { Locale } from '@/shared/i18n'
+import { type Locale, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import AuthorByline from './author-byline.astro'
 
@@ -11,10 +11,10 @@ const text = (html: string) => parseHtml(html).body.textContent?.replace(/\s+/g,
 
 describe('AuthorByline', () => {
   it('подпись — имя и роль автора на языке страницы, одной строкой', async () => {
-    const ru = await render({ locale: 'ru', name: 'Анна Смирнова', jobTitle: 'врач-кардиолог' })
-    expect(text(ru)).toBe('Автор — Анна Смирнова, врач-кардиолог')
-    const en = await render({ locale: 'en', name: 'Anna Smirnova', jobTitle: 'cardiologist' })
-    expect(text(en)).toBe('By Anna Smirnova, cardiologist')
+    for (const locale of SUPPORTED_LOCALES) {
+      const html = await render({ locale, name: 'Анна Смирнова', jobTitle: 'врач-кардиолог' })
+      expect(text(html), locale).toBe(`${t(locale, 'author.by')} Анна Смирнова, врач-кардиолог`)
+    }
   })
 
   it('без роли — только имя', async () => {

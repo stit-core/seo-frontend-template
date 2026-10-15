@@ -112,7 +112,8 @@ test.describe('on-demand: ответы приложения', () => {
       expect(main, path).toContain(t(locale, 'notFound.title'))
       expect(main, path).toContain(`href="${localePath(locale, '/')}"`)
       expect(main, path).not.toContain(' lang="')
-      for (const other of SUPPORTED_LOCALES.filter((candidate) => candidate !== locale)) {
+      // Другие локали — filter с явным boolean: вывод предиката TS при одной локали сузил бы список до never.
+      for (const other of SUPPORTED_LOCALES.filter((candidate): boolean => candidate !== locale)) {
         expect(main, `${path}: текст локали ${other}`).not.toContain(t(other, 'notFound.lead'))
       }
     }
@@ -124,7 +125,7 @@ test.describe('on-demand: ответы приложения', () => {
     const main = html.slice(html.indexOf('<main'), html.indexOf('</main>'))
     expect(main).toContain(t(DEFAULT_LOCALE, 'error.lead'))
     expect(main).not.toContain(' lang="')
-    for (const other of SUPPORTED_LOCALES.filter((locale) => locale !== DEFAULT_LOCALE)) {
+    for (const other of SUPPORTED_LOCALES.filter((locale): boolean => locale !== DEFAULT_LOCALE)) {
       expect(main, other).not.toContain(t(other, 'error.lead'))
     }
   })
@@ -355,7 +356,7 @@ test.describe('адреса как данные (content/redirects.yaml)', () =>
       expect(response.body, rule.from).toContain(`<html lang="${locale}">`)
       expect(response.body, rule.from).toContain(`<h1>${t(locale, 'gone.title')}</h1>`)
       expect(response.body, rule.from).toContain(`href="${localePath(locale, '/')}"`)
-      for (const other of SUPPORTED_LOCALES.filter((candidate) => candidate !== locale)) {
+      for (const other of SUPPORTED_LOCALES.filter((candidate): boolean => candidate !== locale)) {
         expect(response.body, `${rule.from}: текст локали ${other}`).not.toContain(
           t(other, 'gone.lead'),
         )

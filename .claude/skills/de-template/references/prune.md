@@ -55,6 +55,7 @@ src/entities/author/          реестр авторов и подпись: з�
 src/widgets/post-list/
 src/pages/[...locale]/blog/  src/pages/_blog/
 src/pages/[...locale]/rss.xml.ts
+src/pages/_tests/blog.astro.test.ts
 src/shared/seo/rss.ts  src/shared/seo/rss.test.ts
 ```
 
@@ -74,10 +75,9 @@ src/shared/seo/rss.ts  src/shared/seo/rss.test.ts
 | `src/shared/i18n/dict.ts` | убрать ключи `blog.*`, `post.*`, `author.*`, `footer.rss` в словаре каждой локали |
 | `content/redirects.yaml` | демо-записи (их цель `/blog` уходит вместе с блогом — `check:content` это поймает) |
 | `src/app/middleware/redirects.test.ts` | если таблица пустая — условие «непуста» меняется на «строится» |
-| `src/app/middleware/index.server.test.ts` | кейс «адреса … до роутинга» ходит по демо-адресам `/old`, `/blog/staraya-zametka` и `/en/blog/old-note` — заменить своими из `redirects.yaml` (нет `410` — убрать его половину кейса) |
+| `src/app/middleware/index.server.test.ts` | кейс «адреса … до роутинга» ходит по демо-адресам `/old` и `/blog/staraya-zametka` — заменить своими из `redirects.yaml` (нет `410` — убрать его половину кейса) |
 | `src/pages/_tests/fixtures.ts`, `src/pages/_tests/post-body.astro` | удалить вместе с `vi.mock('astro:content')` и `vi.mock('@/entities/author')` в тестах маршрутов: коллекции нет |
-| `src/pages/_tests/endpoints.server.test.ts` | describe фидов и их импорты убрать вместе с `vi.mock('astro:content')` |
-| `src/pages/_tests/pages.astro.test.ts` | убрать строку маршрута `/[...locale]/blog` и таблицу маршрутов с параметрами |
+| `src/pages/_tests/pages.astro.test.ts` | убрать строку маршрута `/[...locale]/blog` |
 | `docs/reference/rendering.md` | убрать строки блога и фидов из карты маршрутов |
 
 ### Что при этом **не** трогать

@@ -1,8 +1,8 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type * as Config from '@/shared/config'
-import type * as I18n from '@/shared/i18n'
-import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
-import type * as Strategy from '@/shared/strategy'
+import { t } from '@/shared/i18n'
+import { expectNoA11yViolations, parseHtml, testLocale } from '@/shared/lib/testing'
+import { pageVersions } from '@/shared/strategy'
 import SiteHeader from './site-header.astro'
 
 // Поле THEME — решение проекта: тест задаёт его и смотрит, печатает ли шапка кнопку темы.
@@ -12,29 +12,13 @@ vi.mock('@/shared/config', async (importOriginal) => ({
   THEME: theme,
 }))
 
-// Три локали — свой дескриптор теста: переключатель называет каждый перевод.
-vi.mock('@/shared/i18n', async (importOriginal) => {
-  const i18n = await importOriginal<typeof I18n>()
-  return {
-    ...i18n,
-    ...i18n.localeRules([
-      { code: 'ru', intl: 'ru-RU', og: 'ru_RU', name: 'Русский' },
-      { code: 'en', intl: 'en-GB', og: 'en_US', name: 'English' },
-      { code: 'de', intl: 'de-DE', og: 'de_DE', name: 'Deutsch' },
-    ]),
-  }
-})
-
-// Раздел без версии на языке страницы: ссылка на него ведёт на версию основного языка.
-const untranslated = vi.hoisted(() => new Set<string>())
-vi.mock('@/shared/strategy', async (importOriginal) => {
-  const strategy = await importOriginal<typeof Strategy>()
-  return {
-    ...strategy,
-    pageLink: (route: string, locale: I18n.Locale) =>
-      untranslated.has(route) ? { href: route, hreflang: 'ru' } : strategy.pageLink(route, locale),
-  }
-})
+// Локали и карта теста: главная и «О компании» — на ru, en и de, блог и контакты — на ru и en.
+vi.mock('@/shared/i18n', async (importOriginal) =>
+  (await import('@/shared/lib/testing')).withTestLocales(importOriginal),
+)
+vi.mock('@/shared/strategy', async (importOriginal) =>
+  (await import('@/shared/lib/testing')).withTestSite(importOriginal),
+)
 
 const render = async (props: Record<string, unknown>) => {
   const container = await AstroContainer.create()
@@ -52,8 +36,6 @@ const languages = (doc: Doc) =>
   )
 
 describe('SiteHeader', () => {
-  afterEach(() => untranslated.clear())
-
   // У дизайн-системы с одной темой выбирать не из чего: кнопку печатает только парная тема.
   it.each([
     [{ default: 'system', switcher: true }, 1],
@@ -65,40 +47,44 @@ describe('SiteHeader', () => {
     Object.assign(theme, { default: 'system', switcher: true })
   })
 
-  it('бренд — на главную языка, меню — разделы версии языка страницы', async () => {
-    const doc = await render({ locale: 'en' })
-    expect(doc.querySelector('header a')?.getAttribute('href')).toBe('/en')
-    expect(menu(doc)).toEqual(['/en/blog', '/en/about', '/en/contacts'])
-    untranslated.add('/about')
-    expect(menu(await render({ locale: 'en' }))).toEqual(['/en/blog', '/en/contacts'])
+  it('бренд — на главную языка, меню — разделы версии языка страницы на её языке', async () => {
+    const en = await render({ locale: 'en' })
+    expect(en.querySelector('header a')?.getAttribute('href')).toBe('/en')
+    expect(menu(en)).toEqual(['/en/blog', '/en/about', '/en/contacts'])
+    expect(en.querySelector('nav')?.getAttribute('aria-label')).toBe(
+      t(testLocale('en'), 'nav.label'),
+    )
+    // У немецкой версии нет блога и контактов: разделы основного языка в её меню не попадают.
+    const de = await render({ locale: 'de' })
+    expect(de.querySelector('header a')?.getAttribute('href')).toBe('/de')
+    expect(menu(de)).toEqual(['/de/about'])
   })
 
   it('переключатель — каждый перевод страницы самоназванием языка, с hreflang, lang и rel="alternate"', async () => {
-    const doc = await render({
-      locale: 'ru',
-      translations: { ru: '/blog', en: '/en/blog', de: '/de/blog' },
-    })
+    const doc = await render({ locale: 'ru', translations: pageVersions('about') })
     expect(languages(doc)).toEqual([
-      ['/en/blog', 'en', 'en', 'alternate', 'English'],
-      ['/de/blog', 'de', 'de', 'alternate', 'Deutsch'],
+      ['/en/about', 'en', 'en', 'alternate', 'English'],
+      ['/de/about', 'de', 'de', 'alternate', 'Deutsch'],
     ])
   })
 
   it('на английской странице перевод на русский — адрес без префикса', async () => {
-    const doc = await render({ locale: 'en', translations: { ru: '/', en: '/en' } })
+    const doc = await render({ locale: 'en', translations: pageVersions('home') })
     expect(languages(doc)[0]).toEqual(['/', 'ru', 'ru', 'alternate', 'Русский'])
   })
 
   it('без перевода — главная языка по карте и без rel="alternate": это не версия страницы', async () => {
-    const links = languages(await render({ locale: 'ru' }))
-    expect(links).toContainEqual(['/en', 'en', 'en', null, 'English'])
-    expect(links.filter(([, , , rel]) => rel !== null)).toEqual([])
+    const doc = await render({ locale: 'en', translations: pageVersions('contacts') })
+    expect(languages(doc)).toEqual([
+      ['/contacts', 'ru', 'ru', 'alternate', 'Русский'],
+      ['/de', 'de', 'de', null, 'Deutsch'],
+    ])
   })
 
   it('не имеет нарушений доступности', async () => {
     const container = await AstroContainer.create()
     const html = await container.renderToString(SiteHeader, {
-      props: { locale: 'ru', translations: { ru: '/', en: '/en' } },
+      props: { locale: 'ru', translations: pageVersions('home') },
     })
     await expectNoA11yViolations(html)
   })

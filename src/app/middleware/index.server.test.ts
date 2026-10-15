@@ -1,6 +1,9 @@
 import type { APIContext, MiddlewareNext } from 'astro'
 import type * as SharedConfig from '@/shared/config'
 import type { RuntimeConfig } from '@/shared/config'
+import { localeOf } from '@/shared/i18n'
+import { buildRedirectTable } from '@/shared/redirects'
+import redirects from '../../../content/redirects.yaml'
 
 // Живой process.env подменяется целиком; из конфига наблюдаемость читает ровно эти ключи —
 // остальные в тесте не участвуют.
@@ -133,11 +136,12 @@ describe('app/middleware', () => {
     expect(gone.status).toBe(410)
     expect(gone.headers.get('cache-control')).toBe('no-cache')
     expect(gone.headers.get('x-robots-tag')).toBe('noindex')
-    expect(await gone.text()).toContain('<html lang="ru">')
-    // Удалённый адрес английской версии — ответ на её языке.
-    const goneEn = await run('/en/blog/old-note', next)
-    expect(goneEn.status).toBe(410)
-    expect(await goneEn.text()).toContain('<html lang="en">')
+    // Удалённый адрес — ответ на языке префикса своего адреса.
+    for (const { path } of buildRedirectTable(redirects).rules.filter((rule) => !('to' in rule))) {
+      const answer = await run(path, next)
+      expect(answer.status, path).toBe(410)
+      expect(await answer.text(), path).toContain(`<html lang="${localeOf(path)}">`)
+    }
 
     // В образе неканоническую форму раньше отдаёт обёртка процесса; запросу, который дошёл до
     // middleware, оно отвечает тем же.

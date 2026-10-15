@@ -1,6 +1,7 @@
 import type * as Antispam from '@/shared/antispam'
 import { getCaptchaVerifier } from '@/shared/antispam'
 import type { RuntimeEnv } from '@/shared/config'
+import { SUPPORTED_LOCALES } from '@/shared/i18n'
 import { HONEYPOT_FIELD, LOCALE_FIELD } from '../model/schema'
 import { handleContactRequest } from './handler'
 
@@ -79,8 +80,13 @@ describe('обработчик формы', () => {
   })
 
   it('локаль отправителя приезжает из скрытого поля', async () => {
-    const outcome = await handleContactRequest(post({ ...filled, [LOCALE_FIELD]: 'en' }), context)
-    expect(outcome).toEqual({ status: 'accepted', locale: 'en' })
+    for (const locale of SUPPORTED_LOCALES) {
+      const outcome = await handleContactRequest(
+        post({ ...filled, [LOCALE_FIELD]: locale }),
+        context,
+      )
+      expect(outcome, locale).toEqual({ status: 'accepted', locale })
+    }
   })
 
   it('ловушка: ответ как у человека, доставки нет', async () => {
