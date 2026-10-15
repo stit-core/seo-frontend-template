@@ -10,6 +10,7 @@
     { "file": "src/pages/index.astro", "rule": "no-restricted-imports", "count": 3 },
     { "file": "src/entities/post/index.ts", "rule": "no-restricted-imports" },
     { "file": "src/features/search/index.ts", "rule": "no-restricted-syntax", "count": 2 },
+    { "file": "src/features/search/model/title.ts", "rule": "no-restricted-syntax", "count": 2 },
     { "file": "src/features/search/ui/search-box.astro", "rule": "no-restricted-imports" },
     { "file": "src/features/search/ui/search-box.astro", "rule": "no-restricted-syntax" },
     { "file": "src/components/promo.astro", "rule": "boundaries/no-unknown-files" },

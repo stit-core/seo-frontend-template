@@ -31,6 +31,7 @@ ESLint, Steiger и Biome гоняются из этого каталога по 
 | `src/pages/index.astro` | deep-import в `.astro`-цель и в `.ts`-цель (над вторым — `eslint-disable-next-line`, который не действует), относительным путём из слайса в каталог слоя | ESLint `no-restricted-imports` ×3, Steiger `fsd/no-public-api-sidestep` (только `.ts`) |
 | `src/entities/post/index.ts` | реэкспорт `astro:content` из public API | ESLint `no-restricted-imports` |
 | `src/features/search/index.ts` | импорт и объявление в баррели вместо `export { x } from` | ESLint `no-restricted-syntax` ×2 |
+| `src/features/search/model/title.ts` | строка словаря склеена с другой — шаблонной строкой и через `+` (законно — подстановка `{имя}`) | ESLint `no-restricted-syntax` ×2 |
 | `src/shared/ui/button/index.ts` | объявление в баррели примитива `shared/ui` | ESLint `no-restricted-syntax` |
 | `.claude/worktrees/agent/src/x.ts` | `any` в чужом worktree | ничем: каталог в ignores ESLint |
 

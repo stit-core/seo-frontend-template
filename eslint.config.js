@@ -129,6 +129,16 @@ const importMetaEnv = {
   message: 'env: из import.meta.env — только DEV; конфигурация среды — getRuntimeConfig()',
 }
 
+// Строка словаря — фраза целиком: порядок слов, место числа и имени задаёт словарь языка подстановкой `{имя}`, а
+// склейка в коде (шаблонная строка, `+`) закрепила бы порядок одного языка. Склейку в разметке (строка и элемент
+// рядом) держит ревью.
+const dictConcat = {
+  selector:
+    "TemplateLiteral > CallExpression[callee.name='t'], BinaryExpression[operator='+'] > CallExpression[callee.name='t']",
+  message:
+    'i18n: строка словаря не склеивается с другой — подстановка `{имя}` в строке словаря языка',
+}
+
 // Значение разметки — только роль слоя сопоставления src/app/styles/index.css. Мимо него ведут
 // литерал цвета, число в утилите (шкала Tailwind или пиксели), скобки в классе (произвольное
 // значение и `(--переменная)`) и `var()` — переменная ДС напрямую.
@@ -364,18 +374,29 @@ export default defineConfig(
       parserOptions: { parser: tseslint.parser, extraFileExtensions: ['.astro'] },
     },
     rules: {
-      'no-restricted-syntax': ['error', ...rawMedia, ...astroSyntax, containerWidth, importMetaEnv],
+      'no-restricted-syntax': [
+        'error',
+        ...rawMedia,
+        ...astroSyntax,
+        containerWidth,
+        importMetaEnv,
+        dictConcat,
+      ],
     },
   },
   {
     // Примитив секции — единственное место, где задаётся ширина контейнера.
     files: ['src/shared/ui/section/*.astro'],
-    rules: { 'no-restricted-syntax': ['error', ...rawMedia, ...astroSyntax, importMetaEnv] },
+    rules: {
+      'no-restricted-syntax': ['error', ...rawMedia, ...astroSyntax, importMetaEnv, dictConcat],
+    },
   },
   {
     // Примитивы медиа — единственное место сырых <img> и <video>.
     files: ['src/shared/ui/media/*.astro'],
-    rules: { 'no-restricted-syntax': ['error', ...astroSyntax, containerWidth, importMetaEnv] },
+    rules: {
+      'no-restricted-syntax': ['error', ...astroSyntax, containerWidth, importMetaEnv, dictConcat],
+    },
   },
   {
     files: [CLIENT_SCRIPTS],
@@ -398,7 +419,7 @@ export default defineConfig(
   },
   {
     files: ['src/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}'],
-    rules: { 'no-restricted-syntax': ['error', importMetaEnv] },
+    rules: { 'no-restricted-syntax': ['error', importMetaEnv, dictConcat] },
   },
   {
     // Public API слайса/сегмента: только explicit re-exports — без своего кода, который баррель
@@ -458,9 +479,16 @@ export default defineConfig(
     rules: { 'no-restricted-imports': 'off' },
   },
   {
+    // Тело 410 — HTML-строка: строка словаря в ней — текст элемента, как в разметке .astro.
+    files: ['src/app/middleware/gone.ts'],
+    rules: { 'no-restricted-syntax': ['error', importMetaEnv] },
+  },
+  {
     files: ['src/**/*.test.ts'],
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
+      // Тест собирает ожидание из строк словаря так же, как их ставит рядом разметка.
+      'no-restricted-syntax': ['error', importMetaEnv],
       'no-restricted-imports': [
         'error',
         { patterns: importPatterns.filter((pattern) => pattern !== GATE_SCRIPTS) },
