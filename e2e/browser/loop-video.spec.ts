@@ -6,6 +6,7 @@ import { pathToFileURL } from 'node:url'
 import type { Page } from '@playwright/test'
 import type * as Astro from 'astro'
 import { t } from '../../src/shared/i18n/dict.ts'
+import { DEFAULT_LOCALE } from '../../src/shared/i18n/locale.ts'
 import { expect, test } from './csp'
 
 // В reference-наборе сайта петли нет: страницу с ней собирает мини-проект на настоящих компонентах —
@@ -22,12 +23,12 @@ const loop = (name) => [
   { src: \`/\${name}.webm\`, type: 'video/webm' },
 ]
 ---
-<html lang="ru">
+<html lang="${DEFAULT_LOCALE}">
   <head><meta charset="utf-8" /><title>Петли</title><PreferencesInit /></head>
   <body>
     <LoopVideo lcp poster={poster} sources={loop('pervyy-ekran')} />
     <h1>Петли</h1>
-    <MotionToggle locale="ru" />
+    <MotionToggle locale="${DEFAULT_LOCALE}" />
     <div style="height: 2000vh"></div>
     <LoopVideo poster={poster} sources={loop('nizhe-ekrana')} />
   </body>
@@ -108,7 +109,7 @@ test.describe('система просит сократить движение',
     await settled(page)
     expect(videos).toEqual([])
     const first = loaded(page, 'pervyy-ekran')
-    await page.getByRole('button', { name: t('ru', 'motion.full') }).click()
+    await page.getByRole('button', { name: t(DEFAULT_LOCALE, 'motion.full') }).click()
     await first
   })
 
@@ -147,7 +148,7 @@ test('выбор «меньше» — петли стоят, ни байта р�
   ])
   if (browserName !== 'webkit') expect(videos).toEqual([])
   const first = loaded(page, 'pervyy-ekran')
-  await page.getByRole('button', { name: t('ru', 'motion.system') }).click()
+  await page.getByRole('button', { name: t(DEFAULT_LOCALE, 'motion.system') }).click()
   await first
 })
 

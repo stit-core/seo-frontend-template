@@ -1,12 +1,12 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
-import { formatDate, localePath, SUPPORTED_LOCALES } from '@/shared/i18n'
+import { DEFAULT_LOCALE, formatDate, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import type { Post } from '../api/queries'
 import PostCard from './post-card.astro'
 
 const post: Post = {
   id: 'ru/chestnye-404-i-410',
-  locale: 'ru',
+  locale: DEFAULT_LOCALE,
   slug: 'chestnye-404-i-410',
   data: {
     title: 'Честные 404 и 410 вместо soft-404',
@@ -27,10 +27,10 @@ describe('PostCard', () => {
     expect(html).toContain('href="/blog/chestnye-404-i-410"')
     expect(html).toMatch(/<h2[^>]*>.*Честные 404 и 410/s)
     expect(html).toContain('datetime="2026-07-14"')
-    expect(html).toContain('14 июля 2026')
+    expect(html).toContain(formatDate(DEFAULT_LOCALE, post.data.pubDate))
     expect(html).toContain('href="/blog/tag/seo"')
     expect(html).toContain('href="/blog/tag/astro"')
-    expect(html).not.toContain('Черновик')
+    expect(html).not.toContain(t(DEFAULT_LOCALE, 'post.draft'))
     expect(html).not.toContain('<script')
   })
 
@@ -39,7 +39,7 @@ describe('PostCard', () => {
     const html = await container.renderToString(PostCard, {
       props: { post: { ...post, data: { ...post.data, draft: true } } },
     })
-    expect(html).toContain('Черновик')
+    expect(html).toContain(t(DEFAULT_LOCALE, 'post.draft'))
   })
 
   it('запись ссылается под префиксом своей локали, дата — в её формате', async () => {

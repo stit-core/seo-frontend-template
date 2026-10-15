@@ -1,6 +1,6 @@
 import { type APIRequestContext, expect, test } from '@playwright/test'
 import { scriptViolations } from '../../scripts/lib/site-policy.mjs'
-import { localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
+import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
 import { cspProblems, edgeHeadersIn, originOf } from '../site'
 
 const MESSAGE = 'Нужен сайт с блогом, формой заявки и картой сайта. Бюджет обсудим.'
@@ -15,7 +15,7 @@ const form = (email: string, extra: Record<string, string> = {}) => ({
   email,
   message: MESSAGE,
   consent: '1',
-  locale: 'ru',
+  locale: DEFAULT_LOCALE,
   ...extra,
 })
 

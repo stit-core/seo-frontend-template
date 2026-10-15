@@ -1,5 +1,5 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
-import { SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import { SLOT_SIZES } from '@/shared/ui/section'
 import type { Post } from '../api/queries'
@@ -7,7 +7,7 @@ import PostArticle from './post-article.astro'
 
 const post: Post = {
   id: 'ru/odin-obraz-na-vse-sredy',
-  locale: 'ru',
+  locale: DEFAULT_LOCALE,
   slug: 'odin-obraz-na-vse-sredy',
   data: {
     title: 'Один Docker-образ на все среды',
@@ -32,11 +32,11 @@ describe('PostArticle', () => {
     expect(html).toContain('Один Docker-образ на все среды')
     expect(html).toContain('datetime="2026-09-08"')
     expect(html).toContain('datetime="2026-09-10"')
-    expect(html).toContain('обновлено')
+    expect(html).toContain(t(DEFAULT_LOCALE, 'post.updated'))
     const paragraphs = [...parseHtml(html).querySelectorAll('article p')]
     expect(paragraphs.map((paragraph) => paragraph.textContent)).toContain('Тело записи.')
     expect(html).toContain('href="/blog/tag/deploy"')
-    expect(html).not.toContain('Черновик')
+    expect(html).not.toContain(t(DEFAULT_LOCALE, 'post.draft'))
   })
 
   it('подпись автора — слот шапки статьи: над датами, а без него шапка без подписи', async () => {
@@ -58,7 +58,7 @@ describe('PostArticle', () => {
     const container = await AstroContainer.create()
     const { updatedDate: _omit, ...data } = post.data
     const html = await container.renderToString(PostArticle, { props: { post: { ...post, data } } })
-    expect(html).not.toContain('обновлено')
+    expect(html).not.toContain(t(DEFAULT_LOCALE, 'post.updated'))
     expect(html.match(/<time[\s>]/g)).toHaveLength(1)
   })
 

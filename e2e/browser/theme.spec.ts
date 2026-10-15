@@ -1,5 +1,6 @@
 import { THEME } from '../../src/shared/config/site.ts'
 import { t } from '../../src/shared/i18n/dict.ts'
+import { DEFAULT_LOCALE } from '../../src/shared/i18n/locale.ts'
 import { prerenderedPaths } from '../site'
 import { expect, test } from './csp'
 import type { Theme } from './themes'
@@ -12,7 +13,7 @@ test.describe('явный выбор темы', () => {
   }) => {
     await page.goto('/')
     const root = page.locator('html')
-    const toggle = page.getByRole('button', { name: t('ru', 'theme.dark') })
+    const toggle = page.getByRole('button', { name: t(DEFAULT_LOCALE, 'theme.dark') })
     // До выбора тема — из разметки: атрибут стоит только у темы по умолчанию.
     const before = await root.getAttribute('data-theme')
     expect(before).toBe(THEME.default === 'system' ? null : THEME.default)
@@ -44,7 +45,7 @@ test.describe('явный выбор темы', () => {
       const context = await browser.newContext({ colorScheme: system })
       const page = await context.newPage()
       await page.goto('/')
-      if (choose) await page.getByRole('button', { name: t('ru', 'theme.dark') }).click()
+      if (choose) await page.getByRole('button', { name: t(DEFAULT_LOCALE, 'theme.dark') }).click()
       const color = await page.evaluate(() => getComputedStyle(document.body).backgroundColor)
       await context.close()
       return color

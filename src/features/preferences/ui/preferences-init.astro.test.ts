@@ -1,6 +1,7 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { Browser } from 'happy-dom'
 import { ISLANDS } from '@/shared/config'
+import { DEFAULT_LOCALE } from '@/shared/i18n'
 import { parseHtml } from '@/shared/lib/testing'
 import { LoopVideo } from '@/shared/ui/media'
 import { brotliBytes, cspHash } from '../../../../scripts/lib/site-policy.mjs'
@@ -13,8 +14,8 @@ const island = await container.renderToString(PreferencesInit)
 const body = /<script[^>]*>([\s\S]*?)<\/script>/.exec(island)?.[1] ?? ''
 // Кнопки и петля — как их печатают компоненты: договор острова с разметкой проверяется на ней самой.
 const controls = [
-  await container.renderToString(ThemeToggle, { props: { locale: 'ru' } }),
-  await container.renderToString(MotionToggle, { props: { locale: 'ru' } }),
+  await container.renderToString(ThemeToggle, { props: { locale: DEFAULT_LOCALE } }),
+  await container.renderToString(MotionToggle, { props: { locale: DEFAULT_LOCALE } }),
 ].join('')
 const loop = await container.renderToString(LoopVideo, {
   props: {

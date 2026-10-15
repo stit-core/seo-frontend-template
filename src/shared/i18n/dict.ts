@@ -1,7 +1,7 @@
 import type { Locale } from './locale'
 
-// Строки каркаса и обвязки контента (шапка, подвал, 404, блог, форма); тексты страниц —
-// в самих страницах и в markdown-коллекциях.
+// Строки каркаса и обвязки контента (шапка, подвал, 404, блог, форма) — словарь на каждую локаль дескриптора; тексты
+// страниц — в самих страницах и в markdown-коллекциях.
 const ru = {
   'nav.label': 'Основная навигация',
   'nav.skip': 'К содержимому',
@@ -73,12 +73,9 @@ const ru = {
   'thanks.title': 'Заявка отправлена',
   'thanks.lead': 'Ответим на указанную почту. Обычно это занимает один рабочий день.',
   'thanks.back': 'Вернуться к контактам',
-} as const
+}
 
-export type DictKey = keyof typeof ru
-type Dict = Record<DictKey, string>
-
-const en: Dict = {
+const en = {
   'nav.label': 'Main navigation',
   'nav.skip': 'Skip to content',
   'nav.home': 'Home',
@@ -152,7 +149,11 @@ const en: Dict = {
   'thanks.back': 'Back to contacts',
 }
 
-export const DICTS: Readonly<Record<Locale, Dict>> = { ru, en }
+export const DICTS = { ru, en } satisfies Record<Locale, Readonly<Record<string, string>>>
+
+// Ключ строки — тот, что есть в словаре каждой локали: строку без перевода код не возьмёт (typecheck), а базового
+// словаря нет — локаль уходит из сайта вместе со своим словарём.
+export type DictKey = keyof (typeof DICTS)[Locale]
 
 // Строка словаря на языке страницы. `{имя}` в строке — подстановка из `params`: порядок слов и место числа задаёт
 // словарь языка, а не склейка в коде. Подстановки нет — ошибка сборки.

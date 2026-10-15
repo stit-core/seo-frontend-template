@@ -4,11 +4,11 @@
 export const prerender = false
 
 import DocumentLayout from '@/app/layouts/document.astro'
-import { formatDateTime } from '@/shared/i18n'
+import { DEFAULT_LOCALE, formatDateTime } from '@/shared/i18n'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 
-const locale = 'ru' as const
+const locale = DEFAULT_LOCALE
 const now = new Date()
 
 // Роут важнее middleware: живой ответ — не для общих кешей и не для «спроси сервер».

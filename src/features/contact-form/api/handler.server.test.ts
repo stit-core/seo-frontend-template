@@ -1,7 +1,7 @@
 import type * as Antispam from '@/shared/antispam'
 import { getCaptchaVerifier } from '@/shared/antispam'
 import type { RuntimeEnv } from '@/shared/config'
-import { SUPPORTED_LOCALES } from '@/shared/i18n'
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '@/shared/i18n'
 import { HONEYPOT_FIELD, LOCALE_FIELD } from '../model/schema'
 import { handleContactRequest } from './handler'
 
@@ -35,7 +35,7 @@ const filled = {
   email: 'maria@example.com',
   message: MESSAGE,
   consent: '1',
-  [LOCALE_FIELD]: 'ru',
+  [LOCALE_FIELD]: DEFAULT_LOCALE,
 }
 
 const fetchMock = vi.fn()
@@ -68,7 +68,7 @@ afterEach(() => {
 describe('обработчик формы', () => {
   it('заполненная заявка уходит в канал доставки одним запросом', async () => {
     const outcome = await handleContactRequest(post(filled), context)
-    expect(outcome).toEqual({ status: 'accepted', locale: 'ru' })
+    expect(outcome).toEqual({ status: 'accepted', locale: DEFAULT_LOCALE })
     expect(fetchMock).toHaveBeenCalledTimes(1)
     const [url, init] = fetchMock.mock.calls[0] as [string, { body: string }]
     expect(url).toBe(BACKEND)
@@ -94,7 +94,7 @@ describe('обработчик формы', () => {
       post({ ...filled, [HONEYPOT_FIELD]: 'spam-bot' }),
       context,
     )
-    expect(outcome).toEqual({ status: 'accepted', locale: 'ru' })
+    expect(outcome).toEqual({ status: 'accepted', locale: DEFAULT_LOCALE })
     expect(fetchMock).not.toHaveBeenCalled()
     expect(logged()).toContain('honeypot')
   })
@@ -145,7 +145,7 @@ describe('обработчик формы', () => {
       ...context,
       env: { ...env, SITE_URL: 'https://demo.example' },
     })
-    expect(outcome).toEqual({ status: 'accepted', locale: 'ru' })
+    expect(outcome).toEqual({ status: 'accepted', locale: DEFAULT_LOCALE })
   })
 
   it('Referer подходит, когда Origin не прислан', async () => {
@@ -160,14 +160,14 @@ describe('обработчик формы', () => {
       }),
       context,
     )
-    expect(outcome).toEqual({ status: 'accepted', locale: 'ru' })
+    expect(outcome).toEqual({ status: 'accepted', locale: DEFAULT_LOCALE })
   })
 
   it('лимит тела — 64 КБ по Content-Length: байт сверх — отказ без чтения', async () => {
     const sized = (length: number) => post(filled, { 'content-length': String(length) })
     expect(await handleContactRequest(sized(64 * 1024), context)).toEqual({
       status: 'accepted',
-      locale: 'ru',
+      locale: DEFAULT_LOCALE,
     })
     expect(await handleContactRequest(sized(64 * 1024 + 1), context)).toEqual({
       status: 'too-large',
@@ -212,7 +212,7 @@ describe('обработчик формы', () => {
     const outcome = await handleContactRequest(post(filled), context)
     expect(outcome).toEqual({
       status: 'invalid',
-      locale: 'ru',
+      locale: DEFAULT_LOCALE,
       values: { name: filled.name, email: filled.email, message: MESSAGE, consent: true },
       errors: {},
       notice: 'form.error.captcha',
@@ -270,7 +270,7 @@ describe('origin-check: доверены только origin сайта и origi
   })
 
   it('Origin сайта, origin запроса и Referer со страницы сайта — заявка принимается', async () => {
-    const accepted = { status: 'accepted', locale: 'ru' }
+    const accepted = { status: 'accepted', locale: DEFAULT_LOCALE }
     expect(await send({ origin: SITE })).toEqual(accepted)
     expect(await send({ origin: 'http://127.0.0.1:4321' })).toEqual(accepted)
     expect(await send({ referer: `${SITE}/en/contacts` })).toEqual(accepted)

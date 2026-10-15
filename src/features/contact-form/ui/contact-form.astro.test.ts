@@ -1,8 +1,9 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import { DEFAULT_LOCALE, t } from '@/shared/i18n'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import ContactForm from './contact-form.astro'
 
-const props = { locale: 'ru' as const, action: '/api/contact', policyHref: '/legal/privacy' }
+const props = { locale: DEFAULT_LOCALE, action: '/api/contact', policyHref: '/legal/privacy' }
 
 const render = async (extra: Record<string, unknown> = {}) => {
   const container = await AstroContainer.create()
@@ -35,7 +36,7 @@ describe('ContactForm', () => {
     expect(html).toContain('id="contact-email"')
     expect(html).toContain('id="contact-message"')
     const locale = form?.querySelector('input[type="hidden"][name="locale"]')
-    expect(locale?.getAttribute('value')).toBe('ru')
+    expect(locale?.getAttribute('value')).toBe(DEFAULT_LOCALE)
     expect(html).toContain('name="company"')
     expect(html).toContain('href="/legal/privacy"')
     expect(html).toContain('type="checkbox"')
@@ -57,7 +58,7 @@ describe('ContactForm', () => {
       },
     })
     const summary = summaryOf(html)
-    expect(summary.title).toBe('Заявка не отправлена')
+    expect(summary.title).toBe(t(DEFAULT_LOCALE, 'form.summary'))
     expect(summary.focused).toBe(true)
     expect(summary.links).toEqual(['#contact-name', '#contact-email', '#contact-consent'])
     expect(html).toContain('aria-invalid="true"')
@@ -69,9 +70,9 @@ describe('ContactForm', () => {
 
   it('сбой доставки показывается той же сводкой — с заголовком и фокусом, без ссылок на поля', async () => {
     const summary = summaryOf(await render({ notice: 'form.error.delivery' }))
-    expect(summary.title).toBe('Заявка не отправлена')
+    expect(summary.title).toBe(t(DEFAULT_LOCALE, 'form.summary'))
     expect(summary.focused).toBe(true)
-    expect(summary.box?.textContent).toContain('сбой доставки')
+    expect(summary.box?.textContent).toContain(t(DEFAULT_LOCALE, 'form.error.delivery'))
     expect(summary.links).toEqual([])
   })
 

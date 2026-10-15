@@ -1,4 +1,6 @@
 import { SITE_DESCRIPTION, SITE_LOGO_PATH, SITE_NAME, SITE_SAME_AS } from '@/shared/config'
+import { DEFAULT_LOCALE } from '@/shared/i18n'
+import { testLocale } from '@/shared/lib/testing'
 import {
   blogPosting,
   breadcrumbList,
@@ -42,7 +44,7 @@ describe('seo/json-ld', () => {
       name: SITE_NAME,
       description: SITE_DESCRIPTION,
       url: `${ORIGIN}/`,
-      inLanguage: 'ru',
+      inLanguage: DEFAULT_LOCALE,
       publisher: organizationRef,
     })
     expect(JsonLdSchema.parse(data)).toEqual(data)
@@ -106,7 +108,7 @@ describe('seo/json-ld', () => {
 
   it('BlogPosting: даты, dateModified и кадры обложки при наличии, автор и издатель — организация по @id; проходит схему', () => {
     const base = {
-      locale: 'ru' as const,
+      locale: testLocale('ru'),
       path: '/blog/x',
       title: 'Заголовок',
       description: 'Описание',
@@ -149,7 +151,7 @@ describe('seo/json-ld', () => {
 
   it('BlogPosting с автором: Person со своим @id, именем и ролью; издатель — организация; проходит схему', () => {
     const input = {
-      locale: 'ru' as const,
+      locale: testLocale('ru'),
       path: '/blog/x',
       title: 'Заголовок',
       description: 'Описание',

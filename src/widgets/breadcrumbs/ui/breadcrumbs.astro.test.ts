@@ -1,5 +1,5 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
-import { localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import Breadcrumbs from './breadcrumbs.astro'
 
@@ -16,8 +16,8 @@ const render = async (props: Record<string, unknown>) => {
 
 describe('Breadcrumbs', () => {
   it('видимые крошки: ссылки на предков, текущая страница без ссылки, без скриптов', async () => {
-    const doc = parseHtml(await render({ locale: 'ru', items }))
-    const nav = doc.querySelector('nav[aria-label="Хлебные крошки"]')
+    const doc = parseHtml(await render({ locale: DEFAULT_LOCALE, items }))
+    const nav = doc.querySelector(`nav[aria-label="${t(DEFAULT_LOCALE, 'nav.breadcrumbs')}"]`)
     expect(nav?.querySelectorAll('li')).toHaveLength(3)
     const links = [...(nav?.querySelectorAll('a') ?? [])]
     expect(links.map((link) => [link.getAttribute('href'), link.textContent])).toEqual([
@@ -43,6 +43,6 @@ describe('Breadcrumbs', () => {
   })
 
   it('не имеет нарушений доступности', async () => {
-    await expectNoA11yViolations(await render({ locale: 'ru', items }))
+    await expectNoA11yViolations(await render({ locale: DEFAULT_LOCALE, items }))
   })
 })

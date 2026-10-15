@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import type { Page, TestInfo } from '@playwright/test'
 import { t } from '../../src/shared/i18n/dict.ts'
-import { localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
+import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
 import { pageTemplates } from '../site'
 import { expect, test } from './csp'
 import { SITE_THEMES } from './themes'
@@ -230,7 +230,7 @@ test('ответ формы с ошибками', async ({ page }, testInfo) => 
   await page.locator('form[method="post"]').evaluate((form: HTMLFormElement) => {
     form.noValidate = true
   })
-  await page.getByRole('button', { name: t('ru', 'form.submit') }).click()
+  await page.getByRole('button', { name: t(DEFAULT_LOCALE, 'form.submit') }).click()
   await expect(page.getByRole('alert')).toBeVisible()
   await inspect(page)
   await frames(page, testInfo, 'contacts_oshibki')

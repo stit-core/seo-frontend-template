@@ -1,12 +1,12 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { Post } from '@/entities/post'
-import { SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import PostList from './post-list.astro'
 
 const post = (slug: string, title: string): Post => ({
   id: `ru/${slug}`,
-  locale: 'ru',
+  locale: DEFAULT_LOCALE,
   slug,
   data: {
     title,
@@ -23,7 +23,7 @@ describe('PostList', () => {
     const container = await AstroContainer.create()
     const html = await container.renderToString(PostList, {
       props: {
-        locale: 'ru',
+        locale: DEFAULT_LOCALE,
         posts: [post('a', 'Первая запись про статику'), post('b', 'Вторая запись про статику')],
         pagination: { current: 2, last: 3, newerHref: '/blog', olderHref: '/blog/page/3' },
       },
@@ -39,7 +39,7 @@ describe('PostList', () => {
     const container = await AstroContainer.create()
     const single = await container.renderToString(PostList, {
       props: {
-        locale: 'ru',
+        locale: DEFAULT_LOCALE,
         posts: [post('a', 'Единственная запись')],
         pagination: { current: 1, last: 1 },
       },
@@ -56,7 +56,7 @@ describe('PostList', () => {
     await expectNoA11yViolations(
       await container.renderToString(PostList, {
         props: {
-          locale: 'ru',
+          locale: DEFAULT_LOCALE,
           posts: [post('a', 'Первая запись про статику')],
           pagination: { current: 1, last: 2, olderHref: '/blog/page/2' },
         },

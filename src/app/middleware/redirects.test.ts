@@ -1,4 +1,4 @@
-import { localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { buildRedirectTable } from '@/shared/redirects'
 import redirects from '../../../content/redirects.yaml'
 import { goneResponse } from './gone'
@@ -47,7 +47,7 @@ describe('app/middleware/redirects', () => {
   })
 
   it('410: тело с заголовком и noindex, без Location', async () => {
-    const response = goneResponse('ru')
+    const response = goneResponse(DEFAULT_LOCALE)
     expect(response.status).toBe(410)
     expect(response.headers.get('location')).toBeNull()
     expect(response.headers.get('x-robots-tag')).toBe('noindex')

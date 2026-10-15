@@ -54,15 +54,15 @@ for (const { system, choice, moves } of STATES) {
       const target = new URL((await link.getAttribute('href')) ?? '', page.url()).pathname
       await link.click()
       await page.waitForURL(`**${target}`)
-      const frames = await page.evaluate<Frame[] | string>(
-        () => (window as Revealed).reveal ?? 'нет pagereveal',
-      )
+      // Событие pagereveal новой страницы может прийти и после load: кадры перехода — у него, его и ждём.
+      await page.waitForFunction(() => (window as Revealed).reveal !== undefined)
+      const frames = (await page.evaluate(() => (window as Revealed).reveal)) ?? []
       if (!moves) {
         expect(frames).toEqual([])
         return
       }
       expect(frames).not.toEqual([])
-      for (const frame of frames as Frame[]) expect(frame.duration, frame.target).toBeGreaterThan(0)
+      for (const frame of frames) expect(frame.duration, frame.target).toBeGreaterThan(0)
     })
   })
 }

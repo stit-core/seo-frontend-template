@@ -1,5 +1,5 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
-import { localePath, t } from '@/shared/i18n'
+import { DEFAULT_LOCALE, localePath, t } from '@/shared/i18n'
 import { parseHtml } from '@/shared/lib/testing'
 import { pageLocales } from '@/shared/strategy'
 import Contacts from '../[...locale]/contacts/index.astro'
@@ -131,18 +131,20 @@ describe('/api/contact', () => {
     expect(response.headers.get('cache-control')).toBe('private, no-store')
     const html = await response.text()
     const doc = parseHtml(html)
-    expect(html).toContain(t('ru', 'form.error.delivery'))
-    expect(doc.title).toMatch(/^Ошибка: Контакты — /)
+    expect(html).toContain(t(DEFAULT_LOCALE, 'form.error.delivery'))
+    expect(doc.title.startsWith(t(DEFAULT_LOCALE, 'form.failed', { title: '' }))).toBe(true)
     expect(outlineFaults(headingLevels(doc))).toEqual([])
     expect(doc.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex')
   })
 
   it('страница с формой до отправки — заголовок окна без слова об ошибке', async () => {
     const html = await container.renderToString(Contacts, {
-      props: { locale: 'ru' },
+      props: { locale: DEFAULT_LOCALE },
       request: new Request(`${ORIGIN}/contacts`),
       partial: false,
     })
-    expect(parseHtml(html).title).toMatch(/^Контакты — /)
+    const { title } = parseHtml(html)
+    expect(title).toBeTruthy()
+    expect(title.startsWith(t(DEFAULT_LOCALE, 'form.failed', { title: '' }))).toBe(false)
   })
 })

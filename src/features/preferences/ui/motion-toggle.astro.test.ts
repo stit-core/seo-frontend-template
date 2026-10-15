@@ -1,11 +1,11 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
-import { SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import MotionToggle from './motion-toggle.astro'
 
 const container = await AstroContainer.create()
 
-async function render(props: Record<string, unknown> = { locale: 'ru' }) {
+async function render(props: Record<string, unknown> = { locale: DEFAULT_LOCALE }) {
   const html = await container.renderToString(MotionToggle, { props })
   const group = parseHtml(html).querySelector('fieldset')
   const label = group?.ownerDocument.getElementById(group.getAttribute('aria-labelledby') ?? '')
@@ -20,7 +20,7 @@ async function render(props: Record<string, unknown> = { locale: 'ru' }) {
 describe('MotionToggle', () => {
   it('группа подписана видимым словом, три кнопки — значения data-motion по контракту базы', async () => {
     const { html, label, buttons } = await render()
-    expect(label).toBe('Движение')
+    expect(label).toBe(t(DEFAULT_LOCALE, 'motion.label'))
     expect(buttons.map((button) => button.getAttribute('type'))).toEqual([
       'button',
       'button',
@@ -33,11 +33,11 @@ describe('MotionToggle', () => {
       'reduced',
       'full',
     ])
-    expect(buttons.map((button) => button.textContent?.trim())).toEqual([
-      'Как в системе',
-      'Меньше',
-      'Полное',
-    ])
+    expect(buttons.map((button) => button.textContent?.trim())).toEqual(
+      (['motion.system', 'motion.reduced', 'motion.full'] as const).map((key) =>
+        t(DEFAULT_LOCALE, key),
+      ),
+    )
     expect(html).not.toContain('<script')
   })
 
@@ -59,7 +59,9 @@ describe('MotionToggle', () => {
 
   it('класс страницы — рядом со своими', async () => {
     const own = [...((await render()).group?.classList ?? [])]
-    const placed = [...((await render({ locale: 'ru', class: 'mt-md' })).group?.classList ?? [])]
+    const placed = [
+      ...((await render({ locale: DEFAULT_LOCALE, class: 'mt-md' })).group?.classList ?? []),
+    ]
     expect(placed).toEqual([...own, 'mt-md'])
   })
 

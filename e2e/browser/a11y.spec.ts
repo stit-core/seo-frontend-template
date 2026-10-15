@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright'
 import type { Page } from '@playwright/test'
 import { THEME } from '../../src/shared/config/site.ts'
 import { t } from '../../src/shared/i18n/dict.ts'
-import { localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
+import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
 import { prerenderedPaths } from '../site'
 import { expect, test } from './csp'
 import { bySite, SITE_THEMES, stored } from './themes'
@@ -40,8 +40,10 @@ for (const theme of SITE_THEMES) {
       await page.locator('form[method="post"]').evaluate((form: HTMLFormElement) => {
         form.noValidate = true
       })
-      await page.getByRole('button', { name: t('ru', 'form.submit') }).click()
-      await expect(page).toHaveTitle(new RegExp(`^${t('ru', 'form.failed', { title: '' })}`))
+      await page.getByRole('button', { name: t(DEFAULT_LOCALE, 'form.submit') }).click()
+      await expect(page).toHaveTitle(
+        new RegExp(`^${t(DEFAULT_LOCALE, 'form.failed', { title: '' })}`),
+      )
       await expect(page.getByRole('alert')).toBeFocused()
       expect(await violations(page)).toEqual([])
     })

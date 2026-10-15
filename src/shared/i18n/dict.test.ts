@@ -6,9 +6,10 @@ const placeholders = (text: string) =>
 
 describe('i18n/dict', () => {
   // Перевод строки не теряет подстановку и не придумывает свою: число и тег встают по словарю каждого языка.
-  it('у каждой локали — словарь, у каждой строки — те же подстановки, что у дефолтной', () => {
+  it('у каждой локали — словарь с теми же ключами, у каждой строки — те же подстановки, что у дефолтной', () => {
     const base = DICTS[DEFAULT_LOCALE]
     for (const locale of SUPPORTED_LOCALES) {
+      expect(Object.keys(DICTS[locale]).sort(), locale).toEqual(Object.keys(base).sort())
       for (const [key, text] of Object.entries(DICTS[locale])) {
         expect(placeholders(text), `${locale} ${key}`).toEqual(
           placeholders(base[key as keyof typeof base]),

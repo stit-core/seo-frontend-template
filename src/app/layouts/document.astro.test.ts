@@ -1,7 +1,7 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type * as Fonts from '@/app/styles/fonts'
 import type * as Config from '@/shared/config'
-import { localePath, SUPPORTED_LOCALES } from '@/shared/i18n'
+import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '@/shared/i18n'
 import { parseHtml } from '@/shared/lib/testing'
 import DocumentLayout from './document.astro'
 
@@ -61,7 +61,7 @@ async function render(
   islands.metrika.pages = metrika
   const html = await container.renderToString(DocumentLayout, {
     props: {
-      locale: 'ru',
+      locale: DEFAULT_LOCALE,
       title: 'Страница для проверки оболочки',
       description: 'Страница существует только в тесте: оболочка печатает её head и каркас сайта.',
     },
