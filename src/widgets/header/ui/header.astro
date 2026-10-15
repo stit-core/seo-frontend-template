@@ -1,39 +1,39 @@
 ---
 import { ThemeToggle } from '@/features/preferences'
 import { SITE_NAME, THEME } from '@/shared/config'
-import {
-  type DictKey,
-  type Locale,
-  localeInfo,
-  localePath,
-  type Translations,
-  t,
-} from '@/shared/i18n'
-import { languageLinks, pageLink } from '@/shared/strategy'
+import { type Locale, localeInfo, localePath, type Translations, t } from '@/shared/i18n'
+import { type BlockProps, languageLinks, menuLinks } from '@/shared/strategy'
+import { ActionLink } from '@/shared/ui/action'
 import { Container } from '@/shared/ui/section'
+import type { header } from '../model/block'
 
-interface Props {
+type Props = BlockProps<typeof header> & {
   locale: Locale
+  // Карта переводов страницы: переключатель языка ведёт на её версии.
   translations?: Translations | undefined
 }
 
-const { locale, translations = {} } = Astro.props
+const {
+  id,
+  variant,
+  'nav-link': labels = [],
+  cta,
+  'cta-label': ctaLabel,
+  phone,
+  'lang-switch': switcher,
+  locale,
+  translations = {},
+} = Astro.props
 
 // Путь страницы: на prerendered это её собственный маршрут, на on-demand — запрошенный.
 const path = Astro.url.pathname
-// Меню версии — только её разделы: страницы без версии на языке страницы в нём нет.
-const items = (
-  [
-    { route: '/blog', key: 'nav.blog' },
-    { route: '/about', key: 'nav.about' },
-    { route: '/contacts', key: 'nav.contacts' },
-  ] satisfies Array<{ route: string; key: DictKey }>
-).flatMap(({ route, key }) => {
-  const link = pageLink(route, locale)
-  return link === undefined || link.hreflang !== undefined ? [] : [{ href: link.href, key }]
-})
+// Меню сайта — у шапки сайта; у посадочной (landing-minimal) меню нет: логотип, призыв и контакт.
+const site = variant === 'site-nav'
+const menu = site ? menuLinks(labels, locale, `${id}/nav-link`) : []
 const isCurrent = (href: string): boolean => path === href || path.startsWith(`${href}/`)
-const languages = languageLinks(locale, translations)
+const languages = switcher === undefined ? [] : languageLinks(locale, translations)
+// Ряд шапки с меню — лендмарк навигации, без меню — просто ряд действий.
+const Bar = site ? 'nav' : 'div'
 ---
 
 <header class="border-b border-subtle">
@@ -41,16 +41,17 @@ const languages = languageLinks(locale, translations)
     width="page"
     class="flex flex-wrap items-center justify-between gap-x-xl gap-y-sm py-md"
   >
+    {/* Знак сайта — имя бренда ссылкой на главную языка: файл знака — манифест пакета дизайна. */}
     <a
       href={localePath(locale, '/')}
       class="touch-target text-body-strong text-primary no-underline hover:text-accent"
     >
       {SITE_NAME}
     </a>
-    <nav aria-label={t(locale, 'nav.label')} class="w-full tablet:w-auto">
-      {/* На узком экране навигация занимает вторую строку целиком и расходится по краям. */}
+    <Bar aria-label={site ? t(locale, 'nav.label') : undefined} class="w-full tablet:w-auto">
+      {/* На узком экране ряд занимает вторую строку целиком и расходится по краям. */}
       <ul class="flex flex-wrap items-center justify-between gap-x-md gap-y-xs text-helper tablet:justify-end tablet:gap-x-lg">
-        {items.map((item) => (
+        {menu.map((item) => (
           <li>
             <a
               href={item.href}
@@ -62,7 +63,7 @@ const languages = languageLinks(locale, translations)
                   : 'text-secondary',
               ]}
             >
-              {t(locale, item.key)}
+              {item.label}
             </a>
           </li>
         ))}
@@ -84,7 +85,19 @@ const languages = languageLinks(locale, translations)
             <ThemeToggle locale={locale} />
           </li>
         )}
+        {phone && (
+          <li>
+            <a href={phone.href} class="touch-target text-primary no-underline hover:text-accent">
+              {phone.href.replace(/^tel:/, '')}
+            </a>
+          </li>
+        )}
+        {cta && ctaLabel && (
+          <li>
+            <ActionLink href={cta.href} hreflang={cta.hreflang} label={ctaLabel} kind="primary" />
+          </li>
+        )}
       </ul>
-    </nav>
+    </Bar>
   </Container>
 </header>

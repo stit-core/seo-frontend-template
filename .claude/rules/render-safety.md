@@ -15,7 +15,7 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 - Frontmatter prerender-страницы (и обработчик prerendered-эндпоинта — фида) исполняется один раз
   на `astro build`: `new Date()`,
   `getRuntimeConfig()`, `process.env` дают значения **сборки** (origin — плейсхолдер, который
-  штампует entrypoint). Год в подвале — год релиза, это честно; «текущее время» — нет.
+  штампует entrypoint). Дата сборки — момент релиза, это честно; «текущее время» — нет.
   `<meta name="robots">` prerendered-страницы — тоже значение сборки: staging закрывают
   `ROBOTS_POLICY` (`robots.txt` и `X-Robots-Tag` обёртки процесса на каждом ответе) и Traefik
 - Request-only API не в prerender-маршрутах: `Astro.request.headers` там пустой (Astro пишет
@@ -80,7 +80,7 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 цвета мимо токен-слоя), `fonts` — семейства списка шрифтов ДС `src/app/styles/fonts.ts` (Fonts API,
 локальный провайдер; запасные гарнитуры — хвост стека семейства в файле токенов, rule `shared-ui`), `image` — без адаптивных стилей и раскладки Astro (`responsiveStyles`, `layout`: их CSS вторым файлом грузила бы страница с картинкой; выбор файла и размеры даёт её компонент, rule `shared-ui`), `vite.build.assetsInlineLimit: 0` (сборка ничего не встраивает в страницу:
 короткий скрипт компонента без импортов остаётся модулем, по которому реестр `ISLANDS` узнаёт
-остров-файл, стиль страницы и ресурс — файлами на `'self'` CSP, а не `data:`-адресом), Vite-плагины `yaml-modules` (`content/*.yaml`, снимок strategy `strategy/` и реестр ботов `shared/seo/crawlers.yaml` → данные на сборке),
+остров-файл, стиль страницы и ресурс — файлами на `'self'` CSP, а не `data:`-адресом), Vite-плагины `yaml-modules` (`content/*.yaml`, снимок strategy `strategy/` и реестр ботов `shared/seo/crawlers.yaml` → данные на сборке; файлы проекта в снимке — полями схем чтения `shared/strategy/contract.ts`: каркас on-demand страниц везёт план, а не прозу и источники),
 `slot-sizes` (`sizes` картинок в контейнере секции — длины ролей файла токенов, модуль `virtual:slot-sizes`:
 `var()` в `sizes` не читается, rule `shared-ui`) и
 `wrapper-entries` (модули приложения, которые `docker/*` берут по имени файла: схема env

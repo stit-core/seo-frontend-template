@@ -1,4 +1,5 @@
-import { action, defineBlock, fact, group, list, text } from './block'
+import { testLocale } from '@/shared/lib/testing'
+import { action, defineBlock, fact, group, labelled, list, media, text, untargeted } from './block'
 import type { Section, StrategyPage } from './page'
 
 const promo = defineBlock({
@@ -95,5 +96,46 @@ describe('strategy/block', () => {
       expect(run, where).toThrow('strategy: home/offer — блок promo: ')
       expect(run, where).toThrow(where)
     }
+  })
+
+  // Переключатель языка — место действия без цели; медиа-слот чтение не заполняет; цель на основном языке — с его кодом.
+  it('действие без цели, медиа-слот и язык цели — свои виды значения', () => {
+    const chrome = defineBlock({
+      id: 'header',
+      variants: ['site-nav'],
+      slots: { logo: media, 'lang-switch': untargeted.optional(), cta: action.optional() },
+    })
+    const header = (slots: Section['slots']) =>
+      chrome.props(
+        page(section({ id: 'header', block: 'header', variant: 'site-nav', slots, groups: {} })),
+        'header',
+      )
+    expect(
+      header({
+        'lang-switch': { href: undefined },
+        cta: { href: '/legal/privacy', hreflang: testLocale('ru') },
+      }),
+    ).toStrictEqual({
+      id: 'header',
+      variant: 'site-nav',
+      'lang-switch': { href: undefined },
+      cta: { href: '/legal/privacy', hreflang: 'ru' },
+    })
+    expect(() => header({ 'lang-switch': { href: '/en' } })).toThrow('→ at ["lang-switch"].href')
+    expect(() => header({ logo: 'logo.svg' })).toThrow('→ at logo')
+  })
+
+  it('действия и подписи — пары по порядку плана; у пары нет половины — ошибка называет ключ', () => {
+    const links = [{ href: '/privacy' }, { href: '/soglasie' }]
+    expect(labelled(links, ['Политика', 'Согласие'], 'home/footer/privacy')).toEqual([
+      { href: '/privacy', label: 'Политика' },
+      { href: '/soglasie', label: 'Согласие' },
+    ])
+    expect(() => labelled(links, ['Политика'], 'home/footer/privacy')).toThrow(
+      'strategy: home/footer/privacy — действий 2, а подписей 1',
+    )
+    expect(() => labelled(links.slice(1), ['Политика', 'Согласие'], 'home/footer/privacy')).toThrow(
+      'strategy: home/footer/privacy — действий 1, а подписей 2',
+    )
   })
 })

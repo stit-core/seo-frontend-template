@@ -1,5 +1,5 @@
 import { PACKAGE_LANDING, testLocale } from '@/shared/lib/testing'
-import { languagesOf, linkOf, localesOf, projectOf, readPage, versionsOf } from './page'
+import { languagesOf, linkOf, localesOf, projectOf, readPage, siteOf, versionsOf } from './page'
 
 // Чтение проверяется на локалях теста — ru, en и de, — а не на локалях сайта: фикстура проекта от них не зависит.
 // Снимок сайта — на дескрипторе сайта (snapshot.test.ts).
@@ -302,6 +302,29 @@ describe('strategy/page', () => {
     })
   })
 
+  // Маршрут цели — страница карты на языке страницы; без её версии на нём — версия основного языка, ссылка называет его.
+  it('маршрут действия — страница карты: своя версия, без неё — версия основного языка с его кодом', () => {
+    const toServices = (versions: string[]) =>
+      edited((files) => {
+        const [hero] = files['site/web/plans/repair.yaml'].sections
+        const [cta] = hero && 'action' in hero.slots ? hero.slots.action : []
+        if (cta) Object.assign(cta, { target: { kind: 'route', value: '/uslugi' } })
+        for (const page of files['site/web/site-map.yaml'].pages) {
+          if (page.id === 'services') Object.assign(page, { lang_versions: versions })
+        }
+      })
+    expect(read(toServices(['ru', 'en']), 'en').sections[0]?.slots.cta).toStrictEqual({
+      href: '/en/uslugi',
+    })
+    expect(read(toServices(['ru']), 'en').sections[0]?.slots.cta).toStrictEqual({
+      href: '/uslugi',
+      hreflang: 'ru',
+    })
+    expect(() => read(toServices(['de']), 'en')).toThrow(
+      'strategy: repair/hero/cta — /uslugi: у страницы карты нет версии ни на en, ни на основном языке',
+    )
+  })
+
   it('без карты (лендинг) — адрес из page.url плана, родителей нет', () => {
     const files = edited((files) => {
       Reflect.deleteProperty(files, 'site/web/site-map.yaml')
@@ -461,6 +484,53 @@ describe('strategy/page', () => {
       ).toEqual([{ locale: 'ru', href: '/uslugi', translation: true }])
       const landing = edited((files) => Reflect.deleteProperty(files, 'site/web/site-map.yaml'))
       expect(languagesOf(projectOf(landing), testLocale('ru'), {})).toEqual([])
+    })
+  })
+
+  describe('каркас по карте', () => {
+    const menu = (labels: string[], code: 'ru' | 'de' = 'ru') =>
+      siteOf(
+        projectOf(
+          edited((files) => {
+            Object.assign(files['site/web/site-map.yaml'], {
+              chrome: { header: { items: [{ page: 'services' }, { page: 'repair' }] } },
+            })
+          }),
+        ),
+      ).menuLinks(labels, testLocale(code), 'repair/header/nav-link')
+
+    it('меню шапки — страницы chrome.header.items по порядку с подписями плана; меню версии — её разделы', () => {
+      expect(menu(['Услуги', 'Ремонт'])).toEqual([
+        { href: '/uslugi', label: 'Услуги' },
+        { href: '/uslugi/remont', label: 'Ремонт' },
+      ])
+      // У «услуг» нет немецкой версии: в немецком меню их нет.
+      expect(menu(['Dienste', 'Renovierung'], 'de')).toEqual([
+        { href: '/de/uslugi/remont', label: 'Renovierung' },
+      ])
+      expect(siteOf(projectOf(site())).menuLinks([], testLocale('ru'), 'repair/header')).toEqual([])
+    })
+
+    it('подписей меню меньше или больше пунктов карты — ошибка называет ключ', () => {
+      for (const labels of [['Услуги'], ['Услуги', 'Ремонт', 'Ещё']]) {
+        expect(() => menu(labels)).toThrow(
+          `strategy: repair/header/nav-link — подписей меню ${labels.length}, а пунктов chrome.header.items карты 2`,
+        )
+      }
+    })
+
+    it('крошки — у шаблона карты с крошками и с глубины 2', () => {
+      const crumbs = siteOf(
+        projectOf(
+          edited((files) => {
+            const map = files['site/web/site-map.yaml']
+            Object.assign(map, { templates: [{ id: 'service', breadcrumbs: true }] })
+            for (const page of map.pages) Object.assign(page, { template: 'service' })
+          }),
+        ),
+      ).breadcrumbsOn
+      expect(['home', 'services', 'repair'].filter(crumbs)).toEqual(['repair'])
+      expect(siteOf(projectOf(site())).breadcrumbsOn('repair')).toBe(false)
     })
   })
 

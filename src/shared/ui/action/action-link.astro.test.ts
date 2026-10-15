@@ -22,6 +22,14 @@ describe('ActionLink', () => {
     }
   })
 
+  it('цель — версия основного языка: ссылка называет её язык', async () => {
+    const html = await astro.renderToString(ActionLink, {
+      props: { href: '/legal/privacy', hreflang: 'ru', label: 'Политика', kind: 'secondary' },
+    })
+    expect(parseHtml(html).querySelector('a')?.getAttribute('hreflang')).toBe('ru')
+    expect((await render('primary')).link?.hasAttribute('hreflang')).toBe(false)
+  })
+
   it('главный призыв — кнопка с заливкой, второй путь — ссылка с целью касания', async () => {
     expect([...((await render('primary')).link?.classList ?? [])]).toEqual(['button'])
     expect([...((await render('secondary')).link?.classList ?? [])]).toEqual(['touch-target'])

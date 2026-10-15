@@ -2,12 +2,19 @@ import { z } from 'zod'
 import { fail } from './contract'
 import type { FactValue, StrategyPage } from './page'
 
-// Значения слотов блока — как их отдаёт чтение страницы: текст copy deck, действие плана с адресом цели, факт.
+// Значения слотов блока — как их отдаёт чтение страницы: текст copy deck, действие плана с адресом цели (и языком цели,
+// когда это версия основного языка), факт.
 export const text = z.string()
-export const action = z.strictObject({ href: z.string() })
+export const action = z.strictObject({ href: z.string(), hreflang: z.string().optional() })
 export const fact = z.custom<FactValue>(
   (value) => typeof value === 'object' && value !== null && 'id' in value && 'text' in value,
 )
+
+// Действие без цели в плане (переключатель языка): слот ставит место действия, адрес собирает код.
+export const untargeted = z.strictObject({ href: z.undefined() })
+
+// Медиа-слот: файл — манифест пакета дизайна, чтение плана его не заполняет; элемент рисует блок (знак — имя бренда).
+export const media = z.undefined().optional()
 
 // Элемент, который план заполняет не раз (пункты меню, абзацы раздела): значения по порядку плана; один — тоже список.
 export const list = <T extends z.ZodType>(value: T) =>
@@ -16,6 +23,18 @@ export const list = <T extends z.ZodType>(value: T) =>
 // Повторяемый набор каталога (карточки, пункты): экземпляры по порядку плана, в каждом — элементы набора.
 export const group = <const S extends Record<string, z.ZodType>>(elements: S) =>
   z.array(z.strictObject(elements))
+
+// Действия и их подписи — пары элементов анатомии по порядку плана (`privacy` ↔ `privacy-label`): у пары нет половины —
+// ошибка сборки с ключом.
+export function labelled<A extends object>(
+  actions: readonly A[],
+  labels: readonly string[],
+  key: string,
+): Array<A & { label: string }> {
+  const mismatch = () => fail(key, `действий ${actions.length}, а подписей ${labels.length}`)
+  if (labels.length > actions.length) mismatch()
+  return actions.map((target, index) => ({ ...target, label: labels[index] ?? mismatch() }))
+}
 
 // Блок каталога strategy — `widgets/<id>`: id и варианты каталога, которые он умеет, слоты — элементы его анатомии с
 // видом значения. Пропсы блока — id секции плана (подпись секции и якорь), вариант и слоты; соответствие каталогу и

@@ -15,6 +15,27 @@ export function outsideSections(html: string) {
     .map((child) => child.outerHTML.slice(0, 80))
 }
 
+// Крошки страницы — видимые (`<nav>` с `<ol>`: ступени ссылками, последняя — текущая страница) и BreadcrumbList в
+// <head>: имя и путь каждой ступени по порядку. Нет крошек — undefined у обеих сторон.
+export function crumbsOf(html: string, blocks: ReadonlyArray<Record<string, unknown>>) {
+  const list = parseHtml(html).querySelector('nav > ol')
+  const visible = list
+    ? [...list.querySelectorAll(':scope > li')].map((item) => {
+        const link = item.querySelector('a')
+        const name = (link ?? item.querySelector('[aria-current="page"]'))?.textContent
+        return [name, link?.getAttribute('href')]
+      })
+    : undefined
+  const data = blocks.find((block) => block['@type'] === 'BreadcrumbList') as
+    | { itemListElement: Array<{ name: string; item?: string }> }
+    | undefined
+  const structured = data?.itemListElement.map(({ name, item }) => [
+    name,
+    item === undefined ? undefined : new URL(item).pathname,
+  ])
+  return { visible, structured }
+}
+
 // Плоский TS видит у модуля .astro только default (src/env.d.ts); маршрут страницы экспортирует ещё
 // getStaticPaths — один файл на все локали, локаль — сегмент `[...locale]`.
 interface Route {

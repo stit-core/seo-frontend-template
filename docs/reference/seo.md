@@ -18,7 +18,7 @@ JavaScript не нужен, а разметка одинакова для чел
 | `<head>` из пропсов страницы: title-шаблон, description, self-canonical, OG, `twitter:card`, RSS autodiscovery | `app/layouts/document.astro` + `shared/seo/seo-head.astro` |
 | hreflang только для реальных переводов, взаимно, + `x-default` | `shared/seo/urls.ts` (`alternates`) |
 | JSON-LD в `<head>`: `Organization`/`WebSite`, `LocalBusiness`, `BreadcrumbList`, `BlogPosting`; организация одна — её узлы и ссылки на неё с `@id` `<origin>/#org`; автор записи — `Person` из реестра авторов с видимой подписью | `shared/seo/json-ld.ts` + проп `jsonLd` layout'а, `entities/author` |
-| видимые хлебные крошки из того же массива, что разметка | `widgets/breadcrumbs` |
+| видимые хлебные крошки и `BreadcrumbList` — из одного пропа оболочки, у страницы шаблона карты с крошками и с глубины 2 | `widgets/breadcrumbs`, проп `crumbs` layout'а, `breadcrumbsOn` (`shared/strategy`) |
 | `robots.txt` и файл ключа IndexNow на runtime origin; фиды `rss.xml` — prerendered | `src/pages/*.ts` + `shared/seo` |
 | IndexNow после выката: поисковикам уходят только адреса, которые изменил релиз | `pnpm indexnow` (`scripts/indexnow.mjs`), шаг `/release` |
 | `sitemap.xml` — файл сборки: ровно страницы без `noindex`, адрес — canonical, `lastmod` — дата правки или публикации записи | интеграция `sitemap-from-build` (`astro.config.ts`) + `scripts/lib/sitemap.mjs` |
@@ -57,8 +57,8 @@ hreflang, `og:image`, JSON-LD, крошки, `h1`, размеры и LCP кар�
 7. **JSON-LD** — только про видимое и только из белого списка типов; `FAQPage`, `HowTo`,
    `SearchAction` не генерируются. Организацию страница заново не описывает: фабрики
    `shared/seo` ссылаются на неё по `@id`.
-8. **Крошки** — у вложенной страницы один массив: и в `<Breadcrumbs>`, и в
-   `breadcrumbList(crumbs)`.
+8. **Крошки** — по карте: у страницы шаблона с `breadcrumbs: true` и только с глубины 2; один проп
+   оболочки `crumbs` — и видимые крошки, и `BreadcrumbList`.
 9. **Карта сайта** — её пишет сборка по страницам `dist/client`: индексируемая страница в
    ней сама, с `noindex` — нет; руками карта не правится.
 10. **404** — неизвестный параметр отдаёт 404, а не редирект на главную и не пустую

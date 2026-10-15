@@ -1,8 +1,11 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type * as Fonts from '@/app/styles/fonts'
 import type * as Config from '@/shared/config'
-import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '@/shared/i18n'
-import { parseHtml } from '@/shared/lib/testing'
+import { SITE_NAME } from '@/shared/config'
+import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import { PACKAGE_LANDING, parseHtml, testLocale } from '@/shared/lib/testing'
+import { projectOf, siteOf, strategyPage } from '@/shared/strategy'
+import { jsonLdBlocks } from '../../../scripts/lib/html.mjs'
 import DocumentLayout from './document.astro'
 
 // Поле THEME и страницы островов в реестре — решения проекта: тест задаёт их и смотрит, что
@@ -52,9 +55,18 @@ vi.mock('virtual:astro:assets/fonts/internal', () => {
 
 const container = await AstroContainer.create()
 
+// Каркас страницы — её план strategy (chrome) и крошки (crumbs): пропсы оболочки, которые тест задаёт сам.
+interface Options {
+  preferences?: string[]
+  metrika?: string[]
+  path?: string
+  chrome?: unknown
+  crumbs?: unknown
+}
+
 async function render(
   site: typeof theme,
-  { preferences = ['*'], metrika = [] as string[], path = '/stranica' } = {},
+  { preferences = ['*'], metrika = [], path = '/stranica', chrome, crumbs }: Options = {},
 ) {
   Object.assign(theme, site)
   islands.preferences.pages = preferences
@@ -64,6 +76,8 @@ async function render(
       locale: DEFAULT_LOCALE,
       title: 'Страница для проверки оболочки',
       description: 'Страница существует только в тесте: оболочка печатает её head и каркас сайта.',
+      chrome,
+      crumbs,
     },
     request: new Request(`https://demo.example${path}`),
     partial: false,
@@ -71,6 +85,8 @@ async function render(
   })
   const document = parseHtml(html)
   return {
+    document,
+    jsonLd: jsonLdBlocks(html).map((json) => JSON.parse(json) as Record<string, unknown>),
     fontStyles: [...document.head.querySelectorAll('style')].map((style) => style.textContent),
     fontPreloads: [...document.head.querySelectorAll('link[rel="preload"][as="font"]')].map(
       (link) => link.getAttribute('href'),
@@ -157,5 +173,71 @@ describe('DocumentLayout', () => {
     const page = await render(site)
     expect(page.colorScheme).toBeNull()
     expect(page.root.hasAttribute('style')).toBe(false)
+  })
+
+  // Каркас — секции шапки и подвала плана страницы strategy: вариант — плана, тексты и адреса — его copy deck и цели;
+  // своих текстов и пунктов у оболочки нет — только подпись перехода к содержимому.
+  it('шапка и подвал — секции плана страницы: посадочная (фикстура базы) — без меню и разделов', async () => {
+    const chrome = siteOf(projectOf(PACKAGE_LANDING)).strategyPage('spasibo', testLocale('ru'))
+    const { document } = await render({ default: 'light', switcher: false }, { chrome })
+    expect(document.querySelectorAll('header nav, footer a[href^="/"]')).toHaveLength(0)
+    expect(
+      [...document.body.querySelectorAll('a')].map((link) => [
+        link.getAttribute('href'),
+        link.textContent?.trim(),
+      ]),
+    ).toEqual([
+      ['#main', t(DEFAULT_LOCALE, 'nav.skip')],
+      [localePath(DEFAULT_LOCALE, '/'), SITE_NAME],
+      ['tel:+79000000001', '+79000000001'],
+      ['#lead-form', 'Вызвать замерщика'],
+      ['#lead-form', 'Политика обработки персональных данных'],
+    ])
+    expect(document.querySelector('footer p')?.textContent).toBe(
+      'Студия ремонта «Отвес», Нижний Новгород',
+    )
+  })
+
+  it('страница без своего плана — каркас главной: шапка сайта с меню и подвал сайта', async () => {
+    const home = strategyPage('home', DEFAULT_LOCALE)
+    const legal = home.sections.find((section) => section.block === 'footer')?.slots.legal
+    const { document } = await render({ default: 'system', switcher: true })
+    expect(document.querySelector('header nav')?.getAttribute('aria-label')).toBe(
+      t(DEFAULT_LOCALE, 'nav.label'),
+    )
+    expect(document.querySelector('footer p')?.textContent).toBe(legal)
+  })
+
+  // Крошки — один проп: видимые перед <main> и BreadcrumbList в <head> — одни имена и адреса.
+  it('крошки — из одного пропа: видимые до <main> и BreadcrumbList; без пропа — ни тех ни других', async () => {
+    const crumbs = {
+      id: 'breadcrumbs',
+      variant: 'full-path',
+      crumb: [{ label: 'Начало', link: { href: '/' } }],
+      current: 'Страница',
+    }
+    const page = await render({ default: 'system', switcher: true }, { crumbs })
+    const nav = page.document.querySelector('body > div > nav')
+    expect(
+      [...(nav?.querySelectorAll('a, [aria-current="page"]') ?? [])].map(
+        (step) => step.textContent,
+      ),
+    ).toEqual(['Начало', 'Страница'])
+    expect([...page.document.body.children].map((element) => element.tagName)).toEqual([
+      'A',
+      'HEADER',
+      'DIV',
+      'MAIN',
+      'FOOTER',
+    ])
+    const list = page.jsonLd.find((block) => block['@type'] === 'BreadcrumbList')
+      ?.itemListElement as Array<{ name: string; item?: string }>
+    expect(list.map(({ name, item }) => [name, item && new URL(item).pathname])).toEqual([
+      ['Начало', '/'],
+      ['Страница', undefined],
+    ])
+    const plain = await render({ default: 'system', switcher: true })
+    expect(plain.document.querySelector('nav > ol')).toBeNull()
+    expect(plain.jsonLd).toEqual([])
   })
 })

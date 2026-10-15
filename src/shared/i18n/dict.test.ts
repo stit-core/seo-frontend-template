@@ -29,6 +29,8 @@ describe('i18n/dict', () => {
       ])
     }
     expect(t(DEFAULT_LOCALE, 'nav.home')).toBe(DICTS[DEFAULT_LOCALE]['nav.home'])
-    expect(() => t(DEFAULT_LOCALE, 'blog.page')).toThrow('i18n: blog.page — нет подстановки {page}')
+    expect(() => t(DEFAULT_LOCALE, 'blog.paged', { text: 'Блог' })).toThrow(
+      'i18n: blog.paged — нет подстановки {page}',
+    )
   })
 })

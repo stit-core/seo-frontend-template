@@ -2,9 +2,11 @@ import {
   chosenText,
   type DeckSlot,
   type Fact,
+  hasBreadcrumbs,
   langOf,
   mapLanguages,
   pageLanguages,
+  parentsOf,
   SiteMapSchema,
   targetAddress,
   untranslatedFallback,
@@ -138,6 +140,53 @@ describe('strategy/contract', () => {
       expect(untranslatedFallback(map, 'en')).toBe('language-home')
       expect(untranslatedFallback(map, 'kk')).toBe('hide-link')
       expect(untranslatedFallback(map, 'ru')).toBe('language-home')
+    })
+  })
+
+  describe('место в карте и крошки', () => {
+    // Раздел с хабом под главной, страница под ним, документ без родителя и его вложенная страница; крошки — у шаблонов
+    // page и doc.
+    const map = SiteMapSchema.parse({
+      languages: { primary: 'ru' },
+      templates: [
+        { id: 'hub', breadcrumbs: false },
+        { id: 'page', breadcrumbs: true },
+        { id: 'doc', breadcrumbs: true },
+      ],
+      pages: [
+        { id: 'home', template: 'page', url: '/', parent: null },
+        { id: 'services', template: 'hub', url: '/uslugi', parent: 'home' },
+        { id: 'repair', template: 'page', url: '/uslugi/remont', parent: 'services' },
+        { id: 'flat', template: 'page', url: '/uslugi/remont/kvartira', parent: 'repair' },
+        { id: 'about', template: 'page', url: '/about', parent: 'home' },
+        { id: 'policy', template: 'doc', url: '/policy', parent: null },
+        { id: 'cookies', template: 'doc', url: '/policy/cookies', parent: 'policy' },
+        { id: 'loose', url: '/loose', parent: 'home' },
+      ],
+    })
+
+    it('родители — от корня к ближайшему; родителя нет в карте или цепочка замкнулась — ошибка с ключом', () => {
+      expect(parentsOf(map, 'flat').map(({ id }) => id)).toEqual(['home', 'services', 'repair'])
+      expect(parentsOf(map, 'home')).toEqual([])
+      const broken = SiteMapSchema.parse({
+        languages: { primary: 'ru' },
+        pages: [
+          { id: 'a', url: '/a', parent: 'b' },
+          { id: 'b', url: '/b', parent: 'a' },
+          { id: 'c', url: '/c', parent: 'nobody' },
+        ],
+      })
+      expect(() => parentsOf(broken, 'a')).toThrow('strategy: a — родители в карте замкнулись на a')
+      expect(() => parentsOf(broken, 'c')).toThrow('strategy: c — родителя nobody нет в карте')
+    })
+
+    // Глубина — от главной: у главной 0, у страницы без родителя — 1.
+    it('крошки — у шаблона с крошками и только с глубины 2', () => {
+      expect(
+        ['home', 'services', 'repair', 'flat', 'about', 'policy', 'cookies', 'loose'].filter((id) =>
+          hasBreadcrumbs(map, id),
+        ),
+      ).toEqual(['repair', 'flat', 'cookies'])
     })
   })
 })

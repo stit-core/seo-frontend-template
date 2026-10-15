@@ -10,12 +10,10 @@
 ```astro
 ---
 import DocumentLayout from '@/app/layouts/document.astro'
-import { type Locale, localePath, t } from '@/shared/i18n'
-import { breadcrumbList } from '@/shared/seo'
+import type { Locale } from '@/shared/i18n'
 import { pageVersions } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
-import { Breadcrumbs } from '@/widgets/breadcrumbs'
 
 interface Props {
   locale: Locale
@@ -37,10 +35,6 @@ const COPY = {
 } satisfies Record<Locale, unknown>
 
 const copy = COPY[locale]
-const crumbs = [
-  { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
-  { name: copy.title },
-]
 ---
 
 <DocumentLayout
@@ -48,10 +42,8 @@ const crumbs = [
   title={copy.title}
   description={copy.description}
   translations={pageVersions('<id>')}
-  jsonLd={[breadcrumbList(crumbs)]}
 >
   <Section labelledby="page-title">
-    <Breadcrumbs locale={locale} items={crumbs} class="mb-md" />
     <Heading id="page-title" level={1}>
       {copy.title}
     </Heading>
@@ -60,7 +52,9 @@ const crumbs = [
 </DocumentLayout>
 ```
 
-Страница верхнего уровня — без `<Breadcrumbs>` и без `breadcrumbList`.
+Шапку и подвал ставит оболочка (`chrome` — страница плана; без своего плана — главная). Крошки — у
+страницы шаблона карты с `breadcrumbs: true` и с глубины 2: проп оболочки `crumbs` — пропсы блока
+`breadcrumbs`, видимые крошки и `BreadcrumbList` оболочка печатает из него.
 Служебная — проп `noindex` вместо `jsonLd`.
 
 Страница собрана из секций: каждый раздел — свой `<Section>` с подписью лендмарка
@@ -100,12 +94,13 @@ const { locale } = Astro.props
 ## page — тест
 
 `src/pages/_tests/pages.astro.test.ts`: импорт маршрута и строка в таблице индексируемых страниц —
-шаблон маршрута, модуль и типы JSON-LD (служебная — свой тест по образцу подтверждения заявки):
+шаблон маршрута, модуль, id страницы карты (по нему тест судит крошки) и типы JSON-LD (служебная — свой тест по
+образцу подтверждения заявки):
 
 ```ts
 import * as NamePage from '../[...locale]/<path>.astro'
 
-['/[...locale]/<path>', NamePage, () => ['BreadcrumbList']],
+['/[...locale]/<path>', NamePage, '<id>', () => []],
 ```
 
 Адреса, языки и hreflang тест берёт из getStaticPaths маршрута: страница на одном языке — без hreflang.
@@ -223,7 +218,7 @@ it('title — 25…65 знаков', () => {
 ## block — `model/block.ts`, `ui/<block-id>.astro` и `index.ts`
 
 Контракт — id блока каталога, варианты, которые ставят планы, и слоты — id элементов анатомии с видом
-значения (`text`, `action`, `fact`, `list(…)`, `group({…})`):
+значения (`text`, `action`, `untargeted`, `fact`, `media`, `list(…)`, `group({…})`):
 
 ```ts
 import { action, defineBlock, group, text } from '@/shared/strategy'

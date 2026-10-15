@@ -1,5 +1,15 @@
 export type { BlockProps } from './block'
-export { action, defineBlock, fact, group, list, text } from './block'
+export {
+  action,
+  defineBlock,
+  fact,
+  group,
+  labelled,
+  list,
+  media,
+  text,
+  untargeted,
+} from './block'
 export { elementOf } from './contract'
 export type {
   Action,
@@ -13,8 +23,10 @@ export type {
   StrategyPage,
 } from './page'
 export {
+  breadcrumbsOn,
   languageLinks,
   localeRoutes,
+  menuLinks,
   pageLink,
   pageLocales,
   pageVersions,

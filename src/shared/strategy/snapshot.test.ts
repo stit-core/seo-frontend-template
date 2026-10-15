@@ -1,6 +1,6 @@
-import { localePath, SUPPORTED_LOCALES } from '@/shared/i18n'
+import { SUPPORTED_LOCALES } from '@/shared/i18n'
 import { langOf, mapLanguages } from './contract'
-import { snapshot, strategyPage } from './page'
+import { pageLink, snapshot, strategyPage } from './page'
 
 describe('снимок сайта strategy/', () => {
   // Языки карты и дескриптор локалей — один список: язык карты без строки дескриптора не собрать, а строка без языка
@@ -22,10 +22,11 @@ describe('снимок сайта strategy/', () => {
     }
   })
 
-  it('маршрут действия главной — на языке страницы', () => {
+  // Цель действия — страница карты, как ссылка со страницы: версия на её языке, без неё — версия основного языка.
+  it('маршрут действия главной — ссылка на страницу карты с языка страницы', () => {
     for (const locale of SUPPORTED_LOCALES) {
       const hero = strategyPage('home', locale).sections.find((section) => section.id === 'hero')
-      expect(hero?.slots.cta).toEqual({ href: localePath(locale, '/contacts') })
+      expect(hero?.slots.cta, locale).toEqual(pageLink('/contacts', locale))
     }
   })
 })

@@ -19,7 +19,7 @@ app → pages → widgets → features → entities → shared
 |---|---|
 | `app/` | документ-шелл `layouts/document.astro`, `middleware` (лог, адреса `redirects.yaml`, заголовки), токены ДС и слой сопоставления `styles/{tokens,index}.css`, единственная точка аналитики |
 | `pages/` | роутинг: 1 файл = 1 URL; файлы страницы (разметка и модель) — рядом, в `_<name>/` |
-| `widgets/` | блоки каталога strategy (`widgets/<block-id>`: секция страницы по плану — первый экран, сетка карточек) и каркас: шапка, подвал, список записей, крошки |
+| `widgets/` | блоки каталога strategy (`widgets/<block-id>`): секции страницы по плану — первый экран, сетка карточек — и каркас, который ставит оболочка по секциям плана страницы, — шапка, подвал, крошки; список записей |
 | `features/` | пользовательские сценарии: форма обратной связи, предпочтения посетителя (тема и движение) |
 | `entities/` | доменные сущности: коллекция контента `post` (с текстами внутри слайса), реквизиты `company`, реестр авторов `author` |
 | `shared/` | инфраструктура: config, i18n, seo, redirects, observability, antispam, lib и примитивы страницы `ui` — секция, заголовок, сетка «термин — описание», медиа (готовая картинка и ролик-петля), действие плана и карточка набора |
@@ -88,7 +88,7 @@ src/
 │                 · 404 · 500 · now · healthz · robots.txt · [key].txt · api/contact
 │                 · файлы страниц _home/ _about/ _contacts/ _privacy/ _blog/
 │                 · тесты маршрутов _tests/
-├─ widgets/       hero-text · feature-grid (блоки каталога) · site-header · site-footer · post-list · breadcrumbs
+├─ widgets/       блоки каталога: hero-text · feature-grid · header · footer · breadcrumbs; post-list
 ├─ features/      contact-form · preferences
 ├─ entities/      post (content/{ru,en}/*.md + covers, model, api, lib, ui) · company · author
 └─ shared/        config · i18n · seo · redirects · strategy · observability · antispam · lib

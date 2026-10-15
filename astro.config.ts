@@ -10,6 +10,13 @@ import { writeSitemap } from './scripts/lib/sitemap.mjs'
 import { fontFamilies, fontStacks } from './src/app/styles/fonts.ts'
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from './src/shared/i18n/locale.ts'
 import { TRAILING_SLASH } from './src/shared/redirects/table.ts'
+import {
+  CopyDeckSchema,
+  FactsSchema,
+  PlanSchema,
+  parseFile,
+  SiteMapSchema,
+} from './src/shared/strategy/contract.ts'
 import { slotSizes } from './src/shared/ui/section/sizes.ts'
 
 // Один образ на все среды: на сборке в prerendered-выход попадает плейсхолдер
@@ -22,12 +29,26 @@ process.env.SITE_URL ||= PLACEHOLDER
 // YAML репозитория (`content/*.yaml`, снимок strategy `strategy/`, реестр ботов
 // `shared/seo/crawlers.yaml`) импортируется как модуль: разбирается здесь, на сборке, и в серверный
 // бандл попадают данные, а не парсер (js-yaml — им же Astro читает frontmatter). Пустой файл —
-// `null`; форму данных проверяет Zod в месте импорта.
+// `null`; форму данных проверяет Zod в месте импорта. Файлы проекта в снимке — сразу по схемам
+// чтения (`shared/strategy/contract.ts`): в бандл идут только поля, которые берёт код, — прозу
+// плана, источники фактов и статусы текстов сайт не читает, а каркас страниц на запросе везёт
+// данные плана; файл не по форме роняет сборку с его путём.
+const STRATEGY = fileURLToPath(new URL('./strategy/', import.meta.url))
+const SNAPSHOT_SCHEMAS = [
+  { file: /^facts(?:\.[\w-]+)?\.yaml$/, schema: FactsSchema },
+  { file: /^site\/[^/]+\/site-map\.yaml$/, schema: SiteMapSchema },
+  { file: /^site\/[^/]+\/plans\/[^/]+\.yaml$/, schema: PlanSchema },
+  { file: /^site\/[^/]+\/copy\/[^/]+\.yaml$/, schema: CopyDeckSchema },
+]
 const yamlModules = {
   name: 'yaml-modules',
   transform(code: string, id: string) {
     if (!id.endsWith('.yaml')) return null
-    return { code: `export default ${JSON.stringify(load(code) ?? null)}`, map: null }
+    const data = load(code) ?? null
+    const path = id.startsWith(STRATEGY) ? id.slice(STRATEGY.length) : ''
+    const snapshot = SNAPSHOT_SCHEMAS.find(({ file }) => file.test(path))
+    const value = snapshot ? parseFile(snapshot.schema, data, path) : data
+    return { code: `export default ${JSON.stringify(value)}`, map: null }
   },
 }
 

@@ -113,14 +113,24 @@ export const SiteMapSchema = z.object({
       )
       .default([]),
   }),
+  templates: z
+    .array(z.object({ id: z.string(), breadcrumbs: z.boolean().default(false) }))
+    .default([]),
   pages: z.array(
     z.object({
       id: z.string(),
       url: z.string(),
       parent: z.string().nullable(),
+      template: z.string().optional(),
       lang_versions: z.array(z.string()).optional(),
     }),
   ),
+  // Меню шапки — страницы карты по порядку; подписи пунктов — copy deck (элемент nav-link шапки).
+  chrome: z
+    .object({
+      header: z.object({ items: z.array(z.object({ page: z.string() })).default([]) }).optional(),
+    })
+    .optional(),
 })
 
 export type Plan = z.infer<typeof PlanSchema>
@@ -163,6 +173,31 @@ const versionOf = (map: SiteMap, lang: string) =>
 
 export const mapPage = (map: SiteMap, id: string) =>
   map.pages.find((page) => page.id === id) ?? fail(id, 'страницы нет в карте')
+
+// Родители страницы карты — от корня к ближайшему; родителя нет в карте или цепочка замкнулась — ошибка с ключом.
+export function parentsOf(map: SiteMap, id: string): SiteMap['pages'] {
+  const pages = new Map(map.pages.map((page) => [page.id, page]))
+  const parents: SiteMap['pages'] = []
+  const seen = new Set([id])
+  for (let parent = mapPage(map, id).parent; parent !== null; ) {
+    const entry = pages.get(parent) ?? fail(id, `родителя ${parent} нет в карте`)
+    if (seen.has(entry.id)) fail(id, `родители в карте замкнулись на ${entry.id}`)
+    seen.add(entry.id)
+    parents.unshift(entry)
+    parent = entry.parent
+  }
+  return parents
+}
+
+// Крошки страницы карты — у шаблона с `breadcrumbs: true` и только с глубины 2 (site 06/02 §2.1, SM-20): глубина —
+// от главной, у главной 0, у страницы без родителя — 1.
+export function hasBreadcrumbs(map: SiteMap, id: string): boolean {
+  const page = mapPage(map, id)
+  const template = map.templates.find((candidate) => candidate.id === page.template)
+  if (template?.breadcrumbs !== true || page.url === '/') return false
+  const parents = parentsOf(map, id)
+  return parents.length + (parents[0]?.url === '/' ? 0 : 1) >= 2
+}
 
 // Языки страницы карты: версия со всеми страницами или с этой страницей в списке (основной язык без строки версии — со
 // всеми), и `lang_versions` страницы сужает набор.

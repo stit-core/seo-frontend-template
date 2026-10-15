@@ -1,32 +1,27 @@
 ---
 import { type Locale, t } from '@/shared/i18n'
-import type { Crumb } from '@/shared/seo'
+import type { BlockProps } from '@/shared/strategy'
+import type { breadcrumbs } from '../model/block'
 
-interface Props {
-  locale: Locale
-  // Последняя крошка — текущая страница, без href. Тот же массив страница отдаёт в
-  // breadcrumbList() — JSON-LD печатает layout в <head>.
-  items: readonly Crumb[]
-  class?: string | undefined
-}
+// Те же пропсы оболочка отдаёт в BreadcrumbList — JSON-LD в <head>.
+type Props = BlockProps<typeof breadcrumbs> & { locale: Locale }
 
-const { locale, items, class: className } = Astro.props
+const { crumb, current, locale } = Astro.props
+// Путь от главной; последняя ступень — текущая страница, без ссылки.
+const steps = [...crumb, { label: current, link: undefined }]
 ---
 
-<nav
-  aria-label={t(locale, 'nav.breadcrumbs')}
-  class:list={['text-helper text-secondary', className]}
->
+<nav aria-label={t(locale, 'nav.breadcrumbs')} class="text-helper text-secondary">
   <ol class="flex flex-wrap items-center gap-x-xs">
-    {items.map((item, index) => (
+    {steps.map((step, index) => (
       <li class="flex items-center gap-x-xs">
         {index > 0 && <span aria-hidden="true">›</span>}
-        {item.href ? (
-          <a class="touch-target" href={item.href}>
-            {item.name}
+        {step.link ? (
+          <a class="touch-target" href={step.link.href} hreflang={step.link.hreflang}>
+            {step.label}
           </a>
         ) : (
-          <span aria-current="page">{item.name}</span>
+          <span aria-current="page">{step.label}</span>
         )}
       </li>
     ))}

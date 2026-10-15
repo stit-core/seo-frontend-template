@@ -6,7 +6,8 @@ paths: ["src/shared/seo/**", "src/shared/config/site.ts", "src/app/layouts/**", 
 # SEO-инварианты
 
 Всё, что читает краулер, — в первом HTML: `<head>` собирает `app/layouts/document.astro` из
-props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `jsonLd`). Абсолютные URL —
+props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `jsonLd` и `BreadcrumbList` из пропа
+`crumbs`). Абсолютные URL —
 только через `absoluteUrl()` (`shared/seo`): runtime `SITE_URL` на on-demand, плейсхолдер
 сборки на prerender (штампует entrypoint). Канон целиком — `docs/research/ssr/02-seo-canon.md`
 §3.2; здесь — то, что держат код и гейты.
@@ -73,7 +74,7 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
 
 ## JSON-LD
 
-- Печатает layout в `<head>` из пропа `jsonLd` (`<JsonLdScript>`: `<script
+- Печатает layout в `<head>` из пропов `jsonLd` и `crumbs` (`<JsonLdScript>`: `<script
   type="application/ld+json">`, `<` экранируется; data block не исполняется, nonce ему не нужен).
   В `<body>` скриптов нет — ни исполняемых, ни data block. Блок — любой `<script>` этого типа,
   какие бы ещё атрибуты ни стояли у тега (`jsonLdBlocks`, `scripts/lib/html.mjs`): сырой тег в слоте
@@ -97,9 +98,10 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   роль (`jobTitle`) — на языке страницы и те же строки, что печатает видимая подпись. `seo:check`:
   у `Person` свой `@id` на своём origin, имя и роль видны на странице, у одного `@id` на одной
   локали имя одно
-- `BreadcrumbList` — норма вложенной страницы: страница строит один массив крошек и отдаёт его и
-  в `<Breadcrumbs>` (`widgets/breadcrumbs`, видимые), и в `jsonLd={[breadcrumbList(crumbs)]}`;
-  `seo:check` проверяет форму блока (позиции с 1, абсолютные `item` у предков, последняя
+- `BreadcrumbList` — у страницы шаблона карты с `breadcrumbs: true` и только с глубины 2 (норма базы
+  SG-NAV-02; `breadcrumbsOn`, `shared/strategy`): у страницы первого уровня крошек нет. Крошки — один
+  проп оболочки `crumbs` (пропсы блока `breadcrumbs`): из него оболочка печатает и видимые крошки
+  (`widgets/breadcrumbs`, перед `<main>`), и `BreadcrumbList` в `<head>`; `seo:check` проверяет форму блока (позиции с 1, абсолютные `item` у предков, последняя
   крошка — текущая страница) и что он совпадает с видимыми крошками — `<nav>` с `<ol>`, где
   последний пункт — текущая страница с `aria-current="page"` (паттерн WAI-ARIA Breadcrumb;
   оглавление и нумерованная пагинация — пункты без слов — в `<nav><ol>` не крошки): есть одно —

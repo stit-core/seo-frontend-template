@@ -45,6 +45,12 @@ describe('HeroText', () => {
     ])
   })
 
+  it('цель — версия основного языка: ссылка называет её язык', async () => {
+    const props = { ...slots, 'cta-secondary': { href: '/raboty', hreflang: 'ru' } }
+    const links = [...((await render(props)).section?.querySelectorAll('a') ?? [])]
+    expect(links.map((link) => link.getAttribute('hreflang'))).toEqual([null, 'ru'])
+  })
+
   it('без второго пути — один призыв', async () => {
     const { 'cta-secondary': _secondary, 'cta-secondary-label': _secondaryLabel, ...single } = slots
     const links = [...((await render(single)).section?.querySelectorAll('a') ?? [])]

@@ -1,7 +1,7 @@
 # Сборке нужны только package.json, pnpm-lock.yaml, pnpm-workspace.yaml, astro.config.ts,
-# tsconfig.json, src, public, content, docker и модули сборки из scripts/lib: политика (из неё
-# конфиг строит CSP), карта сайта и их разбор HTML и обход каталога — остальное в контекст не
-# попадает.
+# tsconfig.json, src, public, content, strategy (снимок: каркас каждой страницы — секции плана),
+# docker и модули сборки из scripts/lib: политика (из неё конфиг строит CSP), карта сайта и их
+# разбор HTML и обход каталога — остальное в контекст не попадает.
 node_modules
 dist
 .astro

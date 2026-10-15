@@ -1,14 +1,20 @@
 ---
 interface Props {
   href: string
+  // Язык цели, когда это версия страницы на основном языке: на языке страницы версии нет.
+  hreflang?: string | undefined
   label: string
   // Главный призыв — кнопка с заливкой акцентом, второй путь — ссылкой: иной стиль у того же ряда (каталог strategy).
   kind: 'primary' | 'secondary'
 }
 
-const { href, label, kind } = Astro.props
+const { href, hreflang, label, kind } = Astro.props
 ---
 
-<a href={href} class:list={{ button: kind === 'primary', 'touch-target': kind === 'secondary' }}>
+<a
+  href={href}
+  hreflang={hreflang}
+  class:list={{ button: kind === 'primary', 'touch-target': kind === 'secondary' }}
+>
   {label}
 </a>

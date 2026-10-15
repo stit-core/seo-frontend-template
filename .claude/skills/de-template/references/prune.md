@@ -10,7 +10,7 @@ Reference-набор шаблона — **живой образец**, а не �
 
 `src/pages/{index,about,contacts/*,legal/privacy,404,500,now,healthz,robots.txt,[key].txt,api/contact}`,
 файлы страниц `_about/`, `_contacts/`, `src/features/{contact-form,preferences}`,
-`src/entities/company`, `src/widgets/{site-header,site-footer,breadcrumbs}`,
+`src/entities/company`, `src/widgets/{header,footer,breadcrumbs}`,
 `src/shared/**`, `src/app/**`, `.gate-fixtures/`, `docker/`, `scripts/`, гейты. Фикстуры гейта на
 гейт не правятся ни в каком режиме: у мини-проектов `.gate-fixtures/` свой реестр коллекций, и
 прунинг или переименование коллекций сайта их не касаются.
@@ -18,9 +18,8 @@ Reference-набор шаблона — **живой образец**, а не �
 Форма и политика ПДн — не «демо»: это минимум сайта, который принимает заявки. Страница
 `/now` — образец режима `dynamic`; если проекту она не нужна, удаляется вместе со строкой в
 карте маршрутов `docs/reference/rendering.md`, импортом и кейсом в
-`src/pages/_tests/pages.astro.test.ts`, ссылкой в подвале (`site-footer.astro`, его тест и ключ
-`footer.now` в `dict.ts` — иначе `check:links` упадёт на `/now`) и упоминаниями `/now` в спеках
-`e2e/`.
+`src/pages/_tests/pages.astro.test.ts` и упоминаниями `/now` в спеках `e2e/` (ссылок на неё у
+каркаса нет: подвал — секция плана).
 
 Цели e2e выводятся из сборки и контента (`e2e/site.ts`): смена или удаление записей, тегов и
 редиректов правок в `e2e/` не требует.
@@ -66,13 +65,13 @@ src/shared/seo/rss.ts  src/shared/seo/rss.test.ts
 | `src/content.config.ts` | убрать импорты коллекции и реестра авторов → `export const collections = {}` |
 | `scripts/lib/content.mjs` | `collections = []`, убрать импорты из удалённых слайсов |
 | `scripts/check-content.mjs` | импорт `SLUG_RE` вёл в слайс — заменить локальной константой `const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/` |
-| `strategy/site/<поверхность>/site-map.yaml` | убрать страницы `blog`, `post`, `tag`, коллекции `posts` и `tags` и ссылки на них (`chrome`, `linking`, `build_order`): без страницы блога в карте шапка не печатает пункт меню, подвал — ссылку RSS, `<head>` — автообнаружение фида |
+| `strategy/site/<поверхность>/site-map.yaml` | убрать страницы `blog`, `post`, `tag`, коллекции `posts` и `tags` и ссылки на них (`chrome`, `linking`, `build_order`): без страницы блога в карте `<head>` не печатает автообнаружение фида |
 | `src/pages/_home/home-page.astro` | убрать `listPosts`/`PostList` и блок «свежие заметки»; CTA — на свою страницу |
-| `src/widgets/site-header/ui/site-header.astro` | убрать пункт `/blog` из `items` (+ пути в его тесте) |
+| `strategy/site/<поверхность>/plans/*.yaml`, `copy/*.yaml` | пункт блога в шапке — строка `chrome.header.items` карты и подпись `nav-link` секции `header` плана и copy deck каждой страницы (число подписей = числу пунктов карты, иначе сборка падает); раздел блога в подвале — экземпляр группы `nav` секции `footer` |
 | `src/shared/seo/seo-head.astro`, `src/app/layouts/document.astro` | убрать проп `feed` и автообнаружение фида: его подпись — строка `blog.feed` словаря, она уходит с ключами `blog.*` |
 | `src/shared/seo/index.ts` | убрать реэкспорт `buildFeed` |
 | `src/shared/seo/seo-head.astro.test.ts` | убрать кейс фида своей локали |
-| `src/shared/i18n/dict.ts` | убрать ключи `blog.*`, `post.*`, `author.*`, `footer.rss` в словаре каждой локали |
+| `src/shared/i18n/dict.ts` | убрать ключи `blog.*`, `post.*`, `author.*` в словаре каждой локали |
 | `content/redirects.yaml` | демо-записи (их цель `/blog` уходит вместе с блогом — `check:content` это поймает) |
 | `src/app/middleware/redirects.test.ts` | если таблица пустая — условие «непуста» меняется на «строится» |
 | `src/app/middleware/index.server.test.ts` | кейс «адреса … до роутинга» ходит по демо-адресам `/old` и `/blog/staraya-zametka` — заменить своими из `redirects.yaml` (нет `410` — убрать его половину кейса) |

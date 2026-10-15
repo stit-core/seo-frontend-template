@@ -9,10 +9,12 @@ import { fontFamilies } from '@/app/styles/fonts'
 import { PreferencesInit } from '@/features/preferences'
 import { ISLANDS, standsOn, THEME } from '@/shared/config'
 import { type Locale, localePath, routeOf, type Translations, t } from '@/shared/i18n'
-import { type JsonLd, JsonLdScript, type OgImage, SeoHead } from '@/shared/seo'
-import { pageLink } from '@/shared/strategy'
-import { SiteFooter } from '@/widgets/site-footer'
-import { SiteHeader } from '@/widgets/site-header'
+import { breadcrumbList, type JsonLd, JsonLdScript, type OgImage, SeoHead } from '@/shared/seo'
+import { type BlockProps, pageLink, type StrategyPage, strategyPage } from '@/shared/strategy'
+import { Container } from '@/shared/ui/section'
+import { Breadcrumbs, type breadcrumbs } from '@/widgets/breadcrumbs'
+import { Footer, footer } from '@/widgets/footer'
+import { Header, header } from '@/widgets/header'
 
 interface Props {
   locale: Locale
@@ -28,8 +30,13 @@ interface Props {
   ogType?: 'website' | 'article'
   ogImage?: OgImage | undefined
   article?: { published: Date; modified?: Date | undefined } | undefined
-  // JSON-LD страницы в <head>: Organization/WebSite главной, BreadcrumbList вложенной, BlogPosting записи.
+  // JSON-LD страницы в <head>: Organization/WebSite главной, LocalBusiness «О компании», BlogPosting записи.
   jsonLd?: readonly JsonLd[]
+  // Каркас — шапка и подвал: секции плана этой страницы strategy; у страницы без своего плана — главной, она задаёт
+  // общие шапку и подвал сайта.
+  chrome?: StrategyPage | undefined
+  // Крошки страницы шаблона карты с крошками (с глубины 2): видимые и BreadcrumbList в <head> — из этого пропа.
+  crumbs?: BlockProps<typeof breadcrumbs> | undefined
 }
 
 const {
@@ -42,7 +49,17 @@ const {
   ogImage,
   article,
   jsonLd = [],
+  chrome = strategyPage('home', locale),
+  crumbs,
 } = Astro.props
+const sectionOf = (block: string) => chrome.sections.find((section) => section.block === block)?.id
+const top = sectionOf(header.id)
+const bottom = sectionOf(footer.id)
+const trail = crumbs && [
+  ...crumbs.crumb.map((step) => ({ name: step.label, href: step.link.href })),
+  { name: crumbs.current },
+]
+const blocks = trail ? [...jsonLd, breadcrumbList(trail)] : jsonLd
 // Тема без выбора — системная: её включает блок prefers-color-scheme файла токенов; заданную
 // полем THEME ставит атрибут ДС. Своего color-scheme у оболочки нет — его объявляет файл токенов.
 const theme = THEME.default === 'system' ? undefined : THEME.default
@@ -84,7 +101,7 @@ const fonts = fontFamilies().map(({ variable, preload }) => ({
       ogImage={ogImage}
       article={article}
     />
-    {jsonLd.map((data) => (
+    {blocks.map((data) => (
       <JsonLdScript data={data} />
     ))}
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
@@ -103,11 +120,17 @@ const fonts = fontFamilies().map(({ variable, preload }) => ({
     >
       {t(locale, 'nav.skip')}
     </a>
-    <SiteHeader locale={locale} translations={translations} />
+    {top && <Header {...header.props(chrome, top)} locale={locale} translations={translations} />}
+    {/* Крошки — каркас, а не секция страницы: на контейнере шапки, перед <main>. */}
+    {crumbs && (
+      <Container width="page" class="pt-md">
+        <Breadcrumbs {...crumbs} locale={locale} />
+      </Container>
+    )}
     {/* Ширину, фон и ритм странице дают её секции (shared/ui/section): оболочка её не сужает. */}
     <main id="main" class="flex-1">
       <slot />
     </main>
-    <SiteFooter locale={locale} />
+    {bottom && <Footer {...footer.props(chrome, bottom)} locale={locale} />}
   </body>
 </html>

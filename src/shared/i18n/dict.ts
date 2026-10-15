@@ -1,12 +1,11 @@
 import type { Locale } from './locale'
 
-// Строки каркаса и обвязки контента (шапка, подвал, 404, блог, форма) — словарь на каждую локаль дескриптора; тексты
-// страниц — в самих страницах и в markdown-коллекциях.
+// Строки каркаса и обвязки контента (подписи навигации, 404, блог, форма) — словарь на каждую локаль дескриптора;
+// тексты меню и подвала — copy deck strategy, тексты страниц — в самих страницах и в markdown-коллекциях.
 const ru = {
   'nav.label': 'Основная навигация',
   'nav.skip': 'К содержимому',
   'nav.home': 'Главная',
-  'nav.blog': 'Блог',
   'nav.about': 'О компании',
   'nav.contacts': 'Контакты',
   'nav.breadcrumbs': 'Хлебные крошки',
@@ -15,11 +14,7 @@ const ru = {
   'motion.system': 'Как в системе',
   'motion.reduced': 'Меньше',
   'motion.full': 'Полное',
-  'footer.note': 'шаблон индексируемого сайта',
   'footer.links': 'Ссылки подвала',
-  'footer.now': 'время сервера',
-  'footer.privacy': 'Обработка персональных данных',
-  'footer.rss': 'RSS',
   'og.alt': '{site} — шаблон индексируемого сайта',
   'notFound.title': 'Страница не найдена',
   'notFound.lead': 'Проверьте адрес или вернитесь на главную.',
@@ -34,7 +29,6 @@ const ru = {
     'Короткие заметки о контентных сайтах: prerender, ноль JavaScript, честные статусы, canonical и hreflang, картинки, sitemap и один образ на все среды',
   'blog.lead': 'Заметки о том, как делать быстрые индексируемые сайты.',
   'blog.feed': 'Блог — {site}',
-  'blog.page': 'страница {page}',
   'blog.paged': '{text} — страница {page}',
   'blog.pagination': 'Страницы блога',
   'blog.newer': 'Новее',
@@ -79,7 +73,6 @@ const en = {
   'nav.label': 'Main navigation',
   'nav.skip': 'Skip to content',
   'nav.home': 'Home',
-  'nav.blog': 'Blog',
   'nav.about': 'About',
   'nav.contacts': 'Contacts',
   'nav.breadcrumbs': 'Breadcrumbs',
@@ -88,11 +81,7 @@ const en = {
   'motion.system': 'System',
   'motion.reduced': 'Reduced',
   'motion.full': 'Full',
-  'footer.note': 'indexable site template',
   'footer.links': 'Footer links',
-  'footer.now': 'server time',
-  'footer.privacy': 'Personal data policy',
-  'footer.rss': 'RSS',
   'og.alt': '{site} — indexable site template',
   'notFound.title': 'Page not found',
   'notFound.lead': 'Check the address or go back to the home page.',
@@ -107,7 +96,6 @@ const en = {
     'Short notes on content sites: prerendering, zero JavaScript, honest status codes, canonical and hreflang, images, sitemaps and one image for every environment',
   'blog.lead': 'Notes on building fast, indexable sites.',
   'blog.feed': 'Blog — {site}',
-  'blog.page': 'page {page}',
   'blog.paged': '{text} — page {page}',
   'blog.pagination': 'Blog pages',
   'blog.newer': 'Newer',

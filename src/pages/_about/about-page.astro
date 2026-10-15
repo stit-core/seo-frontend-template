@@ -1,13 +1,12 @@
 ---
 import DocumentLayout from '@/app/layouts/document.astro'
 import { COMPANY, CompanyContacts } from '@/entities/company'
-import { type Locale, localePath, t } from '@/shared/i18n'
-import { breadcrumbList, localBusiness } from '@/shared/seo'
+import { type Locale, t } from '@/shared/i18n'
+import { localBusiness } from '@/shared/seo'
 import { pageVersions } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 import { Term, TermList } from '@/shared/ui/term-list'
-import { Breadcrumbs } from '@/widgets/breadcrumbs'
 
 interface Props {
   locale: Locale
@@ -49,9 +48,8 @@ const COPY = {
 } satisfies Record<Locale, unknown>
 
 const copy = COPY[locale]
-// Заголовок раздела — h1 и крошка; title сниппета говорит, чем компания занимается.
+// Заголовок раздела — h1; title сниппета говорит, чем компания занимается.
 const heading = t(locale, 'nav.about')
-const crumbs = [{ name: t(locale, 'nav.home'), href: localePath(locale, '/') }, { name: heading }]
 const address = COMPANY.address[locale]
 ---
 
@@ -74,11 +72,9 @@ const address = COMPANY.address[locale]
       },
       openingHours: COMPANY.openingHours,
     }),
-    breadcrumbList(crumbs),
   ]}
 >
   <Section labelledby="page-title">
-    <Breadcrumbs locale={locale} items={crumbs} class="mb-md" />
     <Heading id="page-title" level={1}>
       {heading}
     </Heading>

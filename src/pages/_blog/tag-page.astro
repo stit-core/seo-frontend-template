@@ -4,7 +4,6 @@ import type { Post } from '@/entities/post'
 import type { Locale } from '@/shared/i18n'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
-import { Breadcrumbs } from '@/widgets/breadcrumbs'
 import { PostList } from '@/widgets/post-list'
 import { tagPageModel } from './models'
 
@@ -24,10 +23,9 @@ const model = await tagPageModel(locale, tag)
   translations={model.translations}
   title={model.title}
   description={model.description}
-  jsonLd={model.jsonLd}
+  crumbs={model.crumbs}
 >
   <Section labelledby="page-title">
-    <Breadcrumbs locale={locale} items={model.crumbs} class="mb-md" />
     <Heading id="page-title" level={1}>
       {model.heading}
     </Heading>

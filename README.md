@@ -105,8 +105,9 @@ src/pages/        роутинг Astro = слой pages: страница — о
                   404, healthz, now, robots.txt, [key].txt, api/contact (on-demand); файлы
                   страниц — _home/, _about/, _contacts/, _privacy/, _blog/; тесты маршрутов и
                   страниц — _tests/
-src/widgets/      блоки каталога strategy (hero-text, feature-grid: пропсы — элементы анатомии, вариант —
-                  каталога), site-header, site-footer, post-list, breadcrumbs (видимые крошки)
+src/widgets/      блоки каталога strategy (пропсы — элементы анатомии, вариант — каталога): hero-text,
+                  feature-grid и каркас — header, footer, breadcrumbs (их ставит оболочка по
+                  секциям плана страницы); post-list
 src/features/     contact-form (форма без JS и её обработчик), preferences (остров предпочтений:
                   тема и движение)
 src/entities/     post: content/{ru,en}/*.md + covers/, model, api, lib, ui; company: реквизиты
@@ -158,13 +159,13 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 ## SEO
 
 `<head>` каждой страницы собирает `DocumentLayout` из props (`title`, `description`,
-`translations`, `jsonLd`): title-шаблон, self-canonical, полный OG (`og:image` — кадр 1200×630
+`translations`, `jsonLd`, `crumbs`): title-шаблон, self-canonical, полный OG (`og:image` — кадр 1200×630
 обложки записи или `public/og-default.png`), `twitter:card`, hreflang по карте переводов страницы —
 только для реальных переводов (взаимно, + `x-default`), RSS autodiscovery фида своей локали.
 JSON-LD — в `<head>`: `Organization`/`WebSite` на главной,
 `LocalBusiness` на «О компании» — одна организация с `@id` `<origin>/#org`, на неё ссылаются сайт
-и записи; `BreadcrumbList` на вложенных (из того же массива, что видимые крошки
-`widgets/breadcrumbs`), `BlogPosting` у записи — с автором `Person`, когда у записи есть автор
+и записи; `BreadcrumbList` у страниц шаблона карты с крошками, с глубины 2 (из того же пропа
+оболочки, что видимые крошки `widgets/breadcrumbs`), `BlogPosting` у записи — с автором `Person`, когда у записи есть автор
 из реестра и подпись; в `<body>` ни одного `<script>`. Первая иконка в `<head>` — PNG 192×192:
 растр, который подходит выдаче Google. `robots.txt` (`ROBOTS_POLICY`; политика ИИ-ботов — поле сборки `AI_BOTS_POLICY`,
 группы — из реестра ботов базы strategy; `Clean-param` Яндексу — служебные параметры адреса

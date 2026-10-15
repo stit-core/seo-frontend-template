@@ -1,8 +1,8 @@
 import type * as AuthorSlice from '@/entities/author'
 import { getPost, listPosts, type Post, paginate } from '@/entities/post'
-import { type DictKey, type Locale, t } from '@/shared/i18n'
+import { type DictKey, type Locale, localePath, t } from '@/shared/i18n'
 import { testLocale } from '@/shared/lib/testing'
-import { blogPosting, breadcrumbList } from '@/shared/seo'
+import { blogPosting } from '@/shared/seo'
 import { articleImagesOf, ogImageOf } from './images'
 import { blogListPageModel, postPageModel, tagPageModel } from './models'
 
@@ -18,9 +18,15 @@ vi.mock('@/entities/author', async (importOriginal) => ({
 vi.mock('@/shared/i18n', async (importOriginal) =>
   (await import('@/shared/lib/testing')).withTestLocales(importOriginal),
 )
-vi.mock('@/shared/strategy', async (importOriginal) =>
-  (await import('@/shared/lib/testing')).withTestSite(importOriginal),
-)
+// Крошки — по карте: тест снимает их у шаблона и смотрит, что модель их не даёт.
+const crumbless = vi.hoisted(() => new Set<string>())
+vi.mock('@/shared/strategy', async (importOriginal) => {
+  const strategy = await (await import('@/shared/lib/testing')).withTestSite(importOriginal)
+  return {
+    ...strategy,
+    breadcrumbsOn: (id: string) => !crumbless.has(id) && strategy.breadcrumbsOn(id),
+  }
+})
 const RU = testLocale('ru')
 const EN = testLocale('en')
 
@@ -35,9 +41,16 @@ afterEach(() => vi.unstubAllEnvs())
 
 // Слова каркаса — из словаря: форк, переименовавший раздел, остаётся зелёным.
 const ru = (key: DictKey) => t(RU, key)
-const home = { name: ru('nav.home'), href: '/' }
-const blog = { name: ru('blog.title'), href: '/blog' }
-const page2 = t(RU, 'blog.page', { page: 2 })
+// Крошки — пропсы блока breadcrumbs: путь от главной и текущая страница.
+const trail = (locale: Locale, current: string) => ({
+  id: 'breadcrumbs',
+  variant: 'full-path',
+  crumb: [
+    { label: t(locale, 'nav.home'), link: { href: localePath(locale, '/') } },
+    { label: t(locale, 'blog.title'), link: { href: localePath(locale, '/blog') } },
+  ],
+  current,
+})
 const paged = (key: DictKey) => t(RU, 'blog.paged', { text: ru(key), page: 2 })
 
 const post = async (locale: Locale, slug: string): Promise<Post> => {
@@ -47,14 +60,14 @@ const post = async (locale: Locale, slug: string): Promise<Post> => {
 }
 
 describe('страница записи', () => {
-  it('перевод: ссылка на slug перевода, крошки локали, BlogPosting без правки и обложки', async () => {
+  it('перевод: ссылка на slug перевода, крошки локали по карте, BlogPosting без правки и обложки', async () => {
     const para = await post(RU, 'para')
     const model = await postPageModel(para)
     const author = { id: 'anna-smirnova', name: 'Анна Смирнова', jobTitle: 'редактор блога' }
     expect(model.translations).toEqual({ ru: '/blog/para', en: '/en/blog/pair' })
     expect(model.ogImage).toBeUndefined()
     expect(model.author).toEqual(author)
-    expect(model.crumbs).toEqual([home, blog, { name: 'Запись с переводом' }])
+    expect(model.crumbs).toEqual(trail(RU, 'Запись с переводом'))
     expect(model.jsonLd).toEqual([
       blogPosting({
         locale: RU,
@@ -64,12 +77,11 @@ describe('страница записи', () => {
         published: new Date('2026-03-01'),
         author,
       }),
-      breadcrumbList(model.crumbs),
     ])
 
     const pair = await postPageModel(await post(EN, 'pair'))
     expect(pair.translations).toEqual({ ru: '/blog/para', en: '/en/blog/pair' })
-    expect(pair.crumbs[1]).toEqual({ name: t(EN, 'blog.title'), href: '/en/blog' })
+    expect(pair.crumbs).toEqual(trail(EN, 'Post with a translation'))
   })
 
   it('автор: имя и роль — на языке страницы; без роли — только имя; без автора подписи нет', async () => {
@@ -146,14 +158,23 @@ describe('страница записи', () => {
   })
 })
 
+describe('крошки', () => {
+  afterEach(() => crumbless.clear())
+
+  it('у шаблона карты без крошек их нет ни у записи, ни у тега', async () => {
+    crumbless.add('post').add('tag')
+    expect((await postPageModel(await post(RU, 'para'))).crumbs).toBeUndefined()
+    expect((await tagPageModel(RU, 'astro')).crumbs).toBeUndefined()
+  })
+})
+
 describe('страница списка', () => {
-  it('первая страница: ссылка на перевод, крошка без ссылки, только «дальше»', async () => {
+  it('первая страница: ссылка на перевод, только «дальше»', async () => {
     const model = await blogListPageModel(RU, paginate(await listPosts(RU), 1))
     expect(model.translations).toEqual({ ru: '/blog', en: '/en/blog' })
     expect(model.heading).toBe(ru('blog.title'))
     expect(model.title).toBe(ru('blog.pageTitle'))
     expect(model.description).toBe(ru('blog.description'))
-    expect(model.crumbs).toEqual([home, { name: ru('blog.title') }])
     expect(model.tags).toEqual(['almost', 'astro', 'i18n', 'seo'])
     expect(model.pagination).toEqual({
       current: 1,
@@ -170,7 +191,6 @@ describe('страница списка', () => {
     expect(model.title).toBe(paged('blog.pageTitle'))
     expect(model.description).toBe(paged('blog.description'))
     expect(model.heading).toContain('2')
-    expect(model.crumbs).toEqual([home, blog, { name: page2 }])
     expect(model.pagination).toEqual({
       current: 2,
       last: 2,
@@ -217,7 +237,6 @@ describe('страница тега', () => {
     expect(model.title).toBe(model.heading)
     expect(model.description).toBe(t(RU, 'blog.tagDescription', { tag: 'astro' }))
     expect([model.heading, model.description].every((text) => text.includes('astro'))).toBe(true)
-    expect(model.crumbs).toEqual([home, blog, { name: '#astro' }])
-    expect(model.jsonLd).toEqual([breadcrumbList(model.crumbs)])
+    expect(model.crumbs).toEqual(trail(RU, '#astro'))
   })
 })

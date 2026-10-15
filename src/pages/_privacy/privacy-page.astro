@@ -1,12 +1,10 @@
 ---
 import DocumentLayout from '@/app/layouts/document.astro'
 import { PRIVACY_POLICY_VERSION, SITE_NAME } from '@/shared/config'
-import { formatDate, type Locale, localePath, t } from '@/shared/i18n'
-import { breadcrumbList } from '@/shared/seo'
+import { formatDate, type Locale } from '@/shared/i18n'
 import { pageVersions } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
-import { Breadcrumbs } from '@/widgets/breadcrumbs'
 
 interface Props {
   locale: Locale
@@ -26,7 +24,6 @@ const OPERATOR = {
 const title = 'Политика обработки персональных данных'
 const description =
   'Кто обрабатывает персональные данные посетителей сайта, какие именно, на каком основании, где они хранятся и как отозвать согласие.'
-const crumbs = [{ name: t(locale, 'nav.home'), href: localePath(locale, '/') }, { name: title }]
 const revision = formatDate(locale, new Date(PRIVACY_POLICY_VERSION))
 ---
 
@@ -35,10 +32,8 @@ const revision = formatDate(locale, new Date(PRIVACY_POLICY_VERSION))
   translations={pageVersions('privacy')}
   title={title}
   description={description}
-  jsonLd={[breadcrumbList(crumbs)]}
 >
   <Section labelledby="page-title">
-    <Breadcrumbs locale={locale} items={crumbs} class="mb-md" />
     <Heading id="page-title" level={1}>
       {title}
     </Heading>

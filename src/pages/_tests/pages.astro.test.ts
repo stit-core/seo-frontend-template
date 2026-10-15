@@ -1,7 +1,8 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
-import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
+import { DEFAULT_LOCALE, type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { parseHtml } from '@/shared/lib/testing'
+import { breadcrumbsOn, type FactValue, strategyPage } from '@/shared/strategy'
 import { headTags, jsonLdBlocks } from '../../../scripts/lib/html.mjs'
 import * as About from '../[...locale]/about.astro'
 import * as Blog from '../[...locale]/blog/index.astro'
@@ -12,7 +13,7 @@ import * as Privacy from '../[...locale]/legal/privacy.astro'
 import NotFound from '../404.astro'
 import ServerError from '../500.astro'
 import Now from '../now.astro'
-import { type Built, built, outsideSections } from './routes'
+import { type Built, built, crumbsOf, outsideSections } from './routes'
 
 // Страницы — на данных сайта: его локалях, карте и текстах; записи — фикстуры. Маршруты записей, тегов и страниц
 // списка — на локалях и карте теста (blog.astro.test.ts).
@@ -54,6 +55,7 @@ async function render(
     jsonLd: blocks.map((block) => block['@type']),
     h1: html.match(/<h1\b/g)?.length ?? 0,
     outsideSections: outsideSections(html),
+    crumbs: crumbsOf(html, blocks),
   }
 }
 
@@ -69,19 +71,20 @@ function versionsOf(pages: Built[]): Record<string, string | undefined> {
 }
 
 describe('индексируемые страницы', () => {
-  it.each<[string, { default: AstroComponentFactory }, (path: string) => string[]]>([
+  it.each<[string, { default: AstroComponentFactory }, string, (path: string) => string[]]>([
     [
       '/[...locale]',
       Home,
+      'home',
       (path) => (path === '/' ? ['Organization', 'WebSite'] : ['Organization']),
     ],
-    ['/[...locale]/about', About, () => ['LocalBusiness', 'BreadcrumbList']],
-    ['/[...locale]/contacts', Contacts, () => ['BreadcrumbList']],
-    ['/[...locale]/legal/privacy', Privacy, () => ['BreadcrumbList']],
-    ['/[...locale]/blog', Blog, () => ['BreadcrumbList']],
+    ['/[...locale]/about', About, 'about', () => ['LocalBusiness']],
+    ['/[...locale]/contacts', Contacts, 'contacts', () => []],
+    ['/[...locale]/legal/privacy', Privacy, 'privacy', () => []],
+    ['/[...locale]/blog', Blog, 'blog', () => []],
   ])(
-    '%s: на каждой локали страницы — её язык, self-canonical, hreflang версий, JSON-LD, один h1, страница из секций',
-    async (route, module, jsonLd) => {
+    '%s: на каждой локали страницы — её язык, self-canonical, hreflang версий, JSON-LD, один h1, страница из секций, крошки по карте',
+    async (route, module, id, jsonLd) => {
       const pages = await built(route, module)
       expect(pages.length, route).toBeGreaterThan(0)
       for (const { path, locale, props } of pages) {
@@ -93,6 +96,9 @@ describe('индексируемые страницы', () => {
         expect(head.jsonLd, path).toEqual(jsonLd(path))
         expect(head.h1, path).toBe(1)
         expect(head.outsideSections, path).toEqual([])
+        // Крошки — у шаблона карты с крошками и с глубины 2; страницы первого уровня — без них.
+        expect(head.crumbs.visible !== undefined, path).toBe(breadcrumbsOn(id))
+        expect(head.crumbs.structured, path).toEqual(head.crumbs.visible)
       }
     },
   )
@@ -102,6 +108,48 @@ describe('индексируемые страницы', () => {
     expect((await built('/[...locale]/legal/privacy', Privacy)).map(({ path }) => path)).toEqual([
       '/legal/privacy',
     ])
+  })
+})
+
+// Каркас — секции шапки и подвала плана главной: у страниц без своего плана — тоже её. Тексты секции — строки слотов и
+// экземпляров её групп на языке страницы.
+function chromeOf(locale: Locale, block: string) {
+  const section = strategyPage('home', locale).sections.find(
+    (candidate) => candidate.block === block,
+  )
+  const instances = Object.values(section?.groups ?? {}).flat()
+  const values = [
+    ...Object.values(section?.slots ?? {}),
+    ...instances.flatMap((instance) => Object.values(instance)),
+  ]
+  return {
+    slots: section?.slots ?? {},
+    texts: values.flat().filter((value): value is string => typeof value === 'string'),
+  }
+}
+
+describe('каркас страниц — план главной', () => {
+  // Своих текстов и пунктов у оболочки нет: меню — подписи пунктов плана, ссылки подвала — подписи его разделов и
+  // документов, реквизиты — текст copy deck, который показывает факт оператора.
+  it('меню и ссылки подвала — подписи плана, реквизиты подвала — copy deck и факт: страница сборки и on-demand', async () => {
+    const pages = SUPPORTED_LOCALES.flatMap((locale) => [
+      { page: Home.default, path: localePath(locale, '/'), props: { locale }, locale },
+      { page: NotFound, path: localePath(locale, '/net-takoj-stranicy'), props: {}, locale },
+    ])
+    for (const { page, path, props, locale } of pages) {
+      const doc = parseHtml((await render(page, path, props)).html)
+      const header = chromeOf(locale, 'header')
+      const footer = chromeOf(locale, 'footer')
+      const menu = [...doc.querySelectorAll('header nav a:not([hreflang])')]
+      expect(menu.length, path).toBeGreaterThan(0)
+      for (const link of menu) expect(header.texts, path).toContain(link.textContent)
+      for (const link of doc.querySelectorAll('footer nav a')) {
+        expect(footer.texts, path).toContain(link.textContent)
+      }
+      const legal = doc.querySelector('footer p')?.textContent
+      expect(legal, path).toBe(footer.slots.legal)
+      expect(legal, path).toContain((footer.slots.company as FactValue).text)
+    }
   })
 })
 

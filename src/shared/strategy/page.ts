@@ -15,6 +15,7 @@ import {
   type Facts,
   FactsSchema,
   fail,
+  hasBreadcrumbs,
   langOf,
   type Machine,
   mapPage,
@@ -23,6 +24,7 @@ import {
   type PlanSlot,
   type PlanTarget,
   pageLanguages,
+  parentsOf,
   parseFile,
   type SiteMap,
   SiteMapSchema,
@@ -43,6 +45,8 @@ export interface Project {
 // адрес собирает код (переключатель языка).
 export interface Action {
   href: string | undefined
+  // Язык цели, когда это версия страницы на основном языке: на языке страницы версии нет.
+  hreflang?: Locale
 }
 
 // Факт слота данных: видимая формулировка и значение для кода. Пробел `missing:` — без значения.
@@ -172,6 +176,23 @@ export function languagesOf(
   })
 }
 
+// Пункты меню шапки — страницы `chrome.header.items` карты по порядку, подписи — элементы `nav-link` секции плана в том
+// же порядке: адреса у элемента анатомии нет, его страница — пункт карты. Число подписей не то — ошибка сборки. Меню
+// версии — её разделы: страницы без версии на языке страницы в нём нет.
+function menuOf(project: Project, labels: readonly string[], locale: Locale, key: string) {
+  const items = project.map?.chrome?.header?.items ?? []
+  const mismatch = () =>
+    fail(key, `подписей меню ${labels.length}, а пунктов chrome.header.items карты ${items.length}`)
+  if (labels.length > items.length) mismatch()
+  return items.flatMap((item, index) => {
+    const label = labels[index] ?? mismatch()
+    const page = mapPage(mapOf(project, key), item.page)
+    return localesOf(project, page.id).includes(locale)
+      ? [{ href: localePath(locale, page.url), label }]
+      : []
+  })
+}
+
 function placeOf(project: Project, plan: Plan, locale: Locale) {
   const { id } = plan.page
   if (project.map === undefined) {
@@ -179,18 +200,10 @@ function placeOf(project: Project, plan: Plan, locale: Locale) {
     const url = plan.page.url ?? fail(id, 'у страницы без карты нет page.url в плане')
     return { url: localePath(locale, url), parents: [] }
   }
-  const pages = new Map(project.map.pages.map((page) => [page.id, page]))
-  const page = pages.get(id) ?? fail(id, 'страницы нет в карте')
-  const parents: MapEntry[] = []
-  const seen = new Set([id])
-  for (let parent = page.parent; parent !== null; ) {
-    const entry = pages.get(parent) ?? fail(id, `родителя ${parent} нет в карте`)
-    if (seen.has(entry.id)) fail(id, `родители в карте замкнулись на ${entry.id}`)
-    seen.add(entry.id)
-    parents.unshift({ id: entry.id, url: localePath(locale, entry.url) })
-    parent = entry.parent
-  }
-  return { url: localePath(locale, page.url), parents }
+  const parents = parentsOf(project.map, id).map(
+    (entry): MapEntry => ({ id: entry.id, url: localePath(locale, entry.url) }),
+  )
+  return { url: localePath(locale, mapPage(project.map, id).url), parents }
 }
 
 // Страница сайта из снимка: секции плана по порядку, их тексты на языке страницы, адреса действий, факты слотов
@@ -217,8 +230,23 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
       const found = copy?.slots.find((candidate) => candidate.slot_id === slot)
       return chosenText(found ?? fail(key, `нет текста в copy deck ${locale}`), key)
     }
-    const address = (target: PlanTarget, key: string): string =>
-      target.kind === 'route' ? localePath(locale, target.value) : targetAddress(target, facts, key)
+    // Маршрут цели — страница карты: её версия на языке страницы, без неё — версия основного языка с его кодом (как
+    // ссылка со страницы); маршрут вне карты (у лендинга карты нет) — путь на языке страницы.
+    const address = (target: PlanTarget, key: string): Action => {
+      if (target.kind !== 'route') return { href: targetAddress(target, facts, key) }
+      if (!project.map?.pages.some((candidate) => candidate.url === target.value)) {
+        return { href: localePath(locale, target.value) }
+      }
+      const link =
+        linkOf(project, target.value, locale) ??
+        fail(
+          key,
+          `${target.value}: у страницы карты нет версии ни на ${locale}, ни на основном языке`,
+        )
+      return link.hreflang === undefined
+        ? { href: link.href }
+        : { href: link.href, hreflang: link.hreflang }
+    }
     const factOf = (slot: PlanSlot & { fact: string }): FactValue | undefined => {
       if (slot.fact.startsWith('missing:')) return undefined
       const fact =
@@ -247,9 +275,11 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
     for (const slot of section.slots.text) place(slot, 'text', textOf(slot.id))
     for (const slot of section.slots.action) {
       const key = `${id}/${section.id}/${slot.id}`
-      place(slot, 'action', {
-        href: slot.target === undefined ? undefined : address(slot.target, key),
-      })
+      place(
+        slot,
+        'action',
+        slot.target === undefined ? { href: undefined } : address(slot.target, key),
+      )
     }
     for (const slot of section.slots.data) place(slot, 'data', factOf(slot))
 
@@ -284,9 +314,9 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
 }
 
 // Снимок strategy сайта — `strategy/` в корне репозитория. YAML — модулем сборки (плагин yaml-modules
-// astro.config.ts): в бандле данные, а не парсер, и страницы на запросе читают то же, что на сборке. Карту читает
-// каркас любой страницы, в том числе on-demand; планы, copy deck и факты — только чтение страницы: снимок целиком
-// собирается при первом чтении, и серверный бандл маршрутов, которые страницу не читают, их не везёт.
+// astro.config.ts): в бандле — поля схем чтения, а не парсер, и страницы на запросе читают то же, что на сборке.
+// Карта — сразу: её правила (языки, ссылки, меню, крошки) нужны и без чтения страницы; планы, copy deck и факты
+// собираются в снимок при первом чтении страницы — его делает и каркас on-demand страниц.
 const ROOT = '../../../strategy/'
 const mapFiles = import.meta.glob<unknown>('../../../strategy/site/*/site-map.yaml', {
   eager: true,
@@ -310,8 +340,8 @@ const projectOfFiles = (files: Readonly<Record<string, unknown>>) =>
 let full: Project | undefined
 export const snapshot = (): Project => (full ??= projectOfFiles({ ...mapFiles, ...pageFiles }))
 
-// Языки, версии и ссылки страниц карты — по проекту: у сайта это карта снимка, у тестов — проект фикстуры (как правила
-// адреса — по списку локалей).
+// Языки, версии, ссылки, меню и крошки страниц карты и сами страницы — по проекту: у сайта это карта снимка (страницу
+// читает strategyPage — снимок целиком), у тестов — проект фикстуры (как правила адреса — по списку локалей).
 export function siteOf(project: Project) {
   const pageLocales = (id: string): Locale[] => localesOf(project, id)
   return {
@@ -321,17 +351,27 @@ export function siteOf(project: Project) {
       linkOf(project, route, locale),
     languageLinks: (locale: Locale, translations: Translations): LanguageLink[] =>
       languagesOf(project, locale, translations),
+    menuLinks: (labels: readonly string[], locale: Locale, key: string) =>
+      menuOf(project, labels, locale, key),
+    breadcrumbsOn: (id: string): boolean => hasBreadcrumbs(mapOf(project, id), id),
     // Пути маршрута `[...locale]` страницы карты: по пути на локаль её версии, у дефолтной сегмента нет.
     localeRoutes: (id: string) =>
       pageLocales(id).map((locale) => ({
         params: { locale: localeParam(locale) },
         props: { locale },
       })),
+    strategyPage: (id: string, locale: Locale): StrategyPage => readPage(project, id, locale),
   }
 }
 
-export const { pageLocales, pageVersions, pageLink, languageLinks, localeRoutes } = siteOf(
-  projectOfFiles(mapFiles),
-)
+export const {
+  pageLocales,
+  pageVersions,
+  pageLink,
+  languageLinks,
+  menuLinks,
+  breadcrumbsOn,
+  localeRoutes,
+} = siteOf(projectOfFiles(mapFiles))
 export const strategyPage = (id: string, locale: Locale): StrategyPage =>
   readPage(snapshot(), id, locale)

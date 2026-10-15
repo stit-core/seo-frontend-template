@@ -24,9 +24,14 @@ const {
   </Heading>
   <p class="mt-stack-display text-lead text-secondary">{subheadline}</p>
   <p class="mt-xl flex flex-wrap items-center gap-x-lg gap-y-sm">
-    <ActionLink href={cta.href} label={ctaLabel} kind="primary" />
+    <ActionLink href={cta.href} hreflang={cta.hreflang} label={ctaLabel} kind="primary" />
     {secondary && secondaryLabel && (
-      <ActionLink href={secondary.href} label={secondaryLabel} kind="secondary" />
+      <ActionLink
+        href={secondary.href}
+        hreflang={secondary.hreflang}
+        label={secondaryLabel}
+        kind="secondary"
+      />
     )}
   </p>
 </Section>

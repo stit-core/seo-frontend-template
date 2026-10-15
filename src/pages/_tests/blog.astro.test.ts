@@ -4,12 +4,13 @@ import type * as AuthorSlice from '@/entities/author'
 import { SITE_NAME } from '@/shared/config'
 import { t } from '@/shared/i18n'
 import { parseHtml, testLocale } from '@/shared/lib/testing'
+import { breadcrumbsOn } from '@/shared/strategy'
 import { headTags, jsonLdBlocks } from '../../../scripts/lib/html.mjs'
 import * as Post from '../[...locale]/blog/[slug].astro'
 import * as List from '../[...locale]/blog/page/[page].astro'
 import * as Tag from '../[...locale]/blog/tag/[tag].astro'
 import { GET as feed, getStaticPaths as feedPaths } from '../[...locale]/rss.xml.ts'
-import { built, outsideSections } from './routes'
+import { built, crumbsOf, outsideSections } from './routes'
 
 // Блог — на локалях и карте теста: записи фикстур на ru и en, блог, записи и теги — в версиях обеих. Так маршруты,
 // пары переводов и фиды судятся при любом наборе локалей сайта.
@@ -71,10 +72,11 @@ async function render(
 const THIN_TAGS = ['/blog/tag/almost', '/blog/tag/astro', '/en/blog/tag/i18n']
 
 describe('маршруты блога с параметрами', () => {
-  it.each<[string, { default: AstroComponentFactory }, string[]]>([
+  it.each<[string, { default: AstroComponentFactory }, string, string[]]>([
     [
       '/[...locale]/blog/[slug]',
       Post,
+      'post',
       [
         '/blog/para',
         '/blog/odna',
@@ -90,6 +92,7 @@ describe('маршруты блога с параметрами', () => {
     [
       '/[...locale]/blog/tag/[tag]',
       Tag,
+      'tag',
       [
         '/blog/tag/almost',
         '/blog/tag/astro',
@@ -99,10 +102,10 @@ describe('маршруты блога с параметрами', () => {
         '/en/blog/tag/seo',
       ],
     ],
-    ['/[...locale]/blog/page/[page]', List, ['/blog/page/2']],
+    ['/[...locale]/blog/page/[page]', List, 'blog', ['/blog/page/2']],
   ])(
-    '%s: адреса каждой локали без черновиков, каждый — своя страница из секций',
-    async (route, module, expected) => {
+    '%s: адреса каждой локали без черновиков, каждый — своя страница из секций, крошки — по карте',
+    async (route, module, id, expected) => {
       const pages = await built(route, module)
       expect(pages.map(({ path }) => path)).toEqual(expected)
       for (const { path, locale, props } of pages) {
@@ -110,6 +113,10 @@ describe('маршруты блога с параметрами', () => {
         expect(head.lang, path).toBe(locale)
         expect(head.h1, path).toBe(1)
         expect(head.outsideSections, path).toEqual([])
+        // Крошки — у шаблона карты с крошками: видимые и BreadcrumbList — один путь.
+        const crumbs = crumbsOf(head.html, head.blocks)
+        expect(crumbs.visible !== undefined, path).toBe(breadcrumbsOn(id))
+        expect(crumbs.structured, path).toEqual(crumbs.visible)
         if (THIN_TAGS.includes(path)) {
           expect(head.robots, path).toBe('noindex')
           expect(head.canonical, path).toBeUndefined()
@@ -145,6 +152,11 @@ describe('маршруты блога с параметрами', () => {
     const head = await page('/[...locale]/blog/[slug]', Post, '/blog/para')
     expect(head.hreflang).toEqual(pair('/blog/para', '/en/blog/pair'))
     expect(head.jsonLd).toEqual(['BlogPosting', 'BreadcrumbList'])
+    expect(crumbsOf(head.html, head.blocks).visible).toEqual([
+      [t(RU, 'nav.home'), '/'],
+      [t(RU, 'blog.title'), '/blog'],
+      ['Запись с переводом', undefined],
+    ])
     const paragraphs = [...parseHtml(head.html).querySelectorAll('article p')]
     expect(paragraphs.map((paragraph) => paragraph.textContent)).toContain('Тело записи.')
   })

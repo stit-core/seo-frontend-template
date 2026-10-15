@@ -2,12 +2,10 @@
 import DocumentLayout from '@/app/layouts/document.astro'
 import { COMPANY, CompanyContacts } from '@/entities/company'
 import { type ContactErrors, ContactForm, type ContactValues } from '@/features/contact-form'
-import { type DictKey, type Locale, localePath, t } from '@/shared/i18n'
-import { breadcrumbList } from '@/shared/seo'
+import { type DictKey, type Locale, t } from '@/shared/i18n'
 import { pageVersions } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
-import { Breadcrumbs } from '@/widgets/breadcrumbs'
 
 interface Props {
   locale: Locale
@@ -50,10 +48,6 @@ const place = `${copy.title} — ${address.locality}, ${address.street}`
 // нём раньше текста страницы.
 const failed = errors !== undefined || notice !== undefined
 const title = failed ? t(locale, 'form.failed', { title: place }) : place
-const crumbs = [
-  { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
-  { name: copy.title },
-]
 ---
 
 <DocumentLayout
@@ -62,10 +56,8 @@ const crumbs = [
   description={copy.description}
   translations={pageVersions('contacts')}
   noindex={noindex}
-  jsonLd={noindex ? [] : [breadcrumbList(crumbs)]}
 >
   <Section labelledby="page-title">
-    <Breadcrumbs locale={locale} items={crumbs} class="mb-md" />
     <Heading id="page-title" level={1}>
       {copy.title}
     </Heading>

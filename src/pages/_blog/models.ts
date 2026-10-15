@@ -14,8 +14,9 @@ import {
 } from '@/entities/post'
 import { type Locale, localePath, type Translations, t } from '@/shared/i18n'
 import { invariant } from '@/shared/lib'
-import { blogPosting, breadcrumbList, type Crumb } from '@/shared/seo'
-import { pageLocales } from '@/shared/strategy'
+import { blogPosting } from '@/shared/seo'
+import { type BlockProps, breadcrumbsOn, pageLocales } from '@/shared/strategy'
+import type { breadcrumbs } from '@/widgets/breadcrumbs'
 import { articleImagesOf, ogImageOf } from './images'
 
 // Модели страниц блога — здесь, разметка — в .astro: страницы всех локалей делят и то и другое.
@@ -31,6 +32,25 @@ async function translationsOf(
   return Object.fromEntries(
     versions.flatMap(([locale, path]) => (path === undefined ? [] : [[locale, path] as const])),
   )
+}
+
+// Крошки — у страницы шаблона карты с крошками (запись, тег): путь — главная и блог, последняя ступень — сама страница.
+// Видимые крошки и BreadcrumbList печатает оболочка из этого пропа.
+function crumbsOf(
+  id: string,
+  locale: Locale,
+  current: string,
+): BlockProps<typeof breadcrumbs> | undefined {
+  if (!breadcrumbsOn(id)) return undefined
+  return {
+    id: 'breadcrumbs',
+    variant: 'full-path',
+    crumb: [
+      { label: t(locale, 'nav.home'), link: { href: localePath(locale, '/') } },
+      { label: t(locale, 'blog.title'), link: { href: blogPath(locale) } },
+    ],
+    current,
+  }
 }
 
 // Автор записи на языке страницы: одни и те же строки уходят в видимую подпись и в Person.
@@ -53,17 +73,12 @@ export async function postPageModel(post: Post) {
   const cover = data.cover && data.coverAlt ? { src: data.cover, alt: data.coverAlt } : undefined
   const ogImage = cover && (await ogImageOf(cover.src, cover.alt))
   const imagePaths = cover && (await articleImagesOf(cover.src)).map(({ path }) => path)
-  const crumbs: Crumb[] = [
-    { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
-    { name: t(locale, 'blog.title'), href: blogPath(locale) },
-    { name: data.title },
-  ]
   return {
     translations,
     ogImage,
     article: { published: data.pubDate, modified: data.updatedDate },
     author,
-    crumbs,
+    crumbs: crumbsOf('post', locale, data.title),
     jsonLd: [
       blogPosting({
         locale,
@@ -75,7 +90,6 @@ export async function postPageModel(post: Post) {
         imagePaths,
         author,
       }),
-      breadcrumbList(crumbs),
     ],
   }
 }
@@ -92,22 +106,11 @@ export async function blogListPageModel(locale: Locale, page: Page<Post>) {
     page.current === 1
       ? t(locale, key)
       : t(locale, 'blog.paged', { text: t(locale, key), page: page.current })
-  const crumbs: Crumb[] = [
-    { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
-    ...(page.current === 1
-      ? [{ name: t(locale, 'blog.title') }]
-      : [
-          { name: t(locale, 'blog.title'), href: blogPath(locale) },
-          { name: t(locale, 'blog.page', { page: page.current }) },
-        ]),
-  ]
   return {
     translations,
     title: paged('blog.pageTitle'),
     heading: paged('blog.title'),
     description: paged('blog.description'),
-    crumbs,
-    jsonLd: [breadcrumbList(crumbs)],
     tags: await listTags(locale),
     pagination: {
       current: page.current,
@@ -128,18 +131,12 @@ export async function tagPageModel(locale: Locale, tag: string) {
       : undefined,
   )
   const heading = t(locale, 'blog.tag', { tag })
-  const crumbs: Crumb[] = [
-    { name: t(locale, 'nav.home'), href: localePath(locale, '/') },
-    { name: t(locale, 'blog.title'), href: blogPath(locale) },
-    { name: `#${tag}` },
-  ]
   return {
     noindex: !indexable,
     translations,
     title: heading,
     heading,
     description: t(locale, 'blog.tagDescription', { tag }),
-    crumbs,
-    jsonLd: [breadcrumbList(crumbs)],
+    crumbs: crumbsOf('tag', locale, `#${tag}`),
   }
 }
