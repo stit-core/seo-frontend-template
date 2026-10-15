@@ -1,5 +1,5 @@
 ---
-description: FSD под Astro — слои, навязанные entry, public API, сервер и клиент, размещение; границы держит ESLint.
+description: FSD под Astro — слои, навязанные entry, блок каталога strategy (widgets/<block-id> и его контракт), public API, сервер и клиент, размещение; границы держит ESLint.
 paths: ["src/**/*.ts", "src/**/*.astro", "steiger.config.ts", "eslint.config.js", ".gate-fixtures/**"]
 ---
 
@@ -25,10 +25,23 @@ app → pages → widgets → features → entities → shared
 у дефолтной локали сегмента нет. Служебный маршрут — свой файл: `healthz.ts` → `/healthz`.
 Подпапки — сегменты URL, не слайсы (правила слайсов Steiger на `pages` выключены).
 Файлы одной страницы — её разметка, общая для локалей, и `.ts`-модель — рядом, в
-`src/pages/_<name>/` (префикс `_` вне роутинга); widget — только при ≥ 2 страницах. Server route —
+`src/pages/_<name>/` (префикс `_` вне роутинга); секция страницы из каталога strategy — блок
+`widgets/<block-id>` при любом числе страниц (§ Блок каталога). Server route —
 `src/pages/<name>.ts` с `export const prerender = false`. `src/pages/_image.ts` — не файл
 страницы, а обработчик маршрута `/_image`, который вводит сам Astro (`image.endpoint` в
 `astro.config.ts`).
+
+## Блок каталога
+
+Секция страницы — блок каталога strategy (`strategy/kb/site/04-blocks/blocks.yaml`): слайс
+`widgets/<block-id>`, имя — id блока каталога. Контракт — `model/block.ts`: `defineBlock`
+(`shared/strategy`) — варианты каталога, которые блок умеет, и слоты — id элементов его анатомии
+с видом значения (`text`, `action`, `fact`, `list`, `group`); пропсы компонента — `BlockProps`
+контракта: id секции плана, вариант и слоты. Страница ставит блок пропсами своей секции
+(`heroText.props(page, 'hero')`): не та секция, вариант не из блока, слот вне его анатомии или без
+значения — ошибка сборки с ключом секции. Тест контракта `src/pages/_tests/blocks.astro.test.ts`
+сверяет блоки с каталогом и планами: варианты и слоты — из каталога, обязательные элементы приняты,
+у секции плана — вариант блока и слоты, которые он принимает.
 
 ## Навязанные Astro точки входа
 
@@ -88,12 +101,13 @@ Frontmatter `.astro` и модули `.ts` исполняются на серв�
 | SEO: `absoluteUrl`/hreflang, `SeoHead`, фабрики JSON-LD + `JsonLdScript`, генераторы robots/sitemap/rss, реестр ботов `crawlers.yaml` | `shared/seo` |
 | тест-хелперы | `shared/lib/testing` |
 | канон пути и таблица адресов (данные → правила, ответ на адрес запроса) | `shared/redirects` |
-| чтение данных strategy — снимок `strategy/` в корне (бриф, карта, планы, copy deck по языкам, факты; копии каталогов базы `kb/`): страница — секции плана по порядку, тексты слотов по ключу `page/section/slot`, действия, факты, мета и место в карте; локали страниц карты (`localeRoutes` маршрутов), карта переводов, ссылка на страницу на языке страницы или основном, переключатель языка — правилами по проекту (`siteOf`: у сайта — карта снимка, у тестов — проект фикстуры; планы, copy deck и факты снимок собирает при первом чтении страницы — серверный бандл маршрутов без чтения страницы их не везёт); правила контракта и схемы читаемых полей — листовой `contract.ts` (его берут и скрипты) | `shared/strategy` |
-| проектные UI-примитивы: секция страницы и контейнер каркаса, заголовок, сетка «термин — описание», готовая картинка и ролик-петля | `shared/ui/{section,heading,term-list,media}` |
+| чтение данных strategy — снимок `strategy/` в корне (бриф, карта, планы, copy deck по языкам, факты; копии каталогов базы `kb/`): страница — секции плана по порядку, слоты по элементам анатомии блока (тексты по ключу `page/section/slot`, адреса действий, факты; элемент, который план заполняет не раз, — список), мета и место в карте; контракт блока `defineBlock` (секция → пропсы блока, ошибка с ключом секции); локали страниц карты (`localeRoutes` маршрутов), карта переводов, ссылка на страницу на языке страницы или основном, переключатель языка — правилами по проекту (`siteOf`: у сайта — карта снимка, у тестов — проект фикстуры; планы, copy deck и факты снимок собирает при первом чтении страницы — серверный бандл маршрутов без чтения страницы их не везёт); правила контракта и схемы читаемых полей — листовой `contract.ts` (его берут и скрипты) | `shared/strategy` |
+| проектные UI-примитивы: секция страницы и контейнер каркаса, заголовок, сетка «термин — описание», готовая картинка и ролик-петля, действие плана (призыв), карточка набора | `shared/ui/{section,heading,term-list,media,action,card}` |
+| блок каталога strategy — секция страницы по плану: контракт, разметка, тест | `widgets/<block-id>/{model/block.ts,ui/<block-id>.astro}` (`hero-text`, `feature-grid`) |
 | каркас сайта, список записей, хлебные крошки (видимые; `BreadcrumbList` из того же массива печатает layout в `<head>`) | `widgets/site-header`, `widgets/site-footer`, `widgets/post-list`, `widgets/breadcrumbs` |
 | коллекция контента: `.md`, схема, запросы, карточка/статья | `entities/post/{content,model,api,lib,ui}` |
 | реестр авторов и подпись (подпись ставит страница в слот статьи: слайсы одного слоя не импортируют друг друга) | `entities/author/{model,ui}` |
-| разметка страниц блога, их модель, `getStaticPaths` и фид (локали делят разметку, модель, пути и фид) | `src/pages/_blog/*.astro`, `src/pages/_blog/sections.ts`, `src/pages/_blog/static-paths.ts`, `src/pages/_blog/feed.ts`, кадры обложки для превью и разметки — `src/pages/_blog/images.ts` (сборочный модуль вне барреля `shared/seo`: on-demand маршрутам конвейер картинок не нужен) |
+| разметка страниц блога, их модель, `getStaticPaths` и фид (локали делят разметку, модель, пути и фид) | `src/pages/_blog/*.astro`, `src/pages/_blog/models.ts`, `src/pages/_blog/static-paths.ts`, `src/pages/_blog/feed.ts`, кадры обложки для превью и разметки — `src/pages/_blog/images.ts` (сборочный модуль вне барреля `shared/seo`: on-demand маршрутам конвейер картинок не нужен) |
 | SEO-маршруты: on-demand `robots.txt` и ключ IndexNow, prerendered фиды | `src/pages/{robots.txt,[key].txt}.ts`, `src/pages/[...locale]/rss.xml.ts` |
 | карта сайта — файл сборки по страницам `dist/client` | интеграция `sitemap-from-build` в `astro.config.ts` + `scripts/lib/sitemap.mjs` (формат — `shared/seo/sitemap.ts`) |
 

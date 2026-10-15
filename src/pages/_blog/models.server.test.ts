@@ -4,7 +4,7 @@ import { type DictKey, type Locale, t } from '@/shared/i18n'
 import { testLocale } from '@/shared/lib/testing'
 import { blogPosting, breadcrumbList } from '@/shared/seo'
 import { articleImagesOf, ogImageOf } from './images'
-import { blogListPageModel, postPageModel, tagPageModel } from './sections'
+import { blogListPageModel, postPageModel, tagPageModel } from './models'
 
 vi.mock('astro:content', () =>
   import('../_tests/fixtures').then((fixtures) => fixtures.astroContent),

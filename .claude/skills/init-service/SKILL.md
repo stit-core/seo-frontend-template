@@ -76,7 +76,8 @@ Gate перед запуском: стек `stable`; записи FSD-карты
   `entities/company`) — вручную по rule `fsd-architecture`
 - `pages.md` → `/scaffold page` (ru + en) и `/scaffold route` (служебный маршрут)
 - `features.md` → `/scaffold feature`
-- `widgets.md` → `/scaffold widget` (блок на ≥ 2 страницах)
+- блоки секций планов `strategy/site/<поверхность>/plans/` → `/scaffold block` (блок каталога, которого ещё нет
+  в `src/widgets/`)
 
 После каждого — `pnpm typecheck && pnpm lint && pnpm steiger` зелёные.
 

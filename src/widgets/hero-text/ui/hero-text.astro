@@ -1,0 +1,32 @@
+---
+import type { BlockProps } from '@/shared/strategy'
+import { ActionLink } from '@/shared/ui/action'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
+import type { heroText } from '../model/block'
+
+type Props = BlockProps<typeof heroText>
+
+const {
+  id,
+  headline,
+  subheadline,
+  cta,
+  'cta-label': ctaLabel,
+  'cta-secondary': secondary,
+  'cta-secondary-label': secondaryLabel,
+} = Astro.props
+---
+
+<Section rhythm="m" labelledby={id}>
+  <Heading id={id} level={1} kind="display">
+    {headline}
+  </Heading>
+  <p class="mt-stack-display text-lead text-secondary">{subheadline}</p>
+  <p class="mt-xl flex flex-wrap items-center gap-x-lg gap-y-sm">
+    <ActionLink href={cta.href} label={ctaLabel} kind="primary" />
+    {secondary && secondaryLabel && (
+      <ActionLink href={secondary.href} label={secondaryLabel} kind="secondary" />
+    )}
+  </p>
+</Section>

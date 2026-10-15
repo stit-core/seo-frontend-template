@@ -1,3 +1,6 @@
+export type { BlockProps } from './block'
+export { action, defineBlock, fact, group, list, text } from './block'
+export { elementOf } from './contract'
 export type {
   Action,
   FactValue,
@@ -17,5 +20,6 @@ export {
   pageVersions,
   projectOf,
   siteOf,
+  snapshot,
   strategyPage,
 } from './page'

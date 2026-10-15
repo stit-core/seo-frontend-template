@@ -59,7 +59,7 @@ origin штампуется при старте.
 | `/init-service` | свежий форк: оркестратор пути «шаблон → свой сайт» |
 | `/stack-deep-dive` | платформа: `docs/stack/*.md` волнами до `stable` |
 | `/de-template` | разворот фундамента по stable-артефактам (на каноническом репо — никогда) |
-| `/scaffold` | `page` · `collection` · `feature` · `widget` · `route` по канону |
+| `/scaffold` | `page` · `collection` · `feature` · `block` · `route` по канону |
 | `/content` | запись коллекции: frontmatter в бюджетах, текст для поиска и ИИ-ответов, перевод, `check:content` |
 | `/seo-audit` | прогон `seo:check` + HTTP-набора + curl по домену + GEO-проба `geo:probe`, отчёт |
 | `/release` | аудит прод-зависимостей, образ, приёмка, тег, пуш, handoff в `<org>/infra` |

@@ -1,0 +1,17 @@
+---
+import { Heading } from '@/shared/ui/heading'
+
+interface Props {
+  title: string
+}
+
+const { title } = Astro.props
+---
+
+{/* Карточка набора — пункт списка: блок ставит карточки в <ul>, заголовок карточки — уровня 3 под заголовком секции. */}
+<li class="rounded-panel border border-subtle bg-surface p-lg">
+  <Heading level={3}>{title}</Heading>
+  <div class="mt-sm text-secondary">
+    <slot />
+  </div>
+</li>

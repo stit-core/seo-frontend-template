@@ -22,7 +22,8 @@ export const PlanSchema = z.object({
       id: z.string(),
       role: z.string(),
       block: z.string(),
-      variant: z.string().optional(),
+      // Раскладку блока называет план: вариант по умолчанию знает только каталог, а его чтение не грузит.
+      variant: z.string(),
       slots: z
         .object({
           text: z.array(PlanSlot).default([]),
@@ -192,6 +193,20 @@ export function chosenText(slot: DeckSlot, key: string): string {
       : slot.variants.find((candidate) => candidate.id === slot.chosen)
   if (variant === undefined) fail(key, `chosen «${slot.chosen}» — такого варианта нет`)
   return variant.text
+}
+
+export type SlotKind = 'text' | 'action' | 'data'
+
+// Элемент анатомии блока, который заполняет слот плана (сопоставление site_validate.py strategy): у слота группы —
+// экземпляр «card-1» набора card и элемент «title» из анатомии «card.title»; у прочих — анатомия, по умолчанию id слота.
+// Слот данных без анатомии элемент не заполняет: это факт секции для её текстов (binds).
+export function elementOf(slot: PlanSlot, kind: SlotKind) {
+  if (slot.group !== undefined) {
+    const group = slot.group.replace(/-\d+$/, '')
+    return { element: slot.anatomy?.split('.')[1] ?? slot.id, group, instance: slot.group }
+  }
+  const element = slot.anatomy ?? (kind === 'data' ? undefined : slot.id)
+  return element === undefined ? undefined : { element, group: undefined, instance: undefined }
 }
 
 // Адрес действия — цель плана: литерал как есть (`#якорь`, путь, `tel:`, `mailto:`, адрес ссылки), у цели

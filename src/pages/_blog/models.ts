@@ -18,7 +18,7 @@ import { blogPosting, breadcrumbList, type Crumb } from '@/shared/seo'
 import { pageLocales } from '@/shared/strategy'
 import { articleImagesOf, ogImageOf } from './images'
 
-// Логика секций блога — здесь, разметка — в .astro: страницы всех локалей делят и то и другое.
+// Модели страниц блога — здесь, разметка — в .astro: страницы всех локалей делят и то и другое.
 
 // Карта переводов из версий страницы по локалям её строки карты: адрес версии или ничего.
 async function translationsOf(

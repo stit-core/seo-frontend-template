@@ -1,9 +1,4 @@
-import { createHash } from 'node:crypto'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { testLocale } from '@/shared/lib/testing'
-import deck from './package-landing/site/promo/copy/spasibo.yaml'
-import plan from './package-landing/site/promo/plans/spasibo.yaml'
+import { PACKAGE_LANDING, testLocale } from '@/shared/lib/testing'
 import { languagesOf, linkOf, localesOf, projectOf, readPage, versionsOf } from './page'
 
 // Чтение проверяется на локалях теста — ru, en и de, — а не на локалях сайта: фикстура проекта от них не зависит.
@@ -82,6 +77,7 @@ const site = () => ({
         id: 'steps',
         role: 'how-it-works',
         block: 'steps',
+        variant: 'numbered',
         slots: {
           text: [
             { id: 'step-1-title', anatomy: 'step.title', group: 'step-1' },
@@ -100,9 +96,15 @@ const site = () => ({
         block: 'footer',
         variant: 'minimal',
         slots: {
+          text: [{ id: 'privacy-label' }, { id: 'consent-label', anatomy: 'privacy-label' }],
+          action: [
+            { id: 'privacy', target: { kind: 'route', value: '/privacy' } },
+            { id: 'consent', anatomy: 'privacy', target: { kind: 'route', value: '/soglasie' } },
+          ],
           data: [
-            { id: 'company', fact: 'fact:studio' },
-            { id: 'requisites', fact: 'missing:legal-details' },
+            { id: 'company', anatomy: 'company', fact: 'fact:studio' },
+            { id: 'requisites', anatomy: 'requisites', fact: 'missing:legal-details' },
+            { id: 'owner', fact: 'fact:studio' },
           ],
         },
       },
@@ -145,6 +147,16 @@ const site = () => ({
                 { slot_id: 'step-2-body', variants: [{ id: 'a', text: 'Посчитаем за три дня.' }] },
               ],
             },
+            {
+              section_id: 'footer',
+              slots: [
+                { slot_id: 'privacy-label', variants: [{ id: 'a', text: 'Политика ПДн' }] },
+                {
+                  slot_id: 'consent-label',
+                  variants: [{ id: 'a', text: 'Согласие на обработку' }],
+                },
+              ],
+            },
           ],
         },
       ],
@@ -183,6 +195,13 @@ const site = () => ({
                 { slot_id: 'step-2-body', variants: [{ id: 'a', text: 'Ready in three days.' }] },
               ],
             },
+            {
+              section_id: 'footer',
+              slots: [
+                { slot_id: 'privacy-label', variants: [{ id: 'a', text: 'Privacy policy' }] },
+                { slot_id: 'consent-label', variants: [{ id: 'a', text: 'Consent' }] },
+              ],
+            },
           ],
         },
       ],
@@ -201,43 +220,48 @@ const edited = (change: (files: Files) => void): Files => {
 }
 
 describe('strategy/page', () => {
-  it('секции плана по порядку: блок, вариант, тексты слотов, группы, действия и данные', () => {
+  it('секции плана по порядку: блок, вариант, слоты по элементам анатомии, группы', () => {
     const page = read(site())
     expect(page.sections.map(({ id, block, variant }) => [id, block, variant])).toEqual([
       ['hero', 'hero-text', 'statement-cta'],
-      ['steps', 'steps', undefined],
+      ['steps', 'steps', 'numbered'],
       ['footer', 'footer', 'minimal'],
     ])
-    expect(page.sections[0]).toMatchObject({
-      text: { headline: 'Ремонт под ключ', 'cta-label': 'Вызвать замерщика' },
-      actions: {
-        cta: { href: '/kontakty', label: 'Вызвать замерщика' },
-        chat: { href: 'https://max.ru/demo', label: undefined },
-        'lang-switch': { href: undefined, label: undefined },
+    // Действие — адрес цели: подпись — свой текстовый элемент; без цели в плане адреса нет.
+    expect(page.sections[0]).toStrictEqual({
+      id: 'hero',
+      role: 'hero',
+      block: 'hero-text',
+      variant: 'statement-cta',
+      slots: {
+        headline: 'Ремонт под ключ',
+        'cta-label': 'Вызвать замерщика',
+        cta: { href: '/kontakty' },
+        chat: { href: 'https://max.ru/demo' },
+        'lang-switch': { href: undefined },
       },
       groups: {},
     })
     // Экземпляр группы — по порядку плана, элементы — по анатомии; элемент без анатомии — по id слота.
-    expect(page.sections[1]).toMatchObject({
-      text: {},
-      groups: {
-        step: [
-          { text: { title: 'Замер', body: 'Приедем в удобный день.' }, actions: {}, data: {} },
-          {
-            text: { title: 'Смета', 'step-2-body': 'Посчитаем за три дня.' },
-            data: {
-              phone: {
-                id: 'phone',
-                text: '+7 900 000-00-01',
-                machine: { type: 'telephone', value: '+79000000001' },
-              },
-            },
+    expect(page.sections[1]?.groups).toStrictEqual({
+      step: [
+        { title: 'Замер', body: 'Приедем в удобный день.' },
+        {
+          title: 'Смета',
+          'step-2-body': 'Посчитаем за три дня.',
+          phone: {
+            id: 'phone',
+            text: '+7 900 000-00-01',
+            machine: { type: 'telephone', value: '+79000000001' },
           },
-        ],
-      },
+        },
+      ],
     })
-    // Факт без machine для кода — текст; пробел missing: — без значения.
-    expect(page.sections[2]?.data).toEqual({
+    // Элемент, который план заполняет не раз, — список по порядку плана. Факт без machine для кода — текст, пробел
+    // missing: — без значения, слот данных без анатомии элемент не заполняет.
+    expect(page.sections[2]?.slots).toStrictEqual({
+      'privacy-label': ['Политика ПДн', 'Согласие на обработку'],
+      privacy: [{ href: '/privacy' }, { href: '/soglasie' }],
       company: { id: 'studio', text: 'Студия «Демо»', machine: undefined },
       requisites: undefined,
     })
@@ -260,8 +284,15 @@ describe('strategy/page', () => {
         ogImageAlt: 'A renovated kitchen',
       },
     })
-    expect(page.sections[0]?.actions.cta).toEqual({ href: '/en/kontakty', label: 'Book a survey' })
-    expect(page.sections[2]?.data.company?.text).toBe('Demo studio')
+    expect(page.sections[0]?.slots).toMatchObject({
+      'cta-label': 'Book a survey',
+      cta: { href: '/en/kontakty' },
+    })
+    expect(page.sections[2]?.slots).toMatchObject({
+      'privacy-label': ['Privacy policy', 'Consent'],
+      privacy: [{ href: '/en/privacy' }, { href: '/en/soglasie' }],
+      company: { text: 'Demo studio' },
+    })
     expect(read(site()).meta).toEqual({
       title: 'Ремонт под ключ — Студия «Демо»',
       description: 'Ремонт квартир под ключ.',
@@ -433,28 +464,9 @@ describe('strategy/page', () => {
     })
   })
 
-  // Фикстура базы strategy (scripts/tests/fixtures/package-landing скилла design-deep-dive, тег v0.2.2): план и
-  // copy deck страницы «спасибо» лендинга без карты — в форме, которую пишет strategy, байт в байт.
   describe('фикстура базы package-landing', () => {
-    it('файлы — копии фикстуры базы байт в байт', () => {
-      const sha = (path: string) =>
-        createHash('sha256')
-          .update(readFileSync(join(import.meta.dirname, 'package-landing/site/promo', path)))
-          .digest('hex')
-      expect(sha('plans/spasibo.yaml')).toBe(
-        'bf659955e251eabc0994d2e98b2e2af70cebdd993203a14cda2d30b20128614c',
-      )
-      expect(sha('copy/spasibo.yaml')).toBe(
-        '2581080140d75c4969637d8e93f5b0219bc1a3726a56d9b8c26e800aeec891e8',
-      )
-    })
-
     it('страница читается без правки кода: секции, тексты выбранных вариантов, действия, мета', () => {
-      const landing = projectOf({
-        'site/promo/plans/spasibo.yaml': plan,
-        'site/promo/copy/spasibo.yaml': deck,
-      })
-      expect(readPage(landing, 'spasibo', testLocale('ru'))).toEqual({
+      expect(readPage(projectOf(PACKAGE_LANDING), 'spasibo', testLocale('ru'))).toStrictEqual({
         id: 'spasibo',
         url: '/spasibo',
         parents: [],
@@ -471,12 +483,11 @@ describe('strategy/page', () => {
             role: 'header',
             block: 'header',
             variant: 'landing-minimal',
-            text: { 'cta-label': 'Вызвать замерщика' },
-            actions: {
-              cta: { href: '#lead-form', label: 'Вызвать замерщика' },
-              phone: { href: 'tel:+79000000001', label: undefined },
+            slots: {
+              'cta-label': 'Вызвать замерщика',
+              cta: { href: '#lead-form' },
+              phone: { href: 'tel:+79000000001' },
             },
-            data: {},
             groups: {},
           },
           {
@@ -484,12 +495,10 @@ describe('strategy/page', () => {
             role: 'confirmation',
             block: 'thank-you',
             variant: 'page',
-            text: {
+            slots: {
               title: 'Заявка на замер принята',
               'next-steps': 'Прораб позвонит и договорится о дне замера',
             },
-            actions: {},
-            data: {},
             groups: {},
           },
           {
@@ -497,12 +506,12 @@ describe('strategy/page', () => {
             role: 'footer',
             block: 'footer',
             variant: 'minimal',
-            text: {
+            slots: {
               legal: 'Студия ремонта «Отвес», Нижний Новгород',
               'privacy-label': 'Политика обработки персональных данных',
+              privacy: { href: '#lead-form' },
+              company: undefined,
             },
-            actions: { privacy: { href: '#lead-form', label: undefined } },
-            data: { company: undefined },
             groups: {},
           },
         ],

@@ -10,6 +10,7 @@ import {
   type CopyDeck,
   CopyDeckSchema,
   chosenText,
+  elementOf,
   type Fact,
   type Facts,
   FactsSchema,
@@ -25,6 +26,7 @@ import {
   parseFile,
   type SiteMap,
   SiteMapSchema,
+  type SlotKind,
   targetAddress,
   untranslatedFallback,
 } from './contract'
@@ -37,10 +39,10 @@ export interface Project {
   facts: Facts[]
 }
 
+// Действие плана — адрес цели; подпись — свой текстовый элемент анатомии (`cta` ↔ `cta-label`). Нет цели в плане —
+// адрес собирает код (переключатель языка).
 export interface Action {
-  // Нет цели в плане — адрес собирает код (переключатель языка).
   href: string | undefined
-  label: string | undefined
 }
 
 // Факт слота данных: видимая формулировка и значение для кода. Пробел `missing:` — без значения.
@@ -50,18 +52,19 @@ export interface FactValue {
   machine: Machine | undefined
 }
 
-// Слоты секции по id плана; в экземпляре группы — по элементу анатомии («card.title» → title).
-export interface Slots {
-  text: Record<string, string>
-  actions: Record<string, Action>
-  data: Record<string, FactValue | undefined>
-}
+// Значение слота: текст copy deck, действие плана, факт.
+export type SlotValue = string | Action | FactValue | undefined
 
-export interface Section extends Slots {
+// Слоты по элементу анатомии блока («headline»; в экземпляре группы — «title» из «card.title»). Элемент, который план
+// заполняет не раз (пункты меню), — список значений по порядку плана.
+export type Slots = Record<string, SlotValue | SlotValue[]>
+
+export interface Section {
   id: string
   role: string
   block: string
-  variant: string | undefined
+  variant: string
+  slots: Slots
   // Экземпляры повторяемого набора по порядку плана: «card-1», «card-2» → groups.card.
   groups: Record<string, Slots[]>
 }
@@ -106,8 +109,6 @@ export function projectOf(files: Readonly<Record<string, unknown>>): Project {
   }
   return project
 }
-
-const emptySlots = (): Slots => ({ text: {}, actions: {}, data: {} })
 
 const mapOf = (project: Project, id: string): SiteMap => project.map ?? fail(id, 'нет карты сайта')
 
@@ -218,52 +219,50 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
     }
     const address = (target: PlanTarget, key: string): string =>
       target.kind === 'route' ? localePath(locale, target.value) : targetAddress(target, facts, key)
-
-    const own = emptySlots()
-    const instances = new Map<string, Slots>()
-    // Слот группы ложится в свой экземпляр под именем элемента анатомии, прочие — в секцию под id плана.
-    const place = (slot: PlanSlot) => {
-      if (slot.group === undefined) return { slots: own, name: slot.id }
-      const slots = instances.get(slot.group) ?? emptySlots()
-      instances.set(slot.group, slots)
-      return { slots, name: slot.anatomy?.split('.')[1] ?? slot.id }
+    const factOf = (slot: PlanSlot & { fact: string }): FactValue | undefined => {
+      if (slot.fact.startsWith('missing:')) return undefined
+      const fact =
+        facts.get(slot.fact.slice('fact:'.length)) ??
+        fail(`${id}/${section.id}/${slot.id}`, `${slot.fact} нет в фактах ${locale}`)
+      return { id: fact.id, text: fact.verbatim[0], machine: fact.machine }
     }
 
-    for (const slot of section.slots.text) {
-      const { slots, name } = place(slot)
-      slots.text[name] = textOf(slot.id)
-    }
-    for (const slot of section.slots.action) {
-      const { slots, name } = place(slot)
-      const key = `${id}/${section.id}/${slot.id}`
-      slots.actions[name] = {
-        href: slot.target === undefined ? undefined : address(slot.target, key),
-        label: slot.label === undefined ? undefined : textOf(slot.label),
+    const slots: Slots = {}
+    const instances = new Map<string, { group: string; slots: Slots }>()
+    // Значение ложится под элемент анатомии — в секцию или в свой экземпляр группы.
+    const place = (slot: PlanSlot, kind: SlotKind, value: SlotValue) => {
+      const at = elementOf(slot, kind)
+      if (at === undefined) return
+      let target = slots
+      if (at.instance !== undefined) {
+        const instance = instances.get(at.instance) ?? { group: at.group, slots: {} }
+        instances.set(at.instance, instance)
+        target = instance.slots
       }
+      const prior = target[at.element]
+      target[at.element] =
+        at.element in target ? [...(Array.isArray(prior) ? prior : [prior]), value] : value
     }
-    for (const slot of section.slots.data) {
-      const { slots, name } = place(slot)
-      const fact = slot.fact.startsWith('missing:')
-        ? undefined
-        : (facts.get(slot.fact.slice('fact:'.length)) ??
-          fail(`${id}/${section.id}/${slot.id}`, `${slot.fact} нет в фактах ${locale}`))
-      slots.data[name] =
-        fact === undefined
-          ? undefined
-          : { id: fact.id, text: fact.verbatim[0], machine: fact.machine }
+
+    for (const slot of section.slots.text) place(slot, 'text', textOf(slot.id))
+    for (const slot of section.slots.action) {
+      const key = `${id}/${section.id}/${slot.id}`
+      place(slot, 'action', {
+        href: slot.target === undefined ? undefined : address(slot.target, key),
+      })
     }
+    for (const slot of section.slots.data) place(slot, 'data', factOf(slot))
 
     const groups: Record<string, Slots[]> = {}
-    for (const [instance, slots] of instances) {
-      const group = instance.replace(/-\d+$/, '')
-      groups[group] = [...(groups[group] ?? []), slots]
+    for (const { group, slots: instance } of instances.values()) {
+      groups[group] = [...(groups[group] ?? []), instance]
     }
     return {
       id: section.id,
       role: section.role,
       block: section.block,
       variant: section.variant,
-      ...own,
+      slots,
       groups,
     }
   })

@@ -220,50 +220,104 @@ it('title — 25…65 знаков', () => {
 
 ---
 
-## widget — `ui/<name>.astro` и `index.ts`
+## block — `model/block.ts`, `ui/<block-id>.astro` и `index.ts`
+
+Контракт — id блока каталога, варианты, которые ставят планы, и слоты — id элементов анатомии с видом
+значения (`text`, `action`, `fact`, `list(…)`, `group({…})`):
+
+```ts
+import { action, defineBlock, group, text } from '@/shared/strategy'
+
+export const <blockName> = defineBlock({
+  id: '<block-id>',
+  variants: ['<variant>'],
+  slots: {
+    title: text,
+    cta: action.optional(),
+    'cta-label': text.optional(),
+    card: group({ title: text, body: text }),
+  },
+})
+```
+
+Разметка — `html` блока каталога; пропсы — контракта, тексты — только из них:
 
 ```astro
 ---
-import type { Locale } from '@/shared/i18n'
+import type { BlockProps } from '@/shared/strategy'
+import { ActionLink } from '@/shared/ui/action'
+import { Card } from '@/shared/ui/card'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
+import type { <blockName> } from '../model/block'
 
-interface Props {
-  locale: Locale
-  class?: string | undefined
-}
+type Props = BlockProps<typeof <blockName>>
 
-const { locale, class: className } = Astro.props
+const { id, title, cta, 'cta-label': ctaLabel, card: cards } = Astro.props
 ---
 
-<div class={className}>
-  <!-- разметка -->
-</div>
+<Section labelledby={id}>
+  <Heading id={id} level={2}>
+    {title}
+  </Heading>
+  <ul class="mt-lg grid gap-lg tablet:grid-cols-2">
+    {cards.map((card) => (
+      <Card title={card.title}>
+        <p>{card.body}</p>
+      </Card>
+    ))}
+  </ul>
+  {cta && ctaLabel && (
+    <p class="mt-xl">
+      <ActionLink href={cta.href} label={ctaLabel} kind="primary" />
+    </p>
+  )}
+</Section>
 ```
 
-Виджет — содержимое секции: ширину, фон и подпись лендмарка ему даёт `<Section>` страницы.
-Ссылка вне строки текста и кнопка-иконка несут класс `touch-target` — цель касания на таче
-(rule `shared-ui`).
+Секция подписана своим заголовком: id — id секции плана (на него ведёт якорь `#<id>` действия),
+уровень — `heading` анатомии. Ссылка вне строки текста несёт класс `touch-target` — цель касания на
+таче (rule `shared-ui`).
 
 ```ts
-export { default as <Name> } from './ui/<name>.astro'
+export { <blockName> } from './model/block'
+export { default as <BlockName> } from './ui/<block-id>.astro'
 ```
 
-Тест рядом — Container API: разметка — разбором (`parseHtml`: элементы, атрибуты, текст), а не
-подстрокой тега; доступность — `expectNoA11yViolations`:
+Тест рядом — Container API на пропсах контракта: разметка — разбором (`parseHtml`: элементы,
+атрибуты, текст), а не подстрокой тега; каждый слот — на своём месте; доступность —
+`expectNoA11yViolations`:
 
 ```ts
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
-import <Name> from './<name>.astro'
+import <BlockName> from './<block-id>.astro'
 
-describe('<Name>', () => {
-  it('рендерится и проходит axe', async () => {
-    const container = await AstroContainer.create()
-    const html = await container.renderToString(<Name>, { props: { locale: 'ru' } })
-    expect(parseHtml(html).querySelector('div')).not.toBeNull()
-    await expectNoA11yViolations(html)
+const astro = await AstroContainer.create()
+const cards = [
+  { title: 'Замер', body: 'Приедем в удобный день.' },
+  { title: 'Смета', body: 'Посчитаем за три дня.' },
+]
+const slots = { id: 'benefits', variant: '<variant>', title: 'Как мы работаем', card: cards }
+
+describe('<BlockName>', () => {
+  it('секция подписана заголовком с id секции плана, карточки — все и по порядку', async () => {
+    const section = parseHtml(await astro.renderToString(<BlockName>, { props: slots })).querySelector('section')
+    expect(section?.getAttribute('aria-labelledby')).toBe('benefits')
+    expect(section?.querySelector('h2')?.textContent).toBe('Как мы работаем')
+    const items = [...(section?.querySelectorAll('ul > li') ?? [])]
+    expect(items.map((item) => item.querySelector('h3')?.textContent)).toEqual(['Замер', 'Смета'])
+  })
+
+  it('не имеет нарушений доступности', async () => {
+    await expectNoA11yViolations(await astro.renderToString(<BlockName>, { props: slots }))
   })
 })
 ```
+
+Страница ставит блок пропсами своей секции: `<BlockName {...<blockName>.props(page, '<section-id>')} />`,
+`page` — `strategyPage('<page-id>', locale)`. Новый блок тест контракта
+`src/pages/_tests/blocks.astro.test.ts` находит сам.
 
 ---
 

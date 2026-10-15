@@ -199,7 +199,7 @@ strategy; врезки «это страница шаблона» удали. Т
   `entities/company`) — вручную по rule `fsd-architecture`
 - `pages.md` → `/scaffold page` (ru + en) и `/scaffold route` (служебный маршрут)
 - `features.md` → `/scaffold feature`
-- `widgets.md` → `/scaffold widget`
+- блоки секций планов `strategy/site/<поверхность>/plans/` → `/scaffold block`
 
 После каждого — `pnpm typecheck && pnpm lint && pnpm steiger` зелёные.
 

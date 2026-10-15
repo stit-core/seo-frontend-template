@@ -1,0 +1,14 @@
+---
+interface Props {
+  href: string
+  label: string
+  // Главный призыв — кнопка с заливкой акцентом, второй путь — ссылкой: иной стиль у того же ряда (каталог strategy).
+  kind: 'primary' | 'secondary'
+}
+
+const { href, label, kind } = Astro.props
+---
+
+<a href={href} class:list={{ button: kind === 'primary', 'touch-target': kind === 'secondary' }}>
+  {label}
+</a>

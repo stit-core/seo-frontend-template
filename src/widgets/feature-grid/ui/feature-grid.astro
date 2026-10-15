@@ -1,0 +1,25 @@
+---
+import type { BlockProps } from '@/shared/strategy'
+import { Card } from '@/shared/ui/card'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
+import type { featureGrid } from '../model/block'
+
+type Props = BlockProps<typeof featureGrid>
+
+const { id, title, card: cards } = Astro.props
+---
+
+<Section width="wide" tone="subtle" rhythm="m" labelledby={id}>
+  <Heading id={id} level={2}>
+    {title}
+  </Heading>
+  {/* Раскладка каталога: на десктопе — три колонки, до 60rem — две, на телефоне — одна; порядок — порядок плана. */}
+  <ul class="mt-lg grid gap-lg tablet:grid-cols-2 desktop:grid-cols-3">
+    {cards.map((card) => (
+      <Card title={card.title}>
+        <p>{card.body}</p>
+      </Card>
+    ))}
+  </ul>
+</Section>

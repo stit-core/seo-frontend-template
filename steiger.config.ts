@@ -16,8 +16,8 @@ export default defineConfig([
       'fsd/inconsistent-naming': 'error',
       'fsd/typo-in-layer-name': 'error',
       'fsd/excessive-slicing': 'warn',
-      // Референсы из вложенных каталогов маршрутов Steiger не видит,
-      // поэтому widgets ложно числятся «без референсов». Границы держит ESLint.
+      // Блок каталога — widget при любом числе страниц, а референсы из вложенных каталогов
+      // маршрутов Steiger и не видит: «без референсов» у widgets ложно. Границы держит ESLint.
       'fsd/insignificant-slice': 'off',
     },
   },

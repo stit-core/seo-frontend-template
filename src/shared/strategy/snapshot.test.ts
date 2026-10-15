@@ -25,7 +25,7 @@ describe('снимок сайта strategy/', () => {
   it('маршрут действия главной — на языке страницы', () => {
     for (const locale of SUPPORTED_LOCALES) {
       const hero = strategyPage('home', locale).sections.find((section) => section.id === 'hero')
-      expect(hero?.actions.cta?.href).toBe(localePath(locale, '/contacts'))
+      expect(hero?.slots.cta).toEqual({ href: localePath(locale, '/contacts') })
     }
   })
 })
