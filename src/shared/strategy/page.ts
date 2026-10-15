@@ -285,28 +285,37 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
 }
 
 // Снимок strategy сайта — `strategy/` в корне репозитория. YAML — модулем сборки (плагин yaml-modules
-// astro.config.ts): в бандле данные, а не парсер, и страницы на запросе читают то же, что на сборке.
+// astro.config.ts): в бандле данные, а не парсер, и страницы на запросе читают то же, что на сборке. Карту читает
+// каркас любой страницы, в том числе on-demand; планы, copy deck и факты — только чтение страницы: снимок целиком
+// собирается при первом чтении, и серверный бандл маршрутов, которые страницу не читают, их не везёт.
 const ROOT = '../../../strategy/'
-const files = import.meta.glob<unknown>(
+const mapFiles = import.meta.glob<unknown>('../../../strategy/site/*/site-map.yaml', {
+  eager: true,
+  import: 'default',
+})
+const pageFiles = import.meta.glob<unknown>(
   [
     '../../../strategy/facts*.yaml',
-    '../../../strategy/site/*/site-map.yaml',
     '../../../strategy/site/*/plans/*.yaml',
     '../../../strategy/site/*/copy/*.yaml',
   ],
   { eager: true, import: 'default' },
 )
+const projectOfFiles = (files: Readonly<Record<string, unknown>>) =>
+  projectOf(
+    Object.fromEntries(
+      Object.entries(files).map(([path, data]) => [path.slice(ROOT.length), data]),
+    ),
+  )
 
-export const snapshot = projectOf(
-  Object.fromEntries(Object.entries(files).map(([path, data]) => [path.slice(ROOT.length), data])),
-)
+let full: Project | undefined
+export const snapshot = (): Project => (full ??= projectOfFiles({ ...mapFiles, ...pageFiles }))
 
-// Страницы, языки и переводы — по проекту: у сайта это снимок, у тестов — проект фикстуры (как правила адреса — по
-// списку локалей).
+// Языки, версии и ссылки страниц карты — по проекту: у сайта это карта снимка, у тестов — проект фикстуры (как правила
+// адреса — по списку локалей).
 export function siteOf(project: Project) {
   const pageLocales = (id: string): Locale[] => localesOf(project, id)
   return {
-    strategyPage: (id: string, locale: Locale): StrategyPage => readPage(project, id, locale),
     pageLocales,
     pageVersions: (id: string): Translations => versionsOf(project, id),
     pageLink: (route: string, locale: Locale): PageLink | undefined =>
@@ -322,5 +331,8 @@ export function siteOf(project: Project) {
   }
 }
 
-export const { strategyPage, pageLocales, pageVersions, pageLink, languageLinks, localeRoutes } =
-  siteOf(snapshot)
+export const { pageLocales, pageVersions, pageLink, languageLinks, localeRoutes } = siteOf(
+  projectOfFiles(mapFiles),
+)
+export const strategyPage = (id: string, locale: Locale): StrategyPage =>
+  readPage(snapshot(), id, locale)
