@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { globSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import node from '@astrojs/node'
 import tailwindcss from '@tailwindcss/vite'
@@ -40,8 +40,28 @@ const SNAPSHOT_SCHEMAS = [
   { file: /^site\/[^/]+\/plans\/[^/]+\.yaml$/, schema: PlanSchema },
   { file: /^site\/[^/]+\/copy\/[^/]+\.yaml$/, schema: CopyDeckSchema },
 ]
+// Данные одной страницы strategy — модуль `virtual:strategy/<page-id>`: план и copy deck страницы по языкам в раскладке
+// снимка (`plans/<page-id>.yaml`, `copy/<page-id>.yaml` и `.<lang>.yaml`), путь файла от корня снимка → данные.
+// Страница везёт свои данные, а не снимок целиком: серверному бандлу on-demand маршрута (404, ответ формы) — только их.
+const PAGE_MODULE = 'virtual:strategy/'
 const yamlModules = {
   name: 'yaml-modules',
+  resolveId: (id: string) => (id.startsWith(PAGE_MODULE) ? `\0${id}` : null),
+  load(id: string) {
+    if (!id.startsWith(`\0${PAGE_MODULE}`)) return null
+    const page = id.slice(PAGE_MODULE.length + 1)
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(page)) {
+      throw new Error(`${PAGE_MODULE}${page}: id страницы — kebab-case карты strategy`)
+    }
+    const files = globSync(
+      [`site/*/plans/${page}.yaml`, `site/*/copy/${page}.yaml`, `site/*/copy/${page}.*.yaml`],
+      { cwd: STRATEGY },
+    ).sort()
+    return [
+      ...files.map((file, index) => `import f${index} from ${JSON.stringify(STRATEGY + file)}`),
+      `export default {${files.map((file, index) => `${JSON.stringify(file)}: f${index}`).join(', ')}}`,
+    ].join('\n')
+  },
   transform(code: string, id: string) {
     if (!id.endsWith('.yaml')) return null
     const data = load(code) ?? null

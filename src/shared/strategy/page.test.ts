@@ -102,7 +102,7 @@ const site = () => ({
             { id: 'consent', anatomy: 'privacy', target: { kind: 'route', value: '/soglasie' } },
           ],
           data: [
-            { id: 'company', anatomy: 'company', fact: 'fact:studio' },
+            { id: 'company', anatomy: 'company', fact: 'fact:studio', binds: ['privacy-label'] },
             { id: 'requisites', anatomy: 'requisites', fact: 'missing:legal-details' },
             { id: 'owner', fact: 'fact:studio' },
           ],
@@ -253,6 +253,7 @@ describe('strategy/page', () => {
             id: 'phone',
             text: '+7 900 000-00-01',
             machine: { type: 'telephone', value: '+79000000001' },
+            binds: [],
           },
         },
       ],
@@ -262,7 +263,12 @@ describe('strategy/page', () => {
     expect(page.sections[2]?.slots).toStrictEqual({
       'privacy-label': ['Политика ПДн', 'Согласие на обработку'],
       privacy: [{ href: '/privacy' }, { href: '/soglasie' }],
-      company: { id: 'studio', text: 'Студия «Демо»', machine: undefined },
+      company: {
+        id: 'studio',
+        text: 'Студия «Демо»',
+        machine: undefined,
+        binds: ['privacy-label'],
+      },
       requisites: undefined,
     })
   })
@@ -302,8 +308,9 @@ describe('strategy/page', () => {
     })
   })
 
-  // Маршрут цели — страница карты на языке страницы; без её версии на нём — версия основного языка, ссылка называет его.
-  it('маршрут действия — страница карты: своя версия, без неё — версия основного языка с его кодом', () => {
+  // Маршрут цели — страница карты на языке страницы; без её версии на нём — версия на другом языке (ссылка на страницу
+  // карты), ссылка называет его; версий нет вовсе — ошибка.
+  it('маршрут действия — страница карты: своя версия, без неё — версия другого языка с его кодом', () => {
     const toServices = (versions: string[]) =>
       edited((files) => {
         const [hero] = files['site/web/plans/repair.yaml'].sections
@@ -320,8 +327,8 @@ describe('strategy/page', () => {
       href: '/uslugi',
       hreflang: 'ru',
     })
-    expect(() => read(toServices(['de']), 'en')).toThrow(
-      'strategy: repair/hero/cta — /uslugi: у страницы карты нет версии ни на en, ни на основном языке',
+    expect(() => read(toServices(['fr']), 'en')).toThrow(
+      'strategy: repair/hero/cta — /uslugi: у страницы карты нет ни одной версии',
     )
   })
 
@@ -446,7 +453,7 @@ describe('strategy/page', () => {
       expect(versionsOf(project(), 'home')).toEqual({ ru: '/', en: '/en', de: '/de' })
     })
 
-    it('ссылка на страницу карты: её версия на языке страницы, без неё — версия основного языка с его кодом', () => {
+    it('ссылка на страницу карты: её версия на языке страницы, без неё — основного языка, без неё — любая', () => {
       expect(linkOf(project(), '/uslugi', testLocale('en'))).toEqual({
         href: '/en/uslugi',
         hreflang: undefined,
@@ -461,7 +468,10 @@ describe('strategy/page', () => {
           if (page.id === 'services') Object.assign(page, { lang_versions: ['en'] })
         }
       })
-      expect(linkOf(projectOf(withoutPrimary), '/uslugi', testLocale('de'))).toBeUndefined()
+      expect(linkOf(projectOf(withoutPrimary), '/uslugi', testLocale('de'))).toEqual({
+        href: '/en/uslugi',
+        hreflang: 'en',
+      })
     })
 
     it('переключатель — перевод на каждый другой язык; без перевода — главная языка или ничего по карте', () => {

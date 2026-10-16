@@ -9,9 +9,10 @@
 
 ```astro
 ---
+import home from 'virtual:strategy/home'
 import DocumentLayout from '@/app/layouts/document.astro'
 import type { Locale } from '@/shared/i18n'
-import { pageVersions } from '@/shared/strategy'
+import { pageOf, pageVersions } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 
@@ -39,6 +40,7 @@ const copy = COPY[locale]
 
 <DocumentLayout
   locale={locale}
+  chrome={pageOf(home, locale)}
   title={copy.title}
   description={copy.description}
   translations={pageVersions('<id>')}
@@ -52,7 +54,8 @@ const copy = COPY[locale]
 </DocumentLayout>
 ```
 
-Шапку и подвал ставит оболочка (`chrome` — страница плана; без своего плана — главная). Крошки — у
+Шапку и подвал ставит оболочка секциями плана, который передаёт страница (`chrome` — модуль
+`virtual:strategy/<id>` через `pageOf`; без своего плана — план главной). Крошки — у
 страницы шаблона карты с `breadcrumbs: true` и с глубины 2: проп оболочки `crumbs` — пропсы блока
 `breadcrumbs`, видимые крошки и `BreadcrumbList` оболочка печатает из него.
 Служебная — проп `noindex` вместо `jsonLd`.
@@ -335,7 +338,7 @@ describe('<BlockName>', () => {
 ```
 
 Страница ставит блок пропсами своей секции: `<BlockName {...<blockName>.props(page, '<section-id>')} />`,
-`page` — `strategyPage('<page-id>', locale)`. Новый блок тест контракта
+`page` — `pageOf(files, locale)`, `files` — модуль `virtual:strategy/<page-id>`. Новый блок тест контракта
 `src/pages/_tests/blocks.astro.test.ts` находит сам.
 
 ---

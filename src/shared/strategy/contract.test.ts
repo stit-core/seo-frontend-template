@@ -104,9 +104,10 @@ describe('strategy/contract', () => {
     })
   })
 
-  it('язык файла — первый подтег', () => {
+  it('язык файла — первый подтег BCP 47', () => {
     expect(langOf('ru')).toBe('ru')
     expect(langOf('en-GB')).toBe('en')
+    expect(langOf('fil-PH')).toBe('fil')
   })
 
   describe('языки карты', () => {

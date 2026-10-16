@@ -1,9 +1,10 @@
 ---
+import home from 'virtual:strategy/home'
 import DocumentLayout from '@/app/layouts/document.astro'
 import { COMPANY, CompanyContacts } from '@/entities/company'
 import { type ContactErrors, ContactForm, type ContactValues } from '@/features/contact-form'
 import { type DictKey, type Locale, t } from '@/shared/i18n'
-import { pageVersions } from '@/shared/strategy'
+import { pageOf, pageVersions } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 
@@ -52,6 +53,7 @@ const title = failed ? t(locale, 'form.failed', { title: place }) : place
 
 <DocumentLayout
   locale={locale}
+  chrome={pageOf(home, locale)}
   title={title}
   description={copy.description}
   translations={pageVersions('contacts')}

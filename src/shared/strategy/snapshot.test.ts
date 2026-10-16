@@ -1,6 +1,6 @@
-import { SUPPORTED_LOCALES } from '@/shared/i18n'
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '@/shared/i18n'
 import { langOf, mapLanguages } from './contract'
-import { pageLink, pageLocales, snapshot, strategyPage } from './page'
+import { type PageFiles, pageLink, pageLocales, pageOf, snapshot, strategyPage } from './page'
 
 describe('снимок сайта strategy/', () => {
   // Языки карты и дескриптор локалей — один список: язык карты без строки дескриптора не собрать, а строка без языка
@@ -22,7 +22,7 @@ describe('снимок сайта strategy/', () => {
     }
   })
 
-  // Цель действия — страница карты, как ссылка со страницы: версия на её языке, без неё — версия основного языка.
+  // Цель действия — страница карты, как ссылка со страницы: версия на её языке, без неё — версия другого языка.
   it('маршрут действия каждого плана на каждом языке страницы — ссылка на страницу карты с этого языка', () => {
     const { map, plans } = snapshot()
     const routes = new Set(map?.pages.map((page) => page.url))
@@ -44,5 +44,41 @@ describe('снимок сайта strategy/', () => {
       }
     }
     expect(checked).toBeGreaterThan(0)
+  })
+
+  // Страница читает свои данные модулем по id: в нём только её план и copy deck, а прочитанная страница — та же, что из
+  // снимка целиком.
+  it('модуль страницы — её план и copy deck по языкам; страница модуля = страница снимка', async () => {
+    const { plans } = snapshot()
+    expect(plans.length).toBeGreaterThan(0)
+    for (const { page } of plans) {
+      const files = (
+        (await import(/* @vite-ignore */ `virtual:strategy/${page.id}`)) as { default: PageFiles }
+      ).default
+      for (const path of Object.keys(files)) {
+        expect(path, page.id).toMatch(
+          new RegExp(`^site/[^/]+/(?:plans|copy)/${page.id}(?:\\.[\\w-]+)?\\.yaml$`),
+        )
+      }
+      for (const locale of pageLocales(page.id)) {
+        expect(pageOf(files, locale), `${page.id} (${locale})`).toEqual(
+          strategyPage(page.id, locale),
+        )
+      }
+    }
+  })
+
+  it('модуль без плана или с двумя планами — ошибка', () => {
+    const { plans } = snapshot()
+    const plan = (id: string) => ({ ...plans[0], page: { id } })
+    expect(() => pageOf({}, DEFAULT_LOCALE)).toThrow(
+      'strategy: в модуле страницы планов 0, а нужен один',
+    )
+    expect(() =>
+      pageOf(
+        { 'site/x/plans/a.yaml': plan('a'), 'site/x/plans/b.yaml': plan('b') },
+        DEFAULT_LOCALE,
+      ),
+    ).toThrow('strategy: в модуле страницы планов 2, а нужен один')
   })
 })

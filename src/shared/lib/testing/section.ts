@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import type { StrategyPage } from '@/shared/strategy'
+import type { FactValue, StrategyPage } from '@/shared/strategy'
 import { parseHtml } from './dom'
 
 type Contract = { slots: Readonly<Record<string, z.ZodType>> }
@@ -28,8 +28,8 @@ function visibleText(element: Element): string {
 }
 
 // Что блок обязан показать по секции плана страницы: каждый текст её слотов и экземпляров набора — целым текстом своего
-// элемента, каждое действие с адресом — ссылкой на этот адрес (и язык цели) внутри секции, которую подписывает её
-// заголовок. Каркас — внутри лендмарка каталога (`landmark`: `header`, `footer`); места плана, которых нет на языке
+// элемента, каждое действие с адресом — ссылкой на этот адрес (и язык цели), факт без текстов секции (`binds`) — своей
+// формулировкой внутри секции, которую подписывает её заголовок. Каркас — внутри лендмарка каталога (`landmark`: `header`, `footer`); места плана, которых нет на языке
 // страницы (`elsewhere`: пункт меню `nav-link[2]`, раздел подвала `nav[1]`), он не показывает. Ответ — расхождения:
 // пустой список — секция показана целиком.
 export function sectionFaults(
@@ -51,6 +51,7 @@ export function sectionFaults(
     ]
   }
   const texts = new Set([root, ...root.querySelectorAll('*')].map(visibleText))
+  const shown = visibleText(root)
   const links = new Set(
     [...root.querySelectorAll('a[href]')].map(
       (link) => `${link.getAttribute('href') ?? ''} ${link.getAttribute('hreflang') ?? ''}`,
@@ -72,6 +73,14 @@ export function sectionFaults(
       const link = `${String(href)} ${typeof hreflang === 'string' ? hreflang : ''}`
       if (typeof href === 'string' && !links.has(link)) {
         faults.push(`${page.id}/${id}/${where}: нет ссылки ${link.trim()}`)
+      }
+    } else if (typeof value === 'object' && value !== null && 'binds' in value) {
+      // Факт, который не показывает ни один текст секции (`binds` пуст), показывает сам блок: его формулировка — в
+      // видимом тексте секции. Факт с `binds` виден через свои тексты — их судят как тексты.
+      const { text, binds } = value as FactValue
+      const fact = text.replace(/\s+/g, ' ').trim()
+      if (binds.length === 0 && !shown.includes(fact)) {
+        faults.push(`${page.id}/${id}/${where}: факт «${fact}» не виден`)
       }
     }
   }

@@ -9,7 +9,7 @@ type Props = BlockProps<typeof footer> & { locale: Locale }
 
 const { id, legal, privacy, 'privacy-label': privacyLabels, email, nav = [], locale } = Astro.props
 
-// Правовые документы оператора: без версии на языке страницы ссылка ведёт на версию основного языка и называет его.
+// Правовые документы оператора: без версии на языке страницы ссылка ведёт на версию другого языка и называет его.
 const documents = labelled(privacy, privacyLabels, `${id}/privacy`)
 // Разделы — те, что даёт секция плана, в любом варианте (у minimal каталог их не снимает): версии языка страницы, без
 // своей версии раздела в подвале нет.

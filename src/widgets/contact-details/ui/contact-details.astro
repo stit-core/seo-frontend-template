@@ -13,7 +13,7 @@ type Props = BlockProps<typeof contactDetails> & { locale: Locale }
 const { id, title, info, phone, email, legal, company = [], locale } = Astro.props
 
 // Часы работы (html каталога) — пара «термин — описание»: строка контактов, которая их называет, с временем факта в
-// `<time>`; прочие строки — как есть.
+// `<time>` (запись строки — как в тексте); прочие строки — как есть.
 const hours = hoursOf(info, company, `${id}/info`)
 ---
 
@@ -29,7 +29,7 @@ const hours = hoursOf(info, company, `${id}/info`)
         <TermList>
           <Term name={t(locale, 'company.hours')}>
             {parts.map((part) =>
-              typeof part === 'string' ? part : <time datetime={part.time}>{part.time}</time>,
+              typeof part === 'string' ? part : <time datetime={part.time}>{part.text}</time>,
             )}
           </Term>
         </TermList>

@@ -1,9 +1,10 @@
 ---
+import home from 'virtual:strategy/home'
 import DocumentLayout from '@/app/layouts/document.astro'
 import { COMPANY, CompanyContacts } from '@/entities/company'
 import { type Locale, t } from '@/shared/i18n'
 import { localBusiness } from '@/shared/seo'
-import { pageVersions } from '@/shared/strategy'
+import { pageOf, pageVersions } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 import { Term, TermList } from '@/shared/ui/term-list'
@@ -55,6 +56,7 @@ const address = COMPANY.address[locale]
 
 <DocumentLayout
   locale={locale}
+  chrome={pageOf(home, locale)}
   title={copy.title}
   description={copy.description}
   translations={pageVersions('about')}

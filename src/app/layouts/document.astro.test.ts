@@ -55,7 +55,8 @@ vi.mock('virtual:astro:assets/fonts/internal', () => {
 
 const container = await AstroContainer.create()
 
-// Каркас страницы — её план strategy (chrome) и крошки (crumbs): пропсы оболочки, которые тест задаёт сам.
+// Каркас страницы — её план strategy (chrome, по умолчанию — главная сайта) и крошки (crumbs): пропсы оболочки, которые
+// тест задаёт сам.
 interface Options {
   preferences?: string[]
   metrika?: string[]
@@ -66,7 +67,13 @@ interface Options {
 
 async function render(
   site: typeof theme,
-  { preferences = ['*'], metrika = [], path = '/stranica', chrome, crumbs }: Options = {},
+  {
+    preferences = ['*'],
+    metrika = [],
+    path = '/stranica',
+    chrome = strategyPage('home', DEFAULT_LOCALE),
+    crumbs,
+  }: Options = {},
 ) {
   Object.assign(theme, site)
   islands.preferences.pages = preferences
@@ -198,10 +205,10 @@ describe('DocumentLayout', () => {
     )
   })
 
-  it('страница без своего плана — каркас главной: шапка сайта с меню и подвал сайта', async () => {
+  it('план главной — шапка сайта с меню и подвал сайта с реквизитами', async () => {
     const home = strategyPage('home', DEFAULT_LOCALE)
     const legal = home.sections.find((section) => section.block === 'footer')?.slots.legal
-    const { document } = await render({ default: 'system', switcher: true })
+    const { document } = await render({ default: 'system', switcher: true }, { chrome: home })
     expect(document.querySelector('header nav')?.getAttribute('aria-label')).toBe(
       t(DEFAULT_LOCALE, 'nav.label'),
     )

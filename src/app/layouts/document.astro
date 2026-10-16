@@ -10,7 +10,7 @@ import { PreferencesInit } from '@/features/preferences'
 import { ISLANDS, standsOn, THEME } from '@/shared/config'
 import { type Locale, localePath, routeOf, type Translations, t } from '@/shared/i18n'
 import { breadcrumbList, type JsonLd, JsonLdScript, type OgImage, SeoHead } from '@/shared/seo'
-import { type BlockProps, pageLink, type StrategyPage, strategyPage } from '@/shared/strategy'
+import { type BlockProps, pageLink, type StrategyPage } from '@/shared/strategy'
 import { Container } from '@/shared/ui/section'
 import { Breadcrumbs, type breadcrumbs } from '@/widgets/breadcrumbs'
 import { Footer, footer } from '@/widgets/footer'
@@ -33,8 +33,8 @@ interface Props {
   // JSON-LD страницы в <head>: Organization/WebSite главной, LocalBusiness «О компании», BlogPosting записи.
   jsonLd?: readonly JsonLd[]
   // Каркас — шапка и подвал: секции плана этой страницы strategy; у страницы без своего плана — главной, она задаёт
-  // общие шапку и подвал сайта.
-  chrome?: StrategyPage | undefined
+  // общие шапку и подвал сайта. Своего умолчания у оболочки нет: на запросе она читала бы план главной.
+  chrome: StrategyPage
   // Крошки страницы шаблона карты с крошками (с глубины 2): видимые и BreadcrumbList в <head> — из этого пропа.
   crumbs?: BlockProps<typeof breadcrumbs> | undefined
 }
@@ -49,7 +49,7 @@ const {
   ogImage,
   article,
   jsonLd = [],
-  chrome = strategyPage('home', locale),
+  chrome,
   crumbs,
 } = Astro.props
 const sectionOf = (block: string) => chrome.sections.find((section) => section.block === block)?.id

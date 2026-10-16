@@ -237,7 +237,9 @@ export const TEST_SITE = {
               group: `nav-${index + 1}`,
             })),
           ],
-          data: [{ id: 'company', anatomy: 'company', fact: 'fact:company-name' }],
+          data: [
+            { id: 'company', anatomy: 'company', fact: 'fact:company-name', binds: ['legal'] },
+          ],
           action: [
             { id: 'privacy', target: route('/legal/privacy') },
             { id: 'email', target: { kind: 'url', value: 'mailto:test@example.com' } },
@@ -287,8 +289,8 @@ export const TEST_SITE = {
             { id: 'email', target: { kind: 'url', value: 'mailto:test@example.com' } },
           ],
           data: [
-            { id: 'company', anatomy: 'company', fact: 'fact:company-name' },
-            { id: 'hours', anatomy: 'company', fact: 'fact:company-hours' },
+            { id: 'company', anatomy: 'company', fact: 'fact:company-name', binds: ['legal'] },
+            { id: 'hours', anatomy: 'company', fact: 'fact:company-hours', binds: ['info-2'] },
           ],
         },
       },
@@ -343,7 +345,9 @@ export const TEST_SITE = {
             { id: 'clause-2-heading', anatomy: 'clause.heading', group: 'clause-2' },
             { id: 'clause-2-text-1', anatomy: 'clause.text', group: 'clause-2' },
           ],
-          data: [{ id: 'company', anatomy: 'company', fact: 'fact:company-name' }],
+          data: [
+            { id: 'company', anatomy: 'company', fact: 'fact:company-name', binds: ['operator'] },
+          ],
         },
       },
     ],
@@ -416,8 +420,15 @@ export const TEST_SITE = {
   ),
 }
 
-// Модуль `@/shared/strategy` на проекте теста — фабрика `vi.mock` (вместе с локалями теста `withTestLocales`).
+// Модуль `@/shared/strategy` на проекте теста — фабрика `vi.mock` (вместе с локалями теста `withTestLocales`): страница,
+// которую берут модулем её данных (`pageOf`), — страница проекта теста с тем же id.
 export async function withTestSite(importOriginal: () => Promise<unknown>) {
   const strategy = (await importOriginal()) as typeof Strategy
-  return { ...strategy, ...strategy.siteOf(strategy.projectOf(TEST_SITE)) }
+  const site = strategy.siteOf(strategy.projectOf(TEST_SITE))
+  return {
+    ...strategy,
+    ...site,
+    pageOf: (files: Strategy.PageFiles, locale: Parameters<typeof site.strategyPage>[1]) =>
+      site.strategyPage(strategy.projectOf(files).plans[0]?.page.id ?? '', locale),
+  }
 }

@@ -28,7 +28,7 @@ const promo = defineBlock({
   },
 })
 
-const company = { id: 'company-name', text: 'Студия «Демо»', machine: undefined }
+const company = { id: 'company-name', text: 'Студия «Демо»', machine: undefined, binds: [] }
 const section = (change: Partial<Section> = {}): Section => ({
   id: 'offer',
   role: 'offer',

@@ -2,8 +2,11 @@
 // Страницу с диска отдаёт адаптер, когда рендер on-demand маршрута бросил исключение:
 // поэтому она собирается заранее и не зависит ни от запроса, ни от данных — язык у неё один,
 // дефолтный: файл запроса не знает.
+
+import home from 'virtual:strategy/home'
 import DocumentLayout from '@/app/layouts/document.astro'
 import { DEFAULT_LOCALE, localePath, t } from '@/shared/i18n'
+import { pageOf } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 
@@ -12,6 +15,7 @@ const locale = DEFAULT_LOCALE
 
 <DocumentLayout
   locale={locale}
+  chrome={pageOf(home, locale)}
   title={t(locale, 'error.title')}
   description={t(locale, 'error.lead')}
   noindex

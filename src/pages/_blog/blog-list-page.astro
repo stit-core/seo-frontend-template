@@ -1,7 +1,9 @@
 ---
+import home from 'virtual:strategy/home'
 import DocumentLayout from '@/app/layouts/document.astro'
 import { type Page, type Post, TagList } from '@/entities/post'
 import { type Locale, t } from '@/shared/i18n'
+import { pageOf } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 import { blogListPageModel } from './models'
@@ -18,6 +20,7 @@ const model = await blogListPageModel(locale, page)
 
 <DocumentLayout
   locale={locale}
+  chrome={pageOf(home, locale)}
   translations={model.translations}
   title={model.title}
   description={model.description}

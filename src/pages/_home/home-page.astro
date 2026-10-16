@@ -1,9 +1,10 @@
 ---
+import home from 'virtual:strategy/home'
 import DocumentLayout from '@/app/layouts/document.astro'
 import { listPosts } from '@/entities/post'
 import { type Locale, t } from '@/shared/i18n'
 import { organization, webSite } from '@/shared/seo'
-import { pageLink, pageVersions } from '@/shared/strategy'
+import { pageLink, pageOf, pageVersions } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 import PostList from '../_blog/post-list.astro'
@@ -98,6 +99,7 @@ const jsonLd = Astro.url.pathname === '/' ? [organization(), webSite()] : [organ
 
 <DocumentLayout
   locale={locale}
+  chrome={pageOf(home, locale)}
   translations={pageVersions('home')}
   title={copy.title}
   description={copy.description}

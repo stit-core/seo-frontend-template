@@ -3,8 +3,10 @@
 // on-demand и не кешируется.
 export const prerender = false
 
+import home from 'virtual:strategy/home'
 import DocumentLayout from '@/app/layouts/document.astro'
 import { DEFAULT_LOCALE, formatDateTime } from '@/shared/i18n'
+import { pageOf } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 
@@ -17,6 +19,7 @@ Astro.response.headers.set('cache-control', 'private, no-store')
 
 <DocumentLayout
   locale={locale}
+  chrome={pageOf(home, locale)}
   title="Время сервера"
   description="Служебная on-demand страница: время сервера на момент запроса."
   noindex

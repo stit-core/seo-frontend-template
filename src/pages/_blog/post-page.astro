@@ -1,7 +1,9 @@
 ---
+import home from 'virtual:strategy/home'
 import DocumentLayout from '@/app/layouts/document.astro'
 import { AuthorByline } from '@/entities/author'
 import { type Post, PostArticle, renderPost } from '@/entities/post'
+import { pageOf } from '@/shared/strategy'
 import { Section } from '@/shared/ui/section'
 import { postPageModel } from './models'
 
@@ -17,6 +19,7 @@ const model = await postPageModel(post)
 
 <DocumentLayout
   locale={locale}
+  chrome={pageOf(home, locale)}
   translations={model.translations}
   title={data.title}
   description={data.description}

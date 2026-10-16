@@ -3,14 +3,15 @@
 // redirects.yaml, X-Request-Id, лог); prerendered 404.html адаптер отдал бы с диска до него.
 export const prerender = false
 
+import files from 'virtual:strategy/not-found'
 import DocumentLayout from '@/app/layouts/document.astro'
 import { localeOf } from '@/shared/i18n'
-import { strategyPage } from '@/shared/strategy'
+import { pageOf } from '@/shared/strategy'
 import { NotFound, notFound } from '@/widgets/not-found'
 
 // Язык страницы — по префиксу запрошенного пути: под `/en/…` человек читал английскую версию.
 const locale = localeOf(Astro.url.pathname)
-const page = strategyPage('not-found', locale)
+const page = pageOf(files, locale)
 ---
 
 <DocumentLayout

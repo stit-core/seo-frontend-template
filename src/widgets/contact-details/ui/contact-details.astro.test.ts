@@ -73,7 +73,7 @@ describe('ContactDetails', () => {
 
   it('факт часов есть, а строки контактов с его временем нет — ошибка называет ключ', async () => {
     await expect(render({ ...details(), info: ['Москва'] })).rejects.toThrow(
-      'strategy: details/info — часы факта company-hours (10:00, 19:00) — нет строки контактов с ними',
+      'strategy: details/info — часы факта company-hours (mo, tu, we, th, fr 10:00–19:00) — нет строки контактов с ними',
     )
   })
 

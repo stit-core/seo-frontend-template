@@ -3,7 +3,7 @@ import { fail } from './contract'
 import type { FactValue, StrategyPage } from './page'
 
 // Значения слотов блока — как их отдаёт чтение страницы: текст copy deck, действие плана с адресом цели (и языком цели,
-// когда это версия основного языка), факт.
+// когда это версия другого языка), факт.
 export const text = z.string()
 export const action = z.strictObject({ href: z.string(), hreflang: z.string().optional() })
 export const fact = z.custom<FactValue>(

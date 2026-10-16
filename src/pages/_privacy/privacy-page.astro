@@ -1,8 +1,9 @@
 ---
+import home from 'virtual:strategy/home'
 import DocumentLayout from '@/app/layouts/document.astro'
 import { PRIVACY_POLICY_VERSION, SITE_NAME } from '@/shared/config'
 import { formatDate, type Locale } from '@/shared/i18n'
-import { pageVersions } from '@/shared/strategy'
+import { pageOf, pageVersions } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 
@@ -29,6 +30,7 @@ const revision = formatDate(locale, new Date(PRIVACY_POLICY_VERSION))
 
 <DocumentLayout
   locale={locale}
+  chrome={pageOf(home, locale)}
   translations={pageVersions('privacy')}
   title={title}
   description={description}

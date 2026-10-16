@@ -45,15 +45,17 @@ export interface Project {
 // адрес собирает код (переключатель языка).
 export interface Action {
   href: string | undefined
-  // Язык цели, когда это версия страницы на основном языке: на языке страницы версии нет.
+  // Язык цели, когда это версия страницы на другом языке: на языке страницы версии нет.
   hreflang?: Locale
 }
 
-// Факт слота данных: видимая формулировка и значение для кода. Пробел `missing:` — без значения.
+// Факт слота данных: видимая формулировка, значение для кода и тексты секции, которые его показывают (`binds` плана; без
+// них факт показывает сам блок). Пробел `missing:` — без значения.
 export interface FactValue {
   id: string
   text: string
   machine: Machine | undefined
+  binds: readonly string[]
 }
 
 // Значение слота: текст copy deck, действие плана, факт.
@@ -135,19 +137,22 @@ export function versionsOf(project: Project, id: string): Translations {
 
 export interface PageLink {
   href: string
-  // Язык цели, когда он не язык страницы: версии на нём нет, ссылка ведёт на версию основного языка.
+  // Язык цели, когда он не язык страницы: версии на нём нет, ссылка ведёт на версию другого языка.
   hreflang: Locale | undefined
 }
 
 // Ссылка со страницы на языке `locale` на страницу карты по её адресу: версия на этом языке, без неё — версия основного
-// языка; страницы нет в карте или основной версии у неё нет — ссылки нет.
+// языка, без неё — первая версия страницы (политика только на ru у сайта с основным en); ссылка на версию другого языка
+// называет его. Страницы нет в карте или версий у неё нет — ссылки нет.
 export function linkOf(project: Project, route: string, locale: Locale): PageLink | undefined {
   const page = project.map?.pages.find((candidate) => candidate.url === route)
   if (page === undefined) return undefined
   const locales = localesOf(project, page.id)
-  if (locales.includes(locale)) return { href: localePath(locale, route), hreflang: undefined }
-  if (!locales.includes(DEFAULT_LOCALE)) return undefined
-  return { href: localePath(DEFAULT_LOCALE, route), hreflang: DEFAULT_LOCALE }
+  const target = [locale, DEFAULT_LOCALE, ...locales].find((candidate) =>
+    locales.includes(candidate),
+  )
+  if (target === undefined) return undefined
+  return { href: localePath(target, route), hreflang: target === locale ? undefined : target }
 }
 
 export interface LanguageLink {
@@ -222,6 +227,20 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
       .flatMap((file) => file.facts)
       .map((fact) => [fact.id, fact]),
   )
+  // Маршрут цели — страница карты: её версия на языке страницы, без неё — версия на другом языке с его кодом (как
+  // ссылка со страницы); маршрут вне карты (у лендинга карты нет) — путь на языке страницы.
+  const address = (target: PlanTarget, key: string): Action => {
+    if (target.kind !== 'route') return { href: targetAddress(target, facts, key) }
+    if (!project.map?.pages.some((candidate) => candidate.url === target.value)) {
+      return { href: localePath(locale, target.value) }
+    }
+    const link =
+      linkOf(project, target.value, locale) ??
+      fail(key, `${target.value}: у страницы карты нет ни одной версии`)
+    return link.hreflang === undefined
+      ? { href: link.href }
+      : { href: link.href, hreflang: link.hreflang }
+  }
 
   const sections = plan.sections.map((section): Section => {
     const copy = page.sections.find((candidate) => candidate.section_id === section.id)
@@ -230,29 +249,12 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
       const found = copy?.slots.find((candidate) => candidate.slot_id === slot)
       return chosenText(found ?? fail(key, `нет текста в copy deck ${locale}`), key)
     }
-    // Маршрут цели — страница карты: её версия на языке страницы, без неё — версия основного языка с его кодом (как
-    // ссылка со страницы); маршрут вне карты (у лендинга карты нет) — путь на языке страницы.
-    const address = (target: PlanTarget, key: string): Action => {
-      if (target.kind !== 'route') return { href: targetAddress(target, facts, key) }
-      if (!project.map?.pages.some((candidate) => candidate.url === target.value)) {
-        return { href: localePath(locale, target.value) }
-      }
-      const link =
-        linkOf(project, target.value, locale) ??
-        fail(
-          key,
-          `${target.value}: у страницы карты нет версии ни на ${locale}, ни на основном языке`,
-        )
-      return link.hreflang === undefined
-        ? { href: link.href }
-        : { href: link.href, hreflang: link.hreflang }
-    }
-    const factOf = (slot: PlanSlot & { fact: string }): FactValue | undefined => {
+    const factOf = (slot: PlanSlot & { fact: string; binds: string[] }): FactValue | undefined => {
       if (slot.fact.startsWith('missing:')) return undefined
       const fact =
         facts.get(slot.fact.slice('fact:'.length)) ??
         fail(`${id}/${section.id}/${slot.id}`, `${slot.fact} нет в фактах ${locale}`)
-      return { id: fact.id, text: fact.verbatim[0], machine: fact.machine }
+      return { id: fact.id, text: fact.verbatim[0], machine: fact.machine, binds: slot.binds }
     }
 
     const slots: Slots = {}
@@ -315,19 +317,15 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
 
 // Снимок strategy сайта — `strategy/` в корне репозитория. YAML — модулем сборки (плагин yaml-modules
 // astro.config.ts): в бандле — поля схем чтения, а не парсер, и страницы на запросе читают то же, что на сборке.
-// Карта — сразу: её правила (языки, ссылки, меню, крошки) нужны и без чтения страницы; планы, copy deck и факты
-// собираются в снимок при первом чтении страницы — его делает и каркас on-demand страниц.
+// Карта и факты — сразу: правила карты (языки, ссылки, меню, крошки) и факты нужны каждой странице; план и copy deck
+// страница берёт своим модулем (`pageOf`), а снимок целиком собирают проверки по всем страницам (тесты).
 const ROOT = '../../../strategy/'
-const mapFiles = import.meta.glob<unknown>('../../../strategy/site/*/site-map.yaml', {
-  eager: true,
-  import: 'default',
-})
+const siteFiles = import.meta.glob<unknown>(
+  ['../../../strategy/site/*/site-map.yaml', '../../../strategy/facts*.yaml'],
+  { eager: true, import: 'default' },
+)
 const pageFiles = import.meta.glob<unknown>(
-  [
-    '../../../strategy/facts*.yaml',
-    '../../../strategy/site/*/plans/*.yaml',
-    '../../../strategy/site/*/copy/*.yaml',
-  ],
+  ['../../../strategy/site/*/plans/*.yaml', '../../../strategy/site/*/copy/*.yaml'],
   { eager: true, import: 'default' },
 )
 const projectOfFiles = (files: Readonly<Record<string, unknown>>) =>
@@ -336,12 +334,13 @@ const projectOfFiles = (files: Readonly<Record<string, unknown>>) =>
       Object.entries(files).map(([path, data]) => [path.slice(ROOT.length), data]),
     ),
   )
+const site = projectOfFiles(siteFiles)
 
 let full: Project | undefined
-export const snapshot = (): Project => (full ??= projectOfFiles({ ...mapFiles, ...pageFiles }))
+export const snapshot = (): Project => (full ??= projectOfFiles({ ...siteFiles, ...pageFiles }))
 
-// Языки, версии, ссылки, меню и крошки страниц карты и сами страницы — по проекту: у сайта это карта снимка (страницу
-// читает strategyPage — снимок целиком), у тестов — проект фикстуры (как правила адреса — по списку локалей).
+// Языки, версии, ссылки, меню и крошки страниц карты и сами страницы — по проекту: у сайта это карта и факты снимка, у
+// тестов — проект фикстуры (как правила адреса — по списку локалей).
 export function siteOf(project: Project) {
   const pageLocales = (id: string): Locale[] => localesOf(project, id)
   return {
@@ -372,6 +371,23 @@ export const {
   menuLinks,
   breadcrumbsOn,
   localeRoutes,
-} = siteOf(projectOfFiles(mapFiles))
+} = siteOf(site)
+
+// Страница из снимка целиком — для проверок по всем страницам сайта.
 export const strategyPage = (id: string, locale: Locale): StrategyPage =>
   readPage(snapshot(), id, locale)
+
+// Данные одной страницы — модуль `virtual:strategy/<page-id>` (плагин yaml-modules astro.config.ts): её план и copy
+// deck по языкам, пути — от корня снимка.
+export type PageFiles = Readonly<Record<string, unknown>>
+
+// Страница сайта по модулю своих данных — на карте и фактах снимка: страница везёт свои план и copy deck, а не снимок
+// целиком, поэтому серверный бандл on-demand маршрута (404, ответ формы) несёт только их.
+export function pageOf(files: PageFiles, locale: Locale): StrategyPage {
+  const { plans, decks } = projectOf(files)
+  const [plan, ...more] = plans
+  if (plan === undefined || more.length > 0) {
+    throw new Error(`strategy: в модуле страницы планов ${plans.length}, а нужен один`)
+  }
+  return readPage({ ...site, plans, decks }, plan.page.id, locale)
+}

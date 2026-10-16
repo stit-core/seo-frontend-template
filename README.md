@@ -116,7 +116,8 @@ src/entities/     post: content/{ru,en}/*.md + covers/, model, api, lib, ui; com
                   пуст) и подпись под заголовком записи
 src/shared/       config (runtime env, Zod; идентичность сайта), i18n, lib (+ testing), redirects,
                   seo (absoluteUrl, hreflang, SeoHead, JSON-LD, robots/sitemap/rss), strategy (чтение
-                  снимка: секции плана, тексты по ключу, факты, мета; контракт блока), antispam (шов капчи),
+                  снимка: страница — модулем по id, секции плана, тексты по ключу, факты, мета; контракт
+                  блока), antispam (шов капчи),
                   observability (JSON-лог с порогом LOG_LEVEL, Sentry по DSN), ui
 src/{content.config,middleware,env.d}.ts   навязанные Astro entry — тонкие входы
 docker/           Dockerfile (4 стадии), entrypoint.sh + stamp.mjs (штамповка SITE_URL), server.mjs

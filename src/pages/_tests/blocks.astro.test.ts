@@ -136,7 +136,7 @@ const pages = [
 ]
 
 // Каркас показывает разделы версии языка страницы: пункта меню, чьей страницы карты нет на этом языке, и раздела
-// подвала, чья ссылка ведёт на версию основного языка (с её hreflang), на странице нет.
+// подвала, чья ссылка ведёт на версию другого языка (с её hreflang), на странице нет.
 function elsewhere(section: Section, locale: Locale, project: ReturnType<typeof projectOf>) {
   const items = project.map?.chrome?.header?.items ?? []
   return new Set([

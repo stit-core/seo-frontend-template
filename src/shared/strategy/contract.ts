@@ -30,8 +30,14 @@ export const PlanSchema = z.object({
           action: z
             .array(PlanSlot.extend({ target: Target.optional(), label: z.string().optional() }))
             .default([]),
+          // `binds` — тексты секции, которые показывают факт; без них факт показывает сам блок.
           data: z
-            .array(PlanSlot.extend({ fact: z.string().regex(/^(?:fact|missing):/) }))
+            .array(
+              PlanSlot.extend({
+                fact: z.string().regex(/^(?:fact|missing):/),
+                binds: z.array(z.string()).default([]),
+              }),
+            )
             .default([]),
         })
         .default({ text: [], action: [], data: [] }),
@@ -159,8 +165,8 @@ export function fail(key: string, why: string): never {
   throw new Error(`strategy: ${key} — ${why}`)
 }
 
-// Язык файла — первый подтег: copy deck и факты пишут `ru` или `ru-RU`.
-export const langOf = (lang: string): string => lang.slice(0, 2)
+// Язык файла — первый подтег BCP 47: copy deck и факты пишут `ru`, `ru-RU` или `fil-PH`.
+export const langOf = (lang: string): string => lang.replace(/-.*/, '')
 
 // Языки карты: основной — первым, затем версии в порядке карты.
 export function mapLanguages(map: SiteMap): string[] {
