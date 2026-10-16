@@ -1,7 +1,13 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
 import { z } from 'zod'
-import { PACKAGE_LANDING, parseHtml, sectionFaults, testLocale } from '@/shared/lib/testing'
+import {
+  PACKAGE_LANDING,
+  parseHtml,
+  sectionFaults,
+  testLocale,
+  unshownOf,
+} from '@/shared/lib/testing'
 import {
   action,
   defineBlock,
@@ -22,6 +28,7 @@ import catalogFile from '../../../strategy/kb/site/04-blocks/blocks.yaml'
 // Каталог блоков базы strategy (копия strategy/kb): поля, которые судит тест.
 const Element = z.object({
   id: z.string(),
+  slot: z.string(),
   required: z.union([z.boolean(), z.string()]).optional(),
   variants: z.array(z.string()).optional(),
 })
@@ -31,7 +38,7 @@ const Catalog = z.object({
     z.object({
       // Каркас (`chrome`) ставит оболочка, а не план страницы секцией.
       flow: z.string().optional(),
-      html: z.object({ heading: z.string().optional() }).default({}),
+      html: z.object({ heading: z.string().optional(), form: z.boolean().optional() }).default({}),
       variants: z.array(
         z.object({
           id: z.string(),
@@ -211,6 +218,24 @@ describe('блоки каталога: блок ↔ каталог ↔ план�
               )
           })
       }),
+    ).toEqual([])
+  })
+
+  // Текст, который блок принимает и не показывает, — только успех формы: на месте формы его показал бы остров, а без JS
+  // успех — страница «спасибо» плана. Любой другой элемент каталог велит показать.
+  it('вид unshown — только у успеха формы: элемент со слотом form-success у блока с формой', () => {
+    expect(
+      blocks.flatMap(({ block }) =>
+        [...unshownOf(block)]
+          .filter((element) => {
+            const entry = catalog[block.id]
+            const slot = entry?.slots.find((candidate) => candidate.id === element)?.slot
+            return entry?.html.form !== true || slot !== 'form-success'
+          })
+          .map(
+            (element) => `${block.id}: элемент ${element} — unshown, а каталог велит его показать`,
+          ),
+      ),
     ).toEqual([])
   })
 

@@ -6,7 +6,7 @@ type Contract = { slots: Readonly<Record<string, z.ZodType>> }
 type Element = NonNullable<ReturnType<ReturnType<typeof parseHtml>['querySelector']>>
 
 // Элементы, которые блок принимает и не показывает (вид `unshown` контракта): метка вида переживает `.optional()`.
-function unshownOf(block: Contract): Set<string> {
+export function unshownOf(block: Contract): Set<string> {
   return new Set(
     Object.entries(block.slots)
       .filter(([, schema]) => {
