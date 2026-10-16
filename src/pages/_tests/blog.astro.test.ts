@@ -141,6 +141,45 @@ describe('маршруты блога с параметрами', () => {
     'x-default': `${ORIGIN}${ru}`,
   })
 
+  // Записи списка и тега — карточки секции записей: адреса записей по порядку.
+  const cards = (html: string) =>
+    [...parseHtml(html).querySelectorAll('main [aria-labelledby="related"] li h3 a')].map((link) =>
+      link.getAttribute('href'),
+    )
+
+  it('страницы списка: записи страницы, навигация между страницами, номер страницы 2…N в заголовке', async () => {
+    const first = await page('/[...locale]/blog', Blog, '/blog')
+    const second = await page('/[...locale]/blog/page/[page]', List, '/blog/page/2')
+    expect(cards(first.html)).toEqual([
+      '/blog/para',
+      '/blog/odna',
+      '/blog/zametka-4',
+      '/blog/zametka-3',
+      '/blog/zametka-2',
+    ])
+    expect(cards(second.html)).toEqual(['/blog/zametka-1'])
+    const link = (html: string, rel: string) =>
+      parseHtml(html).querySelector(`main a[rel="${rel}"]`)?.getAttribute('href')
+    expect([link(first.html, 'prev'), link(first.html, 'next')]).toEqual([
+      undefined,
+      '/blog/page/2',
+    ])
+    expect([link(second.html, 'prev'), link(second.html, 'next')]).toEqual(['/blog', undefined])
+    const heading = (html: string) => parseHtml(html).querySelector('h1')?.textContent?.trim()
+    expect(heading(second.html)).not.toBe(heading(first.html))
+    expect(heading(second.html)).toContain('2')
+  })
+
+  it('страница тега — записи этого тега своей локали, новые первыми', async () => {
+    const tag = (path: string) => page('/[...locale]/blog/tag/[tag]', Tag, path)
+    expect(cards((await tag('/blog/tag/seo')).html)).toEqual([
+      '/blog/para',
+      '/blog/zametka-2',
+      '/blog/zametka-1',
+    ])
+    expect(cards((await tag('/en/blog/tag/i18n')).html)).toEqual(['/en/blog/note-1'])
+  })
+
   it('тег от трёх записей в обеих локалях — пара hreflang; перевод с тонкой страницей парой не считается', async () => {
     const tag = (path: string) => page('/[...locale]/blog/tag/[tag]', Tag, path)
     const seo = pair('/blog/tag/seo', '/en/blog/tag/seo')
