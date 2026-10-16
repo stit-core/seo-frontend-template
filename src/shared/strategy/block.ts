@@ -39,6 +39,11 @@ export const list = <T extends z.ZodType>(value: T) =>
 export const group = <const S extends Record<string, z.ZodType>>(elements: S) =>
   z.array(z.strictObject(elements))
 
+// Набор записей коллекции (свежие главной, список, тег, связанные): его кладёт страница из запроса коллекции третьим
+// аргументом пропсов, план его не заполняет.
+export const records = <const S extends Record<string, z.ZodType>>(elements: S) =>
+  group(elements).optional().meta({ records: true })
+
 // Действия и их подписи — пары элементов анатомии по порядку плана (`privacy` ↔ `privacy-label`): у пары нет половины —
 // ошибка сборки с ключом.
 export function labelled<A extends object>(
@@ -59,12 +64,17 @@ export function defineBlock<
   const S extends Record<string, z.ZodType>,
 >(block: { id: string; variants: readonly [V, ...V[]]; slots: S }) {
   const schema = z.strictObject({ id: z.string(), variant: z.enum(block.variants), ...block.slots })
+  const recordSets = new Set(
+    Object.entries(block.slots).flatMap(([element, slot]) =>
+      slot.meta()?.records === true ? [element] : [],
+    ),
+  )
   return {
     ...block,
     // Пропсы секции страницы: другой блок, вариант не из блока, слот вне его анатомии или без значения — ошибка
-    // сборки с ключом секции. `record` — значения, которые кладёт страница из коллекции: слоты записи шаблона (у шаблона
-    // коллекции — слоты без текста в copy deck) и записи, которых план не перечисляет (свежие, связанные); значение
-    // плана запись не перекрывает.
+    // сборки с ключом секции. `record` — значения, которые кладёт страница из коллекции: наборы записей (свежие, список,
+    // связанные) и, у шаблона коллекции, слоты плана без текста (`blank`: поля записи). Значение плана запись не
+    // перекрывает, а другого элемента не пишет: текст секции — copy deck плана.
     props(
       page: StrategyPage,
       section: string,
@@ -80,6 +90,15 @@ export function defineBlock<
       )
       if (planned.length > 0)
         fail(key, `${planned.join(', ')} — значение плана, запись его не перекрывает`)
+      const foreign = Object.keys(record).filter(
+        (element) => !recordSets.has(element) && !(found.blank ?? []).includes(element),
+      )
+      if (foreign.length > 0) {
+        fail(
+          key,
+          `${foreign.join(', ')} — не набор записей и не слот шаблона без текста: текст секции — copy deck плана`,
+        )
+      }
       const result = schema.safeParse({
         id: found.id,
         variant: found.variant,

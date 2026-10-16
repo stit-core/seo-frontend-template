@@ -9,6 +9,7 @@ import {
   labelled,
   list,
   media,
+  records,
   text,
   unshown,
   untargeted,
@@ -26,6 +27,7 @@ const promo = defineBlock({
     point: list(text),
     company: fact.optional(),
     card: group({ title: text, link: action.optional() }),
+    post: records({ title: text }),
   },
 })
 
@@ -94,15 +96,26 @@ describe('strategy/block', () => {
     )
   })
 
-  // Значения, которых план не заполняет, кладёт страница из коллекции: слоты записи шаблона, записи списка.
-  it('значения записи — в пропсах блока: слот, который план не заполняет; значение плана запись не перекрывает', () => {
+  // Значения, которых план не заполняет, кладёт страница из коллекции: наборы записей (свежие, связанные) у любой
+  // страницы, слоты записи — только у шаблона коллекции (`blank` чтения). Другой элемент — текст мимо copy deck.
+  it('значения записи — набор записей и слот шаблона без текста; значение плана запись не перекрывает, другого не пишет', () => {
     const { title: _title, ...untitled } = section().slots
-    const template = page(section({ slots: untitled }))
+    const template = page(section({ slots: untitled, blank: ['title'] }))
     expect(promo.props(template, 'offer', { title: 'Отделка' })).toMatchObject({
       title: 'Отделка',
       'cta-label': 'Оставить заявку',
     })
     expect(() => promo.props(template, 'offer')).toThrow('→ at title')
+    expect(
+      promo.props(page(section()), 'offer', { post: [{ title: 'Замер за час' }] }),
+    ).toMatchObject({ post: [{ title: 'Замер за час' }] })
+    const foreign = 'не набор записей и не слот шаблона без текста: текст секции — copy deck плана'
+    expect(() =>
+      promo.props(page(section({ slots: untitled })), 'offer', { title: 'Отделка' }),
+    ).toThrow(`strategy: home/offer — title — ${foreign}`)
+    expect(() => promo.props(template, 'offer', { title: 'Отделка', note: 'Скидка' })).toThrow(
+      `strategy: home/offer — note — ${foreign}`,
+    )
     expect(() =>
       promo.props(page(section()), 'offer', { title: 'Отделка', note: 'Скидка' }),
     ).toThrow('strategy: home/offer — title — значение плана, запись его не перекрывает')

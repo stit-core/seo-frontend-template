@@ -454,6 +454,7 @@ export const TEST_SITE = {
         variant: 'longread',
         slots: {
           text: [{ id: 'title' }, { id: 'lead' }, { id: 'date' }, { id: 'author' }, { id: 'alt' }],
+          media: [{ id: 'cover' }],
         },
       },
       {

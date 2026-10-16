@@ -80,6 +80,9 @@ export interface Section {
   slots: Slots
   // Экземпляры повторяемого набора по порядку плана: «card-1», «card-2» → groups.card.
   groups: Record<string, Slots[]>
+  // У шаблона коллекции — слоты записи: элементы плана без значения (текста нет в copy deck шаблона, медиа-слот) — их
+  // кладёт запись третьим аргументом пропсов блока. У страницы одного плана их нет.
+  blank?: string[]
 }
 
 export interface Meta {
@@ -278,10 +281,16 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
 
     const slots: Slots = {}
     const instances = new Map<string, { group: string; slots: Slots }>()
-    // Значение ложится под элемент анатомии — в секцию или в свой экземпляр группы.
-    const place = (slot: PlanSlot, kind: SlotKind, value: SlotValue) => {
+    const blank = new Set<string>()
+    // Значение ложится под элемент анатомии — в секцию или в свой экземпляр группы. Без значения (текста нет в copy deck
+    // шаблона, медиа-слот) элемент секции — слот записи: его кладёт запись; экземпляр набора план даёт целиком.
+    const place = (slot: PlanSlot, kind: SlotKind, value: SlotValue, vacant: boolean) => {
       const at = elementOf(slot, kind)
       if (at === undefined) return
+      if (vacant) {
+        if (at.instance === undefined) blank.add(at.element)
+        return
+      }
       let target = slots
       if (at.instance !== undefined) {
         const instance = instances.get(at.instance) ?? { group: at.group, slots: {} }
@@ -295,18 +304,20 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
 
     for (const slot of section.slots.text) {
       const text = textOf(slot.id)
-      if (text !== undefined) place(slot, 'text', text)
+      place(slot, 'text', text, text === undefined)
     }
+    for (const slot of section.slots.media) place(slot, 'media', undefined, true)
     for (const slot of section.slots.action) {
       const key = `${id}/${section.id}/${slot.id}`
       place(
         slot,
         'action',
         slot.target === undefined ? { href: undefined } : address(slot.target, key),
+        false,
       )
     }
     for (const slot of section.slots.data) {
-      place(slot, 'data', factOf(slot.fact, `${id}/${section.id}/${slot.id}`, slot.binds))
+      place(slot, 'data', factOf(slot.fact, `${id}/${section.id}/${slot.id}`, slot.binds), false)
     }
 
     const groups: Record<string, Slots[]> = {}
@@ -320,6 +331,7 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
       variant: section.variant,
       slots,
       groups,
+      ...(template ? { blank: [...blank] } : {}),
     }
   })
 

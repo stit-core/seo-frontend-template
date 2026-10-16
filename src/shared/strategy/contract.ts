@@ -54,8 +54,10 @@ export const PlanSchema = z.object({
               }),
             )
             .default([]),
+          // Медиа-слоты: файл — манифест пакета дизайна; у шаблона коллекции медиа-слот (обложка записи) даёт запись.
+          media: z.array(PlanSlot).default([]),
         })
-        .default({ text: [], action: [], data: [] }),
+        .default({ text: [], action: [], data: [], media: [] }),
     }),
   ),
 })
@@ -277,7 +279,7 @@ export function chosenText(slot: DeckSlot, key: string): string {
   return variant.text
 }
 
-export type SlotKind = 'text' | 'action' | 'data'
+export type SlotKind = 'text' | 'action' | 'data' | 'media'
 
 // Элемент анатомии блока, который заполняет слот плана (сопоставление site_validate.py strategy): у слота группы —
 // экземпляр «card-1» набора card и элемент «title» из анатомии «card.title»; у прочих — анатомия, по умолчанию id слота.

@@ -222,7 +222,8 @@ it('title — 25…65 знаков', () => {
 ## block — `model/block.ts`, `ui/<block-id>.astro` и `index.ts`
 
 Контракт — id блока каталога, варианты, которые ставят планы, и слоты — id элементов анатомии с видом
-значения (`text`, `action`, `untargeted`, `fact`, `media`, `unshown`, `date`, `list(…)`, `group({…})`):
+значения (`text`, `action`, `untargeted`, `fact`, `media`, `unshown`, `date`, `image`, `list(…)`, `group({…})`,
+`records({…})`):
 
 ```ts
 import { action, defineBlock, group, text } from '@/shared/strategy'

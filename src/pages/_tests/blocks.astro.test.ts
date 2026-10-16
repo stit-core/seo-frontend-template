@@ -231,6 +231,7 @@ describe('блоки каталога: блок ↔ каталог ↔ план�
             ['text', section.slots.text],
             ['action', section.slots.action],
             ['data', section.slots.data],
+            ['media', section.slots.media],
           ] as const
           const filled = new Set<string>()
           for (const [kind, slots] of kinds) {

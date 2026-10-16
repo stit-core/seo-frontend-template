@@ -365,12 +365,17 @@ describe('strategy/page', () => {
     expect(read(files)).toMatchObject({ url: '/remont', parents: [] })
   })
 
-  // Шаблон коллекции — страница записи: тексты шаблона — copy deck, слот без текста и мету страницы даёт запись.
-  it('шаблон коллекции: слот без текста в copy deck — слот записи, меты нет; тексты шаблона — как у страницы', () => {
+  // Шаблон коллекции — страница записи: тексты шаблона — copy deck, слот без текста, медиа-слот и мету страницы даёт
+  // запись.
+  it('шаблон коллекции: слот без текста в copy deck и медиа-слот — слоты записи, меты нет; тексты шаблона — как у страницы', () => {
     const files = edited((files) => {
       Object.assign(files['site/web/plans/repair.yaml'].page, { template: true })
+      Object.assign(files['site/web/plans/repair.yaml'].sections[0]?.slots ?? {}, {
+        media: [{ id: 'cover' }],
+      })
       for (const page of files['site/web/copy/repair.yaml'].copy_deck.pages) {
         page.sections.at(0)?.slots.shift()
+        page.sections.at(1)?.slots.pop()
         Reflect.deleteProperty(page, 'meta')
       }
     })
@@ -382,7 +387,21 @@ describe('strategy/page', () => {
       chat: { href: 'https://max.ru/demo' },
       'lang-switch': { href: undefined },
     })
-    expect(page.sections.slice(1)).toStrictEqual(read(site()).sections.slice(1))
+    expect(page.sections.map((section) => section.blank)).toEqual([['headline', 'cover'], [], []])
+    // Текст экземпляра набора без copy deck — не слот записи: экземпляр план даёт целиком, его неполноту судит схема блока.
+    expect(page.sections[1]?.groups.step?.[1]).toStrictEqual({
+      title: 'Смета',
+      phone: read(site()).sections[1]?.groups.step?.[1]?.phone,
+    })
+    expect(page.sections.slice(2).map(({ blank: _blank, ...section }) => section)).toStrictEqual(
+      read(site()).sections.slice(2),
+    )
+    // У плана одной страницы слотов записи нет: медиа-слот запись не заполняет.
+    expect(read(site()).sections.map((section) => 'blank' in section)).toEqual([
+      false,
+      false,
+      false,
+    ])
   })
 
   it('нет страницы, секции, текста, меты, факта или адреса — ошибка называет ключ', () => {
