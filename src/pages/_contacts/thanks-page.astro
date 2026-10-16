@@ -17,7 +17,7 @@ const page = pageOf(thanks, locale)
 <DocumentLayout
   locale={locale}
   chrome={page}
-  translations={pageVersions('thank-you')}
+  translations={pageVersions(page.id)}
   title={page.meta.title}
   description={page.meta.description}
   noindex

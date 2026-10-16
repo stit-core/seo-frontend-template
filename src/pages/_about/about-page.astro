@@ -20,7 +20,7 @@ const page = pageOf(about, locale)
 <DocumentLayout
   locale={locale}
   chrome={page}
-  translations={pageVersions('about')}
+  translations={pageVersions(page.id)}
   title={page.meta.title}
   description={page.meta.description}
   jsonLd={[localBusiness(businessOf(page))]}

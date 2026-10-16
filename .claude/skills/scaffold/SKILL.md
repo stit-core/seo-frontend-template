@@ -52,8 +52,8 @@ src/pages/[...locale]/<path>.astro    маршрут — один файл на 
 - страница рендерится через `DocumentLayout` с уникальными `title` и `description`
   (бюджеты сниппета: title — от трёх слов до 65 знаков и не общий, description 70–170 —
   их держит `seo:check`)
-- карта переводов — `translations={pageVersions('<id>')}`: версии страницы на языках карты; у
-  страницы на одном языке hreflang не печатается
+- карта переводов — `translations={pageVersions(page.id)}`: версии страницы на языках карты; id страницы —
+  один, модуль её данных `virtual:strategy/<id>`; у страницы на одном языке hreflang не печатается
 - крошки — только у страницы шаблона карты с `breadcrumbs: true` и с глубины 2 (`breadcrumbsOn('<id>')`;
   секцию крошек у такой страницы и ступени — её родителей по карте — сверяет тест страниц): секция
   `breadcrumbs` плана, один проп оболочки `crumbs={breadcrumbs.props(page, 'breadcrumbs', { current })}`

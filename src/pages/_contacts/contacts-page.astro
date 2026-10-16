@@ -34,7 +34,7 @@ const policy =
   chrome={page}
   title={title}
   description={page.meta.description}
-  translations={pageVersions('contacts')}
+  translations={pageVersions(page.id)}
   noindex={noindex}
 >
   <HeroText {...heroText.props(page, 'hero')} />
