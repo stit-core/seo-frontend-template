@@ -235,7 +235,9 @@ export const <blockName> = defineBlock({
 })
 ```
 
-Разметка — `html` блока каталога; пропсы — контракта, тексты — только из них:
+Разметка — `html` блока каталога; пропсы — контракта, тексты секции — только из них (строка словаря —
+лишь подпись интерфейса: лендмарк, заглушка пустого списка, термин пары); цель действия на основном
+языке — с её `hreflang`:
 
 ```astro
 ---
@@ -264,7 +266,7 @@ const { id, title, cta, 'cta-label': ctaLabel, card: cards } = Astro.props
   </ul>
   {cta && ctaLabel && (
     <p class="mt-xl">
-      <ActionLink href={cta.href} label={ctaLabel} kind="primary" />
+      <ActionLink href={cta.href} hreflang={cta.hreflang} label={ctaLabel} kind="primary" />
     </p>
   )}
 </Section>
