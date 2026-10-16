@@ -258,8 +258,8 @@ describe('страница из блоков: план страницы', () => 
 
 // Весь текст страницы — данные (R08): слово мимо copy deck, фактов, словаря, самоназваний языков, имени сайта и записей
 // коллекции — текст, которого нет в пакете strategy, и его не видят ни её валидаторы, ни проверка секций. Страница —
-// каждая сборки (адреса getStaticPaths) и on-demand страница карты на её языках; 500 — дефолтной локали. Ответ формы с
-// ошибками — contact.astro.test.ts.
+// каждая сборки (адреса getStaticPaths: у списка с одной страницей адресов 2…N нет) и on-demand страница карты на её
+// языках; 500 — дефолтной локали. Ответ формы с ошибками — contact.astro.test.ts.
 const textRoutes = pageRoutes
   .filter(({ url }) => !url.startsWith('/api/'))
   .map((entry) => [entry.route, entry] as const)
@@ -280,7 +280,6 @@ describe('текст страницы — данные', () => {
                 locale,
                 props: {},
               }))
-      expect(pages.length, route).toBeGreaterThan(0)
       const faults: string[] = []
       for (const { path, locale, props } of pages) {
         const { html } = await render(module.default, path, props)
