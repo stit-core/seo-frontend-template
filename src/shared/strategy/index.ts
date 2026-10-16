@@ -12,7 +12,7 @@ export {
   unshown,
   untargeted,
 } from './block'
-export { elementOf } from './contract'
+export { elementOf, fail } from './contract'
 export type {
   Action,
   FactValue,

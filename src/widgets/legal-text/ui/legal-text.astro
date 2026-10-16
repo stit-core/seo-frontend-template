@@ -17,14 +17,19 @@ const { id, title, date, operator, clause: clauses } = Astro.props
     </Heading>
     <p class="mt-stack-display text-helper text-secondary">{date}</p>
     <p class="mt-xl text-body">{bindNumbers(operator)}</p>
-    {/* Раздел — секция документа в типографике его тела: заголовок раздела без штриха секции страницы. */}
-    {clauses.map((clause) => (
-      <section class="prose">
-        <h2>{clause.heading}</h2>
-        {clause.text.map((paragraph) => (
-          <p>{paragraph}</p>
-        ))}
-      </section>
-    ))}
+    {/* Пункты документа — нумерованный список (html каталога), номер — в заголовке раздела; раздел — секция в
+    типографике тела документа, заголовок без штриха секции страницы. */}
+    <ol>
+      {clauses.map((clause) => (
+        <li>
+          <section class="prose">
+            <h2>{clause.heading}</h2>
+            {clause.text.map((paragraph) => (
+              <p>{paragraph}</p>
+            ))}
+          </section>
+        </li>
+      ))}
+    </ol>
   </article>
 </Section>

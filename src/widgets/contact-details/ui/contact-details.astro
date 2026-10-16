@@ -1,13 +1,20 @@
 ---
+import { type Locale, t } from '@/shared/i18n'
 import { bindNumbers } from '@/shared/lib'
 import type { BlockProps } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
+import { Term, TermList } from '@/shared/ui/term-list'
 import type { contactDetails } from '../model/block'
+import { hoursOf } from '../model/hours'
 
-type Props = BlockProps<typeof contactDetails>
+type Props = BlockProps<typeof contactDetails> & { locale: Locale }
 
-const { id, title, info, phone, email, legal } = Astro.props
+const { id, title, info, phone, email, legal, company = [], locale } = Astro.props
+
+// Часы работы (html каталога) — пара «термин — описание»: строка контактов, которая их называет, с временем факта в
+// `<time>`; прочие строки — как есть.
+const hours = hoursOf(info, company, `${id}/info`)
 ---
 
 <Section labelledby={id}>
@@ -16,9 +23,20 @@ const { id, title, info, phone, email, legal } = Astro.props
   </Heading>
   {/* Ссылка канала без подписи в анатомии показывает свой адрес: номер телефона, почту. */}
   <address class="mt-lg flex flex-col gap-xs text-body not-italic">
-    {info.map((line) => (
-      <p>{bindNumbers(line)}</p>
-    ))}
+    {info.map((line, index) => {
+      const parts = hours[index]
+      return parts ? (
+        <TermList>
+          <Term name={t(locale, 'company.hours')}>
+            {parts.map((part) =>
+              typeof part === 'string' ? part : <time datetime={part.time}>{part.time}</time>,
+            )}
+          </Term>
+        </TermList>
+      ) : (
+        <p>{bindNumbers(line)}</p>
+      )
+    })}
     {phone && (
       <p>
         <a class="touch-target" href={phone.href}>

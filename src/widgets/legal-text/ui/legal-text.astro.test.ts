@@ -28,7 +28,7 @@ describe('LegalText', () => {
     expect(sectionFaults(html, page(), 'policy', legalText)).toEqual([])
   })
 
-  it('документ — <article>: h1 с id секции, дата и оператор, разделы — секции с h2 и абзацами по порядку плана', async () => {
+  it('документ — <article>: h1 с id секции, дата и оператор, пункты — <ol> секций с h2 и абзацами по порядку плана', async () => {
     const { section } = await render()
     const article = section?.querySelector('article')
     const title = article?.querySelector('h1')
@@ -38,7 +38,7 @@ describe('LegalText', () => {
       'ООО «Тест», ОГРН\u00a01000000000002, Москва',
     ])
     expect(
-      [...(article?.querySelectorAll(':scope > section') ?? [])].map((clause) => [
+      [...(article?.querySelectorAll(':scope > ol > li > section') ?? [])].map((clause) => [
         clause.querySelector('h2')?.textContent,
         [...clause.querySelectorAll('p')].map((p) => p.textContent),
       ]),

@@ -12,6 +12,7 @@ export const contactDetails = defineBlock({
     // Реквизиты оператора — текст copy deck, который показывает факт company (binds плана); пробел в фактах — без
     // значения.
     legal: text.optional(),
-    company: fact.optional(),
+    // Факты компании, которые называют тексты секции: оператор — реквизиты, часы работы — строку контактов с их временем.
+    company: list(fact).optional(),
   },
 })

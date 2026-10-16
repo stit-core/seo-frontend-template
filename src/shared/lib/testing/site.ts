@@ -71,9 +71,20 @@ const homeDeck = (lang: string, nav: readonly string[], legal: string, privacy: 
   },
 })
 
+// Факты теста на языке: оператор и часы работы (их время — `machine`, строка — та, что называет copy deck).
 const factsOf = (lang: string, name: string) => ({
   lang,
-  facts: [{ id: 'company-name', verbatim: [name] }],
+  facts: [
+    { id: 'company-name', verbatim: [name] },
+    {
+      id: 'company-hours',
+      verbatim: [say(lang, 'Пн–Пт, 10:00–19:00')],
+      machine: {
+        type: 'opening-hours',
+        hours: [{ days: ['mo', 'tu', 'we', 'th', 'fr'], opens: '10:00', closes: '19:00' }],
+      },
+    },
+  ],
 })
 
 const NAV = ['/blog', '/about', '/contacts'] as const
@@ -275,7 +286,10 @@ export const TEST_SITE = {
             { id: 'phone', target: { kind: 'tel', value: 'tel:+70000000000' } },
             { id: 'email', target: { kind: 'url', value: 'mailto:test@example.com' } },
           ],
-          data: [{ id: 'company', anatomy: 'company', fact: 'fact:company-name' }],
+          data: [
+            { id: 'company', anatomy: 'company', fact: 'fact:company-name' },
+            { id: 'hours', anatomy: 'company', fact: 'fact:company-hours' },
+          ],
         },
       },
     ],
