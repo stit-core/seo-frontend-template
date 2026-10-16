@@ -2,7 +2,7 @@ import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
 import { DEFAULT_LOCALE, type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { parseHtml } from '@/shared/lib/testing'
-import { breadcrumbsOn, type FactValue, strategyPage } from '@/shared/strategy'
+import { breadcrumbsOn, type FactValue, pageLocales, strategyPage } from '@/shared/strategy'
 import { notFound } from '@/widgets/not-found'
 import { headTags, jsonLdBlocks } from '../../../scripts/lib/html.mjs'
 import * as About from '../[...locale]/about.astro'
@@ -84,10 +84,14 @@ describe('индексируемые страницы', () => {
     ['/[...locale]/legal/privacy', Privacy, 'privacy', () => []],
     ['/[...locale]/blog', Blog, 'blog', () => []],
   ])(
-    '%s: на каждой локали страницы — её язык, self-canonical, hreflang версий, JSON-LD, один h1, страница из секций, крошки по карте',
+    '%s: локали — её строка карты; на каждой — её язык, self-canonical, hreflang версий, JSON-LD, один h1, страница из секций, крошки по карте',
     async (route, module, id, jsonLd) => {
       const pages = await built(route, module)
       expect(pages.length, route).toBeGreaterThan(0)
+      expect(
+        pages.map(({ locale }) => locale),
+        route,
+      ).toEqual(pageLocales(id))
       for (const { path, locale, props } of pages) {
         const head = await render(module.default, path, props)
         expect(head.lang, path).toBe(locale)
@@ -103,13 +107,6 @@ describe('индексируемые страницы', () => {
       }
     },
   )
-
-  // Список локалей страницы — её строка карты: у политики обработки ПДн — только дефолтный язык.
-  it('политика обработки ПДн — только на дефолтном языке', async () => {
-    expect((await built('/[...locale]/legal/privacy', Privacy)).map(({ path }) => path)).toEqual([
-      '/legal/privacy',
-    ])
-  })
 })
 
 // Каркас — секции шапки и подвала плана страницы, у страницы без своего плана — главной. Тексты секции — строки слотов

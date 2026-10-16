@@ -1,6 +1,6 @@
 import { SUPPORTED_LOCALES } from '@/shared/i18n'
 import { langOf, mapLanguages } from './contract'
-import { pageLink, snapshot, strategyPage } from './page'
+import { pageLink, pageLocales, snapshot, strategyPage } from './page'
 
 describe('снимок сайта strategy/', () => {
   // Языки карты и дескриптор локалей — один список: язык карты без строки дескриптора не собрать, а строка без языка
@@ -23,10 +23,26 @@ describe('снимок сайта strategy/', () => {
   })
 
   // Цель действия — страница карты, как ссылка со страницы: версия на её языке, без неё — версия основного языка.
-  it('маршрут действия главной — ссылка на страницу карты с языка страницы', () => {
-    for (const locale of SUPPORTED_LOCALES) {
-      const hero = strategyPage('home', locale).sections.find((section) => section.id === 'hero')
-      expect(hero?.slots.cta, locale).toEqual(pageLink('/contacts', locale))
+  it('маршрут действия каждого плана на каждом языке страницы — ссылка на страницу карты с этого языка', () => {
+    const { map, plans } = snapshot()
+    const routes = new Set(map?.pages.map((page) => page.url))
+    let checked = 0
+    for (const { page, sections } of plans) {
+      for (const locale of pageLocales(page.id)) {
+        strategyPage(page.id, locale).sections.forEach((read, index) => {
+          const values = [read.slots, ...Object.values(read.groups).flat()]
+            .flatMap((slots) => Object.values(slots))
+            .flat()
+          for (const { target } of sections[index]?.slots.action ?? []) {
+            if (target?.kind !== 'route' || !routes.has(target.value)) continue
+            expect(values, `${page.id}/${read.id} (${locale})`).toContainEqual(
+              pageLink(target.value, locale),
+            )
+            checked += 1
+          }
+        })
+      }
     }
+    expect(checked).toBeGreaterThan(0)
   })
 })
