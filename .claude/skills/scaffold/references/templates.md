@@ -5,75 +5,56 @@
 
 ---
 
+## page — данные `strategy/site/<поверхность>/`
+
+Строка карты (`site-map.yaml`: `id`, `url`, `parent`, при нужде `template` и `lang_versions`), план
+`plans/<id>.yaml` и copy deck `copy/<id>.yaml` (на другом языке — `copy/<id>.<lang>.yaml`) — форма
+strategy: образец — план и copy deck «О компании» проекта шаблона (`plans/about.yaml`, `copy/about.yaml`).
+Секции плана — блоки каталога по порядку страницы, шапка и подвал — тоже секции; тексты слотов — в copy
+deck по ключу `page/section/slot`, мета — `meta.title` и `meta.description`, контакты и реквизиты —
+факты (`facts*.yaml`). Валидаторы соседа по проекту — без `error` (`site_validate.py`, `copydeck.py
+check`).
+
 ## page — разметка `src/pages/_<name>/<name>-page.astro`
 
 ```astro
 ---
-import home from 'virtual:strategy/home'
+import files from 'virtual:strategy/<id>'
 import DocumentLayout from '@/app/layouts/document.astro'
 import type { Locale } from '@/shared/i18n'
 import { pageOf, pageVersions } from '@/shared/strategy'
-import { Heading } from '@/shared/ui/heading'
-import { Section } from '@/shared/ui/section'
+import { HeroText, heroText } from '@/widgets/hero-text'
+import { Prose, prose } from '@/widgets/prose'
 
 interface Props {
   locale: Locale
 }
 
 const { locale } = Astro.props
-
-const COPY = {
-  ru: {
-    title: 'Заголовок страницы',
-    description: 'Описание страницы для выдачи: 70–170 символов, уникальное среди всех страниц.',
-    lead: 'Первый абзац.',
-  },
-  en: {
-    title: 'Page title',
-    description: 'Page description for search results: 70–170 characters, unique across the site.',
-    lead: 'Opening paragraph.',
-  },
-} satisfies Record<Locale, unknown>
-
-const copy = COPY[locale]
+const page = pageOf(files, locale)
 ---
 
 <DocumentLayout
   locale={locale}
-  chrome={pageOf(home, locale)}
-  title={copy.title}
-  description={copy.description}
-  translations={pageVersions('<id>')}
+  chrome={page}
+  translations={pageVersions(page.id)}
+  title={page.meta.title}
+  description={page.meta.description}
 >
-  <Section labelledby="page-title">
-    <Heading id="page-title" level={1}>
-      {copy.title}
-    </Heading>
-    <p class="mt-stack-display text-lead text-secondary">{copy.lead}</p>
-  </Section>
+  <HeroText {...heroText.props(page, 'hero')} />
+  <Prose {...prose.props(page, '<section-id>')} />
 </DocumentLayout>
 ```
 
-Шапку и подвал ставит оболочка секциями плана, который передаёт страница (`chrome` — модуль
-`virtual:strategy/<id>` через `pageOf`; без своего плана — план главной). Крошки — у
-страницы шаблона карты с `breadcrumbs: true` и с глубины 2: секция `breadcrumbs` её плана, проп
-оболочки `crumbs` — её пропсы (`breadcrumbs.props(page, 'breadcrumbs', { current })`), видимые крошки
-и `BreadcrumbList` оболочка печатает из него.
-Служебная — проп `noindex` вместо `jsonLd`.
-
-Страница собрана из секций: каждый раздел — свой `<Section>` с подписью лендмарка
-(`labelledby` — id своего `<Heading>`, без видимого заголовка — `label`). Ширину даёт `width`
-(`reading` — умолчание, `page`, `wide`, `full`), полосу фона — `tone`, шаг — `rhythm`; класс
-ширины (`max-w-*`) в странице или блоке — ошибка ESLint:
-
-```astro
-<Section labelledby="details">
-  <Heading id="details" level={2}>
-    {copy.details}
-  </Heading>
-  <p class="mt-lg text-body">{copy.text}</p>
-</Section>
-```
+Страница — блоки секций своего плана по порядку (секцию без блока шаблона заводит `/scaffold block`):
+пропсы блока — его секция плана, свою `Section` с подписью заголовком рисует блок. Шапку и подвал ставит
+оболочка секциями плана, который передаёт страница (`chrome`; без своего плана — модуль главной
+`virtual:strategy/home`). Значения из коллекции — третьим аргументом пропсов: наборы записей
+(`articleCards.props(page, '<section-id>', { article })`) и, у шаблона коллекции (`templateOf`), слоты записи.
+Крошки — у страницы шаблона карты с `breadcrumbs: true` и с глубины 2: секция `breadcrumbs` её плана,
+проп оболочки `crumbs={breadcrumbs.props(page, 'breadcrumbs')}`; видимые крошки и `BreadcrumbList`
+оболочка печатает из него. Служебная — проп `noindex` вместо `jsonLd`. Текста литералом в разметке нет:
+тексты — copy deck и факты, подпись интерфейса — строка словаря `t()`.
 
 ## page — маршрут `src/pages/[...locale]/<path>.astro`
 
@@ -368,31 +349,40 @@ export const GET: APIRoute = () =>
 
 ## route — страница `src/pages/<name>.astro`
 
+Страница на запрос — тоже страница карты: строка карты, план и copy deck в `strategy/`, как у page.
+
 ```astro
 ---
 export const prerender = false
 
+import files from 'virtual:strategy/<id>'
 import DocumentLayout from '@/app/layouts/document.astro'
-import { Heading } from '@/shared/ui/heading'
-import { Section } from '@/shared/ui/section'
+import { localeOf } from '@/shared/i18n'
+import { pageOf } from '@/shared/strategy'
+import { HeroText, heroText } from '@/widgets/hero-text'
 
-const locale = 'ru' as const
+// Язык — по префиксу запрошенного пути: под `/en/…` человек читает английскую версию.
+const locale = localeOf(Astro.url.pathname)
+const page = pageOf(files, locale)
 
 // Роут важнее middleware: живой или персональный ответ не кешируется.
 Astro.response.headers.set('cache-control', 'private, no-store')
 ---
 
-<DocumentLayout locale={locale} title="Заголовок" description="Описание." noindex>
-  <Section labelledby="page-title">
-    <Heading id="page-title" level={1}>
-      Заголовок
-    </Heading>
-  </Section>
+<DocumentLayout
+  locale={locale}
+  chrome={page}
+  title={page.meta.title}
+  description={page.meta.description}
+  noindex
+>
+  <HeroText {...heroText.props(page, 'hero')} />
 </DocumentLayout>
 ```
 
 Каждый такой маршрут — строка в `docs/reference/rendering.md` и в
-`docs/stack/rendering.md`, и он не попадает в `sitemap.xml`.
+`docs/stack/rendering.md`, и он не попадает в `sitemap.xml`; серверный бандл везёт данные только его
+страницы (модуль `virtual:strategy/<id>` — `seo:check`).
 
 ## route — тест
 
