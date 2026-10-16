@@ -198,28 +198,32 @@ describe('маршруты — страницы карты', () => {
   })
 })
 
+// Страница снимка с планом — на каждом языке своей строки карты: тест на страницу и язык.
+const planPages = snapshot().plans.flatMap(({ page: { id } }) =>
+  pageLocales(id).map((locale) => [id, locale] as const),
+)
+
 // Страница — секции своего плана: план — источник порядка и полноты, композиция страницы их только ставит.
 describe('страница из блоков: план страницы', () => {
-  it('секции = план: дети <main> — секции плана по порядку (каркас ставит оболочка); слот — на странице: каждая секция целиком', async () => {
-    const project = snapshot()
-    const faults: string[] = []
-    for (const {
-      page: { id },
-    } of project.plans) {
+  it.each(planPages)(
+    '%s (%s): секции = план — дети <main> — секции плана по порядку (каркас ставит оболочка); слот — на странице: каждая секция целиком',
+    async (id, locale) => {
+      const project = snapshot()
       const url = project.map?.pages.find((page) => page.id === id)?.url ?? ''
       const route = routeOf(url)
       expect(route, `${id}: маршрута ${url} нет`).toBeDefined()
-      if (route === undefined) continue
+      if (route === undefined) return
       const module = await route.load()
-      // Страница сборки — адреса её getStaticPaths; on-demand (404) — адрес страницы карты на каждом её языке.
+      // Страница сборки — адреса её getStaticPaths на этом языке; on-demand (404) — адрес страницы карты.
       const pages =
         'getStaticPaths' in module
-          ? await built(route.route, module)
-          : pageLocales(id).map((locale) => ({ path: localePath(locale, url), locale, props: {} }))
-      expect(pages.length, id).toBeGreaterThan(0)
-      for (const { path, locale, props } of pages) {
+          ? (await built(route.route, module)).filter((page) => page.locale === locale)
+          : [{ path: localePath(locale, url), props: {} }]
+      expect(pages.length, `${id} (${locale})`).toBeGreaterThan(0)
+      const faults: string[] = []
+      for (const { path, props } of pages) {
         const { html } = await render(module.default, path, props)
-        const page = strategyPage(id, locale as Locale)
+        const page = strategyPage(id, locale)
         const main = parseHtml(html).querySelector('main')
         const shown = [...(main?.children ?? [])].map((child) =>
           child.getAttribute('aria-labelledby'),
@@ -240,19 +244,15 @@ describe('страница из блоков: план страницы', () => 
             continue
           }
           faults.push(
-            ...sectionFaults(
-              html,
-              page,
-              section.id,
-              block,
-              chromeOf(section, locale as Locale, project),
-            ).map((fault) => `${path} ${fault}`),
+            ...sectionFaults(html, page, section.id, block, chromeOf(section, locale, project)).map(
+              (fault) => `${path} ${fault}`,
+            ),
           )
         }
       }
-    }
-    expect(faults).toEqual([])
-  })
+      expect(faults).toEqual([])
+    },
+  )
 })
 
 // Крошки — секция плана у страницы шаблона карты с крошками и глубиной от 2: ступени ведут на её родителей по карте,
