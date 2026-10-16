@@ -7,22 +7,13 @@ import type { footer } from '../model/block'
 
 type Props = BlockProps<typeof footer> & { locale: Locale }
 
-const {
-  id,
-  variant,
-  legal,
-  privacy,
-  'privacy-label': privacyLabels,
-  email,
-  nav = [],
-  locale,
-} = Astro.props
+const { id, legal, privacy, 'privacy-label': privacyLabels, email, nav = [], locale } = Astro.props
 
 // Правовые документы оператора: без версии на языке страницы ссылка ведёт на версию основного языка и называет его.
 const documents = labelled(privacy, privacyLabels, `${id}/privacy`)
-// Разделы сайта — у подвала сайта; у посадочной (minimal) — реквизиты, правовые ссылки и контакты. Разделы — версии
-// языка страницы: без своей версии раздела в подвале нет.
-const sections = variant === 'site' ? nav.filter((item) => item.link.hreflang === undefined) : []
+// Разделы — те, что даёт секция плана, в любом варианте (у minimal каталог их не снимает): версии языка страницы, без
+// своей версии раздела в подвале нет.
+const sections = nav.filter((item) => item.link.hreflang === undefined)
 ---
 
 <footer class="border-t border-subtle">

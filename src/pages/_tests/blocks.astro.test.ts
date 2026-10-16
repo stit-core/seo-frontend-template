@@ -1,6 +1,7 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
 import { z } from 'zod'
+import type { Locale } from '@/shared/i18n'
 import {
   PACKAGE_LANDING,
   parseHtml,
@@ -17,6 +18,7 @@ import {
   list,
   pageLocales,
   projectOf,
+  type Section,
   type StrategyPage,
   siteOf,
   snapshot,
@@ -38,7 +40,13 @@ const Catalog = z.object({
     z.object({
       // Каркас (`chrome`) ставит оболочка, а не план страницы секцией.
       flow: z.string().optional(),
-      html: z.object({ heading: z.string().optional(), form: z.boolean().optional() }).default({}),
+      html: z
+        .object({
+          element: z.string().optional(),
+          heading: z.string().optional(),
+          form: z.boolean().optional(),
+        })
+        .default({}),
       variants: z.array(
         z.object({
           id: z.string(),
@@ -110,15 +118,42 @@ function acceptedOf(block: Block) {
 const plans = [...snapshot().plans, ...projectOf(PACKAGE_LANDING).plans]
 
 // Страницы с планами — на своих языках: страницы снимка сайта на языках карты, посадочная фикстуры базы — на русском.
+const landing = projectOf(PACKAGE_LANDING)
 const pages = [
   ...snapshot().plans.flatMap(({ page: { id } }) =>
-    pageLocales(id).map((locale) => ({ page: strategyPage(id, locale), locale })),
+    pageLocales(id).map((locale) => ({
+      page: strategyPage(id, locale),
+      locale,
+      project: snapshot(),
+    })),
   ),
   {
-    page: siteOf(projectOf(PACKAGE_LANDING)).strategyPage('spasibo', testLocale('ru')),
+    page: siteOf(landing).strategyPage('spasibo', testLocale('ru')),
     locale: testLocale('ru'),
+    project: landing,
   },
 ]
+
+// Каркас показывает разделы версии языка страницы: пункта меню, чьей страницы карты нет на этом языке, и раздела
+// подвала, чья ссылка ведёт на версию основного языка (с её hreflang), на странице нет.
+function elsewhere(section: Section, locale: Locale, project: ReturnType<typeof projectOf>) {
+  const items = project.map?.chrome?.header?.items ?? []
+  return new Set([
+    ...items.flatMap(({ page }, index) =>
+      siteOf(project).pageLocales(page).includes(locale) ? [] : [`nav-link[${index}]`],
+    ),
+    ...Object.entries(section.groups).flatMap(([group, instances]) =>
+      instances.flatMap((instance, index) =>
+        Object.values(instance).some(
+          (value) =>
+            typeof value === 'object' && 'hreflang' in value && value.hreflang !== undefined,
+        )
+          ? [`${group}[${index}]`]
+          : [],
+      ),
+    ),
+  ])
+}
 
 describe('блоки каталога: блок ↔ каталог ↔ планы', () => {
   it('форма слота читается у любого вида значения: элемент, список, набор и его элементы', () => {
@@ -282,27 +317,34 @@ describe('блоки каталога: блок ↔ каталог ↔ план�
     ).toEqual([])
   })
 
-  // Каркас — шапку и подвал — ставит оболочка: меню и разделы подвала — версии языка страницы, их судят тесты блоков.
+  // Каркас — шапку и подвал — ставит оболочка: его секция — лендмарк каталога без заголовка, меню и разделы подвала —
+  // версии языка страницы.
   it('секция плана — в разметке блока: заголовок с id секции уровня каталога, каждый текст, адрес действия, экземпляр набора', async () => {
     const container = await AstroContainer.create()
     const faults: string[] = []
-    for (const { page, locale } of pages) {
+    for (const { page, locale, project } of pages) {
       for (const section of page.sections) {
         const entry = catalog[section.block]
         const block = blocks.find((candidate) => candidate.block.id === section.block)?.block
         const component = componentOf(section.block)
-        if (entry?.flow === 'chrome' || block === undefined || component === undefined) continue
+        if (entry === undefined || block === undefined || component === undefined) continue
         const html = await container.renderToString(component, {
           props: { ...block.props(page, section.id), locale },
         })
         const heading = parseHtml(html).getElementById(section.id)?.tagName.toLowerCase()
-        if (heading !== entry?.html.heading) {
+        if (heading !== entry.html.heading) {
           faults.push(
-            `${locale} ${page.id}/${section.id}: заголовок ${heading ?? 'нет'}, в каталоге ${entry?.html.heading ?? '—'}`,
+            `${locale} ${page.id}/${section.id}: заголовок ${heading ?? 'нет'}, в каталоге ${entry.html.heading ?? '—'}`,
           )
         }
+        const chrome =
+          entry.flow === 'chrome'
+            ? { landmark: entry.html.element, elsewhere: elsewhere(section, locale, project) }
+            : {}
         faults.push(
-          ...sectionFaults(html, page, section.id, block).map((fault) => `${locale} ${fault}`),
+          ...sectionFaults(html, page, section.id, block, chrome).map(
+            (fault) => `${locale} ${fault}`,
+          ),
         )
       }
     }

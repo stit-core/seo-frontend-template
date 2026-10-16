@@ -88,6 +88,17 @@ describe('Footer', () => {
     expect(links(doc)).toEqual([['#lead-form', null, 'Политика обработки персональных данных']])
   })
 
+  // Вариант — раскладка той же анатомии: у minimal каталог разделы не снимает, и подвал не роняет то, что даёт план.
+  it('вариант minimal рисует всё, что даёт секция плана: и разделы', async () => {
+    const { doc } = await render({ ...site(), variant: 'minimal', locale: RU })
+    expect(links(doc)).toEqual([
+      ['/blog', null, 'Заметки'],
+      ['/about', null, 'О студии'],
+      ['/contacts', null, 'Связаться'],
+      ['/legal/privacy', null, 'Политика теста'],
+    ])
+  })
+
   it('у правовой ссылки нет подписи или подписи нет ссылки — ошибка называет ключ', async () => {
     const props = { ...site(), locale: RU }
     await expect(render({ ...props, 'privacy-label': [] })).rejects.toThrow(
