@@ -17,6 +17,7 @@ export type {
   Action,
   FactValue,
   LanguageLink,
+  Link,
   MapEntry,
   Meta,
   PageFiles,

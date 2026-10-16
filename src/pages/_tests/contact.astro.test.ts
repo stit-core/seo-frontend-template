@@ -1,7 +1,7 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { DEFAULT_LOCALE, localePath, t } from '@/shared/i18n'
 import { parseHtml } from '@/shared/lib/testing'
-import { pageLocales } from '@/shared/strategy'
+import { pageLocales, strategyPage } from '@/shared/strategy'
 import Contacts from '../[...locale]/contacts/index.astro'
 import Contact from '../api/contact.astro'
 
@@ -135,6 +135,28 @@ describe('/api/contact', () => {
     expect(doc.title.startsWith(t(DEFAULT_LOCALE, 'form.failed', { title: '' }))).toBe(true)
     expect(outlineFaults(headingLevels(doc))).toEqual([])
     expect(doc.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex')
+  })
+
+  // Согласие ссылается на политику плана контактов — её версию по карте: на языке без версии политики ссылка ведёт на
+  // версию другого языка и называет его.
+  it('ссылка согласия — политика ПДн плана, её версия по карте с языком цели: страница и ответ формы', async () => {
+    for (const locale of pageLocales('contacts')) {
+      const policy = strategyPage('contacts', locale).policy
+      expect(policy, locale).toBeDefined()
+      const page = await container.renderToString(Contacts, {
+        props: { locale },
+        request: new Request(`${ORIGIN}${localePath(locale, '/contacts')}`),
+        partial: false,
+      })
+      const answer = await (await send(post({ ...filled, consent: '', locale }))).text()
+      for (const html of [page, answer]) {
+        const link = parseHtml(html).querySelector('label[for="contact-consent"] a')
+        expect(
+          [link?.getAttribute('href'), link?.getAttribute('hreflang') ?? undefined],
+          locale,
+        ).toEqual([policy?.href, policy?.hreflang])
+      }
+    }
   })
 
   it('страница с формой до отправки — заголовок окна без слова об ошибке', async () => {

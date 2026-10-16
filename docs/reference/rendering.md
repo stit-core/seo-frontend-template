@@ -11,7 +11,7 @@ Static-first: страница предрендерится на сборке, �
 | режим | что значит | `Cache-Control` | здесь |
 |---|---|---|---|
 | `static` | HTML собран на `astro build` (`dist/client/<path>/index.html`); отдаёт статик-хендлер адаптера до приложения | `public, max-age=0` + `ETag` + `Last-Modified` (адаптер) — браузер перепроверяет и получает 304 | все контентные страницы; так же, файлами сборки, отдаются фиды и карта сайта |
-| `dynamic` | рендер на каждый запрос, кеш процесса запрещён; проходит через `app/middleware` | публичный (404, 410) — `no-cache`, умолчание middleware; живой/персональный — `private, no-store`, ставит роут; crawler-файлы — короткий `public, max-age` роута | `404`, `/healthz`, `/now`, `robots.txt`, `/<INDEXNOW_KEY>.txt`, закрытый `/_image`; сюда же относятся обработчики форм `api/*` |
+| `dynamic` | рендер на каждый запрос, кеш процесса запрещён; проходит через `app/middleware` | публичный (404, 410) — `no-cache`, умолчание middleware; живой/персональный — `private, no-store`, ставит роут; crawler-файлы — короткий `public, max-age` роута | `404`, `/healthz`, `robots.txt`, `/<INDEXNOW_KEY>.txt`, закрытый `/_image`; сюда же относятся обработчики форм `api/*` |
 | `cached` | рендер на запрос + кеш процесса (TTL + SWR) | `no-cache` | опция для контента из CMS/API — рецепт D ниже, кода в шаблоне нет |
 | `client` | каркас с сервера, данные на клиенте | `private, no-store` | нет и не планируется: приложение за логином — `spa-frontend-template` |
 
@@ -41,7 +41,6 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 | `/legal/privacy` | `[...locale]/legal/privacy.astro` (в карте — только дефолтный язык) | `static` | то же | да | да |
 | `/api/contact` | `api/contact.astro` (страница: без JS ответ на POST — разметка) | `dynamic` | `private, no-store` (роут) | нет — `noindex` | нет |
 | `/500.html` | `500.astro` (адаптер читает файл с диска при исключении в on-demand; по `/500` — 404) | `static` | `public, max-age=0` + ETag | нет — `noindex` | нет |
-| `/now` | `now.astro` | `dynamic` | `private, no-store` (роут) | нет — `noindex` | нет |
 | `/healthz` | `healthz.ts` (endpoint) | `dynamic` | `no-store` (роут) | нет | нет |
 | `/_image` | `_image.ts` (endpoint изображений: маршрут вводит сам Astro, `image.endpoint` в `astro.config.ts` подменяет его для сборки; в `astro dev` — штатный) | `dynamic` | `no-cache` (роут) | — (404 текстом, `X-Robots-Tag: noindex`: картинки готовит сборка, трансформация на запрос наружу закрыта, на edge — тоже) | нет |
 | `/robots.txt` | `robots.txt.ts` (endpoint) | `dynamic` | `public, max-age=300` (роут) | — (текст; `X-Robots-Tag: noindex`) | нет |
@@ -54,11 +53,7 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 | `/_astro/*` | ассеты сборки | статика | `public, max-age=31536000, immutable` (адаптер) | — | нет |
 | `/favicon.ico`, `/icon.svg`, … | `public/` как есть | статика | `public, max-age=0` + ETag (адаптер) | — | нет |
 
-`/now` — образец режима `dynamic` (серверное время в разметке, `noindex`, `private, no-store`,
-только `ru`). Ссылок на неё нет: подвал — секция плана, а служебной странице место ни в меню, ни в
-подвале.
-
-`/api/contact` — второй on-demand HTML: обработчик формы. Он маршрут-страница, а не endpoint,
+`/api/contact` — on-demand HTML обработчика формы. Он маршрут-страница, а не endpoint,
 потому что без JavaScript ответ на POST обязан быть разметкой: успех — 303 на
 `/contacts/spasibo` (F5 не переотправляет заявку), ошибка — та же страница контактов с
 сохранёнными полями (200) или честный 500 при сбое канала доставки. Отказ до разбора заявки —
@@ -75,6 +70,25 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 `noindex`, адресом canonical и с датой последнего изменения записи. Списка страниц нет: карта равна
 сборке по построению, а `seo:check` сверяет её со страницами и с датами записей из frontmatter;
 правила — `.claude/rules/seo-invariants.md`. В `astro dev` карты нет.
+
+## Рецепт: живая страница на запрос
+
+Страница, чей HTML меняется на каждый запрос (время сервера, остаток на складе), в шаблоне не стоит —
+это решение проекта. Собирается она так:
+
+- файл маршрута `src/pages/<путь>.astro` с `export const prerender = false` и строкой в карте маршрутов
+  выше (без неё `check:content` красный); текст — данные, как у любой страницы: план и copy deck в
+  `strategy/` (модуль `virtual:strategy/<id>`, `pageOf`), каркас — секции плана (`chrome`);
+- живой ответ — не для общих кешей: `Astro.response.headers.set('cache-control', 'private, no-store')`
+  в самом маршруте (middleware его не перебивает), страница — проп `noindex` оболочки: вне карты сайта
+  и пар hreflang;
+- время и данные запроса — только во frontmatter этого маршрута: на prerender они значения сборки
+  (rule `render-safety`); модульное состояние — нет: оно общее для всех запросов процесса;
+- ссылок на неё нет ни в меню, ни в подвале: служебной странице место вне навигации;
+- проверки: тест страницы — `renderToResponse` (заголовок `Cache-Control`, `noindex`, время запроса);
+  HTTP-набор берёт маршрут сам (on-demand маршруты `src/pages`: `X-Request-Id`, `noindex`, ответ
+  ботам), а тело у двух запросов разное — в матрице ботов (`e2e/http/bots.spec.ts`) у такого маршрута
+  сверяются статус и заголовки, тело — нет.
 
 ## Абсолютные URL: один образ на все среды
 
@@ -140,7 +154,7 @@ Prerender происходит на сборке, а канонический or
   `public, max-age=31536000, immutable`. Приложение (middleware, JSON-лог) их не видит
 - On-demand проходит через `app/middleware`: `X-Request-Id`, JSON-лог, `Cache-Control: no-cache`
   для HTML без явного заголовка (404/410 включительно). Роут задаёт заголовок сам, когда ответ
-  живой или персональный: `now` — `private, no-store`, `healthz` — `no-store`; middleware его
+  живой или персональный: ответ формы — `private, no-store`, `healthz` — `no-store`; middleware его
   не перебивает. Crawler-файлы приложения
   (`robots.txt`, ключ IndexNow) ставят короткий `public, max-age` и
   `X-Robots-Tag: noindex` сами: это не страницы выдачи, а обход их не блокирует
@@ -149,7 +163,7 @@ Prerender происходит на сборке, а канонический or
   значение маршрута его не перекрывает. Исключение — отказ самого Node на запрос, не дошедший до
   слушателей (`deployment.md § Обёртка сервера`)
 - `Content-Security-Policy` — у каждой страницы: prerendered — статик-хендлер из
-  `dist/_headers.json` сборки, on-demand (404, `/now`, ответ формы) — Astro в ответе. Политика
+  `dist/_headers.json` сборки, on-demand (404, ответ формы) — Astro в ответе. Политика
   одна (`contentSecurityPolicy()`, `scripts/lib/site-policy.mjs`): `default-src 'self'`,
   `object-src 'none'`, `base-uri 'self'`, `form-action 'self'`, `frame-ancestors 'none'`; скрипт —
   остров реестра: инлайн — по хешу тела, файл — свой; стиль — свой файл, `<style>` шрифтов

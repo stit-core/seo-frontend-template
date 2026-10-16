@@ -41,6 +41,12 @@ export interface Project {
   facts: Facts[]
 }
 
+// Ссылка на цель плана: адрес и язык цели, когда это версия страницы на другом языке.
+export interface Link {
+  href: string
+  hreflang?: Locale
+}
+
 // Действие плана — адрес цели; подпись — свой текстовый элемент анатомии (`cta` ↔ `cta-label`). Нет цели в плане —
 // адрес собирает код (переключатель языка).
 export interface Action {
@@ -95,7 +101,7 @@ export interface StrategyPage extends MapEntry {
   sections: Section[]
   // Правовое плана: политика ПДн (`legal.privacy_policy`) — ссылка на её версию по карте, оператор ПДн и продавец
   // (`legal.operator_ref`) — факт языка страницы.
-  policy: Action | undefined
+  policy: Link | undefined
   operator: FactValue | undefined
 }
 
@@ -233,7 +239,7 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
   )
   // Маршрут цели — страница карты: её версия на языке страницы, без неё — версия на другом языке с его кодом (как
   // ссылка со страницы); маршрут вне карты (у лендинга карты нет) — путь на языке страницы.
-  const address = (target: PlanTarget, key: string): Action => {
+  const address = (target: PlanTarget, key: string): Link => {
     if (target.kind !== 'route') return { href: targetAddress(target, facts, key) }
     if (!project.map?.pages.some((candidate) => candidate.url === target.value)) {
       return { href: localePath(locale, target.value) }

@@ -19,9 +19,16 @@ import * as Home from '../[...locale]/index.astro'
 import * as Privacy from '../[...locale]/legal/privacy.astro'
 import NotFound from '../404.astro'
 import ServerError from '../500.astro'
-import Now from '../now.astro'
 import { blocks, catalog, chromeOf } from './catalog'
-import { type Built, built, crumbsOf, outsideSections, routeOf } from './routes'
+import {
+  type Built,
+  built,
+  crumbsOf,
+  outsideSections,
+  pageRoutes,
+  routeOf,
+  shapeOf,
+} from './routes'
 
 // Страницы — на данных сайта: его локалях, карте и текстах; записи — фикстуры. Маршруты записей, тегов и страниц
 // списка — на локалях и карте теста (blog.astro.test.ts).
@@ -167,6 +174,23 @@ describe('каркас страниц — план страницы', () => {
   })
 })
 
+// Маршрут = страница карты: адрес файла маршрута без сегмента локали — `url` строки карты. Не страницы карты — только
+// служебные маршруты: страница сбоя адаптера (500), обработчики (`api/*`) и страницы 2…N списка страницы карты.
+describe('маршруты — страницы карты', () => {
+  it('у каждой страницы карты — маршрут её адреса, у каждого маршрута страницы — строка карты', () => {
+    const urls = snapshot().map?.pages.map(({ url }) => url) ?? []
+    expect(urls.length).toBeGreaterThan(0)
+    expect(urls.filter((url) => routeOf(url) === undefined)).toEqual([])
+    const lists = new Set(urls.map((url) => `${url === '/' ? '' : shapeOf(url)}/page/*`))
+    const service = (url: string) => url === '/500' || url.startsWith('/api/') || lists.has(url)
+    expect(
+      pageRoutes
+        .filter(({ url }) => !urls.some((own) => shapeOf(own) === url) && !service(url))
+        .map(({ route }) => route),
+    ).toEqual([])
+  })
+})
+
 // Страница — секции своего плана: план — источник порядка и полноты, композиция страницы их только ставит.
 describe('страница из блоков: план страницы', () => {
   it('секции = план: дети <main> — секции плана по порядку (каркас ставит оболочка); слот — на странице: каждая секция целиком', async () => {
@@ -286,18 +310,5 @@ describe('служебные страницы', () => {
     for (const other of SUPPORTED_LOCALES.filter((locale): boolean => locale !== DEFAULT_LOCALE)) {
       expect(main?.textContent, other).not.toContain(t(other, 'error.lead'))
     }
-  })
-
-  it('/now: время запроса, ответ не кешируется и не индексируется', async () => {
-    const response = await container.renderToResponse(Now, {
-      request: new Request(`${ORIGIN}/now`),
-      partial: false,
-    })
-    expect(response.headers.get('cache-control')).toBe('private, no-store')
-    const html = await response.text()
-    const time = /<time datetime="([^"]+)"/.exec(html)?.[1] ?? ''
-    expect(Math.abs(Date.parse(time) - Date.now())).toBeLessThan(60_000)
-    expect(headTags(html).find((tag) => tag.name === 'robots')?.content).toBe('noindex')
-    expect(outsideSections(html)).toEqual([])
   })
 })

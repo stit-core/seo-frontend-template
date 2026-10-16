@@ -22,7 +22,9 @@ test.describe('форма обратной связи в браузере без
     await page.getByLabel(t(DEFAULT_LOCALE, 'form.email')).fill(email)
     await page.getByLabel(t(DEFAULT_LOCALE, 'form.message')).fill(MESSAGE)
     await page.getByRole('checkbox').check()
-    await page.getByRole('button', { name: t(DEFAULT_LOCALE, 'form.submit') }).click()
+    await page
+      .getByRole('button', { name: pageText('contacts', 'lead-form', 'cta-label', DEFAULT_LOCALE) })
+      .click()
 
     await expect(page).toHaveURL('/contacts/spasibo')
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
@@ -37,7 +39,9 @@ test.describe('форма обратной связи в браузере без
     await page.getByLabel(t(DEFAULT_LOCALE, 'form.name')).fill('Мария')
     await page.getByLabel(t(DEFAULT_LOCALE, 'form.email')).fill(email)
     await page.getByLabel(t(DEFAULT_LOCALE, 'form.message')).fill(MESSAGE)
-    await page.getByRole('button', { name: t(DEFAULT_LOCALE, 'form.submit') }).click()
+    await page
+      .getByRole('button', { name: pageText('contacts', 'lead-form', 'cta-label', DEFAULT_LOCALE) })
+      .click()
 
     // Нативная валидация required работает и без скриптов: страница та же, заявки нет.
     await expect(page).toHaveURL('/contacts')

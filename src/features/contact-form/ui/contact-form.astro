@@ -18,7 +18,8 @@ interface Props {
   values?: ContactValues | undefined
   errors?: ContactErrors | undefined
   notice?: DictKey | undefined
-  policyHref: string
+  // Политика ПДн — её версия по карте: на другом языке ссылка называет его.
+  policy: { href: string; hreflang?: string | undefined }
   // Подпись кнопки и текст согласия даёт страница — тексты своей секции формы.
   submitLabel: string
   consentLabel: string
@@ -30,7 +31,7 @@ const {
   values = EMPTY_CONTACT_VALUES,
   errors = {},
   notice,
-  policyHref,
+  policy,
   submitLabel,
   consentLabel,
 } = Astro.props
@@ -171,7 +172,10 @@ const describedBy = (id: string, failed: boolean): string | undefined =>
         aria-describedby={describedBy('contact-consent', errors.consent !== undefined)}
       />
       <span>
-        <span>{consentLabel}</span> — <a href={policyHref}>{t(locale, 'form.consentPolicy')}</a>
+        <span>{consentLabel}</span> —{' '}
+        <a href={policy.href} hreflang={policy.hreflang}>
+          {t(locale, 'form.consentPolicy')}
+        </a>
       </span>
     </label>
     {errors.consent && (

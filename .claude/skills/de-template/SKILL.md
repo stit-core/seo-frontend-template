@@ -111,14 +111,16 @@ git grep -lF '@stit/ssr-frontend-template' -- ':!.claude' ':!docs/research' \
 редакции — та же, что `PRIVACY_POLICY_VERSION` (A.2). Напомни юзеру два действия вне репо:
 показать текст юристу и подать уведомление в РКН о намерении обрабатывать ПДн.
 
-### A.4 Реквизиты организации → `src/entities/company/model/company.ts`
+### A.4 Реквизиты организации → факты `strategy/facts*.yaml`
 
 Источник: `seo.md § Структурированные данные` (`LocalBusiness`) и страница «о компании»
-в `routing.md`. Заменить: `legalName`, `email`, `phone` + `phoneHref`, `address` на обеих
-локалях, `openingHours` + `hours`. Разметка `LocalBusiness` обязана совпадать с тем, что
-видно в тексте страницы: нет офиса с приёмом — убери адрес и часы и из данных, и из типа.
-Имя организации в разметке — бренд `SITE_NAME` (A.2), `legalName` — юрлицо отсюда: второе имя
-у организации `seo:check` считает второй сущностью.
+в `routing.md`. Оператор, почта, телефон, адрес и часы работы — факты проекта с `machine` (форма
+`facts.schema.yaml` strategy, по файлу на язык, те же id), тексты, которые их называют, — copy deck
+страниц (`fact_ids`), телефон и почта ссылками — цели действий плана. Разметка `LocalBusiness`
+обязана совпадать с тем, что видно в тексте страницы: нет офиса с приёмом — убери адрес и часы и
+из фактов, и из секции контактов плана. Имя организации в разметке — бренд `SITE_NAME` (A.2),
+`legalName` — оператор плана (`legal.operator_ref`): второе имя у организации `seo:check` считает
+второй сущностью.
 
 ### A.5 Социальная карточка и иконки → `public/`
 
@@ -129,10 +131,12 @@ git grep -lF '@stit/ssr-frontend-template' -- ':!.claude' ':!docs/research' \
 
 ### A.6 Тексты reference-страниц
 
-Главная (`src/pages/_home/home-page.astro`), «о компании»
-(`src/pages/_about/about-page.astro`), контакты (`src/pages/_contacts/*.astro`) написаны
-про шаблон. Перепиши под проект по `interface/<surface>/` и `screens/<surface>/` из
-strategy; врезки «это страница шаблона» удали. Тексты — на каждой локали страницы.
+Тексты страниц — copy deck проекта strategy (`strategy/site/<surface>/copy/<page>.yaml` и
+`.<lang>.yaml`), секции — планы `plans/<page>.yaml`; в шаблоне они написаны про шаблон. Со
+strategy форк получает свои снимком, без него переписывает под проект в той же форме (валидаторы
+strategy — `site_validate.py`, `copydeck.py check`): число и дата текста — факты, тексты — на
+каждом языке страницы карты. Композиции страниц (`src/pages/_<page>/`) ставят блоки секций плана
+и текстов не держат.
 
 ### A.7 Редиректы → `content/redirects.yaml`
 
@@ -195,8 +199,8 @@ strategy; врезки «это страница шаблона» удали. Т
 
 По stable-записям FSD-карты чейнить `/scaffold`:
 
-- `entities.md` → `/scaffold collection` (сущность с контентом); сущность без контента (как
-  `entities/company`) — вручную по rule `fsd-architecture`
+- `entities.md` → `/scaffold collection` (сущность с контентом); сущность без контента — вручную по
+  rule `fsd-architecture`
 - `pages.md` → `/scaffold page` (ru + en) и `/scaffold route` (служебный маршрут)
 - `features.md` → `/scaffold feature`
 - блоки секций планов `strategy/site/<поверхность>/plans/` → `/scaffold block`

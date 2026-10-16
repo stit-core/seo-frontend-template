@@ -30,7 +30,7 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
   приводит сам, и по такому адресу отвечает страница: дубль закрывает этот же canonical, а ссылку
   неканонической формы в сборке валит `check:links` (`docs/reference/rendering.md § Нормализация
   URL`)
-- Служебная страница (404, `/now`, подтверждение заявки, ответ обработчика формы, `500`) — проп
+- Служебная страница (404, подтверждение заявки, ответ обработчика формы, `500`) — проп
   `noindex` layout'а: только `<meta name="robots" content="noindex">`, без canonical/OG/hreflang;
   разрешающие и запрещающие директивы не смешиваются (Яндекс выбирает разрешающую). 404 и 410 — на
   языке префикса пути (`localeOf`, `shared/i18n`): под `/en/…` — английские; у 404 — пути на главную
@@ -126,8 +126,8 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
 ## robots.txt, sitemap.xml, фиды, IndexNow
 
 - `robots.txt` на проде (`ROBOTS_POLICY=index`): `User-agent: *` / `Allow: /` + абсолютная
-  `Sitemap:`; отдельные `noindex`-страницы (`/now`, 404) в нём не закрываются — иначе мета не будет
-  прочитана. `ROBOTS_POLICY=noindex` — контур staging целиком: `User-agent: *` / `Disallow: /` без
+  `Sitemap:`; отдельные `noindex`-страницы (404, подтверждение заявки) в нём не закрываются — иначе
+  мета не будет прочитана. `ROBOTS_POLICY=noindex` — контур staging целиком: `User-agent: *` / `Disallow: /` без
   Sitemap; реальный замок staging — Traefik `basicAuth`, `Disallow: /` и `X-Robots-Tag` — второй и
   третий контуры. `Host`/`Crawl-delay` не выводятся
 - `Clean-param` — строка прод-`robots.txt` вне групп (директива межсекционная, читает её только

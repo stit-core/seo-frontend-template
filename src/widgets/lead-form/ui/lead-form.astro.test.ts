@@ -14,7 +14,7 @@ vi.mock('@/shared/strategy', async (importOriginal) =>
 
 const RU = testLocale('ru')
 const EN = testLocale('en')
-const page = { action: '/api/contact', policyHref: '/legal/privacy' }
+const page = { action: '/api/contact', policy: { href: '/legal/privacy' } }
 
 const render = async (locale = RU, extra: Record<string, unknown> = {}) => {
   const container = await AstroContainer.create()

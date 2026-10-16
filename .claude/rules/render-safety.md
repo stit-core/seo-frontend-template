@@ -36,9 +36,10 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 
 ## Запрос (on-demand)
 
-- `export const prerender = false` — только для служебных маршрутов (`404`, `healthz`, `now`,
-  `robots.txt`, `[key].txt`, `api/*`) и только со строкой в карте маршрутов
-  `docs/reference/rendering.md` (файл маршрута без неё валит `check:content`) и явным решением о
+- `export const prerender = false` — только для служебных маршрутов (`404`, `healthz`,
+  `robots.txt`, `[key].txt`, `api/*`; живая страница — рецепт `docs/reference/rendering.md`) и
+  только со строкой в карте маршрутов `docs/reference/rendering.md` (файл маршрута без неё валит
+  `check:content`) и явным решением о
   `Cache-Control`: публичный HTML —
   `no-cache` (умолчание `app/middleware`, 404/410 включительно), живой или персональный —
   `private, no-store` в самом роуте (`Astro.response.headers`), middleware его не перебивает

@@ -1,8 +1,8 @@
 import type { Locale } from './locale'
 
-// Строки каркаса и обвязки контента (подписи навигации, страницы 410 и 500, блог, форма) — словарь на каждую локаль
-// дескриптора; тексты меню, подвала и секций по плану — copy deck strategy, прочие тексты страниц — в самих страницах и
-// в markdown-коллекциях.
+// Подписи интерфейса — каркас (переход к содержимому, лендмарки, тема и движение), страницы 410 и 500 без плана, блог,
+// форма и термин пары «часы работы» — словарь на каждую локаль дескриптора. Тексты страниц — copy deck strategy (меню,
+// подвал, секции плана), записи — markdown-коллекции.
 const ru = {
   'nav.label': 'Основная навигация',
   'nav.skip': 'К содержимому',
@@ -39,17 +39,11 @@ const ru = {
   'post.updated': 'обновлено',
   'post.draft': 'Черновик',
   'author.by': 'Автор —',
-  'company.email': 'Почта',
-  'company.phone': 'Телефон',
-  'company.address': 'Адрес',
   'company.hours': 'Часы работы',
-  'company.details': 'Реквизиты',
   'form.name': 'Как вас зовут',
   'form.email': 'Почта для ответа',
   'form.message': 'Что нужно сделать',
-  'form.consent': 'Согласен на обработку персональных данных',
   'form.consentPolicy': 'Политика обработки персональных данных',
-  'form.submit': 'Отправить заявку',
   'form.honeypot': 'Не заполняйте это поле',
   'form.summary': 'Заявка не отправлена',
   'form.failed': 'Ошибка: {title}',
@@ -97,17 +91,11 @@ const en = {
   'post.updated': 'updated',
   'post.draft': 'Draft',
   'author.by': 'By',
-  'company.email': 'Email',
-  'company.phone': 'Phone',
-  'company.address': 'Address',
   'company.hours': 'Office hours',
-  'company.details': 'Legal details',
   'form.name': 'Your name',
   'form.email': 'Email for the reply',
   'form.message': 'What you need',
-  'form.consent': 'I agree to the processing of my personal data',
   'form.consentPolicy': 'Personal data policy',
-  'form.submit': 'Send the request',
   'form.honeypot': 'Leave this field empty',
   'form.summary': 'The request was not sent',
   'form.failed': 'Error: {title}',

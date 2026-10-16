@@ -8,18 +8,14 @@ Reference-набор шаблона — **живой образец**, а не �
 
 ## Что остаётся в любом режиме
 
-`src/pages/{index,about,contacts/*,legal/privacy,404,500,now,healthz,robots.txt,[key].txt,api/contact}`,
-файлы страниц `_about/`, `_contacts/`, `src/features/{contact-form,preferences}`,
-`src/entities/company`, `src/widgets/{header,footer,breadcrumbs}`,
+`src/pages/{index,about,contacts/*,legal/privacy,404,500,healthz,robots.txt,[key].txt,api/contact}`,
+файлы страниц `_about/`, `_contacts/`, `_privacy/`, `src/features/{contact-form,preferences}`,
+`src/widgets/{header,footer,breadcrumbs}` и блоки страниц, данные `strategy/`,
 `src/shared/**`, `src/app/**`, `.gate-fixtures/`, `docker/`, `scripts/`, гейты. Фикстуры гейта на
 гейт не правятся ни в каком режиме: у мини-проектов `.gate-fixtures/` свой реестр коллекций, и
 прунинг или переименование коллекций сайта их не касаются.
 
-Форма и политика ПДн — не «демо»: это минимум сайта, который принимает заявки. Страница
-`/now` — образец режима `dynamic`; если проекту она не нужна, удаляется вместе со строкой в
-карте маршрутов `docs/reference/rendering.md`, импортом и кейсом в
-`src/pages/_tests/pages.astro.test.ts` и упоминаниями `/now` в спеках `e2e/` (ссылок на неё у
-каркаса нет: подвал — секция плана).
+Форма и политика ПДн — не «демо»: это минимум сайта, который принимает заявки.
 
 Цели e2e выводятся из сборки и контента (`e2e/site.ts`): смена или удаление записей, тегов и
 редиректов правок в `e2e/` не требует.
@@ -66,7 +62,7 @@ src/shared/seo/rss.ts  src/shared/seo/rss.test.ts
 | `scripts/lib/content.mjs` | `collections = []`, убрать импорты из удалённых слайсов |
 | `scripts/check-content.mjs` | импорт `SLUG_RE` вёл в слайс — заменить локальной константой `const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/` |
 | `strategy/site/<поверхность>/site-map.yaml` | убрать страницы `blog`, `post`, `tag`, коллекции `posts` и `tags` и ссылки на них (`chrome`, `linking`, `build_order`): без страницы блога в карте `<head>` не печатает автообнаружение фида |
-| `src/pages/_home/home-page.astro` | убрать `listPosts`/`PostList` и блок «свежие заметки»; CTA — на свою страницу |
+| `src/pages/_home/home-page.astro` | убрать запрос записей (`listPosts`) и блок свежих записей (`ArticleCards`); второй путь первого экрана — на свою страницу (цель в плане главной) |
 | `strategy/site/<поверхность>/plans/*.yaml`, `copy/*.yaml` | пункт блога в шапке — строка `chrome.header.items` карты и подпись `nav-link` секции `header` плана и copy deck каждой страницы (число подписей = числу пунктов карты, иначе сборка падает); раздел блога в подвале — экземпляр группы `nav` секции `footer`, путь в блог на 404 — экземпляр группы `route` секции `not-found`; секция свежих записей главной (`article-cards`) — из её плана и copy deck (у секции плана без блока шаблона тест контракта красный) |
 | `src/shared/seo/seo-head.astro`, `src/app/layouts/document.astro` | убрать проп `feed` и автообнаружение фида: его подпись — строка `blog.feed` словаря, она уходит с ключами `blog.*` |
 | `src/shared/seo/index.ts` | убрать реэкспорт `buildFeed` |
@@ -94,13 +90,13 @@ src/shared/seo/rss.ts  src/shared/seo/rss.test.ts
 
 ```bash
 grep -rn 'ssr-frontend-template' --include='*.ts' --include='*.astro' --include='*.md' src docs README.md CLAUDE.md
-grep -rn 'example.com\|Пример\|+7 495 000' src/
+grep -rn 'example.com\|Пример\|+7 495 000' src/ strategy/
 grep -n 'example: true' strategy/facts*.yaml
 ```
 
 Литералы, которые не находит переименование пакета: имя сайта в
-`src/shared/seo/seo-head.astro.test.ts`, город в
-`src/entities/company/ui/company-contacts.astro.test.ts`, тексты reference-страниц.
+`src/shared/seo/seo-head.astro.test.ts`; тексты и реквизиты reference-страниц — данные `strategy/`
+(copy deck и факты).
 
 ## После прунинга
 

@@ -68,6 +68,23 @@ describe('снимок сайта strategy/', () => {
     }
   })
 
+  // Страница модуля — из его файлов, а не из снимка: модуль без copy deck не читается и на языке, где у снимка он есть.
+  it('страница модуля — его файлы: без copy deck языка в модуле — ошибка с ключом', async () => {
+    const [plan] = snapshot().plans
+    if (plan === undefined) throw new Error('у снимка нет планов')
+    const files = (
+      (await import(/* @vite-ignore */ `virtual:strategy/${plan.page.id}`)) as {
+        default: PageFiles
+      }
+    ).default
+    const plans = Object.fromEntries(
+      Object.entries(files).filter(([path]) => path.includes('/plans/')),
+    )
+    expect(() => pageOf(plans, DEFAULT_LOCALE)).toThrow(
+      `strategy: ${plan.page.id} — нет страницы в copy deck ${DEFAULT_LOCALE}`,
+    )
+  })
+
   it('модуль без плана или с двумя планами — ошибка', () => {
     const { plans } = snapshot()
     const plan = (id: string) => ({ ...plans[0], page: { id } })

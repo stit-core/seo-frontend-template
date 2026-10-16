@@ -10,6 +10,7 @@ import Badge from './badge.astro'
 const promo = process.env.PROMO === '1'
 const { PUBLIC_PROMO } = import.meta.env
 const size = 'text-body'
+const label = 'промо'
 const WIDTHS = { 'text-body': 'w-[37px]' }
 console.log(promo, getRuntimeConfig().RELEASE, config.SITE_NAME, import.meta.env.SECRET_KEY)
 ---
@@ -28,18 +29,18 @@ data-[theme=…]) и в <style> (prefers-color-scheme, data-theme, light-dark() 
 вариантами системы (motion-safe:, motion-reduce:), кривая литералом (ease-linear) и в <style>
 (transition, @apply, условие системы, @keyframes с animation — в четырёх блоках). -->
 <section class="promo">
-  <img src="/promo.png" alt="Промо" width="10" height="10" />
+  <img src="/promo.png" alt={label} width="10" height="10" />
   <video src="/promo.mp4" width="10" height="10" muted></video>
   <Badge client:load />
-  <p style="margin-top: 1rem">Акция</p>
-  <p class:list={['mt-md', 'text-[#e11d48]']}>Скидка</p>
+  <p style="margin-top: 1rem">{label}</p>
+  <p class:list={['mt-md', 'text-[#e11d48]']}>{label}</p>
   <p class={`text-[#e11d48] ${size}`}>{PUBLIC_PROMO}</p>
   <svg viewBox="0 0 1 1" aria-hidden="true"><path fill="#e11d48" d="M0 0h1v1H0z" /></svg>
-  <p class:list={['px-6', '-mt-1.5', 'tablet:w-1/2', 'h-px']}>Числа</p>
-  <p class="grid-cols-[8rem_1fr] text-[22px]">Скобки</p>
-  <p class="leading-none rounded-t-full">Ключевые слова</p>
-  <p class="bg-(--primitive-color-accent-700)">Примитив</p>
-  <p class={`text-[var(--color-text-primary)] ${size}`}>Роль мимо слоя</p>
+  <p class:list={['px-6', '-mt-1.5', 'tablet:w-1/2', 'h-px']}>{label}</p>
+  <p class="grid-cols-[8rem_1fr] text-[22px]">{label}</p>
+  <p class="leading-none rounded-t-full">{label}</p>
+  <p class="bg-(--primitive-color-accent-700)">{label}</p>
+  <p class={`text-[var(--color-text-primary)] ${size}`}>{label}</p>
   <svg viewBox="0 0 1 1" aria-hidden="true">
     <path fill="var(--primitive-color-red-700)" d="M0 0h1v1H0z" />
   </svg>
@@ -50,21 +51,21 @@ data-[theme=…]) и в <style> (prefers-color-scheme, data-theme, light-dark() 
       <animateTransform attributeName="transform" type="rotate" dur="2s" repeatCount="indefinite" />
     </circle>
   </svg>
-  <p class="outline inset-ring backdrop-grayscale">Обводка, кольцо, фильтр</p>
-  <p class:list={[{ ring: promo }]}>Ключевое слово ключом объекта</p>
-  <p class={size}>Класс из переменной</p>
-  <p class:list={['mt-md', WIDTHS[size], { [size]: promo }]}>Класс по ключу карты</p>
-  <p class="scheme-dark">Своя тема</p>
-  <p class="max-w-measure tablet:max-w-container">Ширина контейнера</p>
-  <p class:list={['mt-md', { container: promo }]}>Контейнер Tailwind</p>
-  {promo && <input type="search" name="q" aria-label="Поиск" autofocus />}
-  <p class="dark:hidden">Тема вариантом класса</p>
-  <p class="in-data-[theme=dark]:hidden">Тема условием по атрибуту</p>
-  <p class="transition-transform duration-page">Движение без условия</p>
-  <p class:list={[{ transition: promo }]}>Движение ключом объекта</p>
-  <p class="motion-safe:animate-none hover:motion-safe:transition-all">Движение по одной системе</p>
-  <p class="motion-reduce:hidden">Статика по одной системе</p>
-  <p class="transition-colors ease-linear">Кривая литералом</p>
+  <p class="outline inset-ring backdrop-grayscale">{label}</p>
+  <p class:list={[{ ring: promo }]}>{label}</p>
+  <p class={size}>{label}</p>
+  <p class:list={['mt-md', WIDTHS[size], { [size]: promo }]}>{label}</p>
+  <p class="scheme-dark">{label}</p>
+  <p class="max-w-measure tablet:max-w-container">{label}</p>
+  <p class:list={['mt-md', { container: promo }]}>{label}</p>
+  {promo && <input type="search" name="q" aria-label={label} autofocus />}
+  <p class="dark:hidden">{label}</p>
+  <p class="in-data-[theme=dark]:hidden">{label}</p>
+  <p class="transition-transform duration-page">{label}</p>
+  <p class:list={[{ transition: promo }]}>{label}</p>
+  <p class="motion-safe:animate-none hover:motion-safe:transition-all">{label}</p>
+  <p class="motion-reduce:hidden">{label}</p>
+  <p class="transition-colors ease-linear">{label}</p>
 </section>
 
 <style>

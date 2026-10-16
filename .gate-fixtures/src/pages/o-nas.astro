@@ -1,0 +1,18 @@
+---
+// Нарушения: текст страницы литералом в разметке — узел текста, строка и шаблонная строка выражения, строка условия и
+// тернарника, подписи aria-label, alt и title литералом и шаблонной строкой. Законно: текст пропом и выражением, числа и
+// знаки без букв, класс, id и адрес литералом.
+const { label, title, wide } = Astro.props as { label: string; title: string; wide: boolean }
+---
+
+<section aria-label="О нас">
+  <h1 title="Заголовок">О компании</h1>
+  <p>{'Текст выражением'}</p>
+  <p>{`Шаблон ${title}`}</p>
+  <p>{wide && 'Строка условия'}</p>
+  <p>{wide ? 'Да' : label}</p>
+  <map name="karta"><area alt="Карта" href="/" shape="default" /></map>
+  <p title={`Подпись ${title}`}>{label}</p>
+  <p class="text-body" id="lead">{title} — 404 · 2026</p>
+  <a class="touch-target" href="/o-nas" aria-label={label}>{title}</a>
+</section>

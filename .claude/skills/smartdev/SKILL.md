@@ -26,8 +26,8 @@ description: Cockpit сессии — сводка состояния (ветк�
    grep -l 'example: true' strategy/facts*.yaml | wc -l   # >0 ⇒ реквизиты оператора — демо-факты
    ls docs/stack/*.md | grep -vc README.md          # 0 ⇒ стек не проектировался
    ```
-   плюс демо-идентичность: `SITE_NAME` в `src/shared/config/site.ts`, `COMPANY` в
-   `src/entities/company/model/company.ts`, демо-записи в `content/redirects.yaml`
+   плюс демо-идентичность: `SITE_NAME` в `src/shared/config/site.ts`, демо-факты оператора в
+   `strategy/facts*.yaml`, демо-записи в `content/redirects.yaml`
 4. **Стек**: какие `docs/stack/<kind>.md` есть и какие ещё `draft`
    (`grep -l '^status: draft' docs/stack/*.md | grep -v README.md`); FSD-карта поверхности в
    `../strategy` (`docs/projects/<slug>/fsd/<surface>/`) заведена или нет

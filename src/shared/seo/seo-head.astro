@@ -13,7 +13,7 @@ interface Props {
   translations?: Translations | undefined
   // Фид блога языка страницы для автообнаружения; у языка без блога его нет.
   feed?: string | undefined
-  // Служебная или тонкая страница (404, /now, тег ниже порога): только noindex — без canonical,
+  // Служебная или тонкая страница (404, ответ формы, тег ниже порога): только noindex — без canonical,
   // OG и hreflang.
   noindex?: boolean | undefined
   ogType?: 'website' | 'article' | undefined

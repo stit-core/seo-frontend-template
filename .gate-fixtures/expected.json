@@ -8,6 +8,7 @@
     { "file": "src/app/layouts/shell.astro", "rule": "boundaries/dependencies" },
     { "file": "src/app/layouts/shell.astro", "rule": "no-restricted-imports" },
     { "file": "src/pages/index.astro", "rule": "no-restricted-imports", "count": 3 },
+    { "file": "src/pages/o-nas.astro", "rule": "no-restricted-syntax", "count": 9 },
     { "file": "src/entities/post/index.ts", "rule": "no-restricted-imports" },
     { "file": "src/features/search/index.ts", "rule": "no-restricted-syntax", "count": 2 },
     { "file": "src/features/search/model/title.ts", "rule": "no-restricted-syntax", "count": 2 },

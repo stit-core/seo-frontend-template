@@ -18,7 +18,7 @@
   выпускаются. Стадии сборки — `deployment.md § Образ`.
 - **Static-first.** Страницы, `sitemap.xml` и фиды — файлы сборки в `/app/dist/client`: их отдаёт
   статик-хендлер адаптера, не доходя до кода приложения. Рендер на запрос — только у служебных
-  маршрутов: 404, `/healthz`, `/now`, `/robots.txt`, `/<INDEXNOW_KEY>.txt`, `POST /api/contact`
+  маршрутов: 404, `/healthz`, `/robots.txt`, `/<INDEXNOW_KEY>.txt`, `POST /api/contact`
   (`rendering.md § Карта маршрутов`). `/_image` не обслуживается — 404: картинки готовит сборка.
 - **Один образ на все среды.** Сборка печёт в абсолютные URL плейсхолдер `https://__site_origin__`,
   entrypoint на старте штампует в них `SITE_URL`, сохраняя mtime файлов. Env вне формата (строка лога

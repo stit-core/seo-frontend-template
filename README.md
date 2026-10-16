@@ -102,7 +102,7 @@ src/app/          layouts/document.astro (<head> из props: SeoHead + JSON-LD),
 src/pages/        роутинг Astro = слой pages: страница — один файл на все локали в [...locale]/
                   (index, about, contacts/{index,spasibo}, legal/privacy,
                   blog/{index,[slug],page/[page],tag/[tag]}, rss.xml — prerender), 500;
-                  404, healthz, now, robots.txt, [key].txt, api/contact (on-demand); файлы
+                  404, healthz, robots.txt, [key].txt, api/contact (on-demand); файлы
                   страниц — _home/, _about/, _contacts/, _privacy/, _blog/; тесты маршрутов и
                   страниц — _tests/
 src/widgets/      блоки каталога strategy (пропсы — элементы анатомии, вариант — каталога): hero-text,
@@ -111,9 +111,8 @@ src/widgets/      блоки каталога strategy (пропсы — эле�
                   секциям плана страницы)
 src/features/     contact-form (форма без JS и её обработчик), preferences (остров предпочтений:
                   тема и движение)
-src/entities/     post: content/{ru,en}/*.md + covers/, model, api, lib, ui; company: реквизиты
-                  оператора для «О компании» и LocalBusiness; author: реестр авторов (в шаблоне
-                  пуст) и подпись под заголовком записи
+src/entities/     post: content/{ru,en}/*.md + covers/, model, api, lib, ui; author: реестр авторов
+                  (в шаблоне пуст) и подпись под заголовком записи
 src/shared/       config (runtime env, Zod; идентичность сайта), i18n, lib (+ testing), redirects,
                   seo (absoluteUrl, hreflang, SeoHead, JSON-LD, robots/sitemap/rss), strategy (чтение
                   снимка: страница — модулем по id, секции плана, тексты по ключу, факты, мета; контракт
@@ -141,9 +140,9 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 ## Режимы рендера
 
 Всё prerender по умолчанию; on-demand (`export const prerender = false`) — только служебное:
-`404`, `/healthz`, `/now` (время сервера, `noindex`, `private, no-store`), `robots.txt`,
-файл ключа IndexNow и обработчик формы `/api/contact`; фиды и карта сайта — файлы сборки. Кеш-заголовки,
-карта маршрутов и рецепт кеша процесса для контента из CMS —
+`404`, `/healthz`, `robots.txt`, файл ключа IndexNow и обработчик формы `/api/contact`; фиды и карта
+сайта — файлы сборки. Кеш-заголовки, карта маршрутов, рецепт живой страницы на запрос и рецепт кеша
+процесса для контента из CMS —
 [`docs/reference/rendering.md`](docs/reference/rendering.md).
 
 ## Форма обратной связи

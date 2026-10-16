@@ -21,7 +21,7 @@ app → pages → widgets → features → entities → shared
 | `pages/` | роутинг: 1 файл = 1 URL; файлы страницы (разметка и модель) — рядом, в `_<name>/` |
 | `widgets/` | только блоки каталога strategy (`widgets/<block-id>`): секции страницы по плану — первый экран, сетка карточек, текстовый раздел, контакты, форма заявки, «спасибо», 404 с путями на разделы, юридический текст, карточки статей — и каркас, который ставит оболочка по секциям плана страницы, — шапка, подвал, крошки |
 | `features/` | пользовательские сценарии: форма обратной связи, предпочтения посетителя (тема и движение) |
-| `entities/` | доменные сущности: коллекция контента `post` (с текстами внутри слайса), реквизиты `company`, реестр авторов `author` |
+| `entities/` | доменные сущности: коллекция контента `post` (с текстами внутри слайса), реестр авторов `author` |
 | `shared/` | инфраструктура: config, i18n, seo, redirects, observability, antispam, lib и примитивы страницы `ui` — секция, заголовок, сетка «термин — описание», медиа (готовая картинка и ролик-петля), действие плана и карточка набора |
 
 ### Единственный импорт вверх
@@ -86,13 +86,13 @@ Frontmatter и модули `.ts` исполняются на сервере (с
 src/
 ├─ app/           layouts/document.astro · middleware/ · styles/{tokens,index}.css · analytics/
 ├─ pages/         [...locale]/{index,about,contacts/{index,spasibo},legal/privacy,blog/**,rss.xml}
-│                 · 404 · 500 · now · healthz · robots.txt · [key].txt · api/contact
+│                 · 404 · 500 · healthz · robots.txt · [key].txt · api/contact
 │                 · файлы страниц _home/ _about/ _contacts/ _privacy/ _blog/
 │                 · тесты маршрутов _tests/
 ├─ widgets/       блоки каталога: hero-text · feature-grid · prose · contact-details · lead-form
 │                 · thank-you · not-found · legal-text · article-cards · header · footer · breadcrumbs
 ├─ features/      contact-form · preferences
-├─ entities/      post (content/{ru,en}/*.md + covers, model, api, lib, ui) · company · author
+├─ entities/      post (content/{ru,en}/*.md + covers, model, api, lib, ui) · author
 └─ shared/        config · i18n · seo · redirects · strategy · observability · antispam · lib
                   · ui/{section,heading,term-list,media,action,card}
 ```

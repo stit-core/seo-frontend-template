@@ -1,16 +1,16 @@
 ---
 import { type ContactErrors, ContactForm, type ContactValues } from '@/features/contact-form'
 import type { DictKey, Locale } from '@/shared/i18n'
-import type { BlockProps } from '@/shared/strategy'
+import type { BlockProps, Link } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 import type { leadForm } from '../model/block'
 
 type Props = BlockProps<typeof leadForm> & {
   locale: Locale
-  // Маршрут обработчика и адрес политики знает страница.
+  // Маршрут обработчика и политику ПДн (версия по карте) знает страница.
   action: string
-  policyHref: string
+  policy: Link
   // Значения и ошибки приходят с ответа обработчика формы; на самой странице их нет.
   values?: ContactValues | undefined
   errors?: ContactErrors | undefined
@@ -26,7 +26,7 @@ const {
   'next-steps': nextSteps,
   locale,
   action,
-  policyHref,
+  policy,
   values,
   errors,
   notice,
@@ -42,7 +42,7 @@ const {
     <ContactForm
       locale={locale}
       action={action}
-      policyHref={policyHref}
+      policy={policy}
       submitLabel={submitLabel}
       consentLabel={consent}
       values={values}

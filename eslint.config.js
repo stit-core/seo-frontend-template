@@ -233,6 +233,29 @@ const rawMedia = [
       'UI: сырой <video> — только в примитиве @/shared/ui/media: LoopVideo (постер, preload="none", источники под условием движения)',
   },
 ]
+// Текст страницы — данные: страница и блок печатают пропсы (copy deck по ключу page/section/slot, факты), подписи
+// интерфейса — строки словаря t(). Литерал с буквами в разметке — узел текста, строка выражения и подпись (aria-label,
+// alt, title) — мимо данных; числа и знаки без букв законны.
+const LETTER = String.raw`/\p{L}/u`
+const LABEL = `JSXAttribute[name.name=/^(?:aria-label|alt|title)$/]`
+const CONTENT = ':matches(JSXElement, JSXFragment) > JSXExpressionContainer'
+const markupText = [
+  {
+    selector: [
+      `JSXText[value=${LETTER}]`,
+      `${CONTENT} > Literal[value=${LETTER}]`,
+      `${CONTENT} > :matches(LogicalExpression, ConditionalExpression) > Literal[value=${LETTER}]`,
+      `${CONTENT} > TemplateLiteral > TemplateElement[value.raw=${LETTER}]`,
+    ].join(', '),
+    message:
+      'Текст: литерал в разметке страницы и блока — текст секции из copy deck (план strategy, ключ page/section/slot) или подпись интерфейса t()',
+  },
+  {
+    selector: `${LABEL} > Literal[value=${LETTER}], ${LABEL} > JSXExpressionContainer > Literal[value=${LETTER}], ${LABEL} > JSXExpressionContainer > TemplateLiteral > TemplateElement[value.raw=${LETTER}]`,
+    message:
+      'Текст: подпись aria-label, alt или title литералом — текст секции из copy deck или подпись интерфейса t()',
+  },
+]
 // Канон разметки .astro (rules shared-ui, render-safety).
 const astroSyntax = [
   {
@@ -381,6 +404,22 @@ export default defineConfig(
         containerWidth,
         importMetaEnv,
         dictConcat,
+      ],
+    },
+  },
+  {
+    // Страница и блок каталога печатают тексты данных: литерал текста в их разметке — ошибка.
+    files: ['src/pages/**/*.astro', 'src/widgets/**/*.astro'],
+    ignores: ['src/pages/_tests/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        ...rawMedia,
+        ...astroSyntax,
+        containerWidth,
+        importMetaEnv,
+        dictConcat,
+        ...markupText,
       ],
     },
   },

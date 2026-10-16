@@ -7,7 +7,7 @@ import ContactForm from './contact-form.astro'
 const props = {
   locale: DEFAULT_LOCALE,
   action: '/api/contact',
-  policyHref: '/legal/privacy',
+  policy: { href: '/legal/privacy' },
   submitLabel: 'Получить ответ',
   consentLabel: 'Согласен на обработку персональных данных для ответа',
 }
@@ -32,6 +32,19 @@ function summaryOf(html: string) {
 }
 
 describe('ContactForm', () => {
+  // Политика ПДн без версии на языке формы — версия другого языка: ссылка называет его.
+  it('согласие ссылается на политику, которую дала страница, с её языком', async () => {
+    const link = parseHtml(
+      await render({ policy: { href: '/legal/privacy', hreflang: 'ru' } }),
+    ).querySelector('label[for="contact-consent"] a')
+    expect([link?.getAttribute('href'), link?.getAttribute('hreflang')]).toEqual([
+      '/legal/privacy',
+      'ru',
+    ])
+    const own = parseHtml(await render()).querySelector('label[for="contact-consent"] a')
+    expect(own?.hasAttribute('hreflang')).toBe(false)
+  })
+
   it('нативная форма: POST, подписанные поля, ловушка и согласие со ссылкой на политику', async () => {
     const html = await render()
     const form = parseHtml(html).querySelector('form')

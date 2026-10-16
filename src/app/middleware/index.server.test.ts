@@ -101,7 +101,7 @@ describe('app/middleware', () => {
   })
 
   it('без входящего X-Request-Id генерирует UUID', async () => {
-    const response = await run('/now', page)
+    const response = await run('/stranica', page)
     expect(response.headers.get('x-request-id')).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[0-9a-f]{4}-[0-9a-f]{12}$/,
     )
@@ -110,9 +110,9 @@ describe('app/middleware', () => {
   it('Cache-Control роута важнее умолчания middleware', async () => {
     const live: MiddlewareNext = () =>
       Promise.resolve(
-        html('<h1>Сейчас</h1>', { headers: { 'cache-control': 'private, no-store' } }),
+        html('<h1>Ответ формы</h1>', { headers: { 'cache-control': 'private, no-store' } }),
       )
-    expect((await run('/now', live)).headers.get('cache-control')).toBe('private, no-store')
+    expect((await run('/api/contact', live)).headers.get('cache-control')).toBe('private, no-store')
   })
 
   it('не-HTML ответ без Cache-Control не трогает', async () => {
@@ -145,9 +145,9 @@ describe('app/middleware', () => {
 
     // В образе неканоническую форму раньше отдаёт обёртка процесса; запросу, который дошёл до
     // middleware, оно отвечает тем же.
-    const slashed = await run('/now/?x=1', next)
+    const slashed = await run('/stranica/?x=1', next)
     expect(slashed.status).toBe(301)
-    expect(slashed.headers.get('location')).toBe('/now?x=1')
+    expect(slashed.headers.get('location')).toBe('/stranica?x=1')
     expect(next).not.toHaveBeenCalled()
   })
 
@@ -182,9 +182,11 @@ describe('app/middleware', () => {
   it('ошибка рендера: лог 500 с тем же rid, ошибка пробрасывается дальше', async () => {
     const boom = new Error('render failed')
     const next: MiddlewareNext = () => Promise.reject(boom)
-    await expect(run('/now', next, { headers: { 'x-request-id': 'rid-500' } })).rejects.toBe(boom)
+    await expect(run('/stranica', next, { headers: { 'x-request-id': 'rid-500' } })).rejects.toBe(
+      boom,
+    )
     expect(logged(console.error)).toEqual([
-      expect.objectContaining({ lvl: 'error', path: '/now', status: 500, rid: 'rid-500' }),
+      expect.objectContaining({ lvl: 'error', path: '/stranica', status: 500, rid: 'rid-500' }),
     ])
   })
 
@@ -202,7 +204,7 @@ describe('app/middleware', () => {
 
   it('строка лога не содержит query и cookie', async () => {
     // Значения вне алфавита hex: в строке лога есть случайный UUID запроса.
-    await run('/now?token=secret', page, { headers: { cookie: 'session=private-cookie' } })
+    await run('/stranica?token=secret', page, { headers: { cookie: 'session=private-cookie' } })
     const [entry] = logged(console.info)
     expect(Object.keys(entry ?? {})).toEqual([
       'ts',
@@ -213,7 +215,7 @@ describe('app/middleware', () => {
       'dur_ms',
       'rid',
     ])
-    expect(entry).toMatchObject({ lvl: 'info', method: 'GET', path: '/now', status: 200 })
+    expect(entry).toMatchObject({ lvl: 'info', method: 'GET', path: '/stranica', status: 200 })
     expect(typeof entry?.ts).toBe('string')
     expect(typeof entry?.dur_ms).toBe('number')
     expect(JSON.stringify(entry)).not.toContain('secret')

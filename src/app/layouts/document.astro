@@ -24,7 +24,7 @@ interface Props {
   // Карта переводов страницы: локаль → адрес версии (своя — тоже). Из неё — hreflang и переводы в переключателе
   // языка.
   translations?: Translations | undefined
-  // Служебная страница (404, /now, подтверждение заявки) и тонкая (тег ниже порога записей):
+  // Служебная страница (404, подтверждение заявки, ответ формы) и тонкая (тег ниже порога записей):
   // noindex, без canonical, OG и hreflang.
   noindex?: boolean | undefined
   ogType?: 'website' | 'article'

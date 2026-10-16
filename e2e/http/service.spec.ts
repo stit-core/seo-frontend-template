@@ -33,8 +33,6 @@ import {
 const PLACEHOLDER = new URL(SITE_ORIGIN_PLACEHOLDER).hostname
 const UNKNOWN = '/net-takogo-adresa'
 
-const serverTime = (html: string) => /<time datetime="([^"]+)"/.exec(html)?.[1]
-
 // Служебная страница: только noindex, без canonical, OG, hreflang и разметки.
 function expectServicePage(html: string, path: string) {
   const tags = headTags(html)
@@ -171,23 +169,6 @@ test.describe('on-demand: ответы приложения', () => {
     expect(await response.text()).toBe('ok')
     expect(response.headers()['cache-control']).toBe('no-store')
     expect(response.headers()['x-request-id']).toBe('e2e-rid')
-  })
-
-  test('/now — рендер на каждый запрос: private, no-store, noindex, время меняется', async ({
-    request,
-  }) => {
-    const first = await request.get('/now', { headers: { 'x-request-id': 'e2e-now' } })
-    expect(first.status()).toBe(200)
-    expect(first.headers()['cache-control']).toBe('private, no-store')
-    expect(first.headers()['x-request-id']).toBe('e2e-now')
-    expect(first.headers()['x-robots-tag']).toBeUndefined()
-    const html = await first.text()
-    expect(html).toContain(`<html lang="${DEFAULT_LOCALE}"`)
-    expectServicePage(html, '/now')
-    expect(serverTime(html)).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
-    // Разрешение метки — миллисекунда: пауза гарантирует разное время у двух рендеров.
-    await new Promise((done) => setTimeout(done, 10))
-    expect(serverTime(await (await request.get('/now')).text())).not.toBe(serverTime(html))
   })
 })
 

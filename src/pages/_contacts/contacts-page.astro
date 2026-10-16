@@ -1,12 +1,12 @@
 ---
-import home from 'virtual:strategy/home'
+import contacts from 'virtual:strategy/contacts'
 import DocumentLayout from '@/app/layouts/document.astro'
-import { COMPANY, CompanyContacts } from '@/entities/company'
-import { type ContactErrors, ContactForm, type ContactValues } from '@/features/contact-form'
+import type { ContactErrors, ContactValues } from '@/features/contact-form'
 import { type DictKey, type Locale, t } from '@/shared/i18n'
-import { pageOf, pageVersions } from '@/shared/strategy'
-import { Heading } from '@/shared/ui/heading'
-import { Section } from '@/shared/ui/section'
+import { fail, pageOf, pageVersions } from '@/shared/strategy'
+import { ContactDetails, contactDetails } from '@/widgets/contact-details'
+import { HeroText, heroText } from '@/widgets/hero-text'
+import { LeadForm, leadForm } from '@/widgets/lead-form'
 
 interface Props {
   locale: Locale
@@ -19,76 +19,33 @@ interface Props {
 }
 
 const { locale, values, errors, notice, noindex } = Astro.props
-
-const COPY = {
-  ru: {
-    title: 'Контакты',
-    description:
-      'Форма обратной связи, которая работает без JavaScript: браузер отправляет POST, сервер проверяет заявку и отвечает редиректом. Почта, телефон и адрес — рядом.',
-    lead: 'Напишите — ответим на почту. Форма отправляется обычным POST-запросом: без JavaScript, без внешних сервисов и без потерянных заявок.',
-    form: 'Заявка',
-    other: 'Другие способы связи',
-    note: 'Имя, почту и текст заявки оператор использует только для ответа. Условия обработки — в политике; согласие на неё подтверждается галочкой в форме.',
-  },
-  en: {
-    title: 'Contacts',
-    description:
-      'A contact form that works without JavaScript: the browser sends a POST, the server validates the request and answers with a redirect. Email, phone and address are below.',
-    lead: 'Write to us and we answer by email. The form is a plain POST request: no JavaScript, no third-party services, no lost requests.',
-    form: 'Request',
-    other: 'Other ways to reach us',
-    note: 'The name, email and text of the request are used only to answer it. The terms are in the personal data policy; the checkbox in the form confirms consent to them.',
-  },
-} satisfies Record<Locale, Record<string, string>>
-
-const copy = COPY[locale]
-// Сниппет контактов — где компания: город и адрес из реквизитов, h1 и крошка — короткие.
-const address = COMPANY.address[locale]
-const place = `${copy.title} — ${address.locality}, ${address.street}`
+const page = pageOf(contacts, locale)
 // Ответ с ошибками называет отказ первым словом заголовка окна: вкладка и чтец экрана сообщают о
 // нём раньше текста страницы.
 const failed = errors !== undefined || notice !== undefined
-const title = failed ? t(locale, 'form.failed', { title: place }) : place
+const title = failed ? t(locale, 'form.failed', { title: page.meta.title }) : page.meta.title
+// Согласие на обработку ПДн ссылается на политику — её версию по карте; без политики форму не собрать.
+const policy =
+  page.policy ?? fail(`${page.id}/legal/privacy_policy`, 'у страницы с формой нет политики ПДн')
 ---
 
 <DocumentLayout
   locale={locale}
-  chrome={pageOf(home, locale)}
+  chrome={page}
   title={title}
-  description={copy.description}
+  description={page.meta.description}
   translations={pageVersions('contacts')}
   noindex={noindex}
 >
-  <Section labelledby="page-title">
-    <Heading id="page-title" level={1}>
-      {copy.title}
-    </Heading>
-    <p class="mt-stack-display text-lead text-secondary">{copy.lead}</p>
-  </Section>
-
-  <Section labelledby="request">
-    <Heading id="request" level={2}>
-      {copy.form}
-    </Heading>
-    <div class="mt-lg">
-      <ContactForm
-        locale={locale}
-        action="/api/contact"
-        policyHref="/legal/privacy"
-        submitLabel={t(locale, 'form.submit')}
-        consentLabel={t(locale, 'form.consent')}
-        values={values}
-        errors={errors}
-        notice={notice}
-      />
-    </div>
-  </Section>
-
-  <Section labelledby="other">
-    <Heading id="other" level={2}>
-      {copy.other}
-    </Heading>
-    <CompanyContacts locale={locale} class="mt-lg" />
-    <p class="note mt-xl">{copy.note}</p>
-  </Section>
+  <HeroText {...heroText.props(page, 'hero')} />
+  <LeadForm
+    {...leadForm.props(page, 'lead-form')}
+    locale={locale}
+    action="/api/contact"
+    policy={policy}
+    values={values}
+    errors={errors}
+    notice={notice}
+  />
+  <ContactDetails {...contactDetails.props(page, 'contacts')} locale={locale} />
 </DocumentLayout>

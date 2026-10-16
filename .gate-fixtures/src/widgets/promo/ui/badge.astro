@@ -2,9 +2,10 @@
 interface Props {
   class?: string | undefined
   wide?: boolean
+  label?: string
 }
 
-const { class: className, wide = false } = Astro.props
+const { class: className, wide = false, label = '' } = Astro.props
 const kind = wide ? 'wide' : 'narrow'
 ---
 
@@ -25,7 +26,7 @@ transition-opacity) и снятие движения (transition-none, animate-n
   id="add"
   class="mt-2xl grid grid-cols-2 gap-x-3xs text-page-title-lg focus:z-10 -order-1 inset-0 rounded-none"
 >
-  badge
+  {label}
   <svg viewBox="0 0 1 1" aria-hidden="true">
     <defs>
       <linearGradient id="fade"><stop offset="0" stop-color="currentColor" /></linearGradient>
@@ -50,7 +51,7 @@ transition-opacity) и снятие движения (transition-none, animate-n
       <path d="M0 0h1v1H0z" />
     </svg>
   </span>
-  {wide && <span role="alert" tabindex="-1" autofocus>Отказ</span>}
+  {wide && <span role="alert" tabindex="-1" autofocus>{label}</span>}
 </span>
 
 <style>

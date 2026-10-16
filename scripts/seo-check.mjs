@@ -41,7 +41,7 @@
 // - карта сайта sitemap.xml: ровно индексируемые страницы сборки своим self-canonical, lastmod —
 //   дата последнего изменения записи из frontmatter (правка, без неё — публикация), у остальных
 //   страниц его нет.
-// On-demand ответы (robots.txt, /now, 404) и проштампованные карту и фиды проверяет HTTP-набор
+// On-demand ответы (robots.txt, 404, ответ формы) и проштампованные карту и фиды проверяет HTTP-набор
 // (`pnpm test:http`) — им нужен сервер.
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { isBuiltin } from 'node:module'

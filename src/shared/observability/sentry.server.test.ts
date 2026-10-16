@@ -8,7 +8,7 @@ const DSN = 'https://public@sentry.example/1'
 const capture = async () =>
   (await import('./sentry')).captureServerError(new Error('сломалось'), {
     rid: 'test-rid',
-    path: '/now',
+    path: '/stranica',
   })
 
 beforeEach(() => {
@@ -34,7 +34,7 @@ describe('captureServerError', () => {
     const { captureServerError } = await import('./sentry')
     const first = new Error('первое')
     const second = new Error('второе')
-    await captureServerError(first, { rid: 'rid-1', path: '/now' })
+    await captureServerError(first, { rid: 'rid-1', path: '/stranica' })
     await captureServerError(second, { rid: 'rid-2', path: '/api/contact' })
     expect(sentry.init).toHaveBeenCalledOnce()
     expect(sentry.init).toHaveBeenCalledWith({
@@ -45,7 +45,7 @@ describe('captureServerError', () => {
       defaultIntegrations: false,
     })
     expect(sentry.captureException.mock.calls).toEqual([
-      [first, { tags: { rid: 'rid-1', path: '/now' } }],
+      [first, { tags: { rid: 'rid-1', path: '/stranica' } }],
       [second, { tags: { rid: 'rid-2', path: '/api/contact' } }],
     ])
   })

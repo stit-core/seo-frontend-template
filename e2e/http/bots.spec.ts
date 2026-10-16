@@ -17,8 +17,6 @@ const UNKNOWN = '/net-takogo-adresa'
 // Заголовки, которые различаются у двух ответов на один и тот же запрос: время ответа и id запроса,
 // который приложение генерирует само. Все остальные обязаны совпасть.
 const VARIABLE_HEADERS = ['date', 'x-request-id']
-// Маршруты с живым телом: в разметке время запроса — у них сверяются статус и заголовки.
-const LIVE_BODY = ['/now']
 
 const comparable = (headers: Record<string, string>) =>
   Object.fromEntries(Object.entries(headers).filter(([name]) => !VARIABLE_HEADERS.includes(name)))
@@ -80,7 +78,7 @@ test.describe('ответ ботам реестра', () => {
         const response = await get(userAgent)
         expect(response.status(), token).toBe(browser.status())
         expect(comparable(response.headers()), token).toEqual(comparable(browser.headers()))
-        if (!LIVE_BODY.includes(path)) expect(await response.text(), token).toBe(body)
+        expect(await response.text(), token).toBe(body)
       }
     })
   }

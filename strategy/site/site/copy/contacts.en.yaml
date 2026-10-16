@@ -1,0 +1,176 @@
+# Тексты страницы контактов проекта шаблона site-template на английском — copy deck второго языка: те же
+# id секций и слотов, что у copy/contacts.yaml.
+copy_deck:
+  version: 1
+  date: '2026-10-16'
+  site: site-template
+  product_name: ssr-frontend-template
+  lang: en
+  source_lang: ru
+  source_ref: contacts.yaml
+  adaptation: {mode: adaptation}
+  facts_ref: ../../../facts.en.yaml
+  page_plan_ref: ../plans/contacts.yaml
+  jurisdiction: ru
+  legal_category: [general]
+  authors: [template maintainer]
+  pages:
+    - page_id: contacts
+      page_type: contacts-page
+      status: assumed
+      meta:
+        title: 'Studio contacts in Moscow: request form, email and phone'
+        description: >-
+          A request form that works without JavaScript: the browser sends a POST, the server checks the request and
+          answers with a redirect. Email, phone and address are below.
+        fact_ids: []
+      sections:
+        - section_id: header
+          section_role: header
+          block: header
+          slots:
+            - slot_id: nav-link-1
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Blog, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-2
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: About, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-3
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Contacts, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: hero
+          section_role: hero
+          block: hero-text
+          slots:
+            - slot_id: headline
+              slot_type: headline
+              variants:
+                - {id: a, text: Contacts, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: subheadline
+              slot_type: subheadline
+              variants:
+                - id: a
+                  text: >-
+                    Write to us and we answer by email. The form is a plain POST request: no JavaScript, no
+                    third-party services, no lost requests.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: cta-label
+              slot_type: cta-label
+              variants:
+                - {id: a, text: Send a request, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: lead-form
+          section_role: lead-form
+          block: lead-form
+          slots:
+            - slot_id: title
+              slot_type: form-title
+              variants:
+                - {id: a, text: Request, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: lead
+              slot_type: form-lead
+              variants:
+                - id: a
+                  text: >-
+                    Describe the task in a few sentences: what site you need and by when.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: cta-label
+              slot_type: cta-label
+              variants:
+                - {id: a, text: Send the request, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: consent
+              slot_type: form-consent
+              variants:
+                - {id: a, text: I agree to the processing of my personal data, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: next-steps
+              slot_type: form-next-steps
+              variants:
+                - id: a
+                  text: >-
+                    We reply to the email you left within one business day. We use the name, email and text of the
+                    request only to answer it.
+                  status: assumed
+                  source: fact
+              chosen: a
+              fact_ids: ['fact:response-time']
+            - slot_id: success
+              slot_type: form-success
+              variants:
+                - {id: a, text: Request sent, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: contacts
+          section_role: contacts
+          block: contact-details
+          slots:
+            - slot_id: title
+              slot_type: section-title
+              variants:
+                - {id: a, text: Other ways to reach us, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: info-1
+              slot_type: contact-info
+              site_slot_id: info
+              variants:
+                - {id: a, text: '1 Primernaya st., office 2, Moscow, 101000', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-address']
+            - slot_id: info-2
+              slot_type: contact-info
+              site_slot_id: info
+              variants:
+                - {id: a, text: 'Mon–Fri, 10:00–19:00 (MSK)', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-hours']
+        - section_id: footer
+          section_role: footer
+          block: footer
+          slots:
+            - slot_id: legal
+              slot_type: footer-legal
+              variants:
+                - {id: a, text: 'Primer LLC, OGRN 1000000000001, INN 7700000000', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-name', 'fact:company-ogrn', 'fact:company-inn']
+            - slot_id: privacy-label
+              slot_type: nav-label
+              variants:
+                - {id: a, text: Personal data policy, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-1-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-1
+              variants:
+                - {id: a, text: Blog, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-2-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-2
+              variants:
+                - {id: a, text: About, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-3-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-3
+              variants:
+                - {id: a, text: Contacts, status: assumed, source: ai-self}
+              chosen: a

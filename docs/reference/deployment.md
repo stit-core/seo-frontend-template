@@ -170,7 +170,7 @@ prerendered-страница печатается на сборке, а обра
   запроса хендлер не смотрит (`POST /` —
   200 со страницей; на `TRACE` обёртка отвечает 400): лишние методы режет edge. По симлинку
   внутри `dist/client` он отдаёт файл, на который тот указывает, — в `public/` симлинков нет
-- **On-demand** (`prerender = false`: `/healthz`, `/now`, `/api/contact`, `robots.txt`,
+- **On-demand** (`prerender = false`: `/healthz`, `/api/contact`, `robots.txt`,
   `/<INDEXNOW_KEY>.txt`, `404.astro` — то есть
   любой путь без статического файла, и закрытый `/_image` — 404 текстом; список держит карта
   `rendering.md`)
@@ -180,7 +180,7 @@ prerendered-страница печатается на сборке, а обра
   генерируется), JSON-лог одной строкой (`ts, lvl, method, path, status, dur_ms, rid`, без
   PII; успешный `/healthz` — только на `debug`; 404/410 — `warn`; ошибка рендера
   логируется со статусом 500 и тем же `rid`, ответ строит Astro), `Cache-Control: no-cache`
-  на HTML без явного заголовка (404/410 включительно; `now` ставит `private, no-store`
+  на HTML без явного заголовка (404/410 включительно; ответ формы ставит `private, no-store`
   сам). Режимы и карта маршрутов — `rendering.md`
 - Нормализация — обёртка, один 301 на конечный адрес: `/en/` → `/en`, `/about/index.html` →
   `/about`, `/old/` → цель правила `redirects.yaml`; `/about.html` → 404 при

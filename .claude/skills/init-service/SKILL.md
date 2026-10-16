@@ -17,7 +17,7 @@ description: Оркестратор онбординга форка ssr-frontend
 - Свежий форк — любой из признаков:
   - `package.json#name` ещё `@stit/ssr-frontend-template`
   - факты оператора в `strategy/facts.yaml` — демо шаблона (`example: true`)
-  - демо-идентичность в `src/shared/config/site.ts` и `src/entities/company/model/company.ts`
+  - демо-идентичность в `src/shared/config/site.ts` и демо-факты оператора в `strategy/facts*.yaml`
   - reference-набор на месте: `src/entities/post/content/**`, демо-строки `content/redirects.yaml`
 
 ## Когда НЕ применять
@@ -72,8 +72,8 @@ Gate перед запуском: стек `stable`; записи FSD-карты
 
 По stable-записям FSD-карты (`<strategy-path>/docs/projects/<slug>/fsd/<surface>/`):
 
-- `entities.md` → `/scaffold collection` (сущность с контентом); сущность без контента (как
-  `entities/company`) — вручную по rule `fsd-architecture`
+- `entities.md` → `/scaffold collection` (сущность с контентом); сущность без контента — вручную по
+  rule `fsd-architecture`
 - `pages.md` → `/scaffold page` (ru + en) и `/scaffold route` (служебный маршрут)
 - `features.md` → `/scaffold feature`
 - блоки секций планов `strategy/site/<поверхность>/plans/` → `/scaffold block` (блок каталога, которого ещё нет

@@ -10,6 +10,7 @@ import {
 } from '@/shared/lib/testing'
 import {
   action,
+  breadcrumbsOn,
   defineBlock,
   elementOf,
   fact,
@@ -22,6 +23,7 @@ import {
   strategyPage,
   text,
 } from '@/shared/strategy'
+import { breadcrumbs } from '@/widgets/breadcrumbs'
 import {
   type Block,
   blocks,
@@ -199,6 +201,19 @@ describe('блоки каталога: блок ↔ каталог ↔ план�
     ).toEqual([])
   })
 
+  // Блок заводится под секцию плана: widget, который не ставит ни одна страница снимка, — блок «на будущее». Крошки ставит
+  // оболочка по карте — у страниц шаблона с крошками.
+  it('каждый widget стоит на странице по данным снимка: у секции плана или крошками карты', () => {
+    const { map, plans } = snapshot()
+    const placed = new Set(plans.flatMap(({ sections }) => sections.map(({ block }) => block)))
+    if (map?.pages.some(({ id }) => breadcrumbsOn(id))) placed.add(breadcrumbs.id)
+    expect(
+      blocks
+        .filter(({ block }) => !placed.has(block.id))
+        .map(({ block }) => `widgets/${block.id}: блок не стоит ни на одной странице снимка`),
+    ).toEqual([])
+  })
+
   it('у секции плана — блок шаблона: вариант, который он умеет, слоты — элементы, которые он принимает', () => {
     const byId = new Map(blocks.map(({ block }) => [block.id, block]))
     expect(
@@ -253,8 +268,9 @@ describe('блоки каталога: блок ↔ каталог ↔ план�
         const block = blocks.find((candidate) => candidate.block.id === section.block)?.block
         const component = componentOf(section.block)
         if (entry === undefined || block === undefined || component === undefined) continue
+        // Пропсы страницы, а не секции: язык и политика ПДн (согласие формы).
         const html = await container.renderToString(component, {
-          props: { ...block.props(page, section.id), locale },
+          props: { ...block.props(page, section.id), locale, policy: page.policy },
         })
         const heading = parseHtml(html).getElementById(section.id)?.tagName.toLowerCase()
         if (heading !== entry.html.heading) {

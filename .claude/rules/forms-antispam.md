@@ -1,6 +1,6 @@
 ---
 description: Форма обратной связи без JavaScript — PRG-303, антиспам-лестница (свой origin-check вместо checkOrigin Astro, лимит тела, honeypot, валидация, шов капчи), согласие на обработку ПДн как literal(true), один канал доставки с ретраями, тело заявки не логируется.
-paths: ["src/features/contact-form/**", "src/pages/api/**", "src/pages/_contacts/**", "src/pages/_privacy/**", "src/shared/antispam/**", "src/entities/company/**", "e2e/http/forms.spec.ts", "e2e/browser/forms.spec.ts", "e2e/form-stub.mjs"]
+paths: ["src/features/contact-form/**", "src/pages/api/**", "src/pages/_contacts/**", "src/pages/_privacy/**", "src/shared/antispam/**", "e2e/http/forms.spec.ts", "e2e/browser/forms.spec.ts", "e2e/form-stub.mjs"]
 ---
 
 # Формы и антиспам

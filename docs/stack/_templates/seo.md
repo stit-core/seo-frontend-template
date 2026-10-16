@@ -37,7 +37,7 @@ status: draft
 |---|---|---|
 | `Organization` + `WebSite` | `/` | `site.ts` |
 | `Organization` | `/en` | `site.ts` |
-| `LocalBusiness` | страница «о компании» — ровно те факты, что видны в тексте | `site.ts` (имя) + `entities/company` |
+| `LocalBusiness` | страница «о компании» — ровно те факты, что видны в тексте | `site.ts` (имя) + факты strategy (`machine`) и оператор плана |
 | `BreadcrumbList` | вложенные страницы | массив крошек страницы |
 | `BlogPosting` | запись коллекции | frontmatter; автор — `Person` из реестра `entities/author` или организация |
 | _<тип>_ | _где_ | _откуда_ |

@@ -1,17 +1,16 @@
 import { join } from 'node:path'
 import type { Page, TestInfo } from '@playwright/test'
-import { t } from '../../src/shared/i18n/dict.ts'
 import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
-import { pageTemplates } from '../site'
+import { pageTemplates, pageText } from '../site'
 import { expect, test } from './csp'
 import { SITE_THEMES } from './themes'
 
 // Раскладка шаблона страницы в настоящем браузере — геометрия и факты, а не снапшоты: по странице сборки
-// на prerendered-маршрут, служебные on-demand (/now, 404 каждой локали) и ответ формы с ошибками. Проект
+// на prerendered-маршрут, служебная on-demand (404 каждой локали) и ответ формы с ошибками. Проект
 // задаёт профиль: телефон (касание) или десктоп (мышь). Кадры страниц — файлы для взгляда глазами в
 // test-results/frames/<профиль>/.
 const notFound = SUPPORTED_LOCALES.map((locale) => localePath(locale, '/net-takogo-adresa'))
-const PAGES = [...pageTemplates(), '/now', ...notFound]
+const PAGES = [...pageTemplates(), ...notFound]
 
 // Цель касания на телефоне — не меньше 44 px по обеим сторонам: умолчание программы (WCAG 2.5.5).
 const TOUCH_MIN = 44
@@ -238,7 +237,9 @@ test('ответ формы с ошибками', async ({ page }, testInfo) => 
   await page.locator('form[method="post"]').evaluate((form: HTMLFormElement) => {
     form.noValidate = true
   })
-  await page.getByRole('button', { name: t(DEFAULT_LOCALE, 'form.submit') }).click()
+  await page
+    .getByRole('button', { name: pageText('contacts', 'lead-form', 'cta-label', DEFAULT_LOCALE) })
+    .click()
   await expect(page.getByRole('alert')).toBeVisible()
   await inspect(page)
   await frames(page, testInfo, 'contacts_oshibki')

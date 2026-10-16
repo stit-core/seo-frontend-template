@@ -3,7 +3,7 @@ import type { Page } from '@playwright/test'
 import { THEME } from '../../src/shared/config/site.ts'
 import { t } from '../../src/shared/i18n/dict.ts'
 import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
-import { prerenderedPaths } from '../site'
+import { pageText, prerenderedPaths } from '../site'
 import { expect, test } from './csp'
 import { bySite, SITE_THEMES, stored } from './themes'
 
@@ -22,9 +22,9 @@ for (const theme of SITE_THEMES) {
         use(bySite(theme) ? undefined : stored(baseURL ?? '', theme)),
     })
 
-    // Каждая страница сборки и служебные on-demand: /now и 404 на языке каждой локали.
+    // Каждая страница сборки и служебная on-demand: 404 на языке каждой локали.
     const notFound = SUPPORTED_LOCALES.map((locale) => localePath(locale, '/net-takogo-adresa'))
-    for (const path of [...prerenderedPaths(), '/now', ...notFound]) {
+    for (const path of [...prerenderedPaths(), ...notFound]) {
       test(path, async ({ page }) => {
         await page.goto(path)
         expect(await violations(page)).toEqual([])
@@ -40,7 +40,11 @@ for (const theme of SITE_THEMES) {
       await page.locator('form[method="post"]').evaluate((form: HTMLFormElement) => {
         form.noValidate = true
       })
-      await page.getByRole('button', { name: t(DEFAULT_LOCALE, 'form.submit') }).click()
+      await page
+        .getByRole('button', {
+          name: pageText('contacts', 'lead-form', 'cta-label', DEFAULT_LOCALE),
+        })
+        .click()
       await expect(page).toHaveTitle(
         new RegExp(`^${t(DEFAULT_LOCALE, 'form.failed', { title: '' })}`),
       )
