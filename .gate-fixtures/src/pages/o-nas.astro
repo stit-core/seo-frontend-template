@@ -1,7 +1,10 @@
 ---
-// Нарушения: текст страницы литералом в разметке — узел текста, строка и шаблонная строка выражения, строка условия и
-// тернарника, подписи aria-label, alt и title литералом и шаблонной строкой. Законно: текст пропом и выражением, числа и
-// знаки без букв, класс, id и адрес литералом.
+// Нарушения: текст страницы литералом в разметке — узел текста, строка и шаблонная строка выражения, строка и шаблонная
+// строка условия и тернарника, подписи aria-label, alt и title литералом и шаблонной строкой, проп компонента литералом,
+// строкой и шаблонной строкой выражения, set:text и set:html литералом. Законно: текст пропом и выражением, числа и знаки
+// без букв, класс, id и адрес литералом, вид примитива пропом литералом.
+import { Promo } from '@/widgets/promo'
+
 const { label, title, wide } = Astro.props as { label: string; title: string; wide: boolean }
 ---
 
@@ -10,9 +13,16 @@ const { label, title, wide } = Astro.props as { label: string; title: string; wi
   <p>{'Текст выражением'}</p>
   <p>{`Шаблон ${title}`}</p>
   <p>{wide && 'Строка условия'}</p>
+  <p>{wide && `Шаблон в условии ${title}`}</p>
   <p>{wide ? 'Да' : label}</p>
   <map name="karta"><area alt="Карта" href="/" shape="default" /></map>
   <p title={`Подпись ${title}`}>{label}</p>
   <p class="text-body" id="lead">{title} — 404 · 2026</p>
   <a class="touch-target" href="/o-nas" aria-label={label}>{title}</a>
+  <Promo label="Подробнее" />
+  <Promo label={'Проп выражением'} />
+  <Promo label={`Проп шаблоном ${title}`} />
+  <Promo label={label} kind="primary" class="mt-md" />
+  <p set:text="Текст set:text" />
+  <Fragment set:html="<b>Разметка set:html</b>" />
 </section>

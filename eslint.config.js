@@ -234,26 +234,76 @@ const rawMedia = [
   },
 ]
 // Текст страницы — данные: страница и блок печатают пропсы (copy deck по ключу page/section/slot, факты), подписи
-// интерфейса — строки словаря t(). Литерал с буквами в разметке — узел текста, строка выражения и подпись (aria-label,
-// alt, title) — мимо данных; числа и знаки без букв законны.
+// интерфейса — строки словаря t(). Литерал с буквами в разметке — узел текста, строка выражения (и ветки && и
+// тернарника), литерал атрибута или пропа, set:text и set:html — мимо данных; числа и знаки без букв законны. Это ранний
+// сигнал: формы выражений (константа frontmatter, склейка, вызов) держит тест страниц «текст страницы — данные».
 const LETTER = String.raw`/\p{L}/u`
-const LABEL = `JSXAttribute[name.name=/^(?:aria-label|alt|title)$/]`
 const CONTENT = ':matches(JSXElement, JSXFragment) > JSXExpressionContainer'
+const BRANCH = `${CONTENT} > :matches(LogicalExpression, ConditionalExpression)`
+// Атрибуты и пропсы без текста — по коду страниц, блоков и их фикстур: класс, id и ссылки на id, адрес, тип, имя,
+// роль, язык и дата, вид и раскладка примитива, загрузка картинки, состояние ARIA, геометрия и анимация SVG. Литерал с
+// буквами в любом другом атрибуте или пропе компонента — текст (подпись, альтернатива, подсказка, проп блока).
+const NOT_TEXT = [
+  'class',
+  'id',
+  'for',
+  'href',
+  'src',
+  'action',
+  'method',
+  'rel',
+  'hreflang',
+  'lang',
+  'type',
+  'name',
+  'role',
+  'datetime',
+  'style',
+  'labelledby',
+  'kind',
+  'variant',
+  'tone',
+  'rhythm',
+  'width',
+  'ogType',
+  'loading',
+  'decoding',
+  'fetchpriority',
+  'fallbackFormat',
+  'aria-current',
+  'aria-hidden',
+  'aria-labelledby',
+  'aria-describedby',
+  'shape',
+  'd',
+  'fill',
+  'stroke',
+  'stop-color',
+  'attributeName',
+  'dur',
+  'repeatCount',
+]
+const ATTRIBUTE = `:matches(JSXAttribute[name.type='JSXIdentifier'][name.name!=/^(?:${NOT_TEXT.join('|')})$/], JSXAttribute[name.namespace.name='set'])`
 const markupText = [
   {
     selector: [
       `JSXText[value=${LETTER}]`,
       `${CONTENT} > Literal[value=${LETTER}]`,
-      `${CONTENT} > :matches(LogicalExpression, ConditionalExpression) > Literal[value=${LETTER}]`,
+      `${BRANCH} > Literal[value=${LETTER}]`,
       `${CONTENT} > TemplateLiteral > TemplateElement[value.raw=${LETTER}]`,
+      `${BRANCH} > TemplateLiteral > TemplateElement[value.raw=${LETTER}]`,
     ].join(', '),
     message:
       'Текст: литерал в разметке страницы и блока — текст секции из copy deck (план strategy, ключ page/section/slot) или подпись интерфейса t()',
   },
   {
-    selector: `${LABEL} > Literal[value=${LETTER}], ${LABEL} > JSXExpressionContainer > Literal[value=${LETTER}], ${LABEL} > JSXExpressionContainer > TemplateLiteral > TemplateElement[value.raw=${LETTER}]`,
+    selector: [
+      `${ATTRIBUTE} > Literal[value=${LETTER}]`,
+      `${ATTRIBUTE} > JSXExpressionContainer > Literal[value=${LETTER}]`,
+      `${ATTRIBUTE} > JSXExpressionContainer > TemplateLiteral > TemplateElement[value.raw=${LETTER}]`,
+    ].join(', '),
     message:
-      'Текст: подпись aria-label, alt или title литералом — текст секции из copy deck или подпись интерфейса t()',
+      'Текст: литерал в атрибуте, пропе компонента или set:text, set:html (подпись, alt, title, проп блока) — текст секции из copy deck или подпись интерфейса t(); атрибут без текста — строка NOT_TEXT eslint.config.js',
   },
 ]
 // Канон разметки .astro (rules shared-ui, render-safety).
