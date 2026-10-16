@@ -1,37 +1,27 @@
 ---
-import home from 'virtual:strategy/home'
+import thanks from 'virtual:strategy/thank-you'
 import DocumentLayout from '@/app/layouts/document.astro'
-import { CompanyContacts } from '@/entities/company'
-import { type Locale, localePath, t } from '@/shared/i18n'
+import type { Locale } from '@/shared/i18n'
 import { pageOf, pageVersions } from '@/shared/strategy'
-import { Heading } from '@/shared/ui/heading'
-import { Section } from '@/shared/ui/section'
+import { ContactDetails, contactDetails } from '@/widgets/contact-details'
+import { ThankYou, thankYou } from '@/widgets/thank-you'
 
 interface Props {
   locale: Locale
 }
 
 const { locale } = Astro.props
+const page = pageOf(thanks, locale)
 ---
 
 <DocumentLayout
   locale={locale}
-  chrome={pageOf(home, locale)}
+  chrome={page}
   translations={pageVersions('thank-you')}
-  title={t(locale, 'thanks.title')}
-  description={t(locale, 'thanks.lead')}
+  title={page.meta.title}
+  description={page.meta.description}
   noindex
 >
-  <Section labelledby="page-title">
-    <Heading id="page-title" level={1}>
-      {t(locale, 'thanks.title')}
-    </Heading>
-    <p class="mt-stack-display text-lead text-secondary">{t(locale, 'thanks.lead')}</p>
-    <p class="mt-xl">
-      <a class="button" href={localePath(locale, '/contacts')}>
-        {t(locale, 'thanks.back')}
-      </a>
-    </p>
-    <CompanyContacts locale={locale} class="mt-section-s border-t border-subtle pt-xl" />
-  </Section>
+  <ThankYou {...thankYou.props(page, 'confirmation')} />
+  <ContactDetails {...contactDetails.props(page, 'contacts')} locale={locale} />
 </DocumentLayout>

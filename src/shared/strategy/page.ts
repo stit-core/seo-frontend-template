@@ -93,6 +93,10 @@ export interface StrategyPage extends MapEntry {
   parents: MapEntry[]
   meta: Meta
   sections: Section[]
+  // Правовое плана: политика ПДн (`legal.privacy_policy`) — ссылка на её версию по карте, оператор ПДн и продавец
+  // (`legal.operator_ref`) — факт языка страницы.
+  policy: Action | undefined
+  operator: FactValue | undefined
 }
 
 // Пути — от корня снимка: `facts.yaml`, `facts.en.yaml`, `site/<поверхность>/{site-map.yaml,plans/…,copy/…}`.
@@ -242,19 +246,19 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
       : { href: link.href, hreflang: link.hreflang }
   }
 
+  // Факт по ссылке плана `fact:<id>` на языке страницы; пробел `missing:` — без значения.
+  const factOf = (ref: string, key: string, binds: readonly string[]): FactValue | undefined => {
+    if (ref.startsWith('missing:')) return undefined
+    const fact = facts.get(ref.slice('fact:'.length)) ?? fail(key, `${ref} нет в фактах ${locale}`)
+    return { id: fact.id, text: fact.verbatim[0], machine: fact.machine, binds }
+  }
+
   const sections = plan.sections.map((section): Section => {
     const copy = page.sections.find((candidate) => candidate.section_id === section.id)
     const textOf = (slot: string): string => {
       const key = `${id}/${section.id}/${slot}`
       const found = copy?.slots.find((candidate) => candidate.slot_id === slot)
       return chosenText(found ?? fail(key, `нет текста в copy deck ${locale}`), key)
-    }
-    const factOf = (slot: PlanSlot & { fact: string; binds: string[] }): FactValue | undefined => {
-      if (slot.fact.startsWith('missing:')) return undefined
-      const fact =
-        facts.get(slot.fact.slice('fact:'.length)) ??
-        fail(`${id}/${section.id}/${slot.id}`, `${slot.fact} нет в фактах ${locale}`)
-      return { id: fact.id, text: fact.verbatim[0], machine: fact.machine, binds: slot.binds }
     }
 
     const slots: Slots = {}
@@ -283,7 +287,9 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
         slot.target === undefined ? { href: undefined } : address(slot.target, key),
       )
     }
-    for (const slot of section.slots.data) place(slot, 'data', factOf(slot))
+    for (const slot of section.slots.data) {
+      place(slot, 'data', factOf(slot.fact, `${id}/${section.id}/${slot.id}`, slot.binds))
+    }
 
     const groups: Record<string, Slots[]> = {}
     for (const { group, slots: instance } of instances.values()) {
@@ -300,6 +306,7 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
   })
 
   const meta = page.meta
+  const { privacy_policy: policy, operator_ref: operator } = plan.page.legal ?? {}
   return {
     id,
     ...placeOf(project, plan, locale),
@@ -312,6 +319,11 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
       ogImageAlt: meta?.og_image_alt,
     },
     sections,
+    policy:
+      policy === undefined
+        ? undefined
+        : address({ kind: 'route', value: policy }, `${id}/legal/privacy_policy`),
+    operator: operator === undefined ? undefined : factOf(operator, `${id}/legal/operator_ref`, []),
   }
 }
 

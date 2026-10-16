@@ -21,8 +21,8 @@ import {
   cspProblems,
   edgeHeadersIn,
   entries,
-  notFoundTitle,
   onDemandRoutes,
+  pageText,
   prerenderedPaths,
   rawGet,
   redirects,
@@ -119,7 +119,9 @@ test.describe('on-demand: ответы приложения', () => {
       const title = /<h1[^>]*>([^<]+)<\/h1>/.exec(main)?.[1]
       expect(html, path).toContain(`<html lang="${locale}"`)
       expectServicePage(html, path)
-      expect(decode(title ?? '').trim(), path).toBe(notFoundTitle(locale))
+      expect(decode(title ?? '').trim(), path).toBe(
+        pageText('not-found', 'not-found', 'title', locale),
+      )
       expect(main, path).toContain(`href="${localePath(locale, '/')}"`)
       expect(main, path).not.toContain(' lang="')
     }

@@ -26,6 +26,8 @@ const page = (binds: string[]): StrategyPage => ({
       groups: {},
     },
   ],
+  policy: undefined,
+  operator: undefined,
 })
 const block = { slots: { title: text, stat: fact } }
 const section = (body: string) =>

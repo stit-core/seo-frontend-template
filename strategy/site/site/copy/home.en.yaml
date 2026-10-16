@@ -19,7 +19,7 @@ copy_deck:
       page_type: home-multipage
       status: assumed
       meta:
-        title: Indexable site template — ssr-frontend-template
+        title: Indexable site template
         description: >-
           An Astro site template that builds its pages ahead of time: JavaScript only as islands by decision, one
           Docker image for every environment.

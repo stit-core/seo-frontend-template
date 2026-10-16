@@ -332,6 +332,31 @@ describe('strategy/page', () => {
     )
   })
 
+  // Правовое плана: политика ПДн — ссылка на её версию по карте, как цель действия; оператор — факт языка страницы.
+  it('политика ПДн и оператор — из legal плана: ссылка по карте и факт языка страницы', () => {
+    const withLegal = (operator: string) =>
+      edited((files) => {
+        Object.assign(files['site/web/plans/repair.yaml'].page, {
+          legal: { privacy_policy: '/uslugi', operator_ref: operator },
+        })
+        for (const page of files['site/web/site-map.yaml'].pages) {
+          if (page.id === 'services') Object.assign(page, { lang_versions: ['ru'] })
+        }
+      })
+    expect(read(withLegal('fact:studio'), 'en')).toMatchObject({
+      policy: { href: '/uslugi', hreflang: 'ru' },
+      operator: { id: 'studio', text: 'Demo studio', machine: undefined, binds: [] },
+    })
+    expect(read(withLegal('missing:legal-details'))).toMatchObject({
+      policy: { href: '/uslugi' },
+      operator: undefined,
+    })
+    expect(read(site())).toMatchObject({ policy: undefined, operator: undefined })
+    expect(() => read(withLegal('fact:owner'))).toThrow(
+      'strategy: repair/legal/operator_ref — fact:owner нет в фактах ru',
+    )
+  })
+
   it('без карты (лендинг) — адрес из page.url плана, родителей нет', () => {
     const files = edited((files) => {
       Reflect.deleteProperty(files, 'site/web/site-map.yaml')
@@ -595,6 +620,8 @@ describe('strategy/page', () => {
             groups: {},
           },
         ],
+        policy: { href: '/privacy' },
+        operator: undefined,
       })
     })
   })

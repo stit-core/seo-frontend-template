@@ -1,0 +1,184 @@
+# Тексты страницы «О компании» проекта шаблона site-template — copy deck v1 базы strategy (kb/text/
+# 10-templates-recipes/copy-deck.schema.json): секции и слоты — id плана plans/about.yaml, утверждение о
+# факте — его fact_ids.
+copy_deck:
+  version: 1
+  date: '2026-10-16'
+  site: site-template
+  product_name: ssr-frontend-template
+  lang: ru
+  facts_ref: ../../../facts.yaml
+  page_plan_ref: ../plans/about.yaml
+  jurisdiction: ru
+  legal_category: [general]
+  authors: [исполнитель шаблона]
+  pages:
+    - page_id: about
+      page_type: about-page
+      status: assumed
+      meta:
+        title: 'О компании: сайты, которые видно в поиске'
+        description: >-
+          Студия делает сайты, которые видно в поиске: чем мы занимаемся, где находимся, когда работаем и как с нами
+          связаться.
+        fact_ids: []
+      sections:
+        - section_id: header
+          section_role: header
+          block: header
+          slots:
+            - slot_id: nav-link-1
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Блог, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-2
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: О компании, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-3
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Контакты, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: hero
+          section_role: hero
+          block: hero-text
+          slots:
+            - slot_id: headline
+              slot_type: headline
+              variants:
+                - {id: a, text: О компании, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: subheadline
+              slot_type: subheadline
+              variants:
+                - id: a
+                  text: >-
+                    Небольшая студия: делаем сайты, которые видно в поиске. Тексты живут в git, страницы собираются
+                    заранее, сервер отдаёт готовые файлы.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: cta-label
+              slot_type: cta-label
+              variants:
+                - {id: a, text: Оставить заявку, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: about
+          section_role: about
+          block: prose
+          slots:
+            - slot_id: title
+              slot_type: section-title
+              variants:
+                - {id: a, text: Чем занимаемся, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: body
+              slot_type: body
+              variants:
+                - id: a
+                  text: >-
+                    Ведём сайт от структуры до публикации и остаёмся рядом после запуска.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: point-1
+              slot_type: list-item
+              site_slot_id: point
+              variants:
+                - id: a
+                  text: >-
+                    Сайты-визитки, блоги и справочные разделы: структура, тексты, вёрстка, публикация.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: point-2
+              slot_type: list-item
+              site_slot_id: point
+              variants:
+                - id: a
+                  text: >-
+                    Техническая сторона поиска: карта сайта, разметка, скорость, честные коды ответов.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: point-3
+              slot_type: list-item
+              site_slot_id: point
+              variants:
+                - id: a
+                  text: >-
+                    Поддержка: обновления контента, слежение за доступностью, разбор обращений из формы.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+        - section_id: contacts
+          section_role: contacts
+          block: contact-details
+          slots:
+            - slot_id: title
+              slot_type: section-title
+              variants:
+                - {id: a, text: Реквизиты и контакты, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: info-1
+              slot_type: contact-info
+              site_slot_id: info
+              variants:
+                - {id: a, text: '101000, Москва, ул. Примерная, 1, офис 2', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-address']
+            - slot_id: info-2
+              slot_type: contact-info
+              site_slot_id: info
+              variants:
+                - {id: a, text: 'Пн–Пт, 10:00–19:00 (МСК)', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-hours']
+            - slot_id: legal
+              slot_type: footer-legal
+              variants:
+                - {id: a, text: 'ООО «Пример», ОГРН 1000000000001, ИНН 7700000000', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-name', 'fact:company-ogrn', 'fact:company-inn']
+        - section_id: footer
+          section_role: footer
+          block: footer
+          slots:
+            - slot_id: legal
+              slot_type: footer-legal
+              variants:
+                - {id: a, text: 'ООО «Пример», ОГРН 1000000000001, ИНН 7700000000', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-name', 'fact:company-ogrn', 'fact:company-inn']
+            - slot_id: privacy-label
+              slot_type: nav-label
+              variants:
+                - {id: a, text: Обработка персональных данных, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-1-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-1
+              variants:
+                - {id: a, text: Блог, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-2-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-2
+              variants:
+                - {id: a, text: О компании, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-3-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-3
+              variants:
+                - {id: a, text: Контакты, status: assumed, source: ai-self}
+              chosen: a

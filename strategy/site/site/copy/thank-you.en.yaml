@@ -1,0 +1,123 @@
+# Тексты страницы «спасибо» проекта шаблона site-template на английском — copy deck второго языка: те же
+# id секций и слотов, что у copy/thank-you.yaml.
+copy_deck:
+  version: 1
+  date: '2026-10-16'
+  site: site-template
+  product_name: ssr-frontend-template
+  lang: en
+  source_lang: ru
+  source_ref: thank-you.yaml
+  adaptation: {mode: adaptation}
+  facts_ref: ../../../facts.en.yaml
+  page_plan_ref: ../plans/thank-you.yaml
+  jurisdiction: ru
+  legal_category: [general]
+  authors: [template maintainer]
+  pages:
+    - page_id: thank-you
+      page_type: thank-you-page
+      status: assumed
+      meta:
+        title: Request sent
+        description: >-
+          The request is in: we reply to the email you left, usually within one business day.
+        fact_ids: ['fact:response-time']
+      sections:
+        - section_id: header
+          section_role: header
+          block: header
+          slots:
+            - slot_id: nav-link-1
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Blog, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-2
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: About, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-3
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Contacts, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: confirmation
+          section_role: confirmation
+          block: thank-you
+          slots:
+            - slot_id: title
+              slot_type: form-success
+              variants:
+                - {id: a, text: Request sent, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: next-steps
+              slot_type: form-next-steps
+              variants:
+                - id: a
+                  text: >-
+                    We reply to the email you left, usually within one business day.
+                  status: assumed
+                  source: fact
+              chosen: a
+              fact_ids: ['fact:response-time']
+            - slot_id: secondary-label
+              slot_type: cta-secondary-label
+              variants:
+                - {id: a, text: Back to contacts, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: contacts
+          section_role: contacts
+          block: contact-details
+          slots:
+            - slot_id: title
+              slot_type: section-title
+              variants:
+                - {id: a, text: If it is urgent, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: info
+              slot_type: contact-info
+              variants:
+                - {id: a, text: 'Mon–Fri, 10:00–19:00 (MSK)', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-hours']
+        - section_id: footer
+          section_role: footer
+          block: footer
+          slots:
+            - slot_id: legal
+              slot_type: footer-legal
+              variants:
+                - {id: a, text: 'Primer LLC, OGRN 1000000000001, INN 7700000000', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-name', 'fact:company-ogrn', 'fact:company-inn']
+            - slot_id: privacy-label
+              slot_type: nav-label
+              variants:
+                - {id: a, text: Personal data policy, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-1-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-1
+              variants:
+                - {id: a, text: Blog, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-2-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-2
+              variants:
+                - {id: a, text: About, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-3-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-3
+              variants:
+                - {id: a, text: Contacts, status: assumed, source: ai-self}
+              chosen: a

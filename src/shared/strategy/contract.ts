@@ -16,7 +16,20 @@ const PlanSlot = z.object({
 })
 
 export const PlanSchema = z.object({
-  page: z.object({ id: z.string(), url: z.string().optional() }),
+  page: z.object({
+    id: z.string(),
+    url: z.string().optional(),
+    // Правовые решения страницы: адрес политики ПДн и оператор — факт `fact:<id>`.
+    legal: z
+      .object({
+        privacy_policy: z.string().optional(),
+        operator_ref: z
+          .string()
+          .regex(/^(?:fact|missing):/)
+          .optional(),
+      })
+      .optional(),
+  }),
   sections: z.array(
     z.object({
       id: z.string(),

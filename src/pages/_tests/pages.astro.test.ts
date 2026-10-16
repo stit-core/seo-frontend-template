@@ -2,7 +2,13 @@ import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
 import { DEFAULT_LOCALE, type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { parseHtml, sectionFaults } from '@/shared/lib/testing'
-import { breadcrumbsOn, type FactValue, pageLocales, strategyPage } from '@/shared/strategy'
+import {
+  breadcrumbsOn,
+  type FactValue,
+  pageLocales,
+  snapshot,
+  strategyPage,
+} from '@/shared/strategy'
 import { notFound } from '@/widgets/not-found'
 import { headTags, jsonLdBlocks } from '../../../scripts/lib/html.mjs'
 import * as About from '../[...locale]/about.astro'
@@ -14,7 +20,8 @@ import * as Privacy from '../[...locale]/legal/privacy.astro'
 import NotFound from '../404.astro'
 import ServerError from '../500.astro'
 import Now from '../now.astro'
-import { type Built, built, crumbsOf, outsideSections } from './routes'
+import { blocks, catalog, chromeOf } from './catalog'
+import { type Built, built, crumbsOf, outsideSections, routeOf } from './routes'
 
 // Страницы — на данных сайта: его локалях, карте и текстах; записи — фикстуры. Маршруты записей, тегов и страниц
 // списка — на локалях и карте теста (blog.astro.test.ts).
@@ -111,7 +118,7 @@ describe('индексируемые страницы', () => {
 
 // Каркас — секции шапки и подвала плана страницы, у страницы без своего плана — главной. Тексты секции — строки слотов
 // и экземпляров её групп на языке страницы.
-function chromeOf(page: string, locale: Locale, block: string) {
+function chromeTextsOf(page: string, locale: Locale, block: string) {
   const section = strategyPage(page, locale).sections.find((candidate) => candidate.block === block)
   const instances = Object.values(section?.groups ?? {}).flat()
   const values = [
@@ -144,8 +151,8 @@ describe('каркас страниц — план страницы', () => {
     ])
     for (const { page, id, path, props, locale } of pages) {
       const doc = parseHtml((await render(page, path, props)).html)
-      const header = chromeOf(id, locale, 'header')
-      const footer = chromeOf(id, locale, 'footer')
+      const header = chromeTextsOf(id, locale, 'header')
+      const footer = chromeTextsOf(id, locale, 'footer')
       const menu = [...doc.querySelectorAll('header nav a:not([hreflang])')]
       expect(menu.length, path).toBeGreaterThan(0)
       for (const link of menu) expect(header.texts, path).toContain(link.textContent)
@@ -157,6 +164,59 @@ describe('каркас страниц — план страницы', () => {
       expect(legal?.replace(/\s/g, ' '), path).toBe(footer.slots.legal)
       expect(legal, path).toContain((footer.slots.company as FactValue).text)
     }
+  })
+})
+
+// Страница — секции своего плана: план — источник порядка и полноты, композиция страницы их только ставит.
+describe('страница из блоков: план страницы', () => {
+  it('секции = план: дети <main> — секции плана по порядку (каркас ставит оболочка); слот — на странице: каждая секция целиком', async () => {
+    const project = snapshot()
+    const faults: string[] = []
+    for (const {
+      page: { id },
+    } of project.plans) {
+      const url = project.map?.pages.find((page) => page.id === id)?.url ?? ''
+      const route = routeOf(url)
+      expect(route, `${id}: маршрута ${url} нет`).toBeDefined()
+      if (route === undefined) continue
+      const module = await route.load()
+      // Страница сборки — адреса её getStaticPaths; on-demand (404) — адрес страницы карты на каждом её языке.
+      const pages =
+        'getStaticPaths' in module
+          ? await built(route.route, module)
+          : pageLocales(id).map((locale) => ({ path: localePath(locale, url), locale, props: {} }))
+      expect(pages.length, id).toBeGreaterThan(0)
+      for (const { path, locale, props } of pages) {
+        const { html } = await render(module.default, path, props)
+        const page = strategyPage(id, locale as Locale)
+        const main = parseHtml(html).querySelector('main')
+        expect(
+          [...(main?.children ?? [])].map((child) => child.getAttribute('aria-labelledby')),
+          path,
+        ).toEqual(
+          page.sections
+            .filter((section) => catalog[section.block]?.flow !== 'chrome')
+            .map((section) => section.id),
+        )
+        for (const section of page.sections) {
+          const block = blocks.find((candidate) => candidate.block.id === section.block)?.block
+          if (block === undefined) {
+            faults.push(`${path} ${id}/${section.id}: блока ${section.block} нет`)
+            continue
+          }
+          faults.push(
+            ...sectionFaults(
+              html,
+              page,
+              section.id,
+              block,
+              chromeOf(section, locale as Locale, project),
+            ).map((fault) => `${path} ${fault}`),
+          )
+        }
+      }
+    }
+    expect(faults).toEqual([])
   })
 })
 

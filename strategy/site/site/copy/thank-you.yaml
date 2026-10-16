@@ -1,0 +1,120 @@
+# Тексты страницы «спасибо» проекта шаблона site-template — copy deck v1 базы strategy (kb/text/
+# 10-templates-recipes/copy-deck.schema.json): секции и слоты — id плана plans/thank-you.yaml.
+copy_deck:
+  version: 1
+  date: '2026-10-16'
+  site: site-template
+  product_name: ssr-frontend-template
+  lang: ru
+  facts_ref: ../../../facts.yaml
+  page_plan_ref: ../plans/thank-you.yaml
+  jurisdiction: ru
+  legal_category: [general]
+  authors: [исполнитель шаблона]
+  pages:
+    - page_id: thank-you
+      page_type: thank-you-page
+      status: assumed
+      meta:
+        title: Заявка отправлена
+        description: >-
+          Заявка принята: ответим на указанную почту, обычно в течение одного рабочего дня.
+        fact_ids: ['fact:response-time']
+      sections:
+        - section_id: header
+          section_role: header
+          block: header
+          slots:
+            - slot_id: nav-link-1
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Блог, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-2
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: О компании, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-3
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Контакты, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: confirmation
+          section_role: confirmation
+          block: thank-you
+          slots:
+            - slot_id: title
+              slot_type: form-success
+              variants:
+                - {id: a, text: Заявка отправлена, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: next-steps
+              slot_type: form-next-steps
+              variants:
+                - id: a
+                  text: >-
+                    Ответим на указанную почту. Обычно это занимает один рабочий день.
+                  status: assumed
+                  source: fact
+              chosen: a
+              fact_ids: ['fact:response-time']
+            - slot_id: secondary-label
+              slot_type: cta-secondary-label
+              variants:
+                - {id: a, text: Вернуться к контактам, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: contacts
+          section_role: contacts
+          block: contact-details
+          slots:
+            - slot_id: title
+              slot_type: section-title
+              variants:
+                - {id: a, text: Если вопрос срочный, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: info
+              slot_type: contact-info
+              variants:
+                - {id: a, text: 'Пн–Пт, 10:00–19:00 (МСК)', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-hours']
+        - section_id: footer
+          section_role: footer
+          block: footer
+          slots:
+            - slot_id: legal
+              slot_type: footer-legal
+              variants:
+                - {id: a, text: 'ООО «Пример», ОГРН 1000000000001, ИНН 7700000000', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-name', 'fact:company-ogrn', 'fact:company-inn']
+            - slot_id: privacy-label
+              slot_type: nav-label
+              variants:
+                - {id: a, text: Обработка персональных данных, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-1-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-1
+              variants:
+                - {id: a, text: Блог, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-2-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-2
+              variants:
+                - {id: a, text: О компании, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-3-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-3
+              variants:
+                - {id: a, text: Контакты, status: assumed, source: ai-self}
+              chosen: a

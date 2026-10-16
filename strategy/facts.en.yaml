@@ -131,3 +131,59 @@ facts:
     use: {any: true}
     example: true
     lang: en
+
+  - id: response-time
+    kind: offer-terms
+    claim_class: [fact-number]
+    verbatim:
+      - one business day
+    canonical: Primer LLC replies to a request from the site within one business day.
+    entities: [company-primer]
+    source: {type: customer-document, who: template owner, where: demo terms of the template, date: '2026-10-16', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: en
+
+  - id: policy-revision
+    kind: date
+    claim_class: [company-details]
+    verbatim:
+      - 10 October 2026
+    canonical: The personal data policy of Primer LLC is in its revision of 10 October 2026.
+    entities: [company-primer]
+    source: {type: customer-document, who: template owner, where: demo policy of the template, date: '2026-10-16', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: en
+
+  - id: log-retention
+    kind: offer-terms
+    claim_class: [fact-number]
+    verbatim:
+      - 30 days
+    canonical: Primer LLC keeps the web server logs of the site for no longer than 30 days.
+    entities: [company-primer]
+    source: {type: customer-document, who: template owner, where: demo policy of the template, date: '2026-10-16', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: en
+
+  - id: request-deadline
+    kind: offer-terms
+    claim_class: [fact-number]
+    verbatim:
+      - 30 days
+    canonical: Primer LLC answers a visitor's request about their personal data within 30 days.
+    entities: [company-primer]
+    source: {type: customer-document, who: template owner, where: demo policy of the template, date: '2026-10-16', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: en

@@ -1,0 +1,276 @@
+# План страницы «О компании» проекта шаблона site-template — форма page-plan v1 базы strategy (kb/site/
+# 10-playbooks-contracts/schemas/page-plan.schema.json): секции — блоки каталога в порядке страницы, тексты слотов —
+# copy deck страницы, контакты и реквизиты — факты.
+page_plan_version: '1'
+checked: '2026-10-16'
+status: draft
+site: site-template
+refs:
+  brief: ../site-brief.yaml
+  facts: ../../../facts.yaml
+  site_map: ../site-map.yaml
+  copy_deck: ../copy/about.yaml
+  blocks: ../../../../../../.claude/skills/design-deep-dive/kb/site/04-blocks/blocks.yaml
+  vocabulary: ../../../../../../.claude/skills/design-deep-dive/kb/site/02-site-types/vocabulary.yaml
+  head_kit: ../../../../../../.claude/skills/design-deep-dive/kb/site/07-seo-geo-performance-analytics/head-kit.yaml
+page:
+  id: about
+  page_type: about-page
+  template: false
+  template_id: about
+  url: /about
+  lang: ru
+  locale: ru-RU
+  jurisdiction:
+    - ru
+  goal: сказать, кто делает сайты, чем занимается и как связаться, и привести к заявке
+  primary_action: lead-request
+  cta_target:
+    kind: route
+    value: /contacts
+  awareness: product-aware
+  awareness_basis:
+    from: assumption
+    rule: уровень по главному источнику страницы — переход из меню и с главной
+  traffic:
+    - traffic_source: internal
+      temperature: warm
+      device: mixed
+  macrostructure: long-document
+  macrostructure_family: document
+  first_screen_policy: offer-cta
+  budget_profile: about-page@L0
+  ambition_level: L0
+  navigation:
+    header: site
+    archetype: bar-links
+    logo_link: /
+    breadcrumbs: false
+    footer: site
+  seo:
+    indexable: true
+    canonical: self
+    h1: hero.headline
+    structured_data:
+      - AboutPage
+    ssr_required: true
+    sitemap: true
+  legal:
+    pd_consent: not-collected
+    privacy_policy: /legal/privacy
+    cookie_banner: not-needed
+    cookie_mode: none
+    analytics_before_consent: false
+    requisites: both
+    operator_ref: fact:company-name
+page_slots:
+  text:
+    - id: meta-title
+      slot: meta-title
+    - id: meta-description
+      slot: meta-description
+sections:
+  - id: header
+    role: header
+    block: header
+    variant: site-nav
+    slots:
+      text:
+        - id: nav-link-1
+          slot: nav-label
+          anatomy: nav-link
+        - id: nav-link-2
+          slot: nav-label
+          anatomy: nav-link
+        - id: nav-link-3
+          slot: nav-label
+          anatomy: nav-link
+      media:
+        - id: logo
+          slot: brand-logo
+          media_role: informational
+          goal: знак сайта — ссылка на главную
+          source: code
+          authenticity: code
+      action:
+        - id: lang-switch
+          slot: link
+          action: read-more
+          style: link
+  - id: hero
+    role: hero
+    question: кто это
+    job: назвать студию и её главную мысль, дать путь к заявке
+    block: hero-text
+    variant: statement-cta
+    next_step: главное действие страницы
+    slots:
+      text:
+        - id: headline
+          slot: headline
+          heading: h1
+        - id: subheadline
+          slot: subheadline
+        - id: cta-label
+          slot: cta-label
+      action:
+        - id: cta
+          slot: cta-primary
+          action: lead-request
+          style: primary
+          target:
+            kind: route
+            value: /contacts
+          label: cta-label
+  - id: about
+    role: about
+    question: чем вы занимаетесь
+    job: что делает студия — сайты, техническая сторона поиска, поддержка
+    block: prose
+    variant: story
+    next_step: главное действие страницы
+    slots:
+      text:
+        - id: title
+          slot: section-title
+          heading: h2
+        - id: body
+          slot: body
+        - id: point-1
+          slot: list-item
+          anatomy: point
+        - id: point-2
+          slot: list-item
+          anatomy: point
+        - id: point-3
+          slot: list-item
+          anatomy: point
+  - id: contacts
+    role: contacts
+    question: где вы и как связаться
+    job: адрес, часы работы, телефон, почта и реквизиты оператора
+    block: contact-details
+    variant: compact
+    next_step: главное действие страницы
+    slots:
+      text:
+        - id: title
+          slot: section-title
+          heading: h2
+        - id: info-1
+          slot: contact-info
+          anatomy: info
+        - id: info-2
+          slot: contact-info
+          anatomy: info
+        - id: legal
+          slot: footer-legal
+      data:
+        - id: company
+          slot: fact-ref
+          fact: fact:company-name
+          anatomy: company
+          binds:
+            - legal
+        - id: address
+          slot: fact-ref
+          fact: fact:company-address
+          anatomy: company
+          binds:
+            - info-1
+        - id: hours
+          slot: fact-ref
+          fact: fact:company-hours
+          anatomy: company
+          binds:
+            - info-2
+      action:
+        - id: phone
+          slot: phone-link
+          action: call
+          style: channel
+          target:
+            kind: tel
+            value: tel:+74950000000
+        - id: email
+          slot: email-link
+          action: message
+          style: channel
+          target:
+            kind: url
+            value: mailto:hello@example.com
+  - id: footer
+    role: footer
+    block: footer
+    variant: site
+    slots:
+      text:
+        - id: legal
+          slot: footer-legal
+        - id: privacy-label
+          slot: nav-label
+        - id: nav-1-label
+          slot: nav-label
+          anatomy: nav.label
+          group: nav-1
+        - id: nav-2-label
+          slot: nav-label
+          anatomy: nav.label
+          group: nav-2
+        - id: nav-3-label
+          slot: nav-label
+          anatomy: nav.label
+          group: nav-3
+      data:
+        - id: company
+          slot: fact-ref
+          fact: fact:company-name
+          anatomy: company
+          binds:
+            - legal
+      action:
+        - id: privacy
+          slot: link
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /legal/privacy
+          label: privacy-label
+        - id: email
+          slot: email-link
+          action: message
+          style: channel
+          target:
+            kind: url
+            value: mailto:hello@example.com
+        - id: nav-1-link
+          slot: link
+          anatomy: nav.link
+          group: nav-1
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /blog
+          label: nav-1-label
+        - id: nav-2-link
+          slot: link
+          anatomy: nav.link
+          group: nav-2
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /about
+          label: nav-2-label
+        - id: nav-3-link
+          slot: link
+          anatomy: nav.link
+          group: nav-3
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /contacts
+          label: nav-3-label

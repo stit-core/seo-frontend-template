@@ -1,160 +1,40 @@
 ---
 import home from 'virtual:strategy/home'
 import DocumentLayout from '@/app/layouts/document.astro'
-import { listPosts } from '@/entities/post'
-import { type Locale, t } from '@/shared/i18n'
+import { listPosts, postPath } from '@/entities/post'
+import type { Locale } from '@/shared/i18n'
 import { organization, webSite } from '@/shared/seo'
-import { pageLink, pageOf, pageVersions } from '@/shared/strategy'
-import { Heading } from '@/shared/ui/heading'
-import { Section } from '@/shared/ui/section'
-import PostList from '../_blog/post-list.astro'
+import { pageOf, pageVersions } from '@/shared/strategy'
+import { ArticleCards, articleCards } from '@/widgets/article-cards'
+import { FeatureGrid, featureGrid } from '@/widgets/feature-grid'
+import { HeroText, heroText } from '@/widgets/hero-text'
 
 interface Props {
   locale: Locale
 }
 
 const { locale } = Astro.props
-
-const COPY = {
-  ru: {
-    title: 'Шаблон индексируемого сайта',
-    description:
-      'Static-first шаблон сайта на Astro 7: prerender по умолчанию, JavaScript — только острова по решению, один Docker-образ на все среды.',
-    lead: 'Страницы собираются заранее и отдаются Node-процессом как файлы. Серверный рендер включается там, где без запроса не обойтись: редиректы, robots.txt, форма.',
-    inside: 'Что внутри',
-    facts: [
-      {
-        term: 'Рендер',
-        text: 'Prerender по умолчанию: HTML собран на сборке. On-demand — только там, где ответ зависит от запроса.',
-      },
-      {
-        term: 'JavaScript',
-        text: 'Только острова по решению — с основанием и бюджетом. Здесь один: выбор темы и движения, инлайн, без загрузки.',
-      },
-      {
-        term: 'Поиск',
-        text: 'Canonical, hreflang, OG и JSON-LD в первом HTML; карта сайта, фиды и robots.txt — на живом origin.',
-      },
-      {
-        term: 'Развёртывание',
-        text: 'Один Docker-образ на все среды: канонический адрес сайта штампуется при старте контейнера.',
-      },
-      {
-        term: 'Архитектура',
-        text: 'Feature-Sliced Design под линтером: границы слоёв держит ESLint, структуру — Steiger, гейт — pnpm check.',
-      },
-      {
-        term: 'Контент',
-        text: 'Markdown в git рядом с кодом: схема frontmatter, бюджеты сниппета и проверка ссылок — до сборки.',
-      },
-    ],
-    noteLabel: 'О шаблоне',
-    note: 'Это стартовая страница шаблона: замените текст и записи своими. Команды, структура репозитория и путь потребителя описаны в README.',
-  },
-  en: {
-    title: 'Indexable site template',
-    description:
-      'Static-first site template on Astro 7: prerendered by default, JavaScript only as islands by decision, one Docker image for every environment.',
-    lead: 'Pages are built ahead of time and served by the Node process as files. Server rendering turns on where a request is unavoidable: redirects, robots.txt, the contact form.',
-    inside: 'What is inside',
-    facts: [
-      {
-        term: 'Rendering',
-        text: 'Prerendered by default: the HTML is built once. On-demand rendering only where the answer depends on the request.',
-      },
-      {
-        term: 'JavaScript',
-        text: 'Only islands, each by a decision with a reason and a budget. Here there is one: the theme and motion choice, inline, with nothing to download.',
-      },
-      {
-        term: 'Search',
-        text: 'Canonical, hreflang, OG and JSON-LD in the first HTML; sitemap, feeds and robots.txt on the live origin.',
-      },
-      {
-        term: 'Deployment',
-        text: 'One Docker image for every environment: the canonical site address is stamped in at container start.',
-      },
-      {
-        term: 'Architecture',
-        text: 'Feature-Sliced Design under lint: ESLint guards the layer boundaries, Steiger the structure, pnpm check the rest.',
-      },
-      {
-        term: 'Content',
-        text: 'Markdown in git next to the code: a frontmatter schema, snippet budgets and link checks run before the build.',
-      },
-    ],
-    noteLabel: 'About the template',
-    note: "This is the template's starting page: replace the text and the notes with your own. Commands, repository layout and the consumer path are described in the README.",
-  },
-} satisfies Record<Locale, unknown>
-
-const copy = COPY[locale]
-const latest = (await listPosts(locale)).slice(0, 3)
-// Ссылка на раздел без версии на языке главной ведёт на версию основного языка и называет его.
-const blog = pageLink('/blog', locale)
-const contacts = pageLink('/contacts', locale)
+const page = pageOf(home, locale)
+// Свежие записи кладёт страница из коллекции: план их не заполняет.
+const latest = (await listPosts(locale)).slice(0, 3).map((post) => ({
+  title: post.data.title,
+  date: post.data.pubDate,
+  link: { href: postPath(locale, post.slug) },
+  excerpt: post.data.description,
+}))
 // WebSite печатает только корень домена (/): оттуда Google читает имя сайта.
 const jsonLd = Astro.url.pathname === '/' ? [organization(), webSite()] : [organization()]
 ---
 
 <DocumentLayout
   locale={locale}
-  chrome={pageOf(home, locale)}
+  chrome={page}
   translations={pageVersions('home')}
-  title={copy.title}
-  description={copy.description}
+  title={page.meta.title}
+  description={page.meta.description}
   jsonLd={jsonLd}
 >
-  <Section rhythm="m" labelledby="page-title">
-    <Heading id="page-title" level={1} kind="display">
-      {copy.title}
-    </Heading>
-    <p class="mt-stack-display text-lead text-secondary">{copy.lead}</p>
-    <p class="mt-xl flex flex-wrap items-center gap-x-lg gap-y-sm">
-      {blog && (
-        <a class="button" href={blog.href} hreflang={blog.hreflang}>
-          {t(locale, 'blog.all')}
-        </a>
-      )}
-      {contacts && (
-        <a class="touch-target" href={contacts.href} hreflang={contacts.hreflang}>
-          {t(locale, 'nav.contacts')}
-        </a>
-      )}
-    </p>
-  </Section>
-
-  <Section width="wide" tone="subtle" rhythm="m" labelledby="inside">
-    <Heading id="inside" level={2}>
-      {copy.inside}
-    </Heading>
-    <dl class="mt-lg grid gap-x-xl gap-y-lg tablet:grid-cols-2 desktop:grid-cols-3">
-      {copy.facts.map((fact) => (
-        <div>
-          <dt class="text-body-strong">{fact.term}</dt>
-          <dd class="mt-2xs text-secondary">{fact.text}</dd>
-        </div>
-      ))}
-    </dl>
-  </Section>
-
-  <Section rhythm="m" labelledby="latest">
-    <Heading id="latest" level={2}>
-      {t(locale, 'blog.latest')}
-    </Heading>
-    <div class="mt-lg">
-      <PostList locale={locale} posts={latest} />
-    </div>
-    {blog && (
-      <p class="mt-xl">
-        <a class="touch-target" href={blog.href} hreflang={blog.hreflang}>
-          {t(locale, 'blog.all')}
-        </a>
-      </p>
-    )}
-  </Section>
-
-  <Section rhythm="m" label={copy.noteLabel}>
-    <p class="note">{copy.note}</p>
-  </Section>
+  <HeroText {...heroText.props(page, 'hero')} />
+  <FeatureGrid {...featureGrid.props(page, 'benefits')} />
+  <ArticleCards {...articleCards.props(page, 'related')} article={latest} locale={locale} />
 </DocumentLayout>

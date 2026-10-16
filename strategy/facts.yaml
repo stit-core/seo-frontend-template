@@ -132,3 +132,60 @@ facts:
     use: {any: true}
     example: true
     lang: ru
+
+  - id: response-time
+    kind: offer-terms
+    claim_class: [fact-number]
+    verbatim:
+      - один рабочий день
+      - одного рабочего дня
+    canonical: ООО «Пример» отвечает на заявку с сайта в течение одного рабочего дня.
+    entities: [company-primer]
+    source: {type: customer-document, who: владелец шаблона, where: демо-условия шаблона, date: '2026-10-16', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: ru
+
+  - id: policy-revision
+    kind: date
+    claim_class: [company-details]
+    verbatim:
+      - 10 октября 2026 года
+    canonical: Политика обработки персональных данных ООО «Пример» действует в редакции от 10 октября 2026 года.
+    entities: [company-primer]
+    source: {type: customer-document, who: владелец шаблона, where: демо-политика шаблона, date: '2026-10-16', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: ru
+
+  - id: log-retention
+    kind: offer-terms
+    claim_class: [fact-number]
+    verbatim:
+      - 30 дней
+    canonical: ООО «Пример» хранит журналы веб-сервера сайта не дольше 30 дней.
+    entities: [company-primer]
+    source: {type: customer-document, who: владелец шаблона, where: демо-политика шаблона, date: '2026-10-16', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: ru
+
+  - id: request-deadline
+    kind: offer-terms
+    claim_class: [fact-number]
+    verbatim:
+      - 30 дней
+    canonical: ООО «Пример» отвечает на запрос посетителя о его персональных данных в течение 30 дней.
+    entities: [company-primer]
+    source: {type: customer-document, who: владелец шаблона, where: демо-политика шаблона, date: '2026-10-16', derivation: direct}
+    verification: {status: stated}
+    permission: {status: not-required}
+    use: {any: true}
+    example: true
+    lang: ru

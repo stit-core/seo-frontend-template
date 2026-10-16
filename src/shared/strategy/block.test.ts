@@ -56,6 +56,8 @@ const page = (...sections: Section[]): StrategyPage => ({
     ogImageAlt: undefined,
   },
   sections,
+  policy: undefined,
+  operator: undefined,
 })
 
 describe('strategy/block', () => {

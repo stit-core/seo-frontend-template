@@ -95,7 +95,7 @@ src/shared/seo/rss.ts  src/shared/seo/rss.test.ts
 ```bash
 grep -rn 'ssr-frontend-template' --include='*.ts' --include='*.astro' --include='*.md' src docs README.md CLAUDE.md
 grep -rn 'example.com\|Пример\|+7 495 000' src/
-grep -rn '{{OPERATOR_' src/
+grep -n 'example: true' strategy/facts*.yaml
 ```
 
 Литералы, которые не находит переименование пакета: имя сайта в

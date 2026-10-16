@@ -1,7 +1,7 @@
 import type { APIRequestContext } from '@playwright/test'
 import { t } from '../../src/shared/i18n/dict.ts'
 import { DEFAULT_LOCALE } from '../../src/shared/i18n/locale.ts'
-import { originOf } from '../site'
+import { originOf, pageText } from '../site'
 import { expect, test } from './csp'
 
 const MESSAGE = 'Нужен сайт с блогом, формой заявки и картой сайта. Бюджет обсудим.'
@@ -26,7 +26,7 @@ test.describe('форма обратной связи в браузере без
 
     await expect(page).toHaveURL('/contacts/spasibo')
     await expect(page.getByRole('heading', { level: 1 })).toHaveText(
-      t(DEFAULT_LOCALE, 'thanks.title'),
+      pageText('thank-you', 'thank-you', 'title', DEFAULT_LOCALE),
     )
     await expect.poll(() => delivered(request)).toContain(email)
   })

@@ -1,0 +1,284 @@
+# Текст политики обработки персональных данных проекта шаблона site-template — copy deck v1 базы strategy:
+# демонстрационный документ вымышленного оператора, форк заменяет его текстом своего юриста.
+copy_deck:
+  version: 1
+  date: '2026-10-16'
+  site: site-template
+  product_name: ssr-frontend-template
+  lang: ru
+  facts_ref: ../../../facts.yaml
+  page_plan_ref: ../plans/privacy.yaml
+  jurisdiction: ru
+  legal_category: [general]
+  authors: [исполнитель шаблона]
+  pages:
+    - page_id: privacy
+      page_type: legal-page
+      status: assumed
+      meta:
+        title: Политика обработки персональных данных
+        description: >-
+          Кто обрабатывает персональные данные посетителей сайта, какие именно, на каком основании, где они хранятся и
+          как отозвать согласие.
+        fact_ids: []
+      sections:
+        - section_id: header
+          section_role: header
+          block: header
+          slots:
+            - slot_id: nav-link-1
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Блог, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-2
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: О компании, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-3
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Контакты, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: legal
+          section_role: legal
+          block: legal-text
+          slots:
+            - slot_id: title
+              slot_type: article-title
+              variants:
+                - {id: a, text: Политика обработки персональных данных, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: date
+              slot_type: article-date
+              variants:
+                - {id: a, text: Редакция от 10 октября 2026 года, status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:policy-revision']
+            - slot_id: operator
+              slot_type: footer-legal
+              variants:
+                - id: a
+                  text: >-
+                    Оператор — ООО «Пример», ОГРН 1000000000001, ИНН 7700000000, адрес: 101000, Москва, ул.
+                    Примерная, 1, офис 2.
+                  status: assumed
+                  source: fact
+              chosen: a
+              fact_ids: ['fact:company-name', 'fact:company-ogrn', 'fact:company-inn', 'fact:company-address']
+            - slot_id: clause-1-heading
+              slot_type: article-heading
+              site_slot_id: clause.heading
+              group: clause-1
+              variants:
+                - {id: a, text: 1. Оператор, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: clause-1-text-1
+              slot_type: article-paragraph
+              site_slot_id: clause.text
+              group: clause-1
+              variants:
+                - id: a
+                  text: >-
+                    Персональные данные посетителей сайта обрабатывает ООО «Пример» — оператор, указанный выше.
+                    Вопросы об обработке данных — на почту оператора: она в подвале каждой страницы.
+                  status: assumed
+                  source: fact
+              chosen: a
+              fact_ids: ['fact:company-name']
+            - slot_id: clause-2-heading
+              slot_type: article-heading
+              site_slot_id: clause.heading
+              group: clause-2
+              variants:
+                - {id: a, text: 2. Какие данные собираются, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: clause-2-text-1
+              slot_type: article-paragraph
+              site_slot_id: clause.text
+              group: clause-2
+              variants:
+                - id: a
+                  text: >-
+                    Сайт собирает ровно то, без чего нельзя ответить на заявку: имя, адрес электронной почты и текст
+                    сообщения из формы обратной связи; дату и версию текста этой политики, с которой посетитель
+                    согласился при отправке формы; технические данные обращения — IP-адрес, время, запрошенный адрес
+                    и заголовки браузера, которые веб-сервер записывает в журнал.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: clause-2-text-2
+              slot_type: article-paragraph
+              site_slot_id: clause.text
+              group: clause-2
+              variants:
+                - id: a
+                  text: >-
+                    Специальные категории персональных данных и биометрию сайт не обрабатывает. Не отправляйте их в
+                    форме.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: clause-3-heading
+              slot_type: article-heading
+              site_slot_id: clause.heading
+              group: clause-3
+              variants:
+                - {id: a, text: 3. Цели и основание обработки, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: clause-3-text-1
+              slot_type: article-paragraph
+              site_slot_id: clause.text
+              group: clause-3
+              variants:
+                - id: a
+                  text: >-
+                    Данные из формы обрабатываются с одной целью — ответить на обращение. Основание — согласие
+                    субъекта персональных данных (пункт 1 части 1 статьи 6 Федерального закона № 152-ФЗ), которое
+                    даётся отдельной галочкой в форме и не считается данным по умолчанию. Технические данные
+                    обрабатываются для защиты сайта от сбоев и атак.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: clause-4-heading
+              slot_type: article-heading
+              site_slot_id: clause.heading
+              group: clause-4
+              variants:
+                - {id: a, text: 4. Кому передаются данные, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: clause-4-text-1
+              slot_type: article-paragraph
+              site_slot_id: clause.text
+              group: clause-4
+              variants:
+                - id: a
+                  text: >-
+                    Заявка доставляется оператору по одному каналу — почтовым сервером или внутренним сервисом
+                    оператора. Третьим лицам данные не продаются и не передаются для рекламы. Трансграничной
+                    передачи нет: заявки хранятся на серверах в Российской Федерации.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: clause-5-heading
+              slot_type: article-heading
+              site_slot_id: clause.heading
+              group: clause-5
+              variants:
+                - {id: a, text: 5. Сроки хранения, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: clause-5-text-1
+              slot_type: article-paragraph
+              site_slot_id: clause.text
+              group: clause-5
+              variants:
+                - id: a
+                  text: >-
+                    Заявки хранятся, пока идёт переписка по обращению, и не дольше года после последнего письма.
+                    Журналы веб-сервера — не дольше 30 дней. По истечении срока данные удаляются.
+                  status: assumed
+                  source: fact
+              chosen: a
+              fact_ids: ['fact:log-retention']
+            - slot_id: clause-6-heading
+              slot_type: article-heading
+              site_slot_id: clause.heading
+              group: clause-6
+              variants:
+                - {id: a, text: 6. Права посетителя, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: clause-6-text-1
+              slot_type: article-paragraph
+              site_slot_id: clause.text
+              group: clause-6
+              variants:
+                - id: a
+                  text: >-
+                    Посетитель вправе получить сведения об обработке своих данных, потребовать их уточнения,
+                    блокирования или уничтожения, а также отозвать согласие. Для этого достаточно письма на почту
+                    оператора: ответ и действие — в течение 30 дней. Отзыв согласия прекращает обработку и приводит
+                    к удалению заявки.
+                  status: assumed
+                  source: fact
+              chosen: a
+              fact_ids: ['fact:request-deadline']
+            - slot_id: clause-7-heading
+              slot_type: article-heading
+              site_slot_id: clause.heading
+              group: clause-7
+              variants:
+                - {id: a, text: 7. Cookie и счётчики, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: clause-7-text-1
+              slot_type: article-paragraph
+              site_slot_id: clause.text
+              group: clause-7
+              variants:
+                - id: a
+                  text: >-
+                    Cookie сайт не ставит. Выбор темы оформления и режима движения хранится в локальном хранилище
+                    браузера на устройстве посетителя и на сервер не передаётся; он нужен для работы интерфейса и
+                    согласия не требует. Аналитические счётчики и рекламные пиксели на сайте не подключены; если они
+                    появятся, этот раздел и форма согласия будут обновлены до их запуска.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: clause-8-heading
+              slot_type: article-heading
+              site_slot_id: clause.heading
+              group: clause-8
+              variants:
+                - {id: a, text: 8. Изменения политики, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: clause-8-text-1
+              slot_type: article-paragraph
+              site_slot_id: clause.text
+              group: clause-8
+              variants:
+                - id: a
+                  text: >-
+                    Новая редакция публикуется на этой странице с датой изменения. Версия, действовавшая в момент
+                    отправки заявки, сохраняется вместе с ней.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+        - section_id: footer
+          section_role: footer
+          block: footer
+          slots:
+            - slot_id: legal
+              slot_type: footer-legal
+              variants:
+                - {id: a, text: 'ООО «Пример», ОГРН 1000000000001, ИНН 7700000000', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-name', 'fact:company-ogrn', 'fact:company-inn']
+            - slot_id: privacy-label
+              slot_type: nav-label
+              variants:
+                - {id: a, text: Обработка персональных данных, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-1-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-1
+              variants:
+                - {id: a, text: Блог, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-2-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-2
+              variants:
+                - {id: a, text: О компании, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-3-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-3
+              variants:
+                - {id: a, text: Контакты, status: assumed, source: ai-self}
+              chosen: a

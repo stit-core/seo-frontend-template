@@ -69,3 +69,22 @@ export async function built(
     return { path: path || '/', locale: owner.locale, props: record }
   })
 }
+
+// Адрес маршрута и адрес карты в одной форме: параметр `[x]` файла и `{x}` карты — `*`.
+const shapeOf = (url: string) => url.replace(/\[[^\]]+\]|\{[^}]+\}/g, '*')
+
+// Маршруты страниц — файлы `.astro` из src/pages вне каталогов `_*` (их Astro не маршрутизирует): маршрут — путь файла
+// для `built`, адрес — без сегмента локали `[...locale]`, модуль — по запросу теста.
+const routeFiles = import.meta.glob<{ default: AstroComponentFactory }>([
+  '../**/*.astro',
+  '!../**/_*/**',
+])
+export const pageRoutes = Object.entries(routeFiles).map(([file, load]) => {
+  const route = `/${file.slice('../'.length, -'.astro'.length)}`.replace(/\/index$/, '') || '/'
+  const url = route.replace(/^\/\[\.\.\.locale\]/, '') || '/'
+  return { route, url: shapeOf(url), load }
+})
+
+// Маршрут страницы карты — по её адресу.
+export const routeOf = (url: string) =>
+  pageRoutes.find((candidate) => candidate.url === shapeOf(url))

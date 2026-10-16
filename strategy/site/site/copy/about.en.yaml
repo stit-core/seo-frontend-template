@@ -1,0 +1,186 @@
+# Тексты страницы «О компании» проекта шаблона site-template на английском — copy deck второго языка: те же
+# id секций и слотов, что у copy/about.yaml.
+copy_deck:
+  version: 1
+  date: '2026-10-16'
+  site: site-template
+  product_name: ssr-frontend-template
+  lang: en
+  source_lang: ru
+  source_ref: about.yaml
+  adaptation: {mode: adaptation}
+  facts_ref: ../../../facts.en.yaml
+  page_plan_ref: ../plans/about.yaml
+  jurisdiction: ru
+  legal_category: [general]
+  authors: [template maintainer]
+  pages:
+    - page_id: about
+      page_type: about-page
+      status: assumed
+      meta:
+        title: 'About the company: sites you can find in search'
+        description: >-
+          A studio that builds sites you can find in search: what we do, where we are, when we work and how to reach
+          us.
+        fact_ids: []
+      sections:
+        - section_id: header
+          section_role: header
+          block: header
+          slots:
+            - slot_id: nav-link-1
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Blog, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-2
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: About, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-3
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Contacts, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: hero
+          section_role: hero
+          block: hero-text
+          slots:
+            - slot_id: headline
+              slot_type: headline
+              variants:
+                - {id: a, text: About the company, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: subheadline
+              slot_type: subheadline
+              variants:
+                - id: a
+                  text: >-
+                    A small studio that builds sites you can find in search. Texts live in git, pages are built
+                    ahead of time, the server ships ready files.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: cta-label
+              slot_type: cta-label
+              variants:
+                - {id: a, text: Send a request, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: about
+          section_role: about
+          block: prose
+          slots:
+            - slot_id: title
+              slot_type: section-title
+              variants:
+                - {id: a, text: What we do, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: body
+              slot_type: body
+              variants:
+                - id: a
+                  text: >-
+                    We take a site from structure to publication and stay with it after the launch.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: point-1
+              slot_type: list-item
+              site_slot_id: point
+              variants:
+                - id: a
+                  text: >-
+                    Brochure sites, blogs and reference sections: structure, copy, markup, publishing.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: point-2
+              slot_type: list-item
+              site_slot_id: point
+              variants:
+                - id: a
+                  text: >-
+                    The technical side of search: sitemaps, structured data, speed, honest status codes.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: point-3
+              slot_type: list-item
+              site_slot_id: point
+              variants:
+                - id: a
+                  text: >-
+                    Support: content updates, uptime watch, handling the requests that arrive by form.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+        - section_id: contacts
+          section_role: contacts
+          block: contact-details
+          slots:
+            - slot_id: title
+              slot_type: section-title
+              variants:
+                - {id: a, text: Details and contacts, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: info-1
+              slot_type: contact-info
+              site_slot_id: info
+              variants:
+                - {id: a, text: '1 Primernaya st., office 2, Moscow, 101000', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-address']
+            - slot_id: info-2
+              slot_type: contact-info
+              site_slot_id: info
+              variants:
+                - {id: a, text: 'Mon–Fri, 10:00–19:00 (MSK)', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-hours']
+            - slot_id: legal
+              slot_type: footer-legal
+              variants:
+                - {id: a, text: 'Primer LLC, OGRN 1000000000001, INN 7700000000', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-name', 'fact:company-ogrn', 'fact:company-inn']
+        - section_id: footer
+          section_role: footer
+          block: footer
+          slots:
+            - slot_id: legal
+              slot_type: footer-legal
+              variants:
+                - {id: a, text: 'Primer LLC, OGRN 1000000000001, INN 7700000000', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-name', 'fact:company-ogrn', 'fact:company-inn']
+            - slot_id: privacy-label
+              slot_type: nav-label
+              variants:
+                - {id: a, text: Personal data policy, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-1-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-1
+              variants:
+                - {id: a, text: Blog, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-2-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-2
+              variants:
+                - {id: a, text: About, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-3-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-3
+              variants:
+                - {id: a, text: Contacts, status: assumed, source: ai-self}
+              chosen: a

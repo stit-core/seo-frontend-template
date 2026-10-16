@@ -16,7 +16,7 @@ copy_deck:
       page_type: home-multipage
       status: assumed
       meta:
-        title: Шаблон индексируемого сайта — ssr-frontend-template
+        title: Шаблон индексируемого сайта
         description: >-
           Шаблон сайта на Astro, который собирает страницы заранее: JavaScript — только острова по решению, один
           Docker-образ на все среды.

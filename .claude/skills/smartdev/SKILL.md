@@ -23,7 +23,7 @@ description: Cockpit сессии — сводка состояния (ветк�
 3. **Шаблонное ли состояние** репо:
    ```bash
    grep -m1 '"name"' package.json                    # @stit/ssr-frontend-template ⇒ форк не развёрнут
-   grep -rl '{{OPERATOR_' src/pages/legal/ | wc -l   # >0 ⇒ политика ПДн с плейсхолдерами
+   grep -l 'example: true' strategy/facts*.yaml | wc -l   # >0 ⇒ реквизиты оператора — демо-факты
    ls docs/stack/*.md | grep -vc README.md          # 0 ⇒ стек не проектировался
    ```
    плюс демо-идентичность: `SITE_NAME` в `src/shared/config/site.ts`, `COMPANY` в
@@ -60,7 +60,7 @@ description: Cockpit сессии — сводка состояния (ветк�
 ```
 ветка: main (чисто, 3 коммита сверх origin)
 план: «Раздел услуг» — шаг 2/4
-шаблон: развёрнут (пакет @acme/site, плейсхолдеров оператора нет)
+шаблон: развёрнут (пакет @acme/site, демо-фактов оператора нет)
 стек: 10 из 10 обязательных stable; api заведён, analytics нет
 зависимости: цикл обновлений 2026-09-02 — пора ежемесячной процедуры
 карта: ../strategy/docs/projects/acme/fsd/web/ — на месте

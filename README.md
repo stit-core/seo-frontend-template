@@ -155,8 +155,8 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 страница с сохранёнными полями, сбой канала — честный 500; отказ до разбора заявки — короткий
 текст (403, 400, 413). Тело заявки не логируется. Rate-limit на этот путь ставится на edge —
 требование контракта [`infra-handoff.md`](docs/reference/infra-handoff.md). Правило —
-`.claude/rules/forms-antispam.md`; политика обработки ПДн — `/legal/privacy` с плейсхолдерами
-реквизитов оператора.
+`.claude/rules/forms-antispam.md`; политика обработки ПДн — `/legal/privacy`: текст — copy deck
+страницы `privacy`, реквизиты оператора — факты проекта (у шаблона — демо, `example: true`).
 
 ## SEO
 

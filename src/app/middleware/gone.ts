@@ -11,7 +11,7 @@ export function goneResponse(locale: Locale): Response {
     `<title>410 — ${t(locale, 'gone.title')}</title>`,
     '<style>body{font-family:system-ui,sans-serif;line-height:1.5;max-width:44rem;margin:4rem auto;padding:0 1.5rem}</style>',
     `</head><body><h1>${t(locale, 'gone.title')}</h1>`,
-    `<p>${t(locale, 'gone.lead')} <a href="${localePath(locale, '/')}">${t(locale, 'notFound.home')}</a></p>`,
+    `<p>${t(locale, 'gone.lead')} <a href="${localePath(locale, '/')}">${t(locale, 'error.home')}</a></p>`,
     '</body></html>',
   ].join('')
   return new Response(html, {

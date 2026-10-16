@@ -1,107 +1,31 @@
 ---
-import home from 'virtual:strategy/home'
+import about from 'virtual:strategy/about'
 import DocumentLayout from '@/app/layouts/document.astro'
-import { COMPANY, CompanyContacts } from '@/entities/company'
-import { type Locale, t } from '@/shared/i18n'
+import type { Locale } from '@/shared/i18n'
 import { localBusiness } from '@/shared/seo'
 import { pageOf, pageVersions } from '@/shared/strategy'
-import { Heading } from '@/shared/ui/heading'
-import { Section } from '@/shared/ui/section'
-import { Term, TermList } from '@/shared/ui/term-list'
+import { ContactDetails, contactDetails } from '@/widgets/contact-details'
+import { HeroText, heroText } from '@/widgets/hero-text'
+import { Prose, prose } from '@/widgets/prose'
+import { businessOf } from './model'
 
 interface Props {
   locale: Locale
 }
 
 const { locale } = Astro.props
-
-const COPY = {
-  ru: {
-    title: 'О компании: сайты, которые видно в поиске',
-    description:
-      'Организация reference-набора: чем занимается, где находится, когда работает и как с ней связаться. Разметка LocalBusiness собирается из этих же фактов.',
-    lead: 'Небольшая студия: делаем сайты, которые видно в поиске. Тексты живут в git, страницы собираются заранее, сервер отдаёт готовые файлы.',
-    work: 'Чем занимаемся',
-    works: [
-      'Сайты-визитки, блоги и справочные разделы: структура, тексты, вёрстка, публикация.',
-      'Техническая сторона поиска: карта сайта, разметка, скорость, честные коды ответов.',
-      'Поддержка: обновления контента, слежение за доступностью, разбор обращений из формы.',
-    ],
-    details: 'Реквизиты и контакты',
-    legalNameLabel: 'Юридическое лицо',
-    note: 'Данные на этой странице — демонстрационные: название, телефон, адрес и часы работы заменяются при развёртывании шаблона в проект.',
-  },
-  en: {
-    title: 'About the company: sites you can find in search',
-    description:
-      'The organisation of the reference set: what it does, where it is, when it works and how to reach it. The LocalBusiness markup is built from the same facts.',
-    lead: 'A small studio that builds sites you can find in search. Texts live in git, pages are built ahead of time, the server ships ready files.',
-    work: 'What we do',
-    works: [
-      'Brochure sites, blogs and reference sections: structure, copy, markup, publishing.',
-      'The technical side of search: sitemaps, structured data, speed, honest status codes.',
-      'Support: content updates, uptime watch, handling the requests that arrive by form.',
-    ],
-    details: 'Details and contacts',
-    legalNameLabel: 'Legal entity',
-    note: 'The data on this page is demonstration data: the name, phone, address and office hours are replaced when the template becomes a project.',
-  },
-} satisfies Record<Locale, unknown>
-
-const copy = COPY[locale]
-// Заголовок раздела — h1; title сниппета говорит, чем компания занимается.
-const heading = t(locale, 'nav.about')
-const address = COMPANY.address[locale]
+const page = pageOf(about, locale)
 ---
 
 <DocumentLayout
   locale={locale}
-  chrome={pageOf(home, locale)}
-  title={copy.title}
-  description={copy.description}
+  chrome={page}
   translations={pageVersions('about')}
-  jsonLd={[
-    localBusiness({
-      legalName: COMPANY.legalName,
-      description: copy.lead,
-      email: COMPANY.email,
-      telephone: COMPANY.phone,
-      address: {
-        country: COMPANY.addressCountry,
-        postalCode: address.postalCode,
-        locality: address.locality,
-        street: address.street,
-      },
-      openingHours: COMPANY.openingHours,
-    }),
-  ]}
+  title={page.meta.title}
+  description={page.meta.description}
+  jsonLd={[localBusiness(businessOf(page))]}
 >
-  <Section labelledby="page-title">
-    <Heading id="page-title" level={1}>
-      {heading}
-    </Heading>
-    <p class="mt-stack-display text-lead text-secondary">{copy.lead}</p>
-  </Section>
-
-  <Section labelledby="work">
-    <Heading id="work" level={2}>
-      {copy.work}
-    </Heading>
-    <ul class="mt-lg grid gap-md text-body">
-      {copy.works.map((item) => (
-        <li class="border-l-thick border-subtle pl-md">{item}</li>
-      ))}
-    </ul>
-  </Section>
-
-  <Section labelledby="details">
-    <Heading id="details" level={2}>
-      {copy.details}
-    </Heading>
-    <TermList class="mt-lg">
-      <Term name={copy.legalNameLabel}>{COMPANY.legalName}</Term>
-    </TermList>
-    <CompanyContacts locale={locale} class="mt-sm" />
-    <p class="note mt-xl">{copy.note}</p>
-  </Section>
+  <HeroText {...heroText.props(page, 'hero')} />
+  <Prose {...prose.props(page, 'about')} />
+  <ContactDetails {...contactDetails.props(page, 'contacts')} locale={locale} />
 </DocumentLayout>

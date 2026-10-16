@@ -308,25 +308,26 @@ function strategyFiles<T>(kind: 'plans' | 'copy', parse: (data: unknown, path: s
     .map((path) => parse(load(readFileSync(resolve(dir, path), 'utf8')), `site/${path}`))
 }
 
-// Заголовок страницы 404 на языке — h1 её блока not-found (элемент title) из copy deck этого языка: версия страницы
-// ошибки в данных. Нет её — отказ: под префиксом языка страница ответила бы ошибкой.
-export function notFoundTitle(locale: Locale): string {
+// Текст элемента блока страницы на языке — из copy deck этого языка по плану страницы: секция блока, слот с этим
+// элементом анатомии (заголовок 404, подпись кнопки формы, подтверждение заявки). Нет его — отказ: страница ответила бы
+// без этого текста.
+export function pageText(page: string, block: string, element: string, locale: Locale): string {
   const plan = strategyFiles('plans', (data, path) => parseFile(PlanSchema, data, path)).find(
-    ({ page }) => page.id === 'not-found',
+    (candidate) => candidate.page.id === page,
   )
-  const section = plan?.sections.find(({ block }) => block === 'not-found')
+  const section = plan?.sections.find((candidate) => candidate.block === block)
   const slot = section?.slots.text.find(
-    (candidate) => elementOf(candidate, 'text')?.element === 'title',
+    (candidate) => elementOf(candidate, 'text')?.element === element,
   )
   const found = strategyFiles('copy', (data, path) => parseFile(CopyDeckSchema, data, path))
     .filter(({ copy_deck: deck }) => langOf(deck.lang) === locale)
     .flatMap(({ copy_deck: deck }) => deck.pages)
-    .find(({ page_id: id }) => id === plan?.page.id)
+    .find(({ page_id: id }) => id === page)
     ?.sections.find(({ section_id: id }) => id === section?.id)
     ?.slots.find(({ slot_id: id }) => id === slot?.id)
-  if (found === undefined)
-    throw new Error(`strategy: у страницы not-found нет заголовка на ${locale}`)
-  return chosenText(found, `not-found/${section?.id ?? ''}/${slot?.id ?? ''}`)
+  const key = `${page}/${section?.id ?? block}/${slot?.id ?? element}`
+  if (found === undefined) throw new Error(`strategy: ${key} — нет текста на ${locale}`)
+  return chosenText(found, key)
 }
 
 // Правила content/redirects.yaml.

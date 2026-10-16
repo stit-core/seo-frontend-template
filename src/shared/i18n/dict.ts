@@ -7,8 +7,6 @@ const ru = {
   'nav.label': 'Основная навигация',
   'nav.skip': 'К содержимому',
   'nav.home': 'Главная',
-  'nav.about': 'О компании',
-  'nav.contacts': 'Контакты',
   'nav.breadcrumbs': 'Хлебные крошки',
   'theme.dark': 'Тёмная тема',
   'motion.label': 'Движение',
@@ -17,7 +15,7 @@ const ru = {
   'motion.full': 'Полное',
   'footer.links': 'Ссылки подвала',
   'og.alt': '{site} — шаблон индексируемого сайта',
-  'notFound.home': 'На главную',
+  'error.home': 'На главную',
   'gone.title': 'Страница удалена',
   'gone.lead': 'Этот адрес больше не существует.',
   'error.title': 'Что-то сломалось',
@@ -33,8 +31,6 @@ const ru = {
   'blog.newer': 'Новее',
   'blog.older': 'Старее',
   'blog.empty': 'Записей пока нет.',
-  'blog.all': 'Все заметки',
-  'blog.latest': 'Свежие заметки',
   'blog.tags': 'Теги',
   'blog.tag': 'Записи с тегом #{tag}',
   'blog.tagDescription':
@@ -63,17 +59,12 @@ const ru = {
   'form.error.consent': 'Без согласия на обработку данных заявку принять нельзя.',
   'form.error.captcha': 'Проверка не пройдена. Отправьте форму ещё раз.',
   'form.error.delivery': 'Заявка не ушла: сбой доставки. Напишите на почту — адрес ниже.',
-  'thanks.title': 'Заявка отправлена',
-  'thanks.lead': 'Ответим на указанную почту. Обычно это занимает один рабочий день.',
-  'thanks.back': 'Вернуться к контактам',
 }
 
 const en = {
   'nav.label': 'Main navigation',
   'nav.skip': 'Skip to content',
   'nav.home': 'Home',
-  'nav.about': 'About',
-  'nav.contacts': 'Contacts',
   'nav.breadcrumbs': 'Breadcrumbs',
   'theme.dark': 'Dark theme',
   'motion.label': 'Motion',
@@ -82,7 +73,7 @@ const en = {
   'motion.full': 'Full',
   'footer.links': 'Footer links',
   'og.alt': '{site} — indexable site template',
-  'notFound.home': 'Home',
+  'error.home': 'Home',
   'gone.title': 'Page removed',
   'gone.lead': 'This address no longer exists.',
   'error.title': 'Something broke',
@@ -98,8 +89,6 @@ const en = {
   'blog.newer': 'Newer',
   'blog.older': 'Older',
   'blog.empty': 'No posts yet.',
-  'blog.all': 'All notes',
-  'blog.latest': 'Latest notes',
   'blog.tags': 'Tags',
   'blog.tag': 'Posts tagged #{tag}',
   'blog.tagDescription':
@@ -129,9 +118,6 @@ const en = {
   'form.error.captcha': 'The check did not pass. Send the form again.',
   'form.error.delivery':
     'The request did not go through: delivery failed. Write to the email below.',
-  'thanks.title': 'Request sent',
-  'thanks.lead': 'We reply to the email you left, usually within one business day.',
-  'thanks.back': 'Back to contacts',
 }
 
 export const DICTS = { ru, en } satisfies Record<Locale, Readonly<Record<string, string>>>
