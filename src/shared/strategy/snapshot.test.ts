@@ -1,6 +1,14 @@
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '@/shared/i18n'
 import { langOf, mapLanguages } from './contract'
-import { type PageFiles, pageLink, pageLocales, pageOf, snapshot, strategyPage } from './page'
+import {
+  type PageFiles,
+  pageLink,
+  pageLocales,
+  pageOf,
+  projectOf,
+  snapshot,
+  strategyPage,
+} from './page'
 
 describe('снимок сайта strategy/', () => {
   // Языки карты и дескриптор локалей — один список: язык карты без строки дескриптора не собрать, а строка без языка
@@ -83,6 +91,25 @@ describe('снимок сайта strategy/', () => {
     expect(() => pageOf(plans, DEFAULT_LOCALE)).toThrow(
       `strategy: ${plan.page.id} — нет страницы в copy deck ${DEFAULT_LOCALE}`,
     )
+  })
+
+  // В бандл идут поля, которые читает код, а не файл целиком: прозы плана, статусов и источников текстов в нём нет.
+  it('файл снимка в модуле сборки — поля схем чтения: разбор схемой его не меняет', () => {
+    const files = import.meta.glob<unknown>(
+      [
+        '../../../strategy/facts*.yaml',
+        '../../../strategy/site/*/site-map.yaml',
+        '../../../strategy/site/*/plans/*.yaml',
+        '../../../strategy/site/*/copy/*.yaml',
+      ],
+      { eager: true, import: 'default' },
+    )
+    expect(Object.keys(files).length).toBeGreaterThan(0)
+    for (const [path, data] of Object.entries(files)) {
+      const file = path.slice('../../../strategy/'.length)
+      const { map, facts, plans, decks } = projectOf({ [file]: data })
+      expect(data, file).toEqual(map ?? facts[0] ?? plans[0] ?? decks[0])
+    }
   })
 
   it('модуль без плана или с двумя планами — ошибка', () => {

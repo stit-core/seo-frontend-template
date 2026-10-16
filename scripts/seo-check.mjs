@@ -37,7 +37,8 @@
 //   (маршрута локалей — хоть на одной локали), страниц черновиков нет;
 // - рантайм образа (dist/server и docker/*.mjs) импортирует ровно dependencies: пакета вне них,
 //   зависимости без импорта и имени модуля, которого не прочесть, нет; серверный бандл — без
-//   конвейера картинок Astro: модуля с импортом sharp в нём нет;
+//   конвейера картинок Astro: модуля с импортом sharp в нём нет; данные страниц strategy в нём —
+//   только страниц, которые читают модулем on-demand маршруты, а не снимок целиком;
 // - карта сайта sitemap.xml: ровно индексируемые страницы сборки своим self-canonical, lastmod —
 //   дата последнего изменения записи из frontmatter (правка, без неё — публикация), у остальных
 //   страниц его нет.
@@ -45,7 +46,7 @@
 // (`pnpm test:http`) — им нужен сервер.
 import { existsSync, readFileSync, statSync } from 'node:fs'
 import { isBuiltin } from 'node:module'
-import { basename, relative, resolve, sep } from 'node:path'
+import { basename, dirname, relative, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { load } from 'js-yaml'
 import sharp from 'sharp'
@@ -1091,6 +1092,43 @@ for (const name of dependencies) {
       `${name} в dependencies, а рантайм (dist/server, docker/*.mjs) его не импортирует — пакет сборки и инструментов живёт в devDependencies`,
     )
   }
+}
+
+// On-demand маршрут читает свою страницу strategy модулем `virtual:strategy/<id>` — сам или разметкой страницы, которую
+// импортирует, — а не снимок целиком: в серверном бандле — данные только этих страниц. Данные страницы в бандле узнаются
+// по пути её плана в снимке (`site/<поверхность>/plans/<id>.yaml`). Бюджет бандла в size-limit ловит снимок лишь по
+// объёму: у сайта с одной локалью снимок в бюджет влезает.
+const PAGE_MODULE = /\bfrom\s+['"]virtual:strategy\/([\w-]+)['"]/g
+const LOCAL_MODULE = /\bfrom\s+['"](\.\.?\/[^'"]+)['"]/g
+const PAGE_PLAN = /\bsite\/[\w-]+\/plans\/([\w-]+)\.yaml\b/g
+const onDemandPages = new Set()
+const readSources = new Set()
+const readPages = (file) => {
+  if (readSources.has(file) || !existsSync(file) || !statSync(file).isFile()) return
+  readSources.add(file)
+  const source = readFileSync(file, 'utf8')
+  for (const [, id] of source.matchAll(PAGE_MODULE)) onDemandPages.add(id)
+  for (const [, path] of source.matchAll(LOCAL_MODULE)) readPages(resolve(dirname(file), path))
+}
+for (const { file, mode } of pageRoutes(resolve(root, 'src/pages'))) {
+  if (mode === 'dynamic') readPages(file)
+}
+const serverDir = resolve(root, 'dist/server')
+const strayPages = new Map()
+for (const file of existsSync(serverDir)
+  ? walk(serverDir).filter((path) => path.endsWith('.mjs'))
+  : []) {
+  for (const [, id] of readFileSync(file, 'utf8').matchAll(PAGE_PLAN)) {
+    if (!onDemandPages.has(id) && !strayPages.has(id)) {
+      strayPages.set(id, `dist/server/${relative(serverDir, file).split(sep).join('/')}`)
+    }
+  }
+}
+for (const [id, where] of strayPages) {
+  fail(
+    where,
+    `данные страницы strategy ${id} — её не рендерит ни один on-demand маршрут: маршрут читает свою страницу модулем virtual:strategy/<id>, а не снимок целиком`,
+  )
 }
 
 // ---------- между страницами: имя организации, уникальность сниппета, hreflang ----------

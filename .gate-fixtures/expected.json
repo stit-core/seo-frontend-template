@@ -196,6 +196,7 @@
     "dist/server/chunks/require_Fx4.mjs: импорт kleur — пакета нет в dependencies, а образ ставит только их",
     "dist/server/chunks/require_Fx4.mjs: импорт chalk — пакета нет в dependencies, а образ ставит только их",
     "dist/server/chunks/sharp_Fx1.mjs: импорт sharp — конвейер картинок Astro в серверном бандле: getImage и astro:assets — только модулям сборки",
+    "dist/server/chunks/stranicy_Fx5.mjs: данные страницы strategy o-nas — её не рендерит ни один on-demand маршрут: маршрут читает свою страницу модулем virtual:strategy/<id>, а не снимок целиком",
     "docker/server.mjs: import() или require() с вычисляемым именем — пакет не проверить: имя модуля строкой",
     "docker/server.mjs: импорт semver — пакета нет в dependencies, а образ ставит только их",
     "docker/server.mjs: импорт yaml — пакета нет в dependencies, а образ ставит только их",
