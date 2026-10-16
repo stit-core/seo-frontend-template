@@ -205,7 +205,7 @@ describe('DocumentLayout', () => {
     expect(document.querySelector('header nav')?.getAttribute('aria-label')).toBe(
       t(DEFAULT_LOCALE, 'nav.label'),
     )
-    expect(document.querySelector('footer p')?.textContent).toBe(legal)
+    expect(document.querySelector('footer p')?.textContent?.replace(/\s/g, ' ')).toBe(legal)
   })
 
   // Крошки — один проп: видимые перед <main> и BreadcrumbList в <head> — одни имена и адреса.

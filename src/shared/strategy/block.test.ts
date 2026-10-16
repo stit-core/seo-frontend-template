@@ -1,5 +1,17 @@
 import { testLocale } from '@/shared/lib/testing'
-import { action, defineBlock, fact, group, labelled, list, media, text, untargeted } from './block'
+import {
+  action,
+  date,
+  defineBlock,
+  fact,
+  group,
+  labelled,
+  list,
+  media,
+  text,
+  unshown,
+  untargeted,
+} from './block'
 import type { Section, StrategyPage } from './page'
 
 const promo = defineBlock({
@@ -123,6 +135,29 @@ describe('strategy/block', () => {
     })
     expect(() => header({ 'lang-switch': { href: '/en' } })).toThrow('→ at ["lang-switch"].href')
     expect(() => header({ logo: 'logo.svg' })).toThrow('→ at logo')
+  })
+
+  // Успех формы без JS — страница «спасибо»: текст успеха блок принимает, а не показывает; дату записи кладёт страница.
+  it('текст, который блок не показывает, — текст плана; дата записи коллекции — дата, а не текст', () => {
+    const form = defineBlock({
+      id: 'lead-form',
+      variants: ['short'],
+      slots: { title: text, success: unshown.optional() },
+    })
+    const lead = (slots: Section['slots']) =>
+      form.props(
+        page(section({ id: 'form', block: 'lead-form', variant: 'short', slots, groups: {} })),
+        'form',
+      )
+    expect(lead({ title: 'Заявка', success: 'Заявка у нас' })).toStrictEqual({
+      id: 'form',
+      variant: 'short',
+      title: 'Заявка',
+      success: 'Заявка у нас',
+    })
+    expect(() => lead({ title: 'Заявка', success: { href: '/spasibo' } })).toThrow('→ at success')
+    expect(date.safeParse(new Date('2026-09-01')).success).toBe(true)
+    expect(date.safeParse('1 сентября 2026').success).toBe(false)
   })
 
   it('действия и подписи — пары по порядку плана; у пары нет половины — ошибка называет ключ', () => {

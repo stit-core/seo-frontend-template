@@ -51,7 +51,7 @@ Reference-набор шаблона — **живой образец**, а не �
 ```
 src/entities/post/            слайс коллекции целиком (контент, схема, запросы, ui, тесты)
 src/entities/author/          реестр авторов и подпись: записей с автором не остаётся
-src/widgets/post-list/
+src/widgets/article-cards/      свежие записи главной — блок, который без блога не ставит ни один план
 src/pages/[...locale]/blog/  src/pages/_blog/
 src/pages/[...locale]/rss.xml.ts
 src/pages/_tests/blog.astro.test.ts
@@ -67,7 +67,7 @@ src/shared/seo/rss.ts  src/shared/seo/rss.test.ts
 | `scripts/check-content.mjs` | импорт `SLUG_RE` вёл в слайс — заменить локальной константой `const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/` |
 | `strategy/site/<поверхность>/site-map.yaml` | убрать страницы `blog`, `post`, `tag`, коллекции `posts` и `tags` и ссылки на них (`chrome`, `linking`, `build_order`): без страницы блога в карте `<head>` не печатает автообнаружение фида |
 | `src/pages/_home/home-page.astro` | убрать `listPosts`/`PostList` и блок «свежие заметки»; CTA — на свою страницу |
-| `strategy/site/<поверхность>/plans/*.yaml`, `copy/*.yaml` | пункт блога в шапке — строка `chrome.header.items` карты и подпись `nav-link` секции `header` плана и copy deck каждой страницы (число подписей = числу пунктов карты, иначе сборка падает); раздел блога в подвале — экземпляр группы `nav` секции `footer` |
+| `strategy/site/<поверхность>/plans/*.yaml`, `copy/*.yaml` | пункт блога в шапке — строка `chrome.header.items` карты и подпись `nav-link` секции `header` плана и copy deck каждой страницы (число подписей = числу пунктов карты, иначе сборка падает); раздел блога в подвале — экземпляр группы `nav` секции `footer`, путь в блог на 404 — экземпляр группы `route` секции `not-found`; секция свежих записей главной (`article-cards`) — из её плана и copy deck (у секции плана без блока шаблона тест контракта красный) |
 | `src/shared/seo/seo-head.astro`, `src/app/layouts/document.astro` | убрать проп `feed` и автообнаружение фида: его подпись — строка `blog.feed` словаря, она уходит с ключами `blog.*` |
 | `src/shared/seo/index.ts` | убрать реэкспорт `buildFeed` |
 | `src/shared/seo/seo-head.astro.test.ts` | убрать кейс фида своей локали |

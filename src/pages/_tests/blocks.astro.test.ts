@@ -1,5 +1,7 @@
+import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
 import { z } from 'zod'
-import { PACKAGE_LANDING } from '@/shared/lib/testing'
+import { PACKAGE_LANDING, parseHtml, sectionFaults, testLocale } from '@/shared/lib/testing'
 import {
   action,
   defineBlock,
@@ -7,8 +9,12 @@ import {
   fact,
   group,
   list,
+  pageLocales,
   projectOf,
+  type StrategyPage,
+  siteOf,
   snapshot,
+  strategyPage,
   text,
 } from '@/shared/strategy'
 import catalogFile from '../../../strategy/kb/site/04-blocks/blocks.yaml'
@@ -23,6 +29,9 @@ const Catalog = z.object({
   blocks: z.record(
     z.string(),
     z.object({
+      // Каркас (`chrome`) ставит оболочка, а не план страницы секцией.
+      flow: z.string().optional(),
+      html: z.object({ heading: z.string().optional() }).default({}),
       variants: z.array(
         z.object({
           id: z.string(),
@@ -39,21 +48,30 @@ const Catalog = z.object({
 })
 const catalog = Catalog.parse(catalogFile).blocks
 
-// Блоки шаблона — контракты из public API слайсов widgets: id, варианты и слоты.
+// Блоки шаблона — public API слайсов widgets: контракт (id, варианты, слоты, пропсы секции) и компонент блока.
 interface Block {
   id: string
   variants: readonly string[]
   slots: Record<string, z.ZodType>
+  props: (page: StrategyPage, section: string) => Record<string, unknown>
 }
 const isBlock = (value: unknown): value is Block =>
   typeof value === 'object' && value !== null && 'variants' in value && 'slots' in value
-const blocks = Object.entries(
+const slices = Object.entries(
   import.meta.glob<Record<string, unknown>>('../../widgets/*/index.ts', { eager: true }),
-).flatMap(([path, module]) =>
+).map(([path, module]) => ({ slice: path.split('/').at(-2) ?? '', module }))
+const blocks = slices.flatMap(({ slice, module }) =>
   Object.values(module)
     .filter(isBlock)
-    .map((block) => ({ slice: path.split('/').at(-2), block })),
+    .map((block) => ({ slice, block })),
 )
+// Компонент блока — экспорт слайса по имени блока: `hero-text` → `HeroText`.
+const componentName = (id: string) =>
+  id.replace(/(?:^|-)(\w)/g, (_, letter: string) => letter.toUpperCase())
+const componentOf = (id: string) => {
+  const component = slices.find(({ slice }) => slice === id)?.module[componentName(id)]
+  return typeof component === 'function' ? (component as AstroComponentFactory) : undefined
+}
 
 // Форма слота блока — его JSON Schema: элементы экземпляра набора и список ли значение. Факт — значение чтения без
 // формы JSON (`z.custom`): у него форма пустая.
@@ -84,6 +102,17 @@ function acceptedOf(block: Block) {
 
 const plans = [...snapshot().plans, ...projectOf(PACKAGE_LANDING).plans]
 
+// Страницы с планами — на своих языках: страницы снимка сайта на языках карты, посадочная фикстуры базы — на русском.
+const pages = [
+  ...snapshot().plans.flatMap(({ page: { id } }) =>
+    pageLocales(id).map((locale) => ({ page: strategyPage(id, locale), locale })),
+  ),
+  {
+    page: siteOf(projectOf(PACKAGE_LANDING)).strategyPage('spasibo', testLocale('ru')),
+    locale: testLocale('ru'),
+  },
+]
+
 describe('блоки каталога: блок ↔ каталог ↔ планы', () => {
   it('форма слота читается у любого вида значения: элемент, список, набор и его элементы', () => {
     const footer = defineBlock({
@@ -106,15 +135,21 @@ describe('блоки каталога: блок ↔ каталог ↔ план�
     ])
   })
 
-  it('у шаблона есть блоки, каждый — widgets/<id блока каталога>', () => {
-    expect(blocks.length).toBeGreaterThan(0)
+  it('каждый widget — блок каталога: в слайсе контракт блока с id слайса и компонент блока', () => {
+    expect(slices.length).toBeGreaterThan(0)
     expect(
-      blocks.flatMap(({ slice, block }) => [
-        ...(slice === block.id
-          ? []
-          : [`widgets/${slice ?? ''}: блок ${block.id} — не в своём слайсе`]),
-        ...(block.id in catalog ? [] : [`${block.id}: такого блока нет в каталоге`]),
-      ]),
+      slices.flatMap(({ slice, module }) => {
+        const own = Object.values(module).filter(isBlock)
+        return [
+          ...(own.length === 1 && own[0]?.id === slice
+            ? []
+            : [`widgets/${slice}: контракт — ${own.map((block) => block.id).join(', ') || 'нет'}`]),
+          ...(slice in catalog ? [] : [`widgets/${slice}: блока ${slice} нет в каталоге`]),
+          ...(componentOf(slice)
+            ? []
+            : [`widgets/${slice}: нет компонента ${componentName(slice)}`]),
+        ]
+      }),
     ).toEqual([])
   })
 
@@ -179,14 +214,15 @@ describe('блоки каталога: блок ↔ каталог ↔ план�
     ).toEqual([])
   })
 
-  it('секция плана — вариант, который блок умеет, слоты — элементы, которые он принимает', () => {
+  it('у секции плана — блок шаблона: вариант, который он умеет, слоты — элементы, которые он принимает', () => {
     const byId = new Map(blocks.map(({ block }) => [block.id, block]))
     expect(
       plans.flatMap((plan) =>
         plan.sections.flatMap((section) => {
-          const block = byId.get(section.block)
-          if (block === undefined) return []
           const key = `${plan.page.id}/${section.id}`
+          const block = byId.get(section.block)
+          if (block === undefined)
+            return [`${key}: блок ${section.block} — нет widgets/${section.block}`]
           const accepted = acceptedOf(block)
           const faults = block.variants.includes(section.variant)
             ? []
@@ -219,5 +255,32 @@ describe('блоки каталога: блок ↔ каталог ↔ план�
         }),
       ),
     ).toEqual([])
+  })
+
+  // Каркас — шапку и подвал — ставит оболочка: меню и разделы подвала — версии языка страницы, их судят тесты блоков.
+  it('секция плана — в разметке блока: заголовок с id секции уровня каталога, каждый текст, адрес действия, экземпляр набора', async () => {
+    const container = await AstroContainer.create()
+    const faults: string[] = []
+    for (const { page, locale } of pages) {
+      for (const section of page.sections) {
+        const entry = catalog[section.block]
+        const block = blocks.find((candidate) => candidate.block.id === section.block)?.block
+        const component = componentOf(section.block)
+        if (entry?.flow === 'chrome' || block === undefined || component === undefined) continue
+        const html = await container.renderToString(component, {
+          props: { ...block.props(page, section.id), locale },
+        })
+        const heading = parseHtml(html).getElementById(section.id)?.tagName.toLowerCase()
+        if (heading !== entry?.html.heading) {
+          faults.push(
+            `${locale} ${page.id}/${section.id}: заголовок ${heading ?? 'нет'}, в каталоге ${entry?.html.heading ?? '—'}`,
+          )
+        }
+        faults.push(
+          ...sectionFaults(html, page, section.id, block).map((fault) => `${locale} ${fault}`),
+        )
+      }
+    }
+    expect(faults).toEqual([])
   })
 })

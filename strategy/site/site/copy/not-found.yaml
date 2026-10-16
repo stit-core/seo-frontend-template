@@ -1,0 +1,126 @@
+# Тексты страницы 404 проекта шаблона site-template — copy deck v1 базы strategy (kb/text/10-templates-recipes/
+# copy-deck.schema.json): секции и слоты — id плана plans/not-found.yaml, текст слота — выбранный вариант.
+copy_deck:
+  version: 1
+  date: '2026-10-16'
+  site: site-template
+  product_name: ssr-frontend-template
+  lang: ru
+  facts_ref: ../../../facts.yaml
+  page_plan_ref: ../plans/not-found.yaml
+  jurisdiction: ru
+  legal_category: [general]
+  authors: [исполнитель шаблона]
+  pages:
+    - page_id: not-found
+      page_type: not-found-page
+      status: assumed
+      meta:
+        title: Страница не найдена
+        description: >-
+          Такой страницы на сайте нет: адрес изменился или в нём опечатка. Начните с главной или откройте нужный раздел.
+        fact_ids: []
+      sections:
+        - section_id: header
+          section_role: header
+          block: header
+          slots:
+            - slot_id: nav-link-1
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Блог, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-2
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: О компании, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-3
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Контакты, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: not-found
+          section_role: not-found
+          block: not-found
+          slots:
+            - slot_id: title
+              slot_type: headline
+              variants:
+                - {id: a, text: Страница не найдена, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: body
+              slot_type: body
+              variants:
+                - id: a
+                  text: >-
+                    Такой страницы на сайте нет — возможно, она переехала или в адресе опечатка. Начните с главной
+                    или откройте нужный раздел.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: cta-label
+              slot_type: cta-label
+              variants:
+                - {id: a, text: На главную, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: route-1-label
+              slot_type: nav-label
+              site_slot_id: route.label
+              group: route-1
+              variants:
+                - {id: a, text: Блог, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: route-2-label
+              slot_type: nav-label
+              site_slot_id: route.label
+              group: route-2
+              variants:
+                - {id: a, text: О компании, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: route-3-label
+              slot_type: nav-label
+              site_slot_id: route.label
+              group: route-3
+              variants:
+                - {id: a, text: Контакты, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: footer
+          section_role: footer
+          block: footer
+          slots:
+            - slot_id: legal
+              slot_type: footer-legal
+              variants:
+                - {id: a, text: 'ООО «Пример», ОГРН 1000000000001, ИНН 7700000000', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-name', 'fact:company-ogrn', 'fact:company-inn']
+            - slot_id: privacy-label
+              slot_type: nav-label
+              variants:
+                - {id: a, text: Обработка персональных данных, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-1-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-1
+              variants:
+                - {id: a, text: Блог, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-2-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-2
+              variants:
+                - {id: a, text: О компании, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-3-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-3
+              variants:
+                - {id: a, text: Контакты, status: assumed, source: ai-self}
+              chosen: a

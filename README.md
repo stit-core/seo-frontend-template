@@ -106,8 +106,9 @@ src/pages/        роутинг Astro = слой pages: страница — о
                   страниц — _home/, _about/, _contacts/, _privacy/, _blog/; тесты маршрутов и
                   страниц — _tests/
 src/widgets/      блоки каталога strategy (пропсы — элементы анатомии, вариант — каталога): hero-text,
-                  feature-grid и каркас — header, footer, breadcrumbs (их ставит оболочка по
-                  секциям плана страницы); post-list
+                  feature-grid, prose, contact-details, lead-form, thank-you, not-found, legal-text,
+                  article-cards и каркас — header, footer, breadcrumbs (их ставит оболочка по
+                  секциям плана страницы)
 src/features/     contact-form (форма без JS и её обработчик), preferences (остров предпочтений:
                   тема и движение)
 src/entities/     post: content/{ru,en}/*.md + covers/, model, api, lib, ui; company: реквизиты

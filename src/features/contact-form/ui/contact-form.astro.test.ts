@@ -3,7 +3,14 @@ import { DEFAULT_LOCALE, t } from '@/shared/i18n'
 import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import ContactForm from './contact-form.astro'
 
-const props = { locale: DEFAULT_LOCALE, action: '/api/contact', policyHref: '/legal/privacy' }
+// Подпись кнопки и текст согласия даёт страница — тексты своей секции формы.
+const props = {
+  locale: DEFAULT_LOCALE,
+  action: '/api/contact',
+  policyHref: '/legal/privacy',
+  submitLabel: 'Получить ответ',
+  consentLabel: 'Согласен на обработку персональных данных для ответа',
+}
 
 const render = async (extra: Record<string, unknown> = {}) => {
   const container = await AstroContainer.create()
@@ -41,6 +48,13 @@ describe('ContactForm', () => {
     expect(html).toContain('href="/legal/privacy"')
     expect(html).toContain('type="checkbox"')
     expect(html).toContain('required')
+    // Тексты секции — на своих местах: подпись кнопки и согласие у флажка.
+    expect(form?.querySelector('button[type="submit"]')?.textContent?.trim()).toBe(
+      props.submitLabel,
+    )
+    expect(form?.querySelector('label[for="contact-consent"] span span')?.textContent).toBe(
+      props.consentLabel,
+    )
     // Форма работает без JS: ни одного скрипта в разметке.
     expect(html).not.toContain('<script')
     // Пустая форма фокус не забирает: сводки нет, автофокуса — ни у одного элемента.

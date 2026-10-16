@@ -1,0 +1,30 @@
+---
+import { bindNumbers } from '@/shared/lib'
+import type { BlockProps } from '@/shared/strategy'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
+import type { legalText } from '../model/block'
+
+type Props = BlockProps<typeof legalText>
+
+const { id, title, date, operator, clause: clauses } = Astro.props
+---
+
+<Section labelledby={id}>
+  <article>
+    <Heading id={id} level={1}>
+      {title}
+    </Heading>
+    <p class="mt-stack-display text-helper text-secondary">{date}</p>
+    <p class="mt-xl text-body">{bindNumbers(operator)}</p>
+    {/* Раздел — секция документа в типографике его тела: заголовок раздела без штриха секции страницы. */}
+    {clauses.map((clause) => (
+      <section class="prose">
+        <h2>{clause.heading}</h2>
+        {clause.text.map((paragraph) => (
+          <p>{paragraph}</p>
+        ))}
+      </section>
+    ))}
+  </article>
+</Section>

@@ -1,0 +1,48 @@
+---
+import { formatDate, isoDate, type Locale, t } from '@/shared/i18n'
+import type { BlockProps } from '@/shared/strategy'
+import { ActionLink } from '@/shared/ui/action'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
+import type { articleCards } from '../model/block'
+
+type Props = BlockProps<typeof articleCards> & { locale: Locale }
+
+const { id, title, all, 'all-label': allLabel, article: articles = [], locale } = Astro.props
+---
+
+<Section labelledby={id}>
+  <Heading id={id} level={2}>
+    {title}
+  </Heading>
+  {articles.length === 0 ? (
+    <p class="mt-lg text-body text-secondary">{t(locale, 'blog.empty')}</p>
+  ) : (
+    <ul class="mt-lg flex flex-col gap-xl">
+      {articles.map((article) => (
+        <li>
+          <article class="border-b border-subtle pb-xl">
+            <Heading level={3}>
+              <a
+                href={article.link.href}
+                hreflang={article.link.hreflang}
+                class="touch-target text-primary no-underline hover:text-accent"
+              >
+                {article.title}
+              </a>
+            </Heading>
+            <p class="mt-xs text-helper text-secondary">
+              <time datetime={isoDate(article.date)}>{formatDate(locale, article.date)}</time>
+            </p>
+            {article.excerpt && <p class="mt-sm text-body">{article.excerpt}</p>}
+          </article>
+        </li>
+      ))}
+    </ul>
+  )}
+  {all && allLabel && (
+    <p class="mt-xl">
+      <ActionLink href={all.href} hreflang={all.hreflang} label={allLabel} kind="secondary" />
+    </p>
+  )}
+</Section>

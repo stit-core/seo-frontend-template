@@ -97,24 +97,39 @@ test.describe('on-demand: ответы приложения', () => {
     }
   })
 
-  // Страница ошибки — на языке адреса и только на нём.
-  test('404 — на языке префикса пути: lang, текст и ссылка на главную своей локали, без второго языка', async ({
+  // Страница ошибки — на языке адреса и только на нём: заголовок 404 другой локали в ней не встречается.
+  test('404 — на языке префикса пути: lang, заголовок и ссылка на главную своей локали, без второго языка', async ({
     request,
   }) => {
+    const pages: Array<{
+      locale: (typeof SUPPORTED_LOCALES)[number]
+      path: string
+      html: string
+      main: string
+      title: string | undefined
+    }> = []
     for (const locale of SUPPORTED_LOCALES) {
       const path = localePath(locale, UNKNOWN)
       const response = await request.get(path)
       expect(response.status(), path).toBe(404)
       const html = await response.text()
+      const main = html.slice(html.indexOf('<main'), html.indexOf('</main>'))
+      pages.push({
+        locale,
+        path,
+        html,
+        main,
+        title: /<h1[^>]*>([^<]+)<\/h1>/.exec(main)?.[1]?.trim(),
+      })
+    }
+    for (const { locale, path, html, main, title } of pages) {
       expect(html, path).toContain(`<html lang="${locale}"`)
       expectServicePage(html, path)
-      const main = html.slice(html.indexOf('<main'), html.indexOf('</main>'))
-      expect(main, path).toContain(t(locale, 'notFound.title'))
+      expect(title, path).toBeTruthy()
       expect(main, path).toContain(`href="${localePath(locale, '/')}"`)
       expect(main, path).not.toContain(' lang="')
-      // Другие локали — filter с явным boolean: вывод предиката TS при одной локали сузил бы список до never.
-      for (const other of SUPPORTED_LOCALES.filter((candidate): boolean => candidate !== locale)) {
-        expect(main, `${path}: текст локали ${other}`).not.toContain(t(other, 'notFound.lead'))
+      for (const other of pages.filter((candidate) => candidate.locale !== locale)) {
+        expect(main, `${path}: заголовок 404 локали ${other.locale}`).not.toContain(other.title)
       }
     }
   })

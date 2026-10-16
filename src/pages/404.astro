@@ -4,29 +4,21 @@
 export const prerender = false
 
 import DocumentLayout from '@/app/layouts/document.astro'
-import { localeOf, localePath, t } from '@/shared/i18n'
-import { Heading } from '@/shared/ui/heading'
-import { Section } from '@/shared/ui/section'
+import { localeOf } from '@/shared/i18n'
+import { strategyPage } from '@/shared/strategy'
+import { NotFound, notFound } from '@/widgets/not-found'
 
 // Язык страницы — по префиксу запрошенного пути: под `/en/…` человек читал английскую версию.
 const locale = localeOf(Astro.url.pathname)
+const page = strategyPage('not-found', locale)
 ---
 
 <DocumentLayout
   locale={locale}
-  title={t(locale, 'notFound.title')}
-  description={t(locale, 'notFound.lead')}
+  title={page.meta.title}
+  description={page.meta.description}
+  chrome={page}
   noindex
 >
-  <Section labelledby="page-title">
-    <Heading id="page-title" level={1}>
-      {t(locale, 'notFound.title')}
-    </Heading>
-    <p class="mt-stack-display text-lead text-secondary">{t(locale, 'notFound.lead')}</p>
-    <p class="mt-xl text-body">
-      <a class="touch-target" href={localePath(locale, '/')}>
-        {t(locale, 'notFound.home')}
-      </a>
-    </p>
-  </Section>
+  <NotFound {...notFound.props(page, 'not-found')} />
 </DocumentLayout>

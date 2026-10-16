@@ -19,6 +19,9 @@ interface Props {
   errors?: ContactErrors | undefined
   notice?: DictKey | undefined
   policyHref: string
+  // Подпись кнопки и текст согласия даёт страница — тексты своей секции формы.
+  submitLabel: string
+  consentLabel: string
 }
 
 const {
@@ -28,6 +31,8 @@ const {
   errors = {},
   notice,
   policyHref,
+  submitLabel,
+  consentLabel,
 } = Astro.props
 
 const failures = [
@@ -166,7 +171,7 @@ const describedBy = (id: string, failed: boolean): string | undefined =>
         aria-describedby={describedBy('contact-consent', errors.consent !== undefined)}
       />
       <span>
-        {t(locale, 'form.consent')} — <a href={policyHref}>{t(locale, 'form.consentPolicy')}</a>
+        <span>{consentLabel}</span> — <a href={policyHref}>{t(locale, 'form.consentPolicy')}</a>
       </span>
     </label>
     {errors.consent && (
@@ -178,7 +183,7 @@ const describedBy = (id: string, failed: boolean): string | undefined =>
 
   <div>
     <button class="button" type="submit">
-      {t(locale, 'form.submit')}
+      {submitLabel}
     </button>
   </div>
 </form>

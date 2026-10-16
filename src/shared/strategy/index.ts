@@ -1,6 +1,7 @@
 export type { BlockProps } from './block'
 export {
   action,
+  date,
   defineBlock,
   fact,
   group,
@@ -8,6 +9,7 @@ export {
   list,
   media,
   text,
+  unshown,
   untargeted,
 } from './block'
 export { elementOf } from './contract'

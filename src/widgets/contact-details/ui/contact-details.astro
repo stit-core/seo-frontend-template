@@ -1,0 +1,38 @@
+---
+import { bindNumbers } from '@/shared/lib'
+import type { BlockProps } from '@/shared/strategy'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
+import type { contactDetails } from '../model/block'
+
+type Props = BlockProps<typeof contactDetails>
+
+const { id, title, info, phone, email, legal } = Astro.props
+---
+
+<Section labelledby={id}>
+  <Heading id={id} level={2}>
+    {title}
+  </Heading>
+  {/* Ссылка канала без подписи в анатомии показывает свой адрес: номер телефона, почту. */}
+  <address class="mt-lg flex flex-col gap-xs text-body not-italic">
+    {info.map((line) => (
+      <p>{bindNumbers(line)}</p>
+    ))}
+    {phone && (
+      <p>
+        <a class="touch-target" href={phone.href}>
+          {phone.href.replace(/^tel:/, '')}
+        </a>
+      </p>
+    )}
+    {email && (
+      <p>
+        <a class="touch-target" href={email.href}>
+          {email.href.replace(/^mailto:/, '')}
+        </a>
+      </p>
+    )}
+  </address>
+  {legal && <p class="mt-md text-helper text-secondary">{bindNumbers(legal)}</p>}
+</Section>

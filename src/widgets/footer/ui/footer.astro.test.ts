@@ -45,7 +45,8 @@ const links = (doc: Doc) =>
 describe('Footer', () => {
   it('подвал сайта: реквизиты — текст плана, почта — ссылкой в address, разделы и правовая ссылка — по плану', async () => {
     const { html, doc } = await render({ ...site(), locale: RU })
-    expect(doc.querySelector('footer p')?.textContent).toBe('ООО «Тест», ОГРН 1000000000002')
+    // Подпись реквизита и номер — неразрывным пробелом: «ОГРН» не остаётся в конце строки без номера.
+    expect(doc.querySelector('footer p')?.textContent).toBe('ООО «Тест», ОГРН\u00a01000000000002')
     const mail = doc.querySelector('footer address a')
     expect([mail?.getAttribute('href'), mail?.textContent]).toEqual([
       'mailto:test@example.com',
@@ -64,7 +65,7 @@ describe('Footer', () => {
   // Политика ПДн есть только на основном языке: ссылка ведёт на неё и называет её язык.
   it('в другой локали — разделы её версии, документ без перевода — версия основного языка с hreflang', async () => {
     const en = await render({ ...site(EN), locale: EN })
-    expect(en.doc.querySelector('footer p')?.textContent).toBe('Test LLC, OGRN 1000000000002')
+    expect(en.doc.querySelector('footer p')?.textContent).toBe('Test LLC, OGRN\u00a01000000000002')
     expect(links(en.doc)).toEqual([
       ['/en/blog', null, 'Notes'],
       ['/en/about', null, 'Studio'],

@@ -23,6 +23,7 @@ const TOUCH_MIN = 44
 //   роль ширины или всё окно; роль браузер читает утилитой слоя на пробном элементе;
 // - разорванные слова заголовков: слово рвётся (overflow-wrap: anywhere), только когда не помещается в
 //   строку, а заголовку при обычном кегле до этого не доходит;
+// - разорванные реквизиты подвала: подпись и номер («ИНН 7700000000») — в одной строке;
 // - цели: что посетитель видит и нажимает, — бокс, высота его текста и заливка. Кроме ссылки внутри
 //   предложения (исключение WCAG 2.5.8: размер задаёт строка текста): она строчная, и в её блоке есть
 //   слова вне неё. Элемент флекса или грида браузер делает блочным — он не в строке текста.
@@ -74,18 +75,24 @@ function layout() {
   }
 
   const broken: string[] = []
-  for (const heading of document.querySelectorAll('h1, h2, h3')) {
-    const walker = document.createTreeWalker(heading, NodeFilter.SHOW_TEXT)
-    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-      for (const word of (node.textContent ?? '').matchAll(/[\p{L}\p{N}]+/gu)) {
-        const range = document.createRange()
-        range.setStart(node, word.index)
-        range.setEnd(node, word.index + word[0].length)
-        const lines = new Set([...range.getClientRects()].map((rect) => Math.round(rect.top)))
-        if (lines.size > 1) broken.push(word[0])
+  const split: string[] = []
+  // Отрезки текста, которые обязаны стоять в одной строке: слово заголовка, пара «подпись — номер» реквизита подвала.
+  const scan = (selector: string, pattern: RegExp, into: string[]) => {
+    for (const element of document.querySelectorAll(selector)) {
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        for (const piece of (node.textContent ?? '').matchAll(pattern)) {
+          const range = document.createRange()
+          range.setStart(node, piece.index)
+          range.setEnd(node, piece.index + piece[0].length)
+          const lines = new Set([...range.getClientRects()].map((rect) => Math.round(rect.top)))
+          if (lines.size > 1) into.push(piece[0])
+        }
       }
     }
   }
+  scan('h1, h2, h3', /[\p{L}\p{N}]+/gu, broken)
+  scan('body > footer p', /\p{L}+\s\p{N}+/gu, split)
 
   const words = (text: string) => text.match(/[\p{L}\p{N}]+/gu)?.length ?? 0
   const inSentence = (element: Element) => {
@@ -117,7 +124,7 @@ function layout() {
     })
     .filter((target) => target.width > 1 && target.height > 1)
 
-  return { overflow: root.scrollWidth - width, geometry, broken, targets }
+  return { overflow: root.scrollWidth - width, geometry, broken, split, targets }
 }
 
 type Layout = ReturnType<typeof layout>
@@ -147,6 +154,7 @@ async function inspect(page: Page) {
     expect(facts.overflow, `вылет, ${at}`).toBe(0)
     expect(facts.geometry, `геометрия, ${at}`).toEqual([])
     expect(facts.broken, `слово заголовка разорвано, ${at}`).toEqual([])
+    expect(facts.split, `реквизит подвала разорван, ${at}`).toEqual([])
     const wrong = facts.targets.filter(touch ? small : stretched).map((target) => target.name)
     expect(
       wrong,

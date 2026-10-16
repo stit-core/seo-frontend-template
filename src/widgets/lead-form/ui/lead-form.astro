@@ -1,0 +1,54 @@
+---
+import { type ContactErrors, ContactForm, type ContactValues } from '@/features/contact-form'
+import type { DictKey, Locale } from '@/shared/i18n'
+import type { BlockProps } from '@/shared/strategy'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
+import type { leadForm } from '../model/block'
+
+type Props = BlockProps<typeof leadForm> & {
+  locale: Locale
+  // Маршрут обработчика и адрес политики знает страница.
+  action: string
+  policyHref: string
+  // Значения и ошибки приходят с ответа обработчика формы; на самой странице их нет.
+  values?: ContactValues | undefined
+  errors?: ContactErrors | undefined
+  notice?: DictKey | undefined
+}
+
+const {
+  id,
+  title,
+  lead,
+  'cta-label': submitLabel,
+  consent,
+  'next-steps': nextSteps,
+  locale,
+  action,
+  policyHref,
+  values,
+  errors,
+  notice,
+} = Astro.props
+---
+
+<Section labelledby={id}>
+  <Heading id={id} level={2}>
+    {title}
+  </Heading>
+  <p class="mt-md text-lead text-secondary">{lead}</p>
+  <div class="mt-lg">
+    <ContactForm
+      locale={locale}
+      action={action}
+      policyHref={policyHref}
+      submitLabel={submitLabel}
+      consentLabel={consent}
+      values={values}
+      errors={errors}
+      notice={notice}
+    />
+  </div>
+  <p class="mt-lg text-helper text-secondary">{nextSteps}</p>
+</Section>

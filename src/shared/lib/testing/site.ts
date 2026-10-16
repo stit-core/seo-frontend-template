@@ -1,7 +1,41 @@
 import type * as Strategy from '@/shared/strategy'
 
-// Тексты каркаса главной теста на языке: шапка (меню — подписи пунктов карты по порядку) и подвал (реквизиты,
-// правовая ссылка, почта, разделы).
+// Текст страницы теста на языке: строка русской версии, у другого языка — с его кодом в скобках.
+const say = (lang: string, text: string) => (lang === 'ru' ? text : `${text} (${lang})`)
+
+const slotsOf = (texts: Readonly<Record<string, string>>) =>
+  Object.entries(texts).map(([slot_id, text]) => ({ slot_id, variants: [{ id: 'a', text }] }))
+
+// Copy deck страницы теста на языке: тексты секций по id слота.
+const deckOf = (
+  lang: string,
+  page: string,
+  sections: Readonly<Record<string, Readonly<Record<string, string>>>>,
+) => ({
+  copy_deck: {
+    lang,
+    pages: [
+      {
+        page_id: page,
+        meta: {
+          title: say(lang, `Страница ${page} теста`),
+          description: say(lang, `Описание страницы ${page} теста`),
+        },
+        sections: Object.entries(sections).map(([section_id, texts]) => ({
+          section_id,
+          slots: slotsOf(
+            Object.fromEntries(
+              Object.entries(texts).map(([slot, text]) => [slot, say(lang, text)]),
+            ),
+          ),
+        })),
+      },
+    ],
+  },
+})
+
+// Тексты главной теста на языке: каркас — шапка (меню — подписи пунктов карты по порядку) и подвал (реквизиты,
+// правовая ссылка, почта, разделы), — и секция свежих записей.
 const homeDeck = (lang: string, nav: readonly string[], legal: string, privacy: string) => ({
   copy_deck: {
     lang,
@@ -12,21 +46,24 @@ const homeDeck = (lang: string, nav: readonly string[], legal: string, privacy: 
         sections: [
           {
             section_id: 'header',
-            slots: nav.map((text, index) => ({
-              slot_id: `nav-link-${index + 1}`,
-              variants: [{ id: 'a', text }],
-            })),
+            slots: slotsOf(
+              Object.fromEntries(nav.map((text, index) => [`nav-link-${index + 1}`, text])),
+            ),
+          },
+          {
+            section_id: 'related',
+            slots: slotsOf({
+              title: say(lang, 'Свежие записи'),
+              'all-label': say(lang, 'Все записи'),
+            }),
           },
           {
             section_id: 'footer',
-            slots: [
-              { slot_id: 'legal', variants: [{ id: 'a', text: legal }] },
-              { slot_id: 'privacy-label', variants: [{ id: 'a', text: privacy }] },
-              ...nav.map((text, index) => ({
-                slot_id: `nav-${index + 1}-label`,
-                variants: [{ id: 'a', text }],
-              })),
-            ],
+            slots: slotsOf({
+              legal,
+              'privacy-label': privacy,
+              ...Object.fromEntries(nav.map((text, index) => [`nav-${index + 1}-label`, text])),
+            }),
           },
         ],
       },
@@ -40,11 +77,70 @@ const factsOf = (lang: string, name: string) => ({
 })
 
 const NAV = ['/blog', '/about', '/contacts'] as const
+const route = (value: string) => ({ kind: 'route', value })
 
-// Проект strategy теста в раскладке снимка — карта на локалях теста (TEST_LOCALES): главная и «О компании» — на ru, en
-// и de, контакты, «спасибо» и блог — на ru и en, политика ПДн — только на ru; крошки — у записи и тега; меню шапки —
-// блог, «О компании», контакты. План главной — её каркас: шапка сайта и подвал сайта, тексты и факты — на трёх языках.
-// Страницы, языки, переводы и каркас тест судит по нему, а не по данным сайта.
+// Тексты страниц под блоки секций — русская версия (у других языков — с кодом языка).
+const ABOUT = {
+  story: {
+    title: 'О студии',
+    'body-1': 'Студия делает сайты, которые видно в поиске.',
+    'body-2': 'Тексты живут в git, страницы собираются заранее.',
+    'point-1': 'Сайты-визитки и блоги',
+    'point-2': 'Техническая сторона поиска',
+  },
+  details: {
+    title: 'Реквизиты и контакты',
+    'info-1': '101000, Москва, ул. Тестовая, 1',
+    'info-2': 'Пн–Пт, 10:00–19:00',
+    legal: 'ООО «Тест», ОГРН 1000000000002',
+  },
+}
+const CONTACTS = {
+  request: {
+    title: 'Заявка',
+    lead: 'Напишите — ответим на почту.',
+    'cta-label': 'Получить ответ',
+    consent: 'Согласен на обработку персональных данных',
+    'next-steps': 'Ответим в течение рабочего дня.',
+    success: 'Заявка у нас.',
+  },
+}
+const THANKS = {
+  confirmation: {
+    title: 'Заявка у нас',
+    'next-steps': 'Ответим на почту в течение рабочего дня.',
+    'secondary-label': 'Вернуться к контактам',
+  },
+}
+const PRIVACY = {
+  policy: {
+    title: 'Политика теста',
+    date: 'Редакция от 1 октября 2026 года',
+    operator: 'ООО «Тест», ОГРН 1000000000002, Москва',
+    'clause-1-heading': '1. Оператор',
+    'clause-1-text-1': 'Данные обрабатывает ООО «Тест».',
+    'clause-1-text-2': 'Вопросы — на почту оператора.',
+    'clause-2-heading': '2. Какие данные',
+    'clause-2-text-1': 'Имя и почта из формы.',
+  },
+}
+const NOT_FOUND = {
+  'not-found': {
+    title: 'Страницы нет',
+    body: 'Проверьте адрес или откройте раздел.',
+    'cta-label': 'На главную теста',
+    'route-1-label': 'Заметки',
+    'route-2-label': 'О студии',
+    'route-3-label': 'Связаться',
+  },
+}
+
+// Проект strategy теста в раскладке снимка — карта на локалях теста (TEST_LOCALES): главная, «О компании» и 404 — на
+// ru, en и de, контакты, «спасибо» и блог — на ru и en, политика ПДн — только на ru; крошки — у записи и тега; меню
+// шапки — блог, «О компании», контакты. План главной — её каркас (шапка сайта и подвал сайта) и свежие записи; планы
+// страниц — секции блоков каталога: «О компании» — текстовый раздел и контакты, контакты — форма, «спасибо»,
+// политика, 404 с путями на разделы. Страницы, языки, переводы, каркас и блоки тест судит по нему, а не по данным
+// сайта.
 export const TEST_SITE = {
   'facts.yaml': factsOf('ru', 'ООО «Тест»'),
   'facts.en.yaml': factsOf('en', 'Test LLC'),
@@ -57,9 +153,9 @@ export const TEST_SITE = {
         {
           lang: 'en',
           scope: 'selected-pages',
-          pages: ['home', 'about', 'contacts', 'thank-you', 'blog', 'post', 'tag'],
+          pages: ['home', 'about', 'contacts', 'thank-you', 'not-found', 'blog', 'post', 'tag'],
         },
-        { lang: 'de', scope: 'selected-pages', pages: ['home', 'about'] },
+        { lang: 'de', scope: 'selected-pages', pages: ['home', 'about', 'not-found'] },
       ],
     },
     templates: [
@@ -68,6 +164,7 @@ export const TEST_SITE = {
       { id: 'contacts', breadcrumbs: false },
       { id: 'thank-you', breadcrumbs: false },
       { id: 'legal', breadcrumbs: false },
+      { id: 'not-found', breadcrumbs: false },
       { id: 'blog', breadcrumbs: false },
       { id: 'post', breadcrumbs: true },
       { id: 'tag', breadcrumbs: true },
@@ -84,6 +181,7 @@ export const TEST_SITE = {
         parent: null,
         lang_versions: ['ru'],
       },
+      { id: 'not-found', template: 'not-found', url: '/404', parent: null },
       { id: 'blog', template: 'blog', url: '/blog', parent: 'home' },
       { id: 'post', template: 'post', url: '/blog/{slug}', parent: 'blog' },
       { id: 'tag', template: 'tag', url: '/blog/tag/{slug}', parent: 'blog' },
@@ -104,6 +202,16 @@ export const TEST_SITE = {
         },
       },
       {
+        id: 'related',
+        role: 'related',
+        block: 'article-cards',
+        variant: 'list',
+        slots: {
+          text: [{ id: 'title' }, { id: 'all-label' }],
+          action: [{ id: 'all', target: route('/blog') }],
+        },
+      },
+      {
         id: 'footer',
         role: 'footer',
         block: 'footer',
@@ -120,13 +228,138 @@ export const TEST_SITE = {
           ],
           data: [{ id: 'company', anatomy: 'company', fact: 'fact:company-name' }],
           action: [
-            { id: 'privacy', target: { kind: 'route', value: '/legal/privacy' } },
+            { id: 'privacy', target: route('/legal/privacy') },
             { id: 'email', target: { kind: 'url', value: 'mailto:test@example.com' } },
-            ...NAV.map((route, index) => ({
+            ...NAV.map((value, index) => ({
               id: `nav-${index + 1}-link`,
               anatomy: 'nav.link',
               group: `nav-${index + 1}`,
-              target: { kind: 'route', value: route },
+              target: route(value),
+            })),
+          ],
+        },
+      },
+    ],
+  },
+  'site/test/plans/about.yaml': {
+    page: { id: 'about' },
+    sections: [
+      {
+        id: 'story',
+        role: 'about',
+        block: 'prose',
+        variant: 'story',
+        slots: {
+          text: [
+            { id: 'title' },
+            { id: 'body-1', anatomy: 'body' },
+            { id: 'body-2', anatomy: 'body' },
+            { id: 'point-1', anatomy: 'point' },
+            { id: 'point-2', anatomy: 'point' },
+          ],
+        },
+      },
+      {
+        id: 'details',
+        role: 'contacts',
+        block: 'contact-details',
+        variant: 'compact',
+        slots: {
+          text: [
+            { id: 'title' },
+            { id: 'info-1', anatomy: 'info' },
+            { id: 'info-2', anatomy: 'info' },
+            { id: 'legal' },
+          ],
+          action: [
+            { id: 'phone', target: { kind: 'tel', value: 'tel:+70000000000' } },
+            { id: 'email', target: { kind: 'url', value: 'mailto:test@example.com' } },
+          ],
+          data: [{ id: 'company', anatomy: 'company', fact: 'fact:company-name' }],
+        },
+      },
+    ],
+  },
+  'site/test/plans/contacts.yaml': {
+    page: { id: 'contacts' },
+    sections: [
+      {
+        id: 'request',
+        role: 'lead-form',
+        block: 'lead-form',
+        variant: 'with-details',
+        slots: {
+          text: Object.keys(CONTACTS.request).map((id) => ({ id })),
+          action: [{ id: 'form' }],
+        },
+      },
+    ],
+  },
+  'site/test/plans/thank-you.yaml': {
+    page: { id: 'thank-you' },
+    sections: [
+      {
+        id: 'confirmation',
+        role: 'confirmation',
+        block: 'thank-you',
+        variant: 'page',
+        slots: {
+          text: Object.keys(THANKS.confirmation).map((id) => ({ id })),
+          action: [{ id: 'secondary', target: route('/contacts') }],
+        },
+      },
+    ],
+  },
+  'site/test/plans/privacy.yaml': {
+    page: { id: 'privacy' },
+    sections: [
+      {
+        id: 'policy',
+        role: 'legal',
+        block: 'legal-text',
+        variant: 'privacy-policy',
+        slots: {
+          text: [
+            { id: 'title' },
+            { id: 'date' },
+            { id: 'operator' },
+            { id: 'clause-1-heading', anatomy: 'clause.heading', group: 'clause-1' },
+            { id: 'clause-1-text-1', anatomy: 'clause.text', group: 'clause-1' },
+            { id: 'clause-1-text-2', anatomy: 'clause.text', group: 'clause-1' },
+            { id: 'clause-2-heading', anatomy: 'clause.heading', group: 'clause-2' },
+            { id: 'clause-2-text-1', anatomy: 'clause.text', group: 'clause-2' },
+          ],
+          data: [{ id: 'company', anatomy: 'company', fact: 'fact:company-name' }],
+        },
+      },
+    ],
+  },
+  'site/test/plans/not-found.yaml': {
+    page: { id: 'not-found' },
+    sections: [
+      {
+        id: 'not-found',
+        role: 'not-found',
+        block: 'not-found',
+        variant: 'with-routes',
+        slots: {
+          text: [
+            { id: 'title' },
+            { id: 'body' },
+            { id: 'cta-label' },
+            ...NAV.map((_, index) => ({
+              id: `route-${index + 1}-label`,
+              anatomy: 'route.label',
+              group: `route-${index + 1}`,
+            })),
+          ],
+          action: [
+            { id: 'cta', target: route('/') },
+            ...NAV.map((value, index) => ({
+              id: `route-${index + 1}-link`,
+              anatomy: 'route.link',
+              group: `route-${index + 1}`,
+              target: route(value),
             })),
           ],
         },
@@ -150,6 +383,22 @@ export const TEST_SITE = {
     ['Notizen', 'Studio', 'Kontakt'],
     'Test GmbH, OGRN 1000000000002',
     'Datenschutz',
+  ),
+  ...Object.fromEntries(
+    (
+      [
+        ['about', ABOUT, ['ru', 'en', 'de']],
+        ['contacts', CONTACTS, ['ru', 'en']],
+        ['thank-you', THANKS, ['ru', 'en']],
+        ['privacy', PRIVACY, ['ru']],
+        ['not-found', NOT_FOUND, ['ru', 'en', 'de']],
+      ] as const
+    ).flatMap(([page, texts, langs]) =>
+      langs.map((lang) => [
+        `site/test/copy/${page}${lang === 'ru' ? '' : `.${lang}`}.yaml`,
+        deckOf(lang, page, texts),
+      ]),
+    ),
   ),
 }
 

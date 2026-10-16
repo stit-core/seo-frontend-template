@@ -1,7 +1,8 @@
 import type { Locale } from './locale'
 
-// Строки каркаса и обвязки контента (подписи навигации, 404, блог, форма) — словарь на каждую локаль дескриптора;
-// тексты меню и подвала — copy deck strategy, тексты страниц — в самих страницах и в markdown-коллекциях.
+// Строки каркаса и обвязки контента (подписи навигации, страницы 410 и 500, блог, форма) — словарь на каждую локаль
+// дескриптора; тексты меню, подвала и секций по плану — copy deck strategy, прочие тексты страниц — в самих страницах и
+// в markdown-коллекциях.
 const ru = {
   'nav.label': 'Основная навигация',
   'nav.skip': 'К содержимому',
@@ -16,8 +17,6 @@ const ru = {
   'motion.full': 'Полное',
   'footer.links': 'Ссылки подвала',
   'og.alt': '{site} — шаблон индексируемого сайта',
-  'notFound.title': 'Страница не найдена',
-  'notFound.lead': 'Проверьте адрес или вернитесь на главную.',
   'notFound.home': 'На главную',
   'gone.title': 'Страница удалена',
   'gone.lead': 'Этот адрес больше не существует.',
@@ -83,8 +82,6 @@ const en = {
   'motion.full': 'Full',
   'footer.links': 'Footer links',
   'og.alt': '{site} — indexable site template',
-  'notFound.title': 'Page not found',
-  'notFound.lead': 'Check the address or go back to the home page.',
   'notFound.home': 'Home',
   'gone.title': 'Page removed',
   'gone.lead': 'This address no longer exists.',

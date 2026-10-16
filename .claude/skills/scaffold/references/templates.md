@@ -218,7 +218,7 @@ it('title — 25…65 знаков', () => {
 ## block — `model/block.ts`, `ui/<block-id>.astro` и `index.ts`
 
 Контракт — id блока каталога, варианты, которые ставят планы, и слоты — id элементов анатомии с видом
-значения (`text`, `action`, `untargeted`, `fact`, `media`, `list(…)`, `group({…})`):
+значения (`text`, `action`, `untargeted`, `fact`, `media`, `unshown`, `date`, `list(…)`, `group({…})`):
 
 ```ts
 import { action, defineBlock, group, text } from '@/shared/strategy'
@@ -279,33 +279,55 @@ export { <blockName> } from './model/block'
 export { default as <BlockName> } from './ui/<block-id>.astro'
 ```
 
-Тест рядом — Container API на пропсах контракта: разметка — разбором (`parseHtml`: элементы,
-атрибуты, текст), а не подстрокой тега; каждый слот — на своём месте; доступность —
-`expectNoA11yViolations`:
+Тест рядом — Container API на секции блока в проекте теста: план страницы с секцией блока и её тексты на
+языках теста — строки `TEST_SITE` (`src/shared/lib/testing/site.ts`); разметка — разбором (`parseHtml`:
+элементы, атрибуты, текст), а не подстрокой тега; секция целиком на каждом языке — `sectionFaults`;
+доступность — `expectNoA11yViolations`:
 
 ```ts
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
-import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
+import { expectNoA11yViolations, parseHtml, sectionFaults, testLocale } from '@/shared/lib/testing'
+import { strategyPage } from '@/shared/strategy'
+import { <blockName> } from '../model/block'
 import <BlockName> from './<block-id>.astro'
 
-const astro = await AstroContainer.create()
-const cards = [
-  { title: 'Замер', body: 'Приедем в удобный день.' },
-  { title: 'Смета', body: 'Посчитаем за три дня.' },
-]
-const slots = { id: 'benefits', variant: '<variant>', title: 'Как мы работаем', card: cards }
+// Секция — страница <page-id> проекта теста на его локалях.
+vi.mock('@/shared/i18n', async (importOriginal) =>
+  (await import('@/shared/lib/testing')).withTestLocales(importOriginal),
+)
+vi.mock('@/shared/strategy', async (importOriginal) =>
+  (await import('@/shared/lib/testing')).withTestSite(importOriginal),
+)
+
+const render = async (locale = testLocale('ru')) => {
+  const container = await AstroContainer.create()
+  const html = await container.renderToString(<BlockName>, {
+    props: <blockName>.props(strategyPage('<page-id>', locale), '<section-id>'),
+  })
+  return { html, section: parseHtml(html).querySelector('section') }
+}
 
 describe('<BlockName>', () => {
+  it('секция плана — в разметке на каждом языке страницы', async () => {
+    for (const locale of [testLocale('ru'), testLocale('en')]) {
+      const { html } = await render(locale)
+      const page = strategyPage('<page-id>', locale)
+      expect(sectionFaults(html, page, '<section-id>', <blockName>), locale).toEqual([])
+    }
+  })
+
   it('секция подписана заголовком с id секции плана, карточки — все и по порядку', async () => {
-    const section = parseHtml(await astro.renderToString(<BlockName>, { props: slots })).querySelector('section')
-    expect(section?.getAttribute('aria-labelledby')).toBe('benefits')
-    expect(section?.querySelector('h2')?.textContent).toBe('Как мы работаем')
-    const items = [...(section?.querySelectorAll('ul > li') ?? [])]
-    expect(items.map((item) => item.querySelector('h3')?.textContent)).toEqual(['Замер', 'Смета'])
+    const { section } = await render()
+    expect(section?.getAttribute('aria-labelledby')).toBe('<section-id>')
+    expect(section?.querySelector('h2')?.id).toBe('<section-id>')
+    expect([...(section?.querySelectorAll('ul > li h3') ?? [])].map((h3) => h3.textContent)).toEqual([
+      '<текст card-1-title>',
+      '<текст card-2-title>',
+    ])
   })
 
   it('не имеет нарушений доступности', async () => {
-    await expectNoA11yViolations(await astro.renderToString(<BlockName>, { props: slots }))
+    await expectNoA11yViolations((await render()).html)
   })
 })
 ```

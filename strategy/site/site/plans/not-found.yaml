@@ -1,0 +1,239 @@
+# План страницы 404 проекта шаблона site-template — форма page-plan v1 базы strategy (kb/site/10-playbooks-contracts/
+# schemas/page-plan.schema.json): секции — блоки каталога в порядке страницы, тексты слотов — copy deck страницы.
+page_plan_version: '1'
+checked: '2026-10-16'
+status: draft
+site: site-template
+refs:
+  brief: ../site-brief.yaml
+  facts: ../../../facts.yaml
+  site_map: ../site-map.yaml
+  copy_deck: ../copy/not-found.yaml
+  blocks: ../../../../../../.claude/skills/design-deep-dive/kb/site/04-blocks/blocks.yaml
+  vocabulary: ../../../../../../.claude/skills/design-deep-dive/kb/site/02-site-types/vocabulary.yaml
+  head_kit: ../../../../../../.claude/skills/design-deep-dive/kb/site/07-seo-geo-performance-analytics/head-kit.yaml
+page:
+  id: not-found
+  page_type: not-found-page
+  template: false
+  template_id: not-found
+  url: /404
+  lang: ru
+  locale: ru-RU
+  jurisdiction:
+    - ru
+  goal: сказать, что страницы нет, и вернуть на главную или в главные разделы — блог, «О компании», контакты
+  primary_action: lead-request
+  cta_target:
+    kind: route
+    value: /contacts
+  awareness: solution-aware
+  awareness_basis:
+    from: assumption
+    rule: уровень по главному источнику страницы — переход по устаревшей или опечатанной ссылке
+  traffic:
+    - traffic_source: internal
+      temperature: warm
+      device: mixed
+  macrostructure: long-document
+  macrostructure_family: document
+  first_screen_policy: offer-cta
+  budget_profile: not-found-page@L0
+  ambition_level: L0
+  navigation:
+    header: site
+    archetype: bar-links
+    logo_link: /
+    breadcrumbs: false
+    footer: site
+  seo:
+    indexable: false
+    canonical: self
+    h1: not-found.title
+    structured_data: []
+    ssr_required: true
+    sitemap: false
+  legal:
+    pd_consent: not-collected
+    privacy_policy: /legal/privacy
+    cookie_banner: not-needed
+    cookie_mode: none
+    analytics_before_consent: false
+    requisites: footer
+    operator_ref: fact:company-name
+page_slots:
+  text:
+    - id: meta-title
+      slot: meta-title
+    - id: meta-description
+      slot: meta-description
+sections:
+  - id: header
+    role: header
+    block: header
+    variant: site-nav
+    slots:
+      text:
+        - id: nav-link-1
+          slot: nav-label
+          anatomy: nav-link
+        - id: nav-link-2
+          slot: nav-label
+          anatomy: nav-link
+        - id: nav-link-3
+          slot: nav-label
+          anatomy: nav-link
+      media:
+        - id: logo
+          slot: brand-logo
+          media_role: informational
+          goal: знак сайта — ссылка на главную
+          source: code
+          authenticity: code
+      action:
+        - id: lang-switch
+          slot: link
+          action: read-more
+          style: link
+  - id: not-found
+    role: not-found
+    question: куда идти дальше
+    job: сказать, что страницы нет, и дать пути — на главную и в главные разделы сайта
+    block: not-found
+    variant: with-routes
+    next_step: главное действие страницы
+    slots:
+      text:
+        - id: title
+          slot: headline
+          heading: h1
+        - id: body
+          slot: body
+        - id: cta-label
+          slot: cta-label
+        - id: route-1-label
+          slot: nav-label
+          anatomy: route.label
+          group: route-1
+        - id: route-2-label
+          slot: nav-label
+          anatomy: route.label
+          group: route-2
+        - id: route-3-label
+          slot: nav-label
+          anatomy: route.label
+          group: route-3
+      action:
+        - id: cta
+          slot: cta-primary
+          action: read-more
+          style: primary
+          target:
+            kind: route
+            value: /
+          label: cta-label
+        - id: route-1-link
+          slot: link
+          anatomy: route.link
+          group: route-1
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /blog
+          label: route-1-label
+        - id: route-2-link
+          slot: link
+          anatomy: route.link
+          group: route-2
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /about
+          label: route-2-label
+        - id: route-3-link
+          slot: link
+          anatomy: route.link
+          group: route-3
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /contacts
+          label: route-3-label
+  - id: footer
+    role: footer
+    block: footer
+    variant: site
+    slots:
+      text:
+        - id: legal
+          slot: footer-legal
+        - id: privacy-label
+          slot: nav-label
+        - id: nav-1-label
+          slot: nav-label
+          anatomy: nav.label
+          group: nav-1
+        - id: nav-2-label
+          slot: nav-label
+          anatomy: nav.label
+          group: nav-2
+        - id: nav-3-label
+          slot: nav-label
+          anatomy: nav.label
+          group: nav-3
+      data:
+        - id: company
+          slot: fact-ref
+          fact: fact:company-name
+          anatomy: company
+          binds:
+            - legal
+      action:
+        - id: privacy
+          slot: link
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /legal/privacy
+          label: privacy-label
+        - id: email
+          slot: email-link
+          action: message
+          style: channel
+          target:
+            kind: url
+            value: mailto:hello@example.com
+        - id: nav-1-link
+          slot: link
+          anatomy: nav.link
+          group: nav-1
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /blog
+          label: nav-1-label
+        - id: nav-2-link
+          slot: link
+          anatomy: nav.link
+          group: nav-2
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /about
+          label: nav-2-label
+        - id: nav-3-link
+          slot: link
+          anatomy: nav.link
+          group: nav-3
+          action: read-more
+          style: link
+          target:
+            kind: route
+            value: /contacts
+          label: nav-3-label

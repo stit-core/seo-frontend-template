@@ -1,0 +1,30 @@
+---
+import type { BlockProps } from '@/shared/strategy'
+import { ActionLink } from '@/shared/ui/action'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
+import type { notFound } from '../model/block'
+
+type Props = BlockProps<typeof notFound>
+
+const { id, title, body, cta, 'cta-label': ctaLabel, route: routes } = Astro.props
+---
+
+<Section labelledby={id}>
+  <Heading id={id} level={1}>
+    {title}
+  </Heading>
+  <p class="mt-stack-display text-lead text-secondary">{body}</p>
+  <p class="mt-xl">
+    <ActionLink href={cta.href} hreflang={cta.hreflang} label={ctaLabel} kind="primary" />
+  </p>
+  <ul class="mt-lg flex flex-wrap gap-x-lg gap-y-xs text-body">
+    {routes.map((route) => (
+      <li>
+        <a class="touch-target" href={route.link.href} hreflang={route.link.hreflang}>
+          {route.label}
+        </a>
+      </li>
+    ))}
+  </ul>
+</Section>

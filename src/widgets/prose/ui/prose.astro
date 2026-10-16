@@ -1,0 +1,28 @@
+---
+import type { BlockProps } from '@/shared/strategy'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
+import type { prose } from '../model/block'
+
+type Props = BlockProps<typeof prose>
+
+const { id, title, body, point: points = [] } = Astro.props
+---
+
+<Section labelledby={id}>
+  <Heading id={id} level={2}>
+    {title}
+  </Heading>
+  <div class="mt-lg flex flex-col gap-md text-body">
+    {body.map((paragraph) => (
+      <p>{paragraph}</p>
+    ))}
+    {points.length > 0 && (
+      <ul class="grid gap-md">
+        {points.map((point) => (
+          <li class="border-l-thick border-subtle pl-md">{point}</li>
+        ))}
+      </ul>
+    )}
+  </div>
+</Section>
