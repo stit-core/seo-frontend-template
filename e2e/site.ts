@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { request as httpRequest, type IncomingHttpHeaders } from 'node:http'
 import { createServer } from 'node:net'
 import { relative, resolve, sep } from 'node:path'
@@ -20,6 +20,14 @@ import {
   SUPPORTED_LOCALES,
 } from '../src/shared/i18n/locale.ts'
 import { buildRedirectTable, type RedirectRule } from '../src/shared/redirects/table.ts'
+import {
+  CopyDeckSchema,
+  chosenText,
+  elementOf,
+  langOf,
+  PlanSchema,
+  parseFile,
+} from '../src/shared/strategy/contract.ts'
 
 const root = resolve(import.meta.dirname, '..')
 const clientDir = resolve(root, 'dist/client')
@@ -291,6 +299,35 @@ export const THROWING_REQUESTS: {
   { name: 'TRACE /_image', path: '/_image', method: 'TRACE' },
   { name: 'userinfo в Host', path: '/', headers: { host: 'user@site.example' } },
 ]
+
+// Файлы снимка strategy одной поверхности — планы или copy deck, разобранные схемой чтения сайта (листовой contract.ts).
+function strategyFiles<T>(kind: 'plans' | 'copy', parse: (data: unknown, path: string) => T): T[] {
+  const dir = resolve(root, 'strategy/site')
+  return readdirSync(dir, { recursive: true, encoding: 'utf8' })
+    .filter((path) => path.split(sep).at(-2) === kind && path.endsWith('.yaml'))
+    .map((path) => parse(load(readFileSync(resolve(dir, path), 'utf8')), `site/${path}`))
+}
+
+// Заголовок страницы 404 на языке — h1 её блока not-found (элемент title) из copy deck этого языка: версия страницы
+// ошибки в данных. Нет её — отказ: под префиксом языка страница ответила бы ошибкой.
+export function notFoundTitle(locale: Locale): string {
+  const plan = strategyFiles('plans', (data, path) => parseFile(PlanSchema, data, path)).find(
+    ({ page }) => page.id === 'not-found',
+  )
+  const section = plan?.sections.find(({ block }) => block === 'not-found')
+  const slot = section?.slots.text.find(
+    (candidate) => elementOf(candidate, 'text')?.element === 'title',
+  )
+  const found = strategyFiles('copy', (data, path) => parseFile(CopyDeckSchema, data, path))
+    .filter(({ copy_deck: deck }) => langOf(deck.lang) === locale)
+    .flatMap(({ copy_deck: deck }) => deck.pages)
+    .find(({ page_id: id }) => id === plan?.page.id)
+    ?.sections.find(({ section_id: id }) => id === section?.id)
+    ?.slots.find(({ slot_id: id }) => id === slot?.id)
+  if (found === undefined)
+    throw new Error(`strategy: у страницы not-found нет заголовка на ${locale}`)
+  return chosenText(found, `not-found/${section?.id ?? ''}/${slot?.id ?? ''}`)
+}
 
 // Правила content/redirects.yaml.
 export function redirects(): readonly RedirectRule[] {

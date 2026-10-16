@@ -1,7 +1,7 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
 import { DEFAULT_LOCALE, type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
-import { parseHtml } from '@/shared/lib/testing'
+import { parseHtml, sectionFaults } from '@/shared/lib/testing'
 import { breadcrumbsOn, type FactValue, pageLocales, strategyPage } from '@/shared/strategy'
 import { notFound } from '@/widgets/not-found'
 import { headTags, jsonLdBlocks } from '../../../scripts/lib/html.mjs'
@@ -191,9 +191,10 @@ describe('служебные страницы', () => {
     },
   )
 
-  // Страница ошибки — на языке адреса и только на нём: второй язык в теле — шум и для человека,
-  // и для определения языка страницы. Пути — главная своей локали и главные разделы из плана.
-  it('404 — на языке префикса пути: текст плана, главная своей локали и пути к разделам, без второго языка', async () => {
+  // Страница ошибки — на языке адреса и только на нём: тело — версия 404 этого языка из данных целиком, без вставок с
+  // другим языком (одинаковый текст двух версий — законные данные, а не второй язык). Пути — главная своей локали и
+  // главные разделы из плана.
+  it('404 — на языке префикса пути: версия этого языка из данных целиком, главная своей локали и пути к разделам', async () => {
     for (const locale of SUPPORTED_LOCALES) {
       const path = localePath(locale, '/net-takoj-stranicy')
       const { html, lang } = await render(NotFound, path)
@@ -201,12 +202,11 @@ describe('служебные страницы', () => {
       const section = notFoundOf(locale)
       expect(lang, path).toBe(locale)
       expect(document.querySelector('h1')?.textContent, path).toBe(section.title)
+      expect(
+        sectionFaults(html, strategyPage('not-found', locale), 'not-found', notFound),
+        path,
+      ).toEqual([])
       const main = document.querySelector('main')
-      expect(main?.textContent, path).toContain(section.body)
-      // Другие локали — filter с явным boolean: вывод предиката TS при одной локали сузил бы список до never.
-      for (const other of SUPPORTED_LOCALES.filter((candidate): boolean => candidate !== locale)) {
-        expect(main?.textContent, path).not.toContain(notFoundOf(other).body)
-      }
       expect(main?.querySelector('[lang]'), path).toBeNull()
       const routes = section.route.map((route) => route.link.href)
       expect(routes.length, path).toBeGreaterThanOrEqual(2)

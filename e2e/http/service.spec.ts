@@ -1,5 +1,12 @@
 import { expect, test } from '@playwright/test'
-import { bodyOf, type HeadTag, headTags, isNoindex, jsonLdBlocks } from '../../scripts/lib/html.mjs'
+import {
+  bodyOf,
+  decode,
+  type HeadTag,
+  headTags,
+  isNoindex,
+  jsonLdBlocks,
+} from '../../scripts/lib/html.mjs'
 import { scriptViolations } from '../../scripts/lib/site-policy.mjs'
 import { SITE_ORIGIN_PLACEHOLDER } from '../../src/shared/config/runtime.ts'
 import { OG_DEFAULT_IMAGE } from '../../src/shared/config/site.ts'
@@ -14,6 +21,7 @@ import {
   cspProblems,
   edgeHeadersIn,
   entries,
+  notFoundTitle,
   onDemandRoutes,
   prerenderedPaths,
   rawGet,
@@ -97,40 +105,23 @@ test.describe('on-demand: ответы приложения', () => {
     }
   })
 
-  // Страница ошибки — на языке адреса и только на нём: заголовок 404 другой локали в ней не встречается.
-  test('404 — на языке префикса пути: lang, заголовок и ссылка на главную своей локали, без второго языка', async ({
+  // Страница ошибки — на языке адреса и только на нём: заголовок — версии 404 этого языка в данных strategy (тот же
+  // текст у двух версий — законные данные), вставок с другим языком нет.
+  test('404 — на языке префикса пути: lang, заголовок версии этого языка из данных, ссылка на главную своей локали', async ({
     request,
   }) => {
-    const pages: Array<{
-      locale: (typeof SUPPORTED_LOCALES)[number]
-      path: string
-      html: string
-      main: string
-      title: string | undefined
-    }> = []
     for (const locale of SUPPORTED_LOCALES) {
       const path = localePath(locale, UNKNOWN)
       const response = await request.get(path)
       expect(response.status(), path).toBe(404)
       const html = await response.text()
       const main = html.slice(html.indexOf('<main'), html.indexOf('</main>'))
-      pages.push({
-        locale,
-        path,
-        html,
-        main,
-        title: /<h1[^>]*>([^<]+)<\/h1>/.exec(main)?.[1]?.trim(),
-      })
-    }
-    for (const { locale, path, html, main, title } of pages) {
+      const title = /<h1[^>]*>([^<]+)<\/h1>/.exec(main)?.[1]
       expect(html, path).toContain(`<html lang="${locale}"`)
       expectServicePage(html, path)
-      expect(title, path).toBeTruthy()
+      expect(decode(title ?? '').trim(), path).toBe(notFoundTitle(locale))
       expect(main, path).toContain(`href="${localePath(locale, '/')}"`)
       expect(main, path).not.toContain(' lang="')
-      for (const other of pages.filter((candidate) => candidate.locale !== locale)) {
-        expect(main, `${path}: заголовок 404 локали ${other.locale}`).not.toContain(other.title)
-      }
     }
   })
 
