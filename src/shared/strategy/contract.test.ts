@@ -7,6 +7,7 @@ import {
   mapLanguages,
   pageLanguages,
   parentsOf,
+  relatedRule,
   SiteMapSchema,
   targetAddress,
   untranslatedFallback,
@@ -189,5 +190,29 @@ describe('strategy/contract', () => {
         ),
       ).toEqual(['repair', 'flat', 'cookies'])
     })
+  })
+
+  // Связанные страницы шаблона — правило перелинковки карты: признак связи и сколько страниц показать.
+  it('связанные — правило карты для шаблона страницы; нет правила у шаблона или в карте — ошибка с ключом', () => {
+    const map = SiteMapSchema.parse({
+      languages: { primary: 'ru' },
+      templates: [
+        { id: 'post', related: 'post-tags' },
+        { id: 'case', related: 'case-services' },
+        { id: 'hub' },
+      ],
+      pages: [
+        { id: 'post', template: 'post', url: '/blog/{slug}', parent: null },
+        { id: 'case', template: 'case', url: '/kejsy/{slug}', parent: null },
+        { id: 'blog', template: 'hub', url: '/blog', parent: null },
+      ],
+      linking: { related_rules: [{ id: 'post-tags', by: 'shared-tag', max: 3 }] },
+    })
+    expect(relatedRule(map, 'post')).toEqual({ id: 'post-tags', by: 'shared-tag', max: 3 })
+    for (const id of ['case', 'blog']) {
+      expect(() => relatedRule(map, id)).toThrow(
+        `strategy: ${id} — у шаблона нет правила связанных в linking.related_rules карты`,
+      )
+    }
   })
 })

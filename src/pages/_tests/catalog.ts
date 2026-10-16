@@ -20,6 +20,8 @@ const Catalog = z.object({
       html: z
         .object({
           element: z.string().optional(),
+          landmark: z.string().optional(),
+          list: z.string().optional(),
           heading: z.string().optional(),
           form: z.boolean().optional(),
         })
@@ -87,14 +89,18 @@ export function elsewhere(section: Section, locale: Locale, project: ReturnType<
 }
 
 // Что судит проверка секции плана в разметке: каркас (`flow: chrome`) — внутри своего лендмарка каталога, кроме разделов
-// без версии на языке страницы; секция страницы — по своему заголовку.
+// без версии на языке страницы; секция страницы — по своему заголовку. Навигаций на странице несколько (меню, крошки):
+// лендмарк навигации узнаётся по своему списку каталога.
 export const chromeOf = (
   section: Section,
   locale: Locale,
   project: ReturnType<typeof projectOf>,
 ) => {
   const entry = catalog[section.block]
-  return entry?.flow === 'chrome'
-    ? { landmark: entry.html.element, elsewhere: elsewhere(section, locale, project) }
-    : {}
+  if (entry?.flow !== 'chrome') return {}
+  const { element, landmark, list } = entry.html
+  return {
+    landmark: landmark === 'navigation' && list ? `${element}:has(${list})` : element,
+    elsewhere: elsewhere(section, locale, project),
+  }
 }

@@ -1,0 +1,115 @@
+# Тексты списка блога проекта шаблона site-template — copy deck v1 базы strategy (kb/text/
+# 10-templates-recipes/copy-deck.schema.json): секции и слоты — id плана plans/blog.yaml.
+copy_deck:
+  version: 1
+  date: '2026-10-16'
+  site: site-template
+  product_name: ssr-frontend-template
+  lang: ru
+  facts_ref: ../../../facts.yaml
+  page_plan_ref: ../plans/blog.yaml
+  jurisdiction: ru
+  legal_category: [general]
+  authors: [исполнитель шаблона]
+  pages:
+    - page_id: blog
+      page_type: blog-index-page
+      status: assumed
+      meta:
+        title: Блог о быстрых индексируемых сайтах
+        description: >-
+          Короткие заметки о контентных сайтах: prerender, ноль JavaScript, честные статусы, canonical и hreflang,
+          картинки, sitemap и один образ на все среды
+        fact_ids: []
+      sections:
+        - section_id: header
+          section_role: header
+          block: header
+          slots:
+            - slot_id: nav-link-1
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Блог, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-2
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: О компании, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-3
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Контакты, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: hero
+          section_role: hero
+          block: hero-text
+          slots:
+            - slot_id: headline
+              slot_type: headline
+              variants:
+                - {id: a, text: Блог о быстрых индексируемых сайтах, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: subheadline
+              slot_type: subheadline
+              variants:
+                - id: a
+                  text: >-
+                    Короткие заметки о том, как делать быстрые индексируемые сайты: рендер, JavaScript, поиск и
+                    развёртывание.
+                  status: assumed
+                  source: ai-self
+              chosen: a
+            - slot_id: cta-label
+              slot_type: cta-label
+              variants:
+                - {id: a, text: Оставить заявку, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: related
+          section_role: related
+          block: article-cards
+          slots:
+            - slot_id: title
+              slot_type: section-title
+              variants:
+                - {id: a, text: Все заметки, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: footer
+          section_role: footer
+          block: footer
+          slots:
+            - slot_id: legal
+              slot_type: footer-legal
+              variants:
+                - {id: a, text: 'ООО «Пример», ОГРН 1000000000001, ИНН 7700000000', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-name', 'fact:company-ogrn', 'fact:company-inn']
+            - slot_id: privacy-label
+              slot_type: nav-label
+              variants:
+                - {id: a, text: Обработка персональных данных, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-1-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-1
+              variants:
+                - {id: a, text: Блог, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-2-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-2
+              variants:
+                - {id: a, text: О компании, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-3-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-3
+              variants:
+                - {id: a, text: Контакты, status: assumed, source: ai-self}
+              chosen: a

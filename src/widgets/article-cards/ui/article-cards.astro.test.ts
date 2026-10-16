@@ -84,7 +84,31 @@ describe('ArticleCards', () => {
     expect(section?.querySelectorAll('a')).toHaveLength(0)
   })
 
+  // Страницы списка — навигация хаба коллекции: соседние страницы и номер; одна страница — навигации нет.
+  it('страницы списка: «новее» и «старее» со своими адресами и номер страницы; одна страница — без навигации', async () => {
+    const { section } = await render(RU, {
+      article: articles,
+      pagination: { current: 2, last: 3, newer: '/blog', older: '/blog/page/3' },
+    })
+    const nav = section?.querySelector(`nav[aria-label="${t(RU, 'blog.pagination')}"]`)
+    expect(nav?.querySelector('a[rel="prev"]')?.getAttribute('href')).toBe('/blog')
+    expect(nav?.querySelector('a[rel="next"]')?.getAttribute('href')).toBe('/blog/page/3')
+    expect(nav?.textContent).toContain('2 / 3')
+    const single = await render(RU, {
+      article: articles,
+      pagination: { current: 1, last: 1, newer: undefined, older: undefined },
+    })
+    expect(single.section?.querySelector('nav')).toBeNull()
+  })
+
   it('не имеет нарушений доступности', async () => {
-    await expectNoA11yViolations((await render(RU, { article: articles })).html)
+    await expectNoA11yViolations(
+      (
+        await render(RU, {
+          article: articles,
+          pagination: { current: 1, last: 2, newer: undefined, older: '/blog/page/2' },
+        })
+      ).html,
+    )
   })
 })

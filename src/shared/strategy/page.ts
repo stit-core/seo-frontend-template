@@ -26,6 +26,7 @@ import {
   pageLanguages,
   parentsOf,
   parseFile,
+  relatedRule,
   type SiteMap,
   SiteMapSchema,
   type SlotKind,
@@ -97,13 +98,17 @@ export interface MapEntry {
 export interface StrategyPage extends MapEntry {
   // Родители по карте — от корня к ближайшему.
   parents: MapEntry[]
-  meta: Meta
+  // Мета copy deck; у шаблона коллекции заголовок и описание страницы даёт запись — меты нет.
+  meta: Meta | undefined
   sections: Section[]
   // Правовое плана: политика ПДн (`legal.privacy_policy`) — ссылка на её версию по карте, оператор ПДн и продавец
   // (`legal.operator_ref`) — факт языка страницы.
   policy: Link | undefined
   operator: FactValue | undefined
 }
+
+// Страница своего плана — с метой copy deck.
+export type PlanPage = StrategyPage & { meta: Meta }
 
 // Пути — от корня снимка: `facts.yaml`, `facts.en.yaml`, `site/<поверхность>/{site-map.yaml,plans/…,copy/…}`.
 export function projectOf(files: Readonly<Record<string, unknown>>): Project {
@@ -223,8 +228,11 @@ function placeOf(project: Project, plan: Plan, locale: Locale) {
 
 // Страница сайта из снимка: секции плана по порядку, их тексты на языке страницы, адреса действий, факты слотов
 // данных, мета copy deck и место в карте. Нет плана, страницы copy deck, текста слота или факта — ошибка с ключом.
+// Шаблон коллекции (`page.template`) — страница записи: в copy deck — тексты шаблона, слот без текста и мету
+// страницы даёт запись (её значения кладёт страница в пропсы блока).
 export function readPage(project: Project, id: string, locale: Locale): StrategyPage {
   const plan = project.plans.find((candidate) => candidate.page.id === id) ?? fail(id, 'нет плана')
+  const { template } = plan.page
   const page =
     project.decks
       .filter((deck) => langOf(deck.copy_deck.lang) === locale)
@@ -261,9 +269,10 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
 
   const sections = plan.sections.map((section): Section => {
     const copy = page.sections.find((candidate) => candidate.section_id === section.id)
-    const textOf = (slot: string): string => {
+    const textOf = (slot: string): string | undefined => {
       const key = `${id}/${section.id}/${slot}`
       const found = copy?.slots.find((candidate) => candidate.slot_id === slot)
+      if (found === undefined && template) return undefined
       return chosenText(found ?? fail(key, `нет текста в copy deck ${locale}`), key)
     }
 
@@ -284,7 +293,10 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
         at.element in target ? [...(Array.isArray(prior) ? prior : [prior]), value] : value
     }
 
-    for (const slot of section.slots.text) place(slot, 'text', textOf(slot.id))
+    for (const slot of section.slots.text) {
+      const text = textOf(slot.id)
+      if (text !== undefined) place(slot, 'text', text)
+    }
     for (const slot of section.slots.action) {
       const key = `${id}/${section.id}/${slot.id}`
       place(
@@ -316,14 +328,16 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
   return {
     id,
     ...placeOf(project, plan, locale),
-    meta: {
-      title: meta?.title ?? fail(`${id}/meta/title`, `нет текста в copy deck ${locale}`),
-      description:
-        meta?.description ?? fail(`${id}/meta/description`, `нет текста в copy deck ${locale}`),
-      ogTitle: meta?.og_title,
-      ogDescription: meta?.og_description,
-      ogImageAlt: meta?.og_image_alt,
-    },
+    meta: template
+      ? undefined
+      : {
+          title: meta?.title ?? fail(`${id}/meta/title`, `нет текста в copy deck ${locale}`),
+          description:
+            meta?.description ?? fail(`${id}/meta/description`, `нет текста в copy deck ${locale}`),
+          ogTitle: meta?.og_title,
+          ogDescription: meta?.og_description,
+          ogImageAlt: meta?.og_image_alt,
+        },
     sections,
     policy:
       policy === undefined
@@ -371,6 +385,7 @@ export function siteOf(project: Project) {
     menuLinks: (labels: readonly string[], locale: Locale, key: string) =>
       menuOf(project, labels, locale, key),
     breadcrumbsOn: (id: string): boolean => hasBreadcrumbs(mapOf(project, id), id),
+    relatedOf: (id: string) => relatedRule(mapOf(project, id), id),
     // Пути маршрута `[...locale]` страницы карты: по пути на локаль её версии, у дефолтной сегмента нет.
     localeRoutes: (id: string) =>
       pageLocales(id).map((locale) => ({
@@ -388,6 +403,7 @@ export const {
   languageLinks,
   menuLinks,
   breadcrumbsOn,
+  relatedOf,
   localeRoutes,
 } = siteOf(site)
 
@@ -400,12 +416,28 @@ export const strategyPage = (id: string, locale: Locale): StrategyPage =>
 export type PageFiles = Readonly<Record<string, unknown>>
 
 // Страница сайта по модулю своих данных — на карте и фактах снимка: страница везёт свои план и copy deck, а не снимок
-// целиком, поэтому серверный бандл on-demand маршрута (404, ответ формы) несёт только их.
-export function pageOf(files: PageFiles, locale: Locale): StrategyPage {
+// целиком, поэтому серверный бандл on-demand маршрута (404, ответ формы) несёт только их. План одной страницы читает
+// `pageOf`, шаблон коллекции — `templateOf`: у шаблона слоты без текста и мету даёт запись.
+function moduleOf(files: PageFiles, locale: Locale, template: boolean): StrategyPage {
   const { plans, decks } = projectOf(files)
   const [plan, ...more] = plans
   if (plan === undefined || more.length > 0) {
     throw new Error(`strategy: в модуле страницы планов ${plans.length}, а нужен один`)
   }
+  if (plan.page.template !== template) {
+    fail(
+      plan.page.id,
+      template
+        ? 'план одной страницы — его читает pageOf'
+        : 'план шаблона коллекции — его читает templateOf',
+    )
+  }
   return readPage({ ...site, plans, decks }, plan.page.id, locale)
 }
+
+// Мету плана одной страницы readPage читает всегда: без неё — ошибка с ключом.
+export const pageOf = (files: PageFiles, locale: Locale): PlanPage =>
+  moduleOf(files, locale, false) as PlanPage
+
+export const templateOf = (files: PageFiles, locale: Locale): StrategyPage =>
+  moduleOf(files, locale, true)

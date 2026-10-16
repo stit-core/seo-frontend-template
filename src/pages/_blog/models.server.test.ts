@@ -1,6 +1,6 @@
 import type * as AuthorSlice from '@/entities/author'
 import { getPost, listPosts, type Post, paginate } from '@/entities/post'
-import { type DictKey, type Locale, localePath, t } from '@/shared/i18n'
+import { type Locale, t } from '@/shared/i18n'
 import { testLocale } from '@/shared/lib/testing'
 import { blogPosting } from '@/shared/seo'
 import { articleImagesOf, ogImageOf } from './images'
@@ -18,13 +18,16 @@ vi.mock('@/entities/author', async (importOriginal) => ({
 vi.mock('@/shared/i18n', async (importOriginal) =>
   (await import('@/shared/lib/testing')).withTestLocales(importOriginal),
 )
-// Крошки — по карте: тест снимает их у шаблона и смотрит, что модель их не даёт.
-const crumbless = vi.hoisted(() => new Set<string>())
+// Правило «связанных» — карты теста; тест подменяет его признак связи.
+const related = vi.hoisted(() => ({ by: undefined as string | undefined }))
 vi.mock('@/shared/strategy', async (importOriginal) => {
   const strategy = await (await import('@/shared/lib/testing')).withTestSite(importOriginal)
   return {
     ...strategy,
-    breadcrumbsOn: (id: string) => !crumbless.has(id) && strategy.breadcrumbsOn(id),
+    relatedOf: (id: string) => ({
+      ...strategy.relatedOf(id),
+      by: related.by ?? strategy.relatedOf(id).by,
+    }),
   }
 })
 const RU = testLocale('ru')
@@ -39,20 +42,6 @@ beforeEach(() => {
 })
 afterEach(() => vi.unstubAllEnvs())
 
-// Слова каркаса — из словаря: форк, переименовавший раздел, остаётся зелёным.
-const ru = (key: DictKey) => t(RU, key)
-// Крошки — пропсы блока breadcrumbs: путь от главной и текущая страница.
-const trail = (locale: Locale, current: string) => ({
-  id: 'breadcrumbs',
-  variant: 'full-path',
-  crumb: [
-    { label: t(locale, 'nav.home'), link: { href: localePath(locale, '/') } },
-    { label: t(locale, 'blog.title'), link: { href: localePath(locale, '/blog') } },
-  ],
-  current,
-})
-const paged = (key: DictKey) => t(RU, 'blog.paged', { text: ru(key), page: 2 })
-
 const post = async (locale: Locale, slug: string): Promise<Post> => {
   const found = await getPost(locale, slug)
   if (!found) throw new Error(`${locale}/${slug} нет в фикстурах`)
@@ -60,14 +49,24 @@ const post = async (locale: Locale, slug: string): Promise<Post> => {
 }
 
 describe('страница записи', () => {
-  it('перевод: ссылка на slug перевода, крошки локали по карте, BlogPosting без правки и обложки', async () => {
+  it('перевод: ссылка на slug перевода; слоты записи — её поля; BlogPosting без правки и обложки', async () => {
     const para = await post(RU, 'para')
     const model = await postPageModel(para)
-    const author = { id: 'anna-smirnova', name: 'Анна Смирнова', jobTitle: 'редактор блога' }
     expect(model.translations).toEqual({ ru: '/blog/para', en: '/en/blog/pair' })
     expect(model.ogImage).toBeUndefined()
-    expect(model.author).toEqual(author)
-    expect(model.crumbs).toEqual(trail(RU, 'Запись с переводом'))
+    expect(model.record).toEqual({
+      title: 'Запись с переводом',
+      lead: 'Анонс записи ru/para.',
+      date: { published: new Date('2026-03-01'), updated: undefined },
+      author: {
+        name: 'Анна Смирнова',
+        jobTitle: 'редактор блога',
+        profile: '/avtory/anna-smirnova',
+      },
+      cover: undefined,
+      alt: undefined,
+    })
+    expect(model.tags).toEqual([{ label: '#seo', href: '/blog/tag/seo' }])
     expect(model.jsonLd).toEqual([
       blogPosting({
         locale: RU,
@@ -75,28 +74,28 @@ describe('страница записи', () => {
         title: 'Запись с переводом',
         description: 'Анонс записи ru/para.',
         published: new Date('2026-03-01'),
-        author,
+        author: { id: 'anna-smirnova', name: 'Анна Смирнова', jobTitle: 'редактор блога' },
       }),
     ])
 
     const pair = await postPageModel(await post(EN, 'pair'))
     expect(pair.translations).toEqual({ ru: '/blog/para', en: '/en/blog/pair' })
-    expect(pair.crumbs).toEqual(trail(EN, 'Post with a translation'))
+    expect(pair.tags).toEqual([{ label: '#seo', href: '/en/blog/tag/seo' }])
   })
 
-  it('автор: имя и роль — на языке страницы; без роли — только имя; без автора подписи нет', async () => {
-    expect((await postPageModel(await post(EN, 'pair'))).author).toEqual({
-      id: 'anna-smirnova',
+  it('автор: имя и роль — на языке страницы, профиль — из реестра; без роли — только имя; без автора подписи нет', async () => {
+    expect((await postPageModel(await post(EN, 'pair'))).record.author).toEqual({
       name: 'Anna Smirnova',
       jobTitle: 'blog editor',
+      profile: '/avtory/anna-smirnova',
     })
-    expect((await postPageModel(await post(RU, 'odna'))).author).toEqual({
-      id: 'petr-ivanov',
+    expect((await postPageModel(await post(RU, 'odna'))).record.author).toEqual({
       name: 'Пётр Иванов',
       jobTitle: undefined,
+      profile: 'https://petr-ivanov.example',
     })
     const plain = await postPageModel(await post(RU, 'zametka-1'))
-    expect(plain.author).toBeUndefined()
+    expect(plain.record.author).toBeUndefined()
     expect(plain.jsonLd[0]).toEqual(
       blogPosting({
         locale: RU,
@@ -115,9 +114,13 @@ describe('страница записи', () => {
     ).rejects.toThrow('автора nikto записи ru/para нет в реестре')
   })
 
-  it('правка без перевода: hreflang нет, dateModified и article:modified_time — из updatedDate', async () => {
+  it('правка без перевода: hreflang нет, дата правки — в слоте записи, dateModified и article:modified_time', async () => {
     const model = await postPageModel(await post(RU, 'odna'))
     expect(model.translations).toEqual({ ru: '/blog/odna' })
+    expect(model.record.date).toEqual({
+      published: new Date('2026-02-01'),
+      updated: new Date('2026-02-10'),
+    })
     expect(model.article).toEqual({
       published: new Date('2026-02-01'),
       modified: new Date('2026-02-10'),
@@ -143,6 +146,7 @@ describe('страница записи', () => {
       data: { ...para.data, cover, coverAlt: 'Обложка записи' },
     })
     expect(model.ogImage).toEqual(await ogImageOf(cover, 'Обложка записи'))
+    expect(model.record).toMatchObject({ cover, alt: 'Обложка записи' })
     const frames = (await articleImagesOf(cover)).map(({ path }) => path)
     expect(model.jsonLd[0]).toEqual(
       blogPosting({
@@ -158,51 +162,89 @@ describe('страница записи', () => {
   })
 })
 
-describe('крошки', () => {
-  afterEach(() => crumbless.clear())
+// Связанные — правило карты post-tags теста: записи той же локали с общим тегом, новые первыми, не больше трёх.
+describe('связанные записи', () => {
+  afterEach(() => {
+    related.by = undefined
+  })
 
-  it('у шаблона карты без крошек их нет ни у записи, ни у тега', async () => {
-    crumbless.add('post').add('tag')
-    expect((await postPageModel(await post(RU, 'para'))).crumbs).toBeUndefined()
-    expect((await tagPageModel(RU, 'astro')).crumbs).toBeUndefined()
+  const relatedOf = async (locale: Locale, slug: string) =>
+    (await postPageModel(await post(locale, slug))).related
+
+  it('записи с общим тегом той же локали, новые первыми; своей записи и черновика нет', async () => {
+    expect(await relatedOf(RU, 'para')).toEqual([
+      { title: 'Заметка 2', link: { href: '/blog/zametka-2' } },
+      { title: 'Заметка 1', link: { href: '/blog/zametka-1' } },
+    ])
+    // Английская запись — связанные из английских записей, адреса — с префиксом языка.
+    expect(await relatedOf(EN, 'pair')).toEqual([
+      { title: 'Note 2', link: { href: '/en/blog/note-2' } },
+      { title: 'Note 1', link: { href: '/en/blog/note-1' } },
+    ])
+  })
+
+  it('не больше максимума правила; нет записей с общим тегом — пусто', async () => {
+    expect((await relatedOf(RU, 'zametka-2')).map(({ title }) => title)).toEqual([
+      'Запись с переводом',
+      'Заметка 4',
+      'Заметка 3',
+    ])
+    expect(await relatedOf(RU, 'odna')).toEqual([])
+  })
+
+  it('связь не по общему тегу — ошибка сборки, а не чужая выборка', async () => {
+    related.by = 'same-category'
+    await expect(postPageModel(await post(RU, 'para'))).rejects.toThrow(
+      'post: связанные по same-category — записи связывает общий тег',
+    )
   })
 })
 
 describe('страница списка', () => {
-  it('первая страница: ссылка на перевод, только «дальше»', async () => {
+  it('первая страница: ссылка на перевод, тексты как есть, записи страницы карточками, только «дальше»', async () => {
     const model = await blogListPageModel(RU, paginate(await listPosts(RU), 1))
     expect(model.translations).toEqual({ ru: '/blog', en: '/en/blog' })
-    expect(model.heading).toBe(ru('blog.title'))
-    expect(model.title).toBe(ru('blog.pageTitle'))
-    expect(model.description).toBe(ru('blog.description'))
-    expect(model.tags).toEqual(['almost', 'astro', 'i18n', 'seo'])
+    expect(model.paged('Заметки студии')).toBe('Заметки студии')
+    expect(model.articles.map(({ link }) => link.href)).toEqual([
+      '/blog/para',
+      '/blog/odna',
+      '/blog/zametka-4',
+      '/blog/zametka-3',
+      '/blog/zametka-2',
+    ])
+    expect(model.articles[0]).toEqual({
+      title: 'Запись с переводом',
+      date: new Date('2026-03-01'),
+      link: { href: '/blog/para' },
+      excerpt: 'Анонс записи ru/para.',
+    })
     expect(model.pagination).toEqual({
       current: 1,
       last: 2,
-      newerHref: undefined,
-      olderHref: '/blog/page/2',
+      newer: undefined,
+      older: '/blog/page/2',
     })
   })
 
-  it('страница 2: своё имя в сниппете; у английского блога её нет — и ссылки на перевод нет', async () => {
+  it('страница 2: номер страницы в h1 и сниппете; у английского блога её нет — и ссылки на перевод нет', async () => {
     const model = await blogListPageModel(RU, paginate(await listPosts(RU), 2))
     expect(model.translations).toEqual({ ru: '/blog/page/2' })
-    expect(model.heading).toBe(paged('blog.title'))
-    expect(model.title).toBe(paged('blog.pageTitle'))
-    expect(model.description).toBe(paged('blog.description'))
-    expect(model.heading).toContain('2')
+    expect(model.paged('Заметки студии')).toBe(
+      t(RU, 'blog.paged', { text: 'Заметки студии', page: 2 }),
+    )
+    expect(model.paged('Заметки студии')).toContain('2')
+    expect(model.articles.map(({ link }) => link.href)).toEqual(['/blog/zametka-1'])
     expect(model.pagination).toEqual({
       current: 2,
       last: 2,
-      newerHref: '/blog',
-      olderHref: undefined,
+      newer: '/blog',
+      older: undefined,
     })
   })
 
   it('английский список: перевод — русская первая страница', async () => {
     const model = await blogListPageModel(EN, paginate(await listPosts(EN), 1))
     expect(model.translations).toEqual({ ru: '/blog', en: '/en/blog' })
-    expect(model.tags).toEqual(['i18n', 'seo'])
   })
 })
 
@@ -231,12 +273,11 @@ describe('страница тега', () => {
     expect((await tagPageModel(RU, 'astro')).translations).toEqual({ ru: '/blog/tag/astro' })
   })
 
-  it('заголовок, сниппет и крошки', async () => {
+  it('подпись и вводный абзац тега — заголовок и описание страницы; текущая крошка — тег', async () => {
     const model = await tagPageModel(RU, 'astro')
-    expect(model.heading).toBe(t(RU, 'blog.tag', { tag: 'astro' }))
-    expect(model.title).toBe(model.heading)
+    expect(model.title).toBe(t(RU, 'blog.tag', { tag: 'astro' }))
     expect(model.description).toBe(t(RU, 'blog.tagDescription', { tag: 'astro' }))
-    expect([model.heading, model.description].every((text) => text.includes('astro'))).toBe(true)
-    expect(model.crumbs).toEqual(trail(RU, '#astro'))
+    expect([model.title, model.description].every((text) => text.includes('astro'))).toBe(true)
+    expect(model.current).toBe('#astro')
   })
 })

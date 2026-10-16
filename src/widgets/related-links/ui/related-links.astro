@@ -1,0 +1,28 @@
+---
+import type { BlockProps } from '@/shared/strategy'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
+import type { relatedLinks } from '../model/block'
+
+type Props = BlockProps<typeof relatedLinks>
+
+const { id, title, item: items = [] } = Astro.props
+// Навигация дальше по сайту (html каталога): список ссылок подписан заголовком секции.
+---
+
+<Section labelledby={id}>
+  <Heading id={id} level={2}>
+    {title}
+  </Heading>
+  <nav aria-labelledby={id} class="mt-lg">
+    <ul class="flex flex-col gap-xs text-body">
+      {items.map((item) => (
+        <li>
+          <a class="touch-target" href={item.link.href} hreflang={item.link.hreflang}>
+            {item.title}
+          </a>
+        </li>
+      ))}
+    </ul>
+  </nav>
+</Section>

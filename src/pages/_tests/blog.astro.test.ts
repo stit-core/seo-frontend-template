@@ -2,14 +2,16 @@ import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
 import type * as AuthorSlice from '@/entities/author'
 import { SITE_NAME } from '@/shared/config'
-import { t } from '@/shared/i18n'
-import { parseHtml, testLocale } from '@/shared/lib/testing'
-import { breadcrumbsOn } from '@/shared/strategy'
+import type { Locale } from '@/shared/i18n'
+import { parseHtml, sectionFaults, testLocale } from '@/shared/lib/testing'
+import { breadcrumbsOn, strategyPage } from '@/shared/strategy'
 import { headTags, jsonLdBlocks } from '../../../scripts/lib/html.mjs'
 import * as Post from '../[...locale]/blog/[slug].astro'
+import * as Blog from '../[...locale]/blog/index.astro'
 import * as List from '../[...locale]/blog/page/[page].astro'
 import * as Tag from '../[...locale]/blog/tag/[tag].astro'
 import { GET as feed, getStaticPaths as feedPaths } from '../[...locale]/rss.xml.ts'
+import { blocks, catalog } from './catalog'
 import { built, crumbsOf, outsideSections } from './routes'
 
 // Блог — на локалях и карте теста: записи фикстур на ru и en, блог, записи и теги — в версиях обеих. Так маршруты,
@@ -152,23 +154,38 @@ describe('маршруты блога с параметрами', () => {
     const head = await page('/[...locale]/blog/[slug]', Post, '/blog/para')
     expect(head.hreflang).toEqual(pair('/blog/para', '/en/blog/pair'))
     expect(head.jsonLd).toEqual(['BlogPosting', 'BreadcrumbList'])
-    expect(crumbsOf(head.html, head.blocks).visible).toEqual([
-      [t(RU, 'nav.home'), '/'],
-      [t(RU, 'blog.title'), '/blog'],
-      ['Запись с переводом', undefined],
-    ])
     const paragraphs = [...parseHtml(head.html).querySelectorAll('article p')]
     expect(paragraphs.map((paragraph) => paragraph.textContent)).toContain('Тело записи.')
   })
 
-  // Разметка = видимое: Person печатается только вместе с подписью, теми же строками.
-  it('автор записи: подпись в шапке статьи и Person с тем же именем; @id один на обе локали', async () => {
+  // Крошки — секция плана шаблона: подписи ступеней — copy deck, адреса — родители страницы по карте, последняя ступень —
+  // сама запись или тег.
+  it('крошки записи и тега — секция breadcrumbs плана: ступени — родители по карте, текущая — страница', async () => {
+    const cases: Array<[string, { default: AstroComponentFactory }, string, Locale, string]> = [
+      ['/[...locale]/blog/[slug]', Post, '/blog/para', RU, 'Запись с переводом'],
+      ['/[...locale]/blog/[slug]', Post, '/en/blog/pair', EN, 'Post with a translation'],
+      ['/[...locale]/blog/tag/[tag]', Tag, '/blog/tag/seo', RU, '#seo'],
+    ]
+    for (const [route, module, path, locale, current] of cases) {
+      const head = await page(route, module, path)
+      const plan = strategyPage(route.includes('tag') ? 'tag' : 'post', locale)
+      const steps = plan.sections.find((section) => section.block === 'breadcrumbs')?.groups.crumb
+      expect(crumbsOf(head.html, head.blocks).visible, path).toEqual([
+        ...plan.parents.map((parent, index) => [steps?.[index]?.label, parent.url]),
+        [current, undefined],
+      ])
+    }
+  })
+
+  // Разметка = видимое: Person печатается только вместе с подписью, теми же строками; подпись — ссылка на профиль.
+  it('автор записи: подпись — ссылка rel="author" на профиль и Person с тем же именем; @id один на обе локали', async () => {
     const post = async (path: string) => {
       const head = await page('/[...locale]/blog/[slug]', Post, path)
-      const header = parseHtml(head.html).querySelector('article header')
+      const link = parseHtml(head.html).querySelector('article header a[rel="author"]')
       return {
         author: head.blocks.find((block) => block['@type'] === 'BlogPosting')?.author,
-        header: header?.textContent?.replace(/\s+/g, ' ') ?? '',
+        link: link && [link.getAttribute('href'), link.textContent?.trim()],
+        signature: link?.parentElement?.textContent?.replace(/\s+/g, ' ').trim(),
       }
     }
     const id = `${ORIGIN}/#author-anna-smirnova`
@@ -180,7 +197,8 @@ describe('маршруты блога с параметрами', () => {
       name: 'Анна Смирнова',
       jobTitle: 'редактор блога',
     })
-    expect(ru.header).toContain(`${t(RU, 'author.by')} Анна Смирнова, редактор блога`)
+    expect(ru.link).toEqual(['/avtory/anna-smirnova', 'Анна Смирнова'])
+    expect(ru.signature).toBe('Анна Смирнова, редактор блога')
 
     const en = await post('/en/blog/pair')
     expect(en.author).toEqual({
@@ -189,7 +207,9 @@ describe('маршруты блога с параметрами', () => {
       name: 'Anna Smirnova',
       jobTitle: 'blog editor',
     })
-    expect(en.header).toContain(`${t(EN, 'author.by')} Anna Smirnova, blog editor`)
+    expect(en.link).toEqual(['/avtory/anna-smirnova', 'Anna Smirnova'])
+
+    expect((await post('/blog/odna')).link).toEqual(['https://petr-ivanov.example', 'Пётр Иванов'])
 
     const plain = await post('/blog/zametka-1')
     expect(plain.author).toEqual({
@@ -197,7 +217,57 @@ describe('маршруты блога с параметрами', () => {
       '@id': `${ORIGIN}/#org`,
       name: SITE_NAME,
     })
-    expect(plain.header).not.toContain(t(RU, 'author.by'))
+    expect(plain.link).toBeNull()
+  })
+
+  // «Связанные» — путь дальше по сайту: записи той же локали с общим тегом; нет таких — секции нет, а не пустой список.
+  it('связанные записи: секция со ссылками на записи с общим тегом той же локали; без них секции нет', async () => {
+    const related = async (path: string) => {
+      const { html } = await page('/[...locale]/blog/[slug]', Post, path)
+      const section = parseHtml(html).querySelector('main [aria-labelledby="related"]')
+      return (
+        section &&
+        [...section.querySelectorAll('nav li a')].map((link) => link.getAttribute('href'))
+      )
+    }
+    expect(await related('/blog/para')).toEqual(['/blog/zametka-2', '/blog/zametka-1'])
+    expect(await related('/en/blog/pair')).toEqual(['/en/blog/note-2', '/en/blog/note-1'])
+    expect(await related('/blog/odna')).toBeNull()
+  })
+})
+
+// Страница блога — секции своего плана: список и шаблоны записи и тега на локалях и карте теста. Страницы 2…N списка —
+// та же композиция с номером страницы в заголовке.
+describe('страницы блога из блоков: план страницы', () => {
+  it('секции = план, слот — на странице: список, тег и запись; связанные — когда они есть', async () => {
+    const routes: Array<[string, { default: AstroComponentFactory }, string]> = [
+      ['/[...locale]/blog', Blog, 'blog'],
+      ['/[...locale]/blog/tag/[tag]', Tag, 'tag'],
+      ['/[...locale]/blog/[slug]', Post, 'post'],
+    ]
+    const faults: string[] = []
+    for (const [route, module, id] of routes) {
+      for (const { path, locale, props } of await built(route, module)) {
+        const { html } = await render(module.default, path, props)
+        const plan = strategyPage(id, locale as Locale)
+        const shown = [...(parseHtml(html).querySelector('main')?.children ?? [])].map((child) =>
+          child.getAttribute('aria-labelledby'),
+        )
+        const expected = plan.sections
+          .filter((section) => catalog[section.block]?.flow !== 'chrome')
+          .filter((section) => section.block !== 'related-links' || shown.includes(section.id))
+        expect(shown, path).toEqual(expected.map((section) => section.id))
+        for (const section of expected) {
+          const block = blocks.find((candidate) => candidate.block.id === section.block)?.block
+          if (block === undefined) faults.push(`${path} ${id}/${section.id}: блока нет`)
+          else
+            faults.push(
+              ...sectionFaults(html, plan, section.id, block).map((fault) => `${path} ${fault}`),
+            )
+        }
+      }
+    }
+    expect(faults).toEqual([])
   })
 })
 

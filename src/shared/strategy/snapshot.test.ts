@@ -8,6 +8,7 @@ import {
   projectOf,
   snapshot,
   strategyPage,
+  templateOf,
 } from './page'
 
 describe('снимок сайта strategy/', () => {
@@ -68,10 +69,10 @@ describe('снимок сайта strategy/', () => {
           new RegExp(`^site/[^/]+/(?:plans|copy)/${page.id}(?:\\.[\\w-]+)?\\.yaml$`),
         )
       }
+      // План одной страницы читает pageOf, шаблон коллекции — templateOf.
+      const read = page.template ? templateOf : pageOf
       for (const locale of pageLocales(page.id)) {
-        expect(pageOf(files, locale), `${page.id} (${locale})`).toEqual(
-          strategyPage(page.id, locale),
-        )
+        expect(read(files, locale), `${page.id} (${locale})`).toEqual(strategyPage(page.id, locale))
       }
     }
   })
@@ -110,6 +111,19 @@ describe('снимок сайта strategy/', () => {
       const { map, facts, plans, decks } = projectOf({ [file]: data })
       expect(data, file).toEqual(map ?? facts[0] ?? plans[0] ?? decks[0])
     }
+  })
+
+  // У шаблона коллекции слоты без текста и мету даёт запись: прочитанный как страница, он скрыл бы пропуск текста.
+  it('шаблон коллекции читает templateOf, план одной страницы — pageOf; не та функция — ошибка с ключом', () => {
+    const plan = (template: boolean) => ({
+      'site/x/plans/a.yaml': { page: { id: 'a', template }, sections: [] },
+    })
+    expect(() => pageOf(plan(true), DEFAULT_LOCALE)).toThrow(
+      'strategy: a — план шаблона коллекции — его читает templateOf',
+    )
+    expect(() => templateOf(plan(false), DEFAULT_LOCALE)).toThrow(
+      'strategy: a — план одной страницы — его читает pageOf',
+    )
   })
 
   it('модуль без плана или с двумя планами — ошибка', () => {

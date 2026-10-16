@@ -17,8 +17,8 @@ JavaScript не нужен, а разметка одинакова для чел
 |---|---|
 | `<head>` из пропсов страницы: title-шаблон, description, self-canonical, OG, `twitter:card`, RSS autodiscovery | `app/layouts/document.astro` + `shared/seo/seo-head.astro` |
 | hreflang только для реальных переводов, взаимно, + `x-default` | `shared/seo/urls.ts` (`alternates`) |
-| JSON-LD в `<head>`: `Organization`/`WebSite`, `LocalBusiness`, `BreadcrumbList`, `BlogPosting`; организация одна — её узлы и ссылки на неё с `@id` `<origin>/#org`; автор записи — `Person` из реестра авторов с видимой подписью | `shared/seo/json-ld.ts` + проп `jsonLd` layout'а, `entities/author` |
-| видимые хлебные крошки и `BreadcrumbList` — из одного пропа оболочки, у страницы шаблона карты с крошками и с глубины 2 | `widgets/breadcrumbs`, проп `crumbs` layout'а, `breadcrumbsOn` (`shared/strategy`) |
+| JSON-LD в `<head>`: `Organization`/`WebSite`, `LocalBusiness`, `BreadcrumbList`, `BlogPosting`; организация одна — её узлы и ссылки на неё с `@id` `<origin>/#org`; автор записи — `Person` из реестра авторов с видимой подписью — ссылкой `rel="author"` на профиль | `shared/seo/json-ld.ts` + проп `jsonLd` layout'а, `entities/author`, `widgets/article-body` |
+| видимые хлебные крошки и `BreadcrumbList` — из одного пропа оболочки: секция крошек плана у страницы шаблона карты с крошками и с глубины 2, ступени — родители по карте | `widgets/breadcrumbs`, проп `crumbs` layout'а, `breadcrumbsOn` (`shared/strategy`) |
 | `robots.txt` и файл ключа IndexNow на runtime origin; фиды `rss.xml` — prerendered | `src/pages/*.ts` + `shared/seo` |
 | IndexNow после выката: поисковикам уходят только адреса, которые изменил релиз | `pnpm indexnow` (`scripts/indexnow.mjs`), шаг `/release` |
 | `sitemap.xml` — файл сборки: ровно страницы без `noindex`, адрес — canonical, `lastmod` — дата правки или публикации записи | интеграция `sitemap-from-build` (`astro.config.ts`) + `scripts/lib/sitemap.mjs` |

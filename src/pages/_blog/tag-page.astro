@@ -1,13 +1,13 @@
 ---
-import home from 'virtual:strategy/home'
+import files from 'virtual:strategy/tag'
 import DocumentLayout from '@/app/layouts/document.astro'
-import type { Post } from '@/entities/post'
+import { type Post, postCard } from '@/entities/post'
 import type { Locale } from '@/shared/i18n'
-import { pageOf } from '@/shared/strategy'
-import { Heading } from '@/shared/ui/heading'
-import { Section } from '@/shared/ui/section'
+import { templateOf } from '@/shared/strategy'
+import { ArticleCards, articleCards } from '@/widgets/article-cards'
+import { breadcrumbs } from '@/widgets/breadcrumbs'
+import { HeroText, heroText } from '@/widgets/hero-text'
 import { tagPageModel } from './models'
-import PostList from './post-list.astro'
 
 interface Props {
   locale: Locale
@@ -16,24 +16,24 @@ interface Props {
 }
 
 const { locale, tag, posts } = Astro.props
+const page = templateOf(files, locale)
 const model = await tagPageModel(locale, tag)
 ---
 
 <DocumentLayout
   locale={locale}
-  chrome={pageOf(home, locale)}
+  chrome={page}
   noindex={model.noindex}
   translations={model.translations}
   title={model.title}
   description={model.description}
-  crumbs={model.crumbs}
+  crumbs={breadcrumbs.props(page, 'breadcrumbs', { current: model.current })}
 >
-  <Section labelledby="page-title">
-    <Heading id="page-title" level={1}>
-      {model.heading}
-    </Heading>
-    <div class="mt-2xl">
-      <PostList locale={locale} posts={posts} />
-    </div>
-  </Section>
+  <HeroText
+    {...heroText.props(page, 'hero', { headline: model.title, subheadline: model.description })}
+  />
+  <ArticleCards
+    {...articleCards.props(page, 'related', { article: posts.map(postCard) })}
+    locale={locale}
+  />
 </DocumentLayout>

@@ -135,6 +135,23 @@ const PRIVACY = {
     'clause-2-text-1': 'Имя и почта из формы.',
   },
 }
+// Блог: список — первый экран и записи; шаблоны записи и тега — тексты шаблона (крошки, заголовки секций, призыв),
+// слоты записи даёт запись.
+const BLOG = {
+  hero: {
+    headline: 'Заметки студии',
+    subheadline: 'Пишем о сайтах, которые видно в поиске.',
+    'cta-label': 'Написать нам',
+  },
+  related: { title: 'Все записи' },
+}
+const CRUMBS = { 'crumb-1-label': 'Начало', 'crumb-2-label': 'Заметки' }
+const POST = { breadcrumbs: CRUMBS, related: { title: 'Ещё по теме' } }
+const TAG = {
+  breadcrumbs: CRUMBS,
+  hero: { 'cta-label': 'Написать нам' },
+  related: { title: 'Записи тега' },
+}
 const NOT_FOUND = {
   'not-found': {
     title: 'Страницы нет',
@@ -146,12 +163,52 @@ const NOT_FOUND = {
   },
 }
 
+// Секции страниц блога: крошки шаблонов (текущая ступень — запись), первый экран и список записей.
+const crumbsSection = {
+  id: 'breadcrumbs',
+  role: 'header',
+  block: 'breadcrumbs',
+  variant: 'full-path',
+  slots: {
+    text: [
+      { id: 'current' },
+      ...['crumb-1', 'crumb-2'].map((group) => ({
+        id: `${group}-label`,
+        anatomy: 'crumb.label',
+        group,
+      })),
+    ],
+    action: [
+      { id: 'crumb-1-link', anatomy: 'crumb.link', group: 'crumb-1', target: route('/') },
+      { id: 'crumb-2-link', anatomy: 'crumb.link', group: 'crumb-2', target: route('/blog') },
+    ],
+  },
+}
+const heroSection = {
+  id: 'hero',
+  role: 'hero',
+  block: 'hero-text',
+  variant: 'statement-cta',
+  slots: {
+    text: [{ id: 'headline' }, { id: 'subheadline' }, { id: 'cta-label' }],
+    action: [{ id: 'cta', target: route('/contacts') }],
+  },
+}
+const cardsSection = {
+  id: 'related',
+  role: 'related',
+  block: 'article-cards',
+  variant: 'list',
+  slots: { text: [{ id: 'title' }] },
+}
+
 // Проект strategy теста в раскладке снимка — карта на локалях теста (TEST_LOCALES): главная, «О компании» и 404 — на
-// ru, en и de, контакты, «спасибо» и блог — на ru и en, политика ПДн — только на ru; крошки — у записи и тега; меню
-// шапки — блог, «О компании», контакты. План главной — её каркас (шапка сайта и подвал сайта) и свежие записи; планы
-// страниц — секции блоков каталога: «О компании» — текстовый раздел и контакты, контакты — форма, «спасибо»,
-// политика, 404 с путями на разделы. Страницы, языки, переводы, каркас и блоки тест судит по нему, а не по данным
-// сайта.
+// ru, en и de, контакты, «спасибо» и блог — на ru и en, политика ПДн — только на ru; крошки — у записи и тега,
+// связанные записи — по общему тегу; меню шапки — блог, «О компании», контакты. План главной — её каркас (шапка сайта и
+// подвал сайта) и свежие записи; планы страниц — секции блоков каталога: «О компании» — текстовый раздел и контакты,
+// контакты — форма, «спасибо», политика, 404 с путями на разделы, блог — первый экран и записи; шаблоны записи и тега —
+// крошки, тело записи и связанные, первый экран и записи тега. Страницы, языки, переводы, каркас и блоки тест судит по
+// нему, а не по данным сайта.
 export const TEST_SITE = {
   'facts.yaml': factsOf('ru', 'ООО «Тест»'),
   'facts.en.yaml': factsOf('en', 'Test LLC'),
@@ -177,7 +234,7 @@ export const TEST_SITE = {
       { id: 'legal', breadcrumbs: false },
       { id: 'not-found', breadcrumbs: false },
       { id: 'blog', breadcrumbs: false },
-      { id: 'post', breadcrumbs: true },
+      { id: 'post', breadcrumbs: true, related: 'post-tags' },
       { id: 'tag', breadcrumbs: true },
     ],
     pages: [
@@ -198,6 +255,7 @@ export const TEST_SITE = {
       { id: 'tag', template: 'tag', url: '/blog/tag/{slug}', parent: 'blog' },
     ],
     chrome: { header: { items: [{ page: 'blog' }, { page: 'about' }, { page: 'contacts' }] } },
+    linking: { related_rules: [{ id: 'post-tags', by: 'shared-tag', max: 3 }] },
   },
   'site/test/plans/home.yaml': {
     page: { id: 'home' },
@@ -384,6 +442,33 @@ export const TEST_SITE = {
       },
     ],
   },
+  'site/test/plans/blog.yaml': { page: { id: 'blog' }, sections: [heroSection, cardsSection] },
+  'site/test/plans/post.yaml': {
+    page: { id: 'post', template: true },
+    sections: [
+      crumbsSection,
+      {
+        id: 'article-body',
+        role: 'article-body',
+        block: 'article-body',
+        variant: 'longread',
+        slots: {
+          text: [{ id: 'title' }, { id: 'lead' }, { id: 'date' }, { id: 'author' }, { id: 'alt' }],
+        },
+      },
+      {
+        id: 'related',
+        role: 'related',
+        block: 'related-links',
+        variant: 'list',
+        slots: { text: [{ id: 'title' }] },
+      },
+    ],
+  },
+  'site/test/plans/tag.yaml': {
+    page: { id: 'tag', template: true },
+    sections: [crumbsSection, heroSection, cardsSection],
+  },
   'site/test/copy/home.yaml': homeDeck(
     'ru',
     ['Заметки', 'О студии', 'Связаться'],
@@ -410,6 +495,9 @@ export const TEST_SITE = {
         ['thank-you', THANKS, ['ru', 'en']],
         ['privacy', PRIVACY, ['ru']],
         ['not-found', NOT_FOUND, ['ru', 'en', 'de']],
+        ['blog', BLOG, ['ru', 'en']],
+        ['post', POST, ['ru', 'en']],
+        ['tag', TAG, ['ru', 'en']],
       ] as const
     ).flatMap(([page, texts, langs]) =>
       langs.map((lang) => [
@@ -421,14 +509,11 @@ export const TEST_SITE = {
 }
 
 // Модуль `@/shared/strategy` на проекте теста — фабрика `vi.mock` (вместе с локалями теста `withTestLocales`): страница,
-// которую берут модулем её данных (`pageOf`), — страница проекта теста с тем же id.
+// которую берут модулем её данных (`pageOf`, `templateOf`), — страница проекта теста с тем же id.
 export async function withTestSite(importOriginal: () => Promise<unknown>) {
   const strategy = (await importOriginal()) as typeof Strategy
   const site = strategy.siteOf(strategy.projectOf(TEST_SITE))
-  return {
-    ...strategy,
-    ...site,
-    pageOf: (files: Strategy.PageFiles, locale: Parameters<typeof site.strategyPage>[1]) =>
-      site.strategyPage(strategy.projectOf(files).plans[0]?.page.id ?? '', locale),
-  }
+  const testPage = (files: Strategy.PageFiles, locale: Parameters<typeof site.strategyPage>[1]) =>
+    site.strategyPage(strategy.projectOf(files).plans[0]?.page.id ?? '', locale)
+  return { ...strategy, ...site, pageOf: testPage, templateOf: testPage }
 }

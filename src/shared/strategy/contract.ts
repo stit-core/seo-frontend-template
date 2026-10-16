@@ -19,6 +19,8 @@ export const PlanSchema = z.object({
   page: z.object({
     id: z.string(),
     url: z.string().optional(),
+    // План шаблона коллекции: тексты шаблона — copy deck, слоты без текста и мету страницы даёт запись коллекции.
+    template: z.boolean().default(false),
     // Правовые решения страницы: адрес политики ПДн и оператор — факт `fact:<id>`.
     legal: z
       .object({
@@ -133,7 +135,14 @@ export const SiteMapSchema = z.object({
       .default([]),
   }),
   templates: z
-    .array(z.object({ id: z.string(), breadcrumbs: z.boolean().default(false) }))
+    .array(
+      z.object({
+        id: z.string(),
+        breadcrumbs: z.boolean().default(false),
+        // Правило «связанных» страниц шаблона — id правила linking.related_rules.
+        related: z.string().optional(),
+      }),
+    )
     .default([]),
   pages: z.array(
     z.object({
@@ -148,6 +157,14 @@ export const SiteMapSchema = z.object({
   chrome: z
     .object({
       header: z.object({ items: z.array(z.object({ page: z.string() })).default([]) }).optional(),
+    })
+    .optional(),
+  // «Связанные»: по какому признаку и сколько страниц коллекции показывает страница шаблона.
+  linking: z
+    .object({
+      related_rules: z
+        .array(z.object({ id: z.string(), by: z.string(), max: z.number() }))
+        .default([]),
     })
     .optional(),
 })
@@ -216,6 +233,17 @@ export function hasBreadcrumbs(map: SiteMap, id: string): boolean {
   if (template?.breadcrumbs !== true || page.url === '/') return false
   const parents = parentsOf(map, id)
   return parents.length + (parents[0]?.url === '/' ? 0 : 1) >= 2
+}
+
+// «Связанные» страницы карты — правило linking.related_rules её шаблона (templates[].related): признак связи и сколько
+// страниц показать. Правила у шаблона или в карте нет — ошибка с ключом.
+export function relatedRule(map: SiteMap, id: string) {
+  const { template } = mapPage(map, id)
+  const rule = map.templates.find((candidate) => candidate.id === template)?.related
+  return (
+    map.linking?.related_rules.find((candidate) => candidate.id === rule) ??
+    fail(id, 'у шаблона нет правила связанных в linking.related_rules карты')
+  )
 }
 
 // Языки страницы карты: версия со всеми страницами или с этой страницей в списке (основной язык без строки версии — со

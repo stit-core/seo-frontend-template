@@ -10,7 +10,6 @@ import {
 } from '@/shared/lib/testing'
 import {
   action,
-  breadcrumbsOn,
   defineBlock,
   elementOf,
   fact,
@@ -23,7 +22,6 @@ import {
   strategyPage,
   text,
 } from '@/shared/strategy'
-import { breadcrumbs } from '@/widgets/breadcrumbs'
 import {
   type Block,
   blocks,
@@ -67,9 +65,10 @@ const plans = [...snapshot().plans, ...landing.plans]
 
 // Страницы с планами — на своих языках: страницы снимка сайта на языках карты, посадочная фикстуры базы — тексты её
 // copy deck на русском, а подписи интерфейса каркаса (словарь сайта) — дефолтной локали: у сайта может не быть ru.
+// Шаблоны коллекций — со слотами записи: их секции судит тест страниц на записях (pages.astro.test.ts).
 const pages = [
-  ...snapshot().plans.flatMap(({ page: { id } }) =>
-    pageLocales(id).map((locale) => ({
+  ...snapshot().plans.flatMap(({ page: { id, template } }) =>
+    (template ? [] : pageLocales(id)).map((locale) => ({
       page: strategyPage(id, locale),
       locale,
       project: snapshot(),
@@ -201,12 +200,11 @@ describe('блоки каталога: блок ↔ каталог ↔ план�
     ).toEqual([])
   })
 
-  // Блок заводится под секцию плана: widget, который не ставит ни одна страница снимка, — блок «на будущее». Крошки ставит
-  // оболочка по карте — у страниц шаблона с крошками.
-  it('каждый widget стоит на странице по данным снимка: у секции плана или крошками карты', () => {
-    const { map, plans } = snapshot()
-    const placed = new Set(plans.flatMap(({ sections }) => sections.map(({ block }) => block)))
-    if (map?.pages.some(({ id }) => breadcrumbsOn(id))) placed.add(breadcrumbs.id)
+  // Блок заводится под секцию плана: widget, который не ставит ни одна страница снимка, — блок «на будущее».
+  it('каждый widget стоит на странице по данным снимка — у секции плана', () => {
+    const placed = new Set(
+      snapshot().plans.flatMap(({ sections }) => sections.map(({ block }) => block)),
+    )
     expect(
       blocks
         .filter(({ block }) => !placed.has(block.id))

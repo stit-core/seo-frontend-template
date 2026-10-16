@@ -5,6 +5,7 @@ export {
   defineBlock,
   fact,
   group,
+  image,
   labelled,
   list,
   media,
@@ -36,7 +37,9 @@ export {
   pageOf,
   pageVersions,
   projectOf,
+  relatedOf,
   siteOf,
   snapshot,
   strategyPage,
+  templateOf,
 } from './page'

@@ -1,0 +1,106 @@
+# Тексты шаблона записи блога на английском — copy deck второго языка: те же id секций и слотов, что у
+# copy/post.yaml.
+copy_deck:
+  version: 1
+  date: '2026-10-16'
+  site: site-template
+  product_name: ssr-frontend-template
+  lang: en
+  source_lang: ru
+  source_ref: post.yaml
+  adaptation: {mode: adaptation}
+  facts_ref: ../../../facts.en.yaml
+  page_plan_ref: ../plans/post.yaml
+  jurisdiction: ru
+  legal_category: [general]
+  authors: [template maintainer]
+  pages:
+    - page_id: post
+      page_type: article-page
+      status: assumed
+      sections:
+        - section_id: header
+          section_role: header
+          block: header
+          slots:
+            - slot_id: nav-link-1
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Blog, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-2
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: About, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-link-3
+              slot_type: nav-label
+              site_slot_id: nav-link
+              variants:
+                - {id: a, text: Contacts, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: breadcrumbs
+          section_role: header
+          block: breadcrumbs
+          slots:
+            - slot_id: crumb-1-label
+              slot_type: nav-label
+              site_slot_id: crumb.label
+              group: crumb-1
+              variants:
+                - {id: a, text: Home, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: crumb-2-label
+              slot_type: nav-label
+              site_slot_id: crumb.label
+              group: crumb-2
+              variants:
+                - {id: a, text: Blog, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: related
+          section_role: related
+          block: related-links
+          slots:
+            - slot_id: title
+              slot_type: section-title
+              variants:
+                - {id: a, text: Read next, status: assumed, source: ai-self}
+              chosen: a
+        - section_id: footer
+          section_role: footer
+          block: footer
+          slots:
+            - slot_id: legal
+              slot_type: footer-legal
+              variants:
+                - {id: a, text: 'Primer LLC, OGRN 1000000000001, INN 7700000000', status: assumed, source: fact}
+              chosen: a
+              fact_ids: ['fact:company-name', 'fact:company-ogrn', 'fact:company-inn']
+            - slot_id: privacy-label
+              slot_type: nav-label
+              variants:
+                - {id: a, text: Personal data policy, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-1-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-1
+              variants:
+                - {id: a, text: Blog, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-2-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-2
+              variants:
+                - {id: a, text: About, status: assumed, source: ai-self}
+              chosen: a
+            - slot_id: nav-3-label
+              slot_type: nav-label
+              site_slot_id: nav.label
+              group: nav-3
+              variants:
+                - {id: a, text: Contacts, status: assumed, source: ai-self}
+              chosen: a

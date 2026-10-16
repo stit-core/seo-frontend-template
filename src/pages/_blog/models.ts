@@ -5,21 +5,21 @@ import {
   isTagIndexable,
   listByTag,
   listPosts,
-  listTags,
   type Page,
   type Post,
   pageCount,
+  postCard,
   postPath,
   tagPath,
 } from '@/entities/post'
-import { type Locale, localePath, type Translations, t } from '@/shared/i18n'
+import { type Locale, type Translations, t } from '@/shared/i18n'
 import { invariant } from '@/shared/lib'
 import { blogPosting } from '@/shared/seo'
-import { type BlockProps, breadcrumbsOn, pageLocales } from '@/shared/strategy'
-import type { breadcrumbs } from '@/widgets/breadcrumbs'
+import { pageLocales, relatedOf } from '@/shared/strategy'
 import { articleImagesOf, ogImageOf } from './images'
 
-// Модели страниц блога — здесь, разметка — в .astro: страницы всех локалей делят и то и другое.
+// Модели страниц блога — здесь, разметка — в .astro: страницы всех локалей делят и то и другое. Тексты шаблонов —
+// планы и copy deck страниц блога; модель даёт то, что приходит из коллекции.
 
 // Карта переводов из версий страницы по локалям её строки карты: адрес версии или ничего.
 async function translationsOf(
@@ -34,31 +34,31 @@ async function translationsOf(
   )
 }
 
-// Крошки — у страницы шаблона карты с крошками (запись, тег): путь — главная и блог, последняя ступень — сама страница.
-// Видимые крошки и BreadcrumbList печатает оболочка из этого пропа.
-function crumbsOf(
-  id: string,
-  locale: Locale,
-  current: string,
-): BlockProps<typeof breadcrumbs> | undefined {
-  if (!breadcrumbsOn(id)) return undefined
-  return {
-    id: 'breadcrumbs',
-    variant: 'full-path',
-    crumb: [
-      { label: t(locale, 'nav.home'), link: { href: localePath(locale, '/') } },
-      { label: t(locale, 'blog.title'), link: { href: blogPath(locale) } },
-    ],
-    current,
-  }
-}
-
 // Автор записи на языке страницы: одни и те же строки уходят в видимую подпись и в Person.
 function authorOf({ id, locale, data }: Post) {
   if (data.author === undefined) return undefined
   const author = AUTHORS[data.author]
   invariant(author, `post: автора ${data.author} записи ${id} нет в реестре entities/author`)
-  return { id: data.author, name: author.name[locale], jobTitle: author.jobTitle?.[locale] }
+  return {
+    id: data.author,
+    name: author.name[locale],
+    jobTitle: author.jobTitle?.[locale],
+    profile: author.profile,
+  }
+}
+
+// Связанные записи — правило «связанных» шаблона записи в карте: записи той же локали с общим тегом, новые первыми, не
+// больше максимума правила; сама запись не связанная. Нет таких — секции нет.
+async function relatedTo(post: Post) {
+  const rule = relatedOf('post')
+  invariant(rule.by === 'shared-tag', `post: связанные по ${rule.by} — записи связывает общий тег`)
+  const related = (await listPosts(post.locale)).filter(
+    (other) => other.id !== post.id && other.data.tags.some((tag) => post.data.tags.includes(tag)),
+  )
+  return related.slice(0, rule.max).map((other) => ({
+    title: other.data.title,
+    link: { href: postPath(other.locale, other.slug) },
+  }))
 }
 
 export async function postPageModel(post: Post) {
@@ -77,8 +77,17 @@ export async function postPageModel(post: Post) {
     translations,
     ogImage,
     article: { published: data.pubDate, modified: data.updatedDate },
-    author,
-    crumbs: crumbsOf('post', locale, data.title),
+    // Слоты записи шаблона: заголовок, лид, даты, автор и обложка.
+    record: {
+      title: data.title,
+      lead: data.description,
+      date: { published: data.pubDate, updated: data.updatedDate },
+      author: author && { name: author.name, jobTitle: author.jobTitle, profile: author.profile },
+      cover: data.cover,
+      alt: data.coverAlt,
+    },
+    tags: data.tags.map((tag) => ({ label: `#${tag}`, href: tagPath(locale, tag) })),
+    related: await relatedTo(post),
     jsonLd: [
       blogPosting({
         locale,
@@ -101,22 +110,17 @@ export async function blogListPageModel(locale: Locale, page: Page<Post>) {
       ? blogPath(other, page.current)
       : undefined,
   )
-  // Страницы 2…N — свой сниппет выдачи: номер страницы в h1, title и description.
-  const paged = (key: 'blog.pageTitle' | 'blog.title' | 'blog.description') =>
-    page.current === 1
-      ? t(locale, key)
-      : t(locale, 'blog.paged', { text: t(locale, key), page: page.current })
   return {
     translations,
-    title: paged('blog.pageTitle'),
-    heading: paged('blog.title'),
-    description: paged('blog.description'),
-    tags: await listTags(locale),
+    // Страницы 2…N — свой сниппет выдачи: номер страницы в h1, title и description.
+    paged: (text: string) =>
+      page.current === 1 ? text : t(locale, 'blog.paged', { text, page: page.current }),
+    articles: page.items.map(postCard),
     pagination: {
       current: page.current,
       last: page.last,
-      newerHref: page.current > 1 ? blogPath(locale, page.current - 1) : undefined,
-      olderHref: page.current < page.last ? blogPath(locale, page.current + 1) : undefined,
+      newer: page.current > 1 ? blogPath(locale, page.current - 1) : undefined,
+      older: page.current < page.last ? blogPath(locale, page.current + 1) : undefined,
     },
   }
 }
@@ -130,13 +134,12 @@ export async function tagPageModel(locale: Locale, tag: string) {
       ? tagPath(other, tag)
       : undefined,
   )
-  const heading = t(locale, 'blog.tag', { tag })
+  // Подпись и вводный абзац тега — его заголовок и описание страницы, текущая крошка — сам тег.
   return {
     noindex: !indexable,
     translations,
-    title: heading,
-    heading,
+    title: t(locale, 'blog.tag', { tag }),
     description: t(locale, 'blog.tagDescription', { tag }),
-    crumbs: crumbsOf('tag', locale, `#${tag}`),
+    current: `#${tag}`,
   }
 }

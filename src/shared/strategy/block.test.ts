@@ -5,6 +5,7 @@ import {
   defineBlock,
   fact,
   group,
+  image,
   labelled,
   list,
   media,
@@ -93,6 +94,23 @@ describe('strategy/block', () => {
     )
   })
 
+  // Значения, которых план не заполняет, кладёт страница из коллекции: слоты записи шаблона, записи списка.
+  it('значения записи — в пропсах блока: слот, который план не заполняет; значение плана запись не перекрывает', () => {
+    const { title: _title, ...untitled } = section().slots
+    const template = page(section({ slots: untitled }))
+    expect(promo.props(template, 'offer', { title: 'Отделка' })).toMatchObject({
+      title: 'Отделка',
+      'cta-label': 'Оставить заявку',
+    })
+    expect(() => promo.props(template, 'offer')).toThrow('→ at title')
+    expect(() =>
+      promo.props(page(section()), 'offer', { title: 'Отделка', note: 'Скидка' }),
+    ).toThrow('strategy: home/offer — title — значение плана, запись его не перекрывает')
+    expect(() => promo.props(page(section()), 'offer', { card: [] })).toThrow(
+      'strategy: home/offer — card — значение плана, запись его не перекрывает',
+    )
+  })
+
   it('вариант не из блока, слот вне анатомии блока или без значения, не тот вид значения — ошибка называет слот', () => {
     const { title: _title, ...untitled } = section().slots
     const cases: Array<[Partial<Section>, string]> = [
@@ -139,8 +157,9 @@ describe('strategy/block', () => {
     expect(() => header({ logo: 'logo.svg' })).toThrow('→ at logo')
   })
 
-  // Успех формы без JS — страница «спасибо»: текст успеха блок принимает, а не показывает; дату записи кладёт страница.
-  it('текст, который блок не показывает, — текст плана; дата записи коллекции — дата, а не текст', () => {
+  // Успех формы без JS — страница «спасибо»: текст успеха блок принимает, а не показывает; дату и обложку записи кладёт
+  // страница.
+  it('текст, который блок не показывает, — текст плана; дата и обложка записи коллекции — дата и картинка, а не текст', () => {
     const form = defineBlock({
       id: 'lead-form',
       variants: ['short'],
@@ -160,6 +179,10 @@ describe('strategy/block', () => {
     expect(() => lead({ title: 'Заявка', success: { href: '/spasibo' } })).toThrow('→ at success')
     expect(date.safeParse(new Date('2026-09-01')).success).toBe(true)
     expect(date.safeParse('1 сентября 2026').success).toBe(false)
+    // Обложка записи — картинка сборки (адрес и размеры), а не путь к файлу.
+    const cover = { src: '/_astro/cover.png', width: 1600, height: 900, format: 'png' }
+    expect(image.safeParse(cover).success).toBe(true)
+    expect(image.safeParse('/_astro/cover.png').success).toBe(false)
   })
 
   it('действия и подписи — пары по порядку плана; у пары нет половины — ошибка называет ключ', () => {

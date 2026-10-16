@@ -1,14 +1,17 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
+import type * as AuthorSlice from '@/entities/author'
 import { DEFAULT_LOCALE, type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { parseHtml, sectionFaults } from '@/shared/lib/testing'
 import {
+  type Action,
   breadcrumbsOn,
   type FactValue,
   pageLocales,
   snapshot,
   strategyPage,
 } from '@/shared/strategy'
+import { breadcrumbs } from '@/widgets/breadcrumbs'
 import { notFound } from '@/widgets/not-found'
 import { headTags, jsonLdBlocks } from '../../../scripts/lib/html.mjs'
 import * as About from '../[...locale]/about.astro'
@@ -30,9 +33,13 @@ import {
   shapeOf,
 } from './routes'
 
-// Страницы — на данных сайта: его локалях, карте и текстах; записи — фикстуры. Маршруты записей, тегов и страниц
-// списка — на локалях и карте теста (blog.astro.test.ts).
+// Страницы — на данных сайта: его локалях, карте и текстах; записи и их авторы — фикстуры (реестр авторов шаблона
+// пуст). Маршруты записей, тегов и страниц списка — на локалях и карте теста (blog.astro.test.ts).
 vi.mock('astro:content', () => import('./fixtures').then((fixtures) => fixtures.astroContent))
+vi.mock('@/entities/author', async (importOriginal) => ({
+  ...(await importOriginal<typeof AuthorSlice>()),
+  AUTHORS: (await import('./fixtures')).AUTHORS,
+}))
 
 const ORIGIN = 'https://demo.example'
 
@@ -214,15 +221,19 @@ describe('страница из блоков: план страницы', () => 
         const { html } = await render(module.default, path, props)
         const page = strategyPage(id, locale as Locale)
         const main = parseHtml(html).querySelector('main')
-        expect(
-          [...(main?.children ?? [])].map((child) => child.getAttribute('aria-labelledby')),
-          path,
-        ).toEqual(
-          page.sections
+        const shown = [...(main?.children ?? [])].map((child) =>
+          child.getAttribute('aria-labelledby'),
+        )
+        // «Связанные» — только когда есть что связать: без них секции нет (запись без общих тегов).
+        const sections = page.sections.filter(
+          (section) => section.block !== 'related-links' || shown.includes(section.id),
+        )
+        expect(shown, path).toEqual(
+          sections
             .filter((section) => catalog[section.block]?.flow !== 'chrome')
             .map((section) => section.id),
         )
-        for (const section of page.sections) {
+        for (const section of sections) {
           const block = blocks.find((candidate) => candidate.block.id === section.block)?.block
           if (block === undefined) {
             faults.push(`${path} ${id}/${section.id}: блока ${section.block} нет`)
@@ -241,6 +252,28 @@ describe('страница из блоков: план страницы', () => 
       }
     }
     expect(faults).toEqual([])
+  })
+})
+
+// Крошки — секция плана у страницы шаблона карты с крошками и глубиной от 2: ступени ведут на её родителей по карте,
+// подписи — copy deck.
+describe('крошки по карте', () => {
+  it('секция крошек — у страницы с крошками по карте; ступени — родители страницы по карте', () => {
+    let checked = 0
+    for (const { page } of snapshot().plans) {
+      for (const locale of pageLocales(page.id)) {
+        const read = strategyPage(page.id, locale)
+        const crumbs = read.sections.find((section) => section.block === breadcrumbs.id)
+        expect(crumbs !== undefined, page.id).toBe(breadcrumbsOn(page.id))
+        if (crumbs === undefined) continue
+        expect(
+          crumbs.groups.crumb?.map((step) => (step.link as Action).href),
+          `${page.id} (${locale})`,
+        ).toEqual(read.parents.map((parent) => parent.url))
+        checked += 1
+      }
+    }
+    expect(checked).toBeGreaterThan(0)
   })
 })
 

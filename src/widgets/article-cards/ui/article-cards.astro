@@ -6,9 +6,23 @@ import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 import type { articleCards } from '../model/block'
 
-type Props = BlockProps<typeof articleCards> & { locale: Locale }
+// Страницы списка — навигация хаба коллекции (пагинация карты), а не элемент анатомии: номер, последняя и соседние.
+type Props = BlockProps<typeof articleCards> & {
+  locale: Locale
+  pagination?:
+    | { current: number; last: number; newer: string | undefined; older: string | undefined }
+    | undefined
+}
 
-const { id, title, all, 'all-label': allLabel, article: articles = [], locale } = Astro.props
+const {
+  id,
+  title,
+  all,
+  'all-label': allLabel,
+  article: articles = [],
+  locale,
+  pagination,
+} = Astro.props
 ---
 
 <Section labelledby={id}>
@@ -44,5 +58,29 @@ const { id, title, all, 'all-label': allLabel, article: articles = [], locale } 
     <p class="mt-xl">
       <ActionLink href={all.href} hreflang={all.hreflang} label={allLabel} kind="secondary" />
     </p>
+  )}
+  {pagination && pagination.last > 1 && (
+    <nav
+      aria-label={t(locale, 'blog.pagination')}
+      class="mt-2xl flex items-center justify-between gap-lg text-helper"
+    >
+      <span>
+        {pagination.newer && (
+          <a class="touch-target" href={pagination.newer} rel="prev">
+            ← {t(locale, 'blog.newer')}
+          </a>
+        )}
+      </span>
+      <span class="text-secondary">
+        {pagination.current} / {pagination.last}
+      </span>
+      <span>
+        {pagination.older && (
+          <a class="touch-target" href={pagination.older} rel="next">
+            {t(locale, 'blog.older')} →
+          </a>
+        )}
+      </span>
+    </nav>
   )}
 </Section>

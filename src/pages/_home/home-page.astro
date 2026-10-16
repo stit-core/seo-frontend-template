@@ -1,7 +1,7 @@
 ---
 import home from 'virtual:strategy/home'
 import DocumentLayout from '@/app/layouts/document.astro'
-import { listPosts, postPath } from '@/entities/post'
+import { listPosts, postCard } from '@/entities/post'
 import type { Locale } from '@/shared/i18n'
 import { organization, webSite } from '@/shared/seo'
 import { pageOf, pageVersions } from '@/shared/strategy'
@@ -16,12 +16,7 @@ interface Props {
 const { locale } = Astro.props
 const page = pageOf(home, locale)
 // Свежие записи кладёт страница из коллекции: план их не заполняет.
-const latest = (await listPosts(locale)).slice(0, 3).map((post) => ({
-  title: post.data.title,
-  date: post.data.pubDate,
-  link: { href: postPath(locale, post.slug) },
-  excerpt: post.data.description,
-}))
+const latest = (await listPosts(locale)).slice(0, 3).map(postCard)
 // WebSite печатает только корень домена (/): оттуда Google читает имя сайта.
 const jsonLd = Astro.url.pathname === '/' ? [organization(), webSite()] : [organization()]
 ---
@@ -36,5 +31,5 @@ const jsonLd = Astro.url.pathname === '/' ? [organization(), webSite()] : [organ
 >
   <HeroText {...heroText.props(page, 'hero')} />
   <FeatureGrid {...featureGrid.props(page, 'benefits')} />
-  <ArticleCards {...articleCards.props(page, 'related')} article={latest} locale={locale} />
+  <ArticleCards {...articleCards.props(page, 'related', { article: latest })} locale={locale} />
 </DocumentLayout>

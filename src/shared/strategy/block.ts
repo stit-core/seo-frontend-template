@@ -1,3 +1,4 @@
+import type { ImageMetadata } from 'astro'
 import { z } from 'zod'
 import { fail } from './contract'
 import type { FactValue, StrategyPage } from './page'
@@ -24,6 +25,11 @@ export const unshown = text.meta({ unshown: true })
 // Дата записи коллекции: её кладёт страница из записи, а не чтение плана; блок печатает `<time>` — дату языка
 // страницы и ISO.
 export const date = z.date()
+
+// Картинка записи коллекции (обложка): её кладёт страница из записи, блок рисует её конвейером картинок сборки.
+export const image = z.custom<ImageMetadata>(
+  (value) => typeof value === 'object' && value !== null && 'src' in value && 'width' in value,
+)
 
 // Элемент, который план заполняет не раз (пункты меню, абзацы раздела): значения по порядку плана; один — тоже список.
 export const list = <T extends z.ZodType>(value: T) =>
@@ -56,18 +62,30 @@ export function defineBlock<
   return {
     ...block,
     // Пропсы секции страницы: другой блок, вариант не из блока, слот вне его анатомии или без значения — ошибка
-    // сборки с ключом секции.
-    props(page: StrategyPage, section: string): z.output<typeof schema> {
+    // сборки с ключом секции. `record` — значения, которые кладёт страница из коллекции: слоты записи шаблона (у шаблона
+    // коллекции — слоты без текста в copy deck) и записи, которых план не перечисляет (свежие, связанные); значение
+    // плана запись не перекрывает.
+    props(
+      page: StrategyPage,
+      section: string,
+      record: { readonly [K in keyof S]?: z.input<S[K]> } = {},
+    ): z.output<typeof schema> {
       const key = `${page.id}/${section}`
       const found =
         page.sections.find((candidate) => candidate.id === section) ??
         fail(key, 'секции нет в плане')
       if (found.block !== block.id) fail(key, `в плане блок ${found.block}, а не ${block.id}`)
+      const planned = Object.keys(record).filter(
+        (element) => element in found.slots || element in found.groups,
+      )
+      if (planned.length > 0)
+        fail(key, `${planned.join(', ')} — значение плана, запись его не перекрывает`)
       const result = schema.safeParse({
         id: found.id,
         variant: found.variant,
         ...found.slots,
         ...found.groups,
+        ...record,
       })
       if (!result.success) fail(key, `блок ${block.id}: ${z.prettifyError(result.error)}`)
       return result.data

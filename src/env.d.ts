@@ -24,7 +24,7 @@ declare module '*.yaml' {
 }
 
 // План и copy deck одной страницы strategy по её id (плагин yaml-modules из astro.config.ts): путь файла от корня
-// снимка → данные; форму проверяет чтение (shared/strategy, `pageOf`).
+// снимка → данные; форму проверяет чтение (shared/strategy, `pageOf` и `templateOf`).
 declare module 'virtual:strategy/*' {
   const files: Readonly<Record<string, unknown>>
   export default files

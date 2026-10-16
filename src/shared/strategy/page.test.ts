@@ -365,6 +365,26 @@ describe('strategy/page', () => {
     expect(read(files)).toMatchObject({ url: '/remont', parents: [] })
   })
 
+  // Шаблон коллекции — страница записи: тексты шаблона — copy deck, слот без текста и мету страницы даёт запись.
+  it('шаблон коллекции: слот без текста в copy deck — слот записи, меты нет; тексты шаблона — как у страницы', () => {
+    const files = edited((files) => {
+      Object.assign(files['site/web/plans/repair.yaml'].page, { template: true })
+      for (const page of files['site/web/copy/repair.yaml'].copy_deck.pages) {
+        page.sections.at(0)?.slots.shift()
+        Reflect.deleteProperty(page, 'meta')
+      }
+    })
+    const page = read(files)
+    expect(page.meta).toBeUndefined()
+    expect(page.sections[0]?.slots).toStrictEqual({
+      'cta-label': 'Вызвать замерщика',
+      cta: { href: '/kontakty' },
+      chat: { href: 'https://max.ru/demo' },
+      'lang-switch': { href: undefined },
+    })
+    expect(page.sections.slice(1)).toStrictEqual(read(site()).sections.slice(1))
+  })
+
   it('нет страницы, секции, текста, меты, факта или адреса — ошибка называет ключ', () => {
     const ruPages = (files: Files) => files['site/web/copy/repair.yaml'].copy_deck.pages
     const cases: Array<[string, (files: Files) => void]> = [

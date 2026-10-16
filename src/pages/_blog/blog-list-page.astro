@@ -1,38 +1,35 @@
 ---
-import home from 'virtual:strategy/home'
+import files from 'virtual:strategy/blog'
 import DocumentLayout from '@/app/layouts/document.astro'
-import { type Page, type Post, TagList } from '@/entities/post'
-import { type Locale, t } from '@/shared/i18n'
+import type { Page, Post } from '@/entities/post'
+import type { Locale } from '@/shared/i18n'
 import { pageOf } from '@/shared/strategy'
-import { Heading } from '@/shared/ui/heading'
-import { Section } from '@/shared/ui/section'
+import { ArticleCards, articleCards } from '@/widgets/article-cards'
+import { HeroText, heroText } from '@/widgets/hero-text'
 import { blogListPageModel } from './models'
-import PostList from './post-list.astro'
 
 interface Props {
   locale: Locale
   page: Page<Post>
 }
 
-const { locale, page } = Astro.props
-const model = await blogListPageModel(locale, page)
+const { locale, page: list } = Astro.props
+const page = pageOf(files, locale)
+const model = await blogListPageModel(locale, list)
+const hero = heroText.props(page, 'hero')
 ---
 
 <DocumentLayout
   locale={locale}
-  chrome={pageOf(home, locale)}
+  chrome={page}
   translations={model.translations}
-  title={model.title}
-  description={model.description}
+  title={model.paged(page.meta.title)}
+  description={model.paged(page.meta.description)}
 >
-  <Section labelledby="page-title">
-    <Heading id="page-title" level={1}>
-      {model.heading}
-    </Heading>
-    <p class="mt-stack-display text-lead text-secondary">{t(locale, 'blog.lead')}</p>
-    <TagList locale={locale} tags={model.tags} class="mt-lg" />
-    <div class="mt-2xl">
-      <PostList locale={locale} posts={page.items} pagination={model.pagination} />
-    </div>
-  </Section>
+  <HeroText {...hero} headline={model.paged(hero.headline)} />
+  <ArticleCards
+    {...articleCards.props(page, 'related', { article: model.articles })}
+    locale={locale}
+    pagination={model.pagination}
+  />
 </DocumentLayout>

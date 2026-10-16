@@ -5,19 +5,21 @@ import PostBody from './post-body.astro'
 
 // Имя и роль фикстурного автора — на локалях фикстур, а не сайта: реестр сайта типизирован его дескриптором, и набор
 // локалей сайта фикстуру не ломает.
-const author = (name: Record<string, string>, jobTitle?: Record<string, string>): Author => ({
-  name,
-  ...(jobTitle && { jobTitle }),
-})
+const author = (
+  profile: string,
+  name: Record<string, string>,
+  jobTitle?: Record<string, string>,
+): Author => ({ name, profile, ...(jobTitle && { jobTitle }) })
 
 // Реестр авторов шаблона пуст — страницам с подписью нужен фикстурный: автор пары переводов (имя и
-// роль по локалям) и автор без роли. Подменяет AUTHORS в `@/entities/author`.
+// роль по локалям, профиль на сайте) и автор без роли с профилем вне сайта. Подменяет AUTHORS в `@/entities/author`.
 export const AUTHORS: Record<string, Author> = {
   'anna-smirnova': author(
+    '/avtory/anna-smirnova',
     { ru: 'Анна Смирнова', en: 'Anna Smirnova' },
     { ru: 'редактор блога', en: 'blog editor' },
   ),
-  'petr-ivanov': author({ ru: 'Пётр Иванов', en: 'Petr Ivanov' }),
+  'petr-ivanov': author('https://petr-ivanov.example', { ru: 'Пётр Иванов', en: 'Petr Ivanov' }),
 }
 
 // Коллекция для подмены astro:content в тестах маршрутов: пара переводов с автором, запись без

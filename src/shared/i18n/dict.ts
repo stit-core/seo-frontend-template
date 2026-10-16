@@ -1,12 +1,11 @@
 import type { Locale } from './locale'
 
-// Подписи интерфейса — каркас (переход к содержимому, лендмарки, тема и движение), страницы 410 и 500 без плана, блог,
-// форма и термин пары «часы работы» — словарь на каждую локаль дескриптора. Тексты страниц — copy deck strategy (меню,
-// подвал, секции плана), записи — markdown-коллекции.
+// Подписи интерфейса — каркас (переход к содержимому, лендмарки, тема и движение), страницы 410 и 500 без плана, блог
+// (пагинация, заглушка, теги), форма и термины пар («часы работы», автор и даты записи) — словарь на каждую локаль
+// дескриптора. Тексты страниц — copy deck strategy (меню, подвал, секции плана), записи — markdown-коллекции.
 const ru = {
   'nav.label': 'Основная навигация',
   'nav.skip': 'К содержимому',
-  'nav.home': 'Главная',
   'nav.breadcrumbs': 'Хлебные крошки',
   'theme.dark': 'Тёмная тема',
   'motion.label': 'Движение',
@@ -20,11 +19,6 @@ const ru = {
   'gone.lead': 'Этот адрес больше не существует.',
   'error.title': 'Что-то сломалось',
   'error.lead': 'Сервер не смог собрать страницу. Обновите её через минуту.',
-  'blog.title': 'Блог',
-  'blog.pageTitle': 'Блог о быстрых индексируемых сайтах',
-  'blog.description':
-    'Короткие заметки о контентных сайтах: prerender, ноль JavaScript, честные статусы, canonical и hreflang, картинки, sitemap и один образ на все среды',
-  'blog.lead': 'Заметки о том, как делать быстрые индексируемые сайты.',
   'blog.feed': 'Блог — {site}',
   'blog.paged': '{text} — страница {page}',
   'blog.pagination': 'Страницы блога',
@@ -35,10 +29,9 @@ const ru = {
   'blog.tag': 'Записи с тегом #{tag}',
   'blog.tagDescription':
     'Записи с тегом #{tag} — заметки блога о быстрых индексируемых сайтах, от новых к старым.',
+  'post.author': 'Автор',
   'post.published': 'Опубликовано',
-  'post.updated': 'обновлено',
-  'post.draft': 'Черновик',
-  'author.by': 'Автор —',
+  'post.updated': 'Обновлено',
   'company.hours': 'Часы работы',
   'form.name': 'Как вас зовут',
   'form.email': 'Почта для ответа',
@@ -58,7 +51,6 @@ const ru = {
 const en = {
   'nav.label': 'Main navigation',
   'nav.skip': 'Skip to content',
-  'nav.home': 'Home',
   'nav.breadcrumbs': 'Breadcrumbs',
   'theme.dark': 'Dark theme',
   'motion.label': 'Motion',
@@ -72,11 +64,6 @@ const en = {
   'gone.lead': 'This address no longer exists.',
   'error.title': 'Something broke',
   'error.lead': 'The server could not build this page. Reload it in a minute.',
-  'blog.title': 'Blog',
-  'blog.pageTitle': 'Blog on fast, indexable sites',
-  'blog.description':
-    'Short notes on content sites: prerendering, zero JavaScript, honest status codes, canonical and hreflang, images, sitemaps and one image for every environment',
-  'blog.lead': 'Notes on building fast, indexable sites.',
   'blog.feed': 'Blog — {site}',
   'blog.paged': '{text} — page {page}',
   'blog.pagination': 'Blog pages',
@@ -87,10 +74,9 @@ const en = {
   'blog.tag': 'Posts tagged #{tag}',
   'blog.tagDescription':
     'Posts tagged #{tag} — notes from the blog on fast, indexable sites, newest first.',
+  'post.author': 'Author',
   'post.published': 'Published',
-  'post.updated': 'updated',
-  'post.draft': 'Draft',
-  'author.by': 'By',
+  'post.updated': 'Updated',
   'company.hours': 'Office hours',
   'form.name': 'Your name',
   'form.email': 'Email for the reply',

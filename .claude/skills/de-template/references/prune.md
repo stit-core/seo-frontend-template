@@ -45,9 +45,11 @@ Reference-набор шаблона — **живой образец**, а не �
 ### Удалить
 
 ```
-src/entities/post/            слайс коллекции целиком (контент, схема, запросы, ui, тесты)
-src/entities/author/          реестр авторов и подпись: записей с автором не остаётся
-src/widgets/article-cards/      свежие записи главной — блок, который без блога не ставит ни один план
+src/entities/post/            слайс коллекции целиком (контент, схема, запросы, пути, тесты)
+src/entities/author/          реестр авторов: записей с автором не остаётся
+src/widgets/article-cards/      свежие записи главной и списки блога — блок, который без блога не ставит ни один план
+src/widgets/article-body/  src/widgets/related-links/   тело записи и «связанные» — блоки страниц блога
+strategy/site/<поверхность>/plans/{blog,post,tag}.yaml  strategy/site/<поверхность>/copy/{blog,post,tag}*.yaml
 src/pages/[...locale]/blog/  src/pages/_blog/
 src/pages/[...locale]/rss.xml.ts
 src/pages/_tests/blog.astro.test.ts

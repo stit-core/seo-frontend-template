@@ -1,0 +1,103 @@
+---
+import { Picture } from 'astro:assets'
+import { formatDate, isoDate, type Locale, t } from '@/shared/i18n'
+import type { BlockProps } from '@/shared/strategy'
+import { Heading } from '@/shared/ui/heading'
+import { Section, SLOT_SIZES } from '@/shared/ui/section'
+import { Term, TermList } from '@/shared/ui/term-list'
+import type { articleBody } from '../model/block'
+
+// Теги записи — ссылки на страницы тегов: у элемента анатомии их нет, а карта перечисляет страницы тегов в записях.
+type Props = BlockProps<typeof articleBody> & {
+  locale: Locale
+  tags?: readonly { label: string; href: string }[]
+}
+
+const {
+  id,
+  title,
+  lead,
+  summary,
+  sources,
+  date,
+  author,
+  cover,
+  alt,
+  part: parts = [],
+  locale,
+  tags = [],
+} = Astro.props
+---
+
+<Section labelledby={id}>
+  <article>
+    {/* Обложка — кандидат в LCP: грузится сразу и с приоритетом, слот — колонка чтения. Без AVIF браузер и поиск по
+    картинкам берут WebP, а не тяжёлый мастер. */}
+    {cover && alt && (
+      <Picture
+        src={cover}
+        alt={alt}
+        widths={[480, 800, 1200]}
+        sizes={SLOT_SIZES.reading}
+        formats={['avif']}
+        fallbackFormat="webp"
+        loading="eager"
+        fetchpriority="high"
+        decoding="async"
+        class="mb-xl rounded-panel border border-subtle"
+      />
+    )}
+    <header class="border-b border-subtle pb-lg">
+      <Heading id={id} level={1}>
+        {title}
+      </Heading>
+      <p class="mt-stack-display text-lead text-secondary">{lead}</p>
+      {summary && <p class="mt-md text-body">{summary}</p>}
+      {/* Автор и даты — пары «термин — описание»: подпись — термин интерфейса, значение — свой элемент. */}
+      <TermList class="mt-lg">
+        {author && (
+          <Term name={t(locale, 'post.author')}>
+            <a class="touch-target" href={author.profile} rel="author">
+              {author.name}
+            </a>
+            {author.jobTitle && `, ${author.jobTitle}`}
+          </Term>
+        )}
+        <Term name={t(locale, 'post.published')}>
+          <time datetime={isoDate(date.published)}>{formatDate(locale, date.published)}</time>
+        </Term>
+        {date.updated && (
+          <Term name={t(locale, 'post.updated')}>
+            <time datetime={isoDate(date.updated)}>{formatDate(locale, date.updated)}</time>
+          </Term>
+        )}
+      </TermList>
+      {tags.length > 0 && (
+        <ul
+          class="mt-md flex flex-wrap gap-x-sm gap-y-2xs text-helper"
+          aria-label={t(locale, 'blog.tags')}
+        >
+          {tags.map((tag) => (
+            <li>
+              <a class="touch-target" href={tag.href} rel="tag">
+                {tag.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </header>
+    <div class="prose mt-xl">
+      {parts.map((part) => (
+        <section>
+          <h2>{part.heading}</h2>
+          {part.paragraph.map((paragraph) => (
+            <p>{paragraph}</p>
+          ))}
+        </section>
+      ))}
+      <slot />
+    </div>
+    {sources && <p class="mt-xl text-helper text-secondary">{sources}</p>}
+  </article>
+</Section>

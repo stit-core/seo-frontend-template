@@ -107,16 +107,16 @@ src/pages/        роутинг Astro = слой pages: страница — о
                   страниц — _tests/
 src/widgets/      блоки каталога strategy (пропсы — элементы анатомии, вариант — каталога): hero-text,
                   feature-grid, prose, contact-details, lead-form, thank-you, not-found, legal-text,
-                  article-cards и каркас — header, footer, breadcrumbs (их ставит оболочка по
-                  секциям плана страницы)
+                  article-cards, article-body, related-links и каркас — header, footer, breadcrumbs
+                  (их ставит оболочка по секциям плана страницы)
 src/features/     contact-form (форма без JS и её обработчик), preferences (остров предпочтений:
                   тема и движение)
-src/entities/     post: content/{ru,en}/*.md + covers/, model, api, lib, ui; author: реестр авторов
-                  (в шаблоне пуст) и подпись под заголовком записи
+src/entities/     post: content/{ru,en}/*.md + covers/, model, api, lib; author: реестр авторов
+                  (в шаблоне пуст): имя, роль и профиль для подписи записи
 src/shared/       config (runtime env, Zod; идентичность сайта), i18n, lib (+ testing), redirects,
                   seo (absoluteUrl, hreflang, SeoHead, JSON-LD, robots/sitemap/rss), strategy (чтение
-                  снимка: страница — модулем по id, секции плана, тексты по ключу, факты, мета; контракт
-                  блока), antispam (шов капчи),
+                  снимка: страница и шаблон коллекции — модулем по id, секции плана, тексты по ключу,
+                  факты, мета; контракт блока), antispam (шов капчи),
                   observability (JSON-лог с порогом LOG_LEVEL, Sentry по DSN), ui
 src/{content.config,middleware,env.d}.ts   навязанные Astro entry — тонкие входы
 docker/           Dockerfile (4 стадии), entrypoint.sh + stamp.mjs (штамповка SITE_URL), server.mjs

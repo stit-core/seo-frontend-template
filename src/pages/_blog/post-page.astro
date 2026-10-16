@@ -1,10 +1,11 @@
 ---
-import home from 'virtual:strategy/home'
+import files from 'virtual:strategy/post'
 import DocumentLayout from '@/app/layouts/document.astro'
-import { AuthorByline } from '@/entities/author'
-import { type Post, PostArticle, renderPost } from '@/entities/post'
-import { pageOf } from '@/shared/strategy'
-import { Section } from '@/shared/ui/section'
+import { type Post, renderPost } from '@/entities/post'
+import { templateOf } from '@/shared/strategy'
+import { ArticleBody, articleBody } from '@/widgets/article-body'
+import { breadcrumbs } from '@/widgets/breadcrumbs'
+import { RelatedLinks, relatedLinks } from '@/widgets/related-links'
 import { postPageModel } from './models'
 
 interface Props {
@@ -13,13 +14,14 @@ interface Props {
 
 const { post } = Astro.props
 const { locale, data } = post
+const page = templateOf(files, locale)
 const { Content } = await renderPost(post)
 const model = await postPageModel(post)
 ---
 
 <DocumentLayout
   locale={locale}
-  chrome={pageOf(home, locale)}
+  chrome={page}
   translations={model.translations}
   title={data.title}
   description={data.description}
@@ -27,19 +29,16 @@ const model = await postPageModel(post)
   ogImage={model.ogImage}
   article={model.article}
   jsonLd={model.jsonLd}
-  crumbs={model.crumbs}
+  crumbs={breadcrumbs.props(page, 'breadcrumbs', { current: data.title })}
 >
-  <Section labelledby="page-title">
-    <PostArticle post={post} titleId="page-title">
-      {model.author && (
-        <AuthorByline
-          slot="byline"
-          locale={locale}
-          name={model.author.name}
-          jobTitle={model.author.jobTitle}
-        />
-      )}
-      <Content />
-    </PostArticle>
-  </Section>
+  <ArticleBody
+    {...articleBody.props(page, 'article-body', model.record)}
+    locale={locale}
+    tags={model.tags}
+  >
+    <Content />
+  </ArticleBody>
+  {model.related.length > 0 && (
+    <RelatedLinks {...relatedLinks.props(page, 'related', { item: model.related })} />
+  )}
 </DocumentLayout>
