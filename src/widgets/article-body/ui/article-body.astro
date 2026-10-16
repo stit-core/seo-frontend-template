@@ -31,21 +31,23 @@ const {
 
 <Section labelledby={id}>
   <article>
-    {/* Обложка — кандидат в LCP: грузится сразу и с приоритетом, слот — колонка чтения. Без AVIF браузер и поиск по
-    картинкам берут WebP, а не тяжёлый мастер. */}
+    {/* Обложка — иллюстрация статьи (`<figure>`, html каталога) и кандидат в LCP: грузится сразу и с приоритетом, слот —
+    колонка чтения. Без AVIF браузер и поиск по картинкам берут WebP, а не тяжёлый мастер. */}
     {cover && alt && (
-      <Picture
-        src={cover}
-        alt={alt}
-        widths={[480, 800, 1200]}
-        sizes={SLOT_SIZES.reading}
-        formats={['avif']}
-        fallbackFormat="webp"
-        loading="eager"
-        fetchpriority="high"
-        decoding="async"
-        class="mb-xl rounded-panel border border-subtle"
-      />
+      <figure class="mb-xl">
+        <Picture
+          src={cover}
+          alt={alt}
+          widths={[480, 800, 1200]}
+          sizes={SLOT_SIZES.reading}
+          formats={['avif']}
+          fallbackFormat="webp"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+          class="rounded-panel border border-subtle"
+        />
+      </figure>
     )}
     <header class="border-b border-subtle pb-lg">
       <Heading id={id} level={1}>

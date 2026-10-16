@@ -343,7 +343,8 @@ rule `render-safety` § Конфиг.
 - Стили картинок Astro (`image.responsiveStyles`, `image.layout`) не включаются: их CSS вторым файлом
   грузила бы каждая страница с картинкой, а картинку ведут базовые стили Tailwind (`max-width: 100%`,
   `height: auto`) — выбор файла и размеры даёт её компонент
-- Обложка записи — LCP: над h1, `loading="eager"`, `fetchpriority="high"`, без `lazy`;
+- Обложка записи — LCP: иллюстрация статьи в `<figure>` (html каталога) над h1, `loading="eager"`,
+  `fetchpriority="high"`, без `lazy`;
   картинки списков и тела — `loading="lazy"`, `decoding="async"`. `seo:check`: у картинки над
   h1 (кандидат в LCP) нет `lazy` и есть `fetchpriority="high"`, у каждой `<img>` и `<video>` —
   `width` и `height`, у источника картинки с `media` другой пропорции (кадр под окно) — свои, вариант той

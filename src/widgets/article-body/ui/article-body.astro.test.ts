@@ -113,7 +113,7 @@ describe('ArticleBody', () => {
 
   // seo:check узнаёт кандидата в LCP по месту — картинка над h1; место и загрузку обложки держит этот тест: под
   // заголовком и с lazy она прошла бы гейт. Файл браузер выбирает до раскладки — по `sizes` колонки чтения.
-  it('обложка — кандидат в LCP: над h1, грузится сразу и с приоритетом, размеры заданы, файлы — по колонке чтения', async () => {
+  it('обложка — иллюстрация в <figure> и кандидат в LCP: над h1, грузится сразу и с приоритетом, размеры заданы, файлы — по колонке чтения', async () => {
     const { html, doc } = await render(RU, { ...record, cover, alt: 'Обложка записи' })
     const img = /<img\b[^>]*>/.exec(html)
     expect(img?.index).toBeLessThan(html.search(/<h1[\s>]/))
@@ -121,7 +121,10 @@ describe('ArticleBody', () => {
     expect(img?.[0]).not.toContain('loading="lazy"')
     expect(img?.[0]).toMatch(/\swidth="\d+"/)
     expect(img?.[0]).toMatch(/\sheight="\d+"/)
-    expect(doc.querySelector('picture img')?.getAttribute('alt')).toBe('Обложка записи')
+    // Иллюстрация статьи — `<figure>` (html каталога).
+    expect(doc.querySelector('article > figure > picture img')?.getAttribute('alt')).toBe(
+      'Обложка записи',
+    )
     const candidates = [...doc.querySelectorAll('picture source, picture img')]
     expect(candidates.length).toBeGreaterThan(1)
     for (const element of candidates) expect(element.getAttribute('sizes')).toBe(SLOT_SIZES.reading)
