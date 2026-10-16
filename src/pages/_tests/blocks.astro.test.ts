@@ -1,7 +1,7 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
 import { z } from 'zod'
-import type { Locale } from '@/shared/i18n'
+import { DEFAULT_LOCALE, type Locale } from '@/shared/i18n'
 import {
   PACKAGE_LANDING,
   parseHtml,
@@ -115,10 +115,11 @@ function acceptedOf(block: Block) {
   return accepted
 }
 
-const plans = [...snapshot().plans, ...projectOf(PACKAGE_LANDING).plans]
-
-// Страницы с планами — на своих языках: страницы снимка сайта на языках карты, посадочная фикстуры базы — на русском.
 const landing = projectOf(PACKAGE_LANDING)
+const plans = [...snapshot().plans, ...landing.plans]
+
+// Страницы с планами — на своих языках: страницы снимка сайта на языках карты, посадочная фикстуры базы — тексты её
+// copy deck на русском, а подписи интерфейса каркаса (словарь сайта) — дефолтной локали: у сайта может не быть ru.
 const pages = [
   ...snapshot().plans.flatMap(({ page: { id } }) =>
     pageLocales(id).map((locale) => ({
@@ -129,7 +130,7 @@ const pages = [
   ),
   {
     page: siteOf(landing).strategyPage('spasibo', testLocale('ru')),
-    locale: testLocale('ru'),
+    locale: DEFAULT_LOCALE,
     project: landing,
   },
 ]
