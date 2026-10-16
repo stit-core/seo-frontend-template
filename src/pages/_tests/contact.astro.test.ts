@@ -4,6 +4,7 @@ import { parseHtml } from '@/shared/lib/testing'
 import { pageLocales, strategyPage } from '@/shared/strategy'
 import Contacts from '../[...locale]/contacts/index.astro'
 import Contact from '../api/contact.astro'
+import { pageTexts, strayText } from './texts'
 
 const ORIGIN = 'https://demo.example'
 
@@ -135,6 +136,20 @@ describe('/api/contact', () => {
     expect(doc.title.startsWith(t(DEFAULT_LOCALE, 'form.failed', { title: '' }))).toBe(true)
     expect(outlineFaults(headingLevels(doc))).toEqual([])
     expect(doc.querySelector('meta[name="robots"]')?.getAttribute('content')).toBe('noindex')
+  })
+
+  // Текст ответа — данные, как у каждой страницы (тест страниц «текст страницы — данные»): секции — copy deck, отказы и
+  // подписи полей — словарь, в полях — присланное человеком.
+  it('ответ с ошибками — весь текст страницы данные: отказ каждого поля, сбой доставки и присланное', async () => {
+    for (const locale of pageLocales('contacts')) {
+      const answer = await (await send(post({ locale }))).text()
+      expect(answer, locale).toContain('role="alert"')
+      expect(strayText(answer, pageTexts(locale)), locale).toEqual([])
+    }
+    vi.stubEnv('FORM_BACKEND_URL', '')
+    const failed = await (await send(post(filled))).text()
+    expect(failed).toContain(t(DEFAULT_LOCALE, 'form.error.delivery'))
+    expect(strayText(failed, [...pageTexts(DEFAULT_LOCALE), ...Object.values(filled)])).toEqual([])
   })
 
   // Согласие ссылается на политику плана контактов — её версию по карте: на языке без версии политики ссылка ведёт на

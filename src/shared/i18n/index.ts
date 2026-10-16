@@ -1,5 +1,5 @@
 export type { DictKey } from './dict'
-export { t } from './dict'
+export { DICTS, t } from './dict'
 export { formatDate, formatDateTime, isoDate } from './format'
 export type { Locale, Translations } from './locale'
 export {

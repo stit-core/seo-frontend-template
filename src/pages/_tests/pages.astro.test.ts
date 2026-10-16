@@ -32,6 +32,7 @@ import {
   routeOf,
   shapeOf,
 } from './routes'
+import { pageTexts, strayText } from './texts'
 
 // Страницы — на данных сайта: его локалях, карте и текстах; записи и их авторы — фикстуры (реестр авторов шаблона
 // пуст). Маршруты записей, тегов и страниц списка — на локалях и карте теста (blog.astro.test.ts).
@@ -249,6 +250,45 @@ describe('страница из блоков: план страницы', () => 
             ),
           )
         }
+      }
+      expect(faults).toEqual([])
+    },
+  )
+})
+
+// Весь текст страницы — данные (R08): слово мимо copy deck, фактов, словаря, самоназваний языков, имени сайта и записей
+// коллекции — текст, которого нет в пакете strategy, и его не видят ни её валидаторы, ни проверка секций. Страница —
+// каждая сборки (адреса getStaticPaths) и on-demand страница карты на её языках; 500 — дефолтной локали. Ответ формы с
+// ошибками — contact.astro.test.ts.
+const textRoutes = pageRoutes
+  .filter(({ url }) => !url.startsWith('/api/'))
+  .map((entry) => [entry.route, entry] as const)
+
+describe('текст страницы — данные', () => {
+  it.each(textRoutes)(
+    '%s: на каждом языке весь текст страницы — copy deck, факты, словарь, самоназвания языков, имя сайта и записи коллекции',
+    async (route, entry) => {
+      const module = await entry.load()
+      const own = snapshot().map?.pages.find((page) => shapeOf(page.url) === entry.url)
+      const pages =
+        'getStaticPaths' in module
+          ? await built(route, module)
+          : own === undefined
+            ? [{ path: route, locale: DEFAULT_LOCALE, props: {} }]
+            : pageLocales(own.id).map((locale) => ({
+                path: localePath(locale, own.url),
+                locale,
+                props: {},
+              }))
+      expect(pages.length, route).toBeGreaterThan(0)
+      const faults: string[] = []
+      for (const { path, locale, props } of pages) {
+        const { html } = await render(module.default, path, props)
+        faults.push(
+          ...strayText(html, pageTexts(locale as Locale)).map(
+            (fault) => `${path} (${locale}): ${fault}`,
+          ),
+        )
       }
       expect(faults).toEqual([])
     },

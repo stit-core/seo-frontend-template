@@ -35,18 +35,21 @@ describe('seo/rss', () => {
     expect(xml).not.toContain('content:encoded')
   })
 
-  it('фид локали с префиксом: ссылки под ним', async () => {
+  it('фид локали с префиксом: ссылки под ним; запись без тегов — без категорий', async () => {
+    const { tags: _tags, ...untagged } = item(0)
     const xml = await buildFeed({
       title: 'Blog — demo',
       description: 'Notes',
       language: testLocale('en'),
       homePath: '/en',
       feedPath: '/en/rss.xml',
-      items: [{ ...item(0), path: '/en/blog/post-0' }],
+      items: [{ ...untagged, path: '/en/blog/post-0' }],
     })
     expect(xml).toContain('<link>https://demo.example/en</link>')
     expect(xml).toContain('<atom:link href="https://demo.example/en/rss.xml"')
     expect(xml).toContain('<link>https://demo.example/en/blog/post-0</link>')
+    // Запись без тегов — без категорий.
+    expect(xml).not.toContain('<category>')
   })
 
   it('в фид попадают только первые FEED_ITEMS_LIMIT записей', async () => {

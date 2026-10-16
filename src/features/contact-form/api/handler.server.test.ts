@@ -176,7 +176,7 @@ describe('обработчик формы', () => {
     expect(logged()).toContain('too-large')
   })
 
-  it('не форма и битое тело — 400 без исключения', async () => {
+  it('не форма, тело без типа и битое тело — 400 без исключения', async () => {
     const json = new Request(`${ORIGIN}/api/contact`, {
       method: 'POST',
       headers: { origin: ORIGIN, 'content-type': 'application/json' },
@@ -190,6 +190,15 @@ describe('обработчик формы', () => {
       body: 'без границы',
     })
     expect(await handleContactRequest(broken, context)).toEqual({ status: 'bad-request' })
+
+    // Тело байтами без Content-Type: тип формы не назван — не форма.
+    const untyped = new Request(`${ORIGIN}/api/contact`, {
+      method: 'POST',
+      headers: { origin: ORIGIN },
+      body: new TextEncoder().encode('name=бот'),
+    })
+    expect(untyped.headers.get('content-type')).toBeNull()
+    expect(await handleContactRequest(untyped, context)).toEqual({ status: 'bad-request' })
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
