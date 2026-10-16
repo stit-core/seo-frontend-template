@@ -1094,21 +1094,29 @@ for (const name of dependencies) {
   }
 }
 
-// On-demand маршрут читает свою страницу strategy модулем `virtual:strategy/<id>` — сам или разметкой страницы, которую
-// импортирует, — а не снимок целиком: в серверном бандле — данные только этих страниц. Данные страницы в бандле узнаются
-// по пути её плана в снимке (`site/<поверхность>/plans/<id>.yaml`). Бюджет бандла в size-limit ловит снимок лишь по
-// объёму: у сайта с одной локалью снимок в бюджет влезает.
-const PAGE_MODULE = /\bfrom\s+['"]virtual:strategy\/([\w-]+)['"]/g
-const LOCAL_MODULE = /\bfrom\s+['"](\.\.?\/[^'"]+)['"]/g
+// On-demand маршрут читает свою страницу strategy модулем `virtual:strategy/<id>` — сам, разметкой страницы или модулем,
+// который импортирует, — а не снимок целиком: в серверном бандле — данные только этих страниц. Импорт — как его
+// разрешают TS и Vite: `from '…'` и `import('…')`, путь без расширения — файл, `.ts`, `.astro`, `<каталог>/index.ts`.
+// Данные страницы в бандле узнаются по пути её плана в снимке (`site/<поверхность>/plans/<id>.yaml`). Бюджет бандла в
+// size-limit ловит снимок лишь по объёму: у сайта с одной локалью снимок в бюджет влезает.
+const IMPORT = String.raw`(?:\bfrom\s+|\bimport\s*\(\s*)['"]`
+const PAGE_MODULE = new RegExp(String.raw`${IMPORT}virtual:strategy/([\w-]+)['"]`, 'g')
+const LOCAL_MODULE = new RegExp(String.raw`${IMPORT}(\.\.?/[^'"]+)['"]`, 'g')
+const AS_IMPORTED = ['', '.ts', '.astro', '/index.ts']
 const PAGE_PLAN = /\bsite\/[\w-]+\/plans\/([\w-]+)\.yaml\b/g
 const onDemandPages = new Set()
 const readSources = new Set()
 const readPages = (file) => {
-  if (readSources.has(file) || !existsSync(file) || !statSync(file).isFile()) return
+  if (readSources.has(file)) return
   readSources.add(file)
   const source = readFileSync(file, 'utf8')
   for (const [, id] of source.matchAll(PAGE_MODULE)) onDemandPages.add(id)
-  for (const [, path] of source.matchAll(LOCAL_MODULE)) readPages(resolve(dirname(file), path))
+  for (const [, path] of source.matchAll(LOCAL_MODULE)) {
+    const module = AS_IMPORTED.map((suffix) => resolve(dirname(file), `${path}${suffix}`)).find(
+      (candidate) => existsSync(candidate) && statSync(candidate).isFile(),
+    )
+    if (module !== undefined) readPages(module)
+  }
 }
 for (const { file, mode } of pageRoutes(resolve(root, 'src/pages'))) {
   if (mode === 'dynamic') readPages(file)
