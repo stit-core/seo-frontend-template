@@ -247,7 +247,7 @@
     "dist/client/hreflang/index.html: hreflang есть, а пары переводов в источнике нет",
     "dist/client/xdefault/index.html: hreflang есть, а пары переводов в источнике нет",
     "dist/client/domen/index.html: hreflang есть, а пары переводов в источнике нет",
-    "strategy/site/fikstura/plans/neizvestnyy-tip.yaml: тип страницы «landing-neizvestnyy» — нет в head-kit page_types: типы JSON-LD не сверить",
+    "strategy/site/fikstura/plans/bezopasnost.yaml: seo.structured_data: WebSite — у типа страницы «security-page» нет строки head-kit: типов разметки, кроме крошек, нет",
     "strategy/site/fikstura/plans/vne-kita.yaml: seo.structured_data: FAQPage вне head-kit для about-page (AboutPage, Organization, BreadcrumbList)",
     "dist/client/blogposting/index.html: JSON-LD «BlogPosting» — не тип плана blogposting (seo.structured_data: Article)",
     "dist/client/blogposting/index.html: нет JSON-LD «Article» — тип плана blogposting",

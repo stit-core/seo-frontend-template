@@ -792,8 +792,12 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
 - Граница плана — head-kit `plan_fields.structured_data` буквально (`headKitTypes`): типы строки `page_types` типа страницы
   (`page.page_type` — поле схемы чтения: тип нужен проверке; планы проекта теста получили свои типы) и подтипы её
   `structured_data_subtypes`; `BreadcrumbList` — у любого типа: его место — видимые крошки (`recipes.breadcrumb`), а
-  наличие держат «BreadcrumbList = видимые крошки» и «типы = план». Тип страницы вне head-kit — нарушение: границ нет.
-  `site_validate.py` (PL-SEO01) мягче — warning и без `Organization`, `WebSite`; сайт держит правило head-kit как написано.
+  наличие держат «BreadcrumbList = видимые крошки» и «типы = план». У типа словаря strategy без строки head-kit (B2
+  валидатора этапа D: в словаре 0.2.2 так у пяти `proposed` типов и трёх `out-of-scope`) разрешённых типов, кроме
+  `BreadcrumbList`, нет: пустой план законен, другой тип — нарушение со своим текстом (фикстура — план `bezopasnost`,
+  законный пустой — `neizvestnyy-tip`); строки head-kit этих типов — Handoff strategy. `site_validate.py` (PL-SEO01)
+  мягче — warning и без `Organization`, `WebSite`; сайт держит правило head-kit как написано: «только типы из
+  page_types этой страницы».
 - Правила «`Organization` и `WebSite` только на главной» и «на главной — оба» сняты: место типа — план в границах head-kit
   (`WebSite` — у главной и посадочных, `Organization` — у главной, «О компании» и посадочных), обязательность — «типы =
   план» в обе стороны: тип плана не напечатан (главная без `WebSite`, контакты без `ContactPage`) — нарушение.
@@ -804,8 +808,9 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
   был бы вторым источником.
 - Фикстура `.gate-fixtures/seo` — свой снимок strategy `strategy/`: карта страниц фикстуры с планом (главная, «О компании»
   `o-nas` — сверх плана, `organizaciya` — тип плана не напечатан, `blogposting` — тип не из плана, страницы авторов и
-  типографики), планы `vne-kita` (тип вне head-kit) и `neizvestnyy-tip` (тип страницы вне head-kit), свой head-kit; записи
-  блога и прочие страницы — вне карты, без плана.
+  типографики), планы `vne-kita` (тип вне head-kit), `bezopasnost` (тип разметки у типа страницы без строки head-kit) и
+  `neizvestnyy-tip` (пустой план такого типа — законный), свой head-kit; записи блога и прочие страницы — вне карты, без
+  плана.
 - Мета = copy deck в `seo:check` (S9): источник меты — план страницы по её адресу. У страницы плана одной страницы
   `<title>` и description — мета её copy deck на языке страницы, у записи коллекции — `title` и `description` её
   frontmatter; страницы 2…N списка дополняют мету номером строкой словаря (`blog.paged`, сниппет держит тест моделей), у
@@ -876,6 +881,9 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
 - strategy (владелец): фикстура многостраничника с copy deck по планам — образец для код-репо (есть только лендинг).
 - strategy (владелец): машинный вид даты редакции документа — `machine` даты у факта или поле плана; по нему
   `legal-text` ставит дату редакции в `<time>` (`html` каталога).
+- strategy (владелец): строки head-kit `page_types` пяти `proposed` типов страниц словаря без строки — `security-page`,
+  `integrations-page`, `html-sitemap-page`, `event-program-page`, `speakers-page`: до них сайт пускает в план такой
+  страницы только `BreadcrumbList`.
 - strategy (владелец): `claims_check.py lint-facts` узнаёт метку реквизита только кириллицей (`_M_LEGAL`: ИНН, ОГРН,
   ОГРНИП, КПП) — у факта второго языка `OGRN 1000000000001` в `canonical` даёт COPY-F-MACHINE; факты шаблона пишут
   метку кириллицей в скобках.

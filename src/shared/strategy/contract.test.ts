@@ -265,7 +265,7 @@ describe('strategy/contract', () => {
 
   // Граница плана — head-kit (plan_fields.structured_data): типы строки page_types и подтипы, а BreadcrumbList — по
   // крошкам страницы, не по её типу.
-  it('типы head-kit типа страницы — его типы, подтипы и BreadcrumbList; типа нет в head-kit — undefined', () => {
+  it('типы head-kit типа страницы — его типы, подтипы и BreadcrumbList; у типа без строки — только BreadcrumbList', () => {
     const headKit = HeadKitSchema.parse({
       page_types: {
         'home-multipage': {
@@ -279,6 +279,6 @@ describe('strategy/contract', () => {
       new Set(['Organization', 'WebSite', 'LocalBusiness', 'BreadcrumbList']),
     )
     expect(headKitTypes(headKit, 'legal-page')).toEqual(new Set(['BreadcrumbList']))
-    expect(headKitTypes(headKit, 'faq-page')).toBeUndefined()
+    expect(headKitTypes(headKit, 'security-page')).toEqual(new Set(['BreadcrumbList']))
   })
 })

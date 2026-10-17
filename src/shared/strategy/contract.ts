@@ -292,13 +292,13 @@ export function pageAt(project: Project, route: string): { id: string; list?: nu
 
 // Типы JSON-LD, которые head-kit допускает в плане страницы этого типа (`plan_fields.structured_data`): типы строки
 // `page_types` и подтипы её `structured_data_subtypes`. BreadcrumbList ставят видимые крошки страницы
-// (`recipes.breadcrumb`), а не её тип. Типа страницы нет в head-kit — undefined.
-export function headKitTypes(headKit: HeadKit, pageType: string): Set<string> | undefined {
+// (`recipes.breadcrumb`), а не её тип: он есть у любого типа. У типа словаря strategy без строки head-kit разрешённых
+// типов, кроме крошек, нет.
+export function headKitTypes(headKit: HeadKit, pageType: string): Set<string> {
   const row = headKit.page_types[pageType]
-  if (row === undefined) return undefined
   return new Set([
-    ...row.structured_data,
-    ...Object.values(row.structured_data_subtypes).flat(),
+    ...(row?.structured_data ?? []),
+    ...Object.values(row?.structured_data_subtypes ?? {}).flat(),
     'BreadcrumbList',
   ])
 }

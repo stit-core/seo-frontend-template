@@ -1,0 +1,6 @@
+page:
+  id: bezopasnost
+  page_type: security-page
+  seo:
+    structured_data: [BreadcrumbList, WebSite]
+sections: []

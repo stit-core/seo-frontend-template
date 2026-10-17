@@ -803,24 +803,19 @@ function checkMarkupVisible(where, body, blocks, page) {
 
 // ---------- планы ----------
 // План — в границах head-kit своего типа страницы (plan_fields.structured_data): тип не из её page_types и не подтип —
-// тип «на всякий случай»; FAQPage, HowTo и SearchAction нет ни у одного типа страницы.
+// тип «на всякий случай»; FAQPage, HowTo и SearchAction нет ни у одного типа страницы. У типа словаря strategy без
+// строки head-kit разрешены только крошки: пустой план законен.
 for (const { page } of project.plans) {
   const where = planFiles.get(page.id) ?? `strategy: план ${page.id}`
   const allowed = headKitTypes(headKit, page.page_type)
-  if (allowed === undefined) {
+  for (const type of page.seo.structured_data) {
+    if (allowed.has(type)) continue
     fail(
       where,
-      `тип страницы «${page.page_type}» — нет в head-kit page_types: типы JSON-LD не сверить`,
+      headKit.page_types[page.page_type] === undefined
+        ? `seo.structured_data: ${type} — у типа страницы «${page.page_type}» нет строки head-kit: типов разметки, кроме крошек, нет`
+        : `seo.structured_data: ${type} вне head-kit для ${page.page_type} (${[...allowed].join(', ')})`,
     )
-    continue
-  }
-  for (const type of page.seo.structured_data) {
-    if (!allowed.has(type)) {
-      fail(
-        where,
-        `seo.structured_data: ${type} вне head-kit для ${page.page_type} (${[...allowed].join(', ')})`,
-      )
-    }
   }
 }
 
