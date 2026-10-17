@@ -18,8 +18,8 @@ reference-набор «с блогом или без», лицо шаблона 
 - Программа и решения владельца — `audit-program.md`: R22 (`.template/`, `/upgrade`, kinship удаляется), R23, R26, R12,
   R25, R28, AC5 программы; теги — решение владельца 2026-10-14 (только версионные `vX.Y.Z` на готовой вершине в конце
   программы, канал `/upgrade` читает их же); хвосты P3 (разворот «без блога», идентичность форка, `AI_TRAINING`,
-  `satteri`) и P4 (`/de-template` — облик, `cn.ts`) — в «Решениях», общая обвязка каналом `/upgrade` — в «Handoff»; P1
-  оставил сюда «Маршрут задачи» `CLAUDE.md`.
+  `satteri`) и P4 (`/de-template` — облик) — в «Решениях», общая обвязка каналом `/upgrade` — в «Handoff»; P1 оставил
+  сюда «Маршрут задачи» `CLAUDE.md`.
 - Код: этапы A–C сверены с `d12b37a` — P5 на этапе D плана `blocks-content-model` (блоки `widgets/<block-id>`, страницы
   из блоков, copy deck и факты в `strategy/`, локали 1…N, head по copy deck); второй план P5 `forms-consent-collections`
   (форма по `form.ref`, согласие, коллекции модулем) и P8 (`strategy/` — снимок с локом, без strategy — руками той же
@@ -33,8 +33,7 @@ reference-набор «с блогом или без», лицо шаблона 
   «с блогом / без блога»), `/smartdev` узнаёт свежий форк по имени пакета и демо-фактам, путь потребителя —
   `docs/getting-started.md`; `.template/`, тегов и `/upgrade` нет; стек — формы `docs/stack/_templates/<kind>.md` (12
   kinds: 10 обязательных, `api` и `analytics` — условные), Gate `/de-template` — grep строки статуса. Лишнее в каждом
-  форке — kinship (`docs/reference/kinship.md`, `pnpm kin:diff`, `shared/lib/cn.ts` без потребителей) и
-  `docs/research/**` (1057 файлов, 10 МБ).
+  форке — `docs/research/**` (1057 файлов, 10 МБ).
 - Образец — `../go-backend-template` (`23f7804`): `.template/{version,paths}`, `scripts/tools/template-update.sh`
   (`--status`, `--remote`, `--annotation`, перенос `TO`, `FROM`, `PATHS`), skill `upgrade`, теги обвязки
   `v1.0.0`…`v1.2.0` с префиксом `template/` (аннотация по разделам — `docs/contributing.md § Версия обвязки`), archtest
@@ -106,12 +105,18 @@ reference-набор «с блогом или без», лицо шаблона 
 
 ## Шаги
 ### Этап A — удалить лишнее
-- [ ] **S1** — Kinship удалён (R22): `kinship.md`, `scripts/kin-diff.mjs`, `kin:diff`, `cn.ts` с тестом и реэкспортом;
+- [x] **S1** — Kinship удалён (R22): `kinship.md`, `scripts/kin-diff.mjs`, `kin:diff`, `cn.ts` с тестом и реэкспортом;
   строки о нём — в `README.md`, `CLAUDE.md`, `docs/README.md`, `ecosystem.md` (раздел «Родство»), `/smartdev`,
   `/de-template` (A.10), `plan/references/repo.md`; освобождённые файлы корзины — по месту: `toThrowError` → `toThrow`
   (с ним — строка бэклога `gate-ux`), примеры `comments` — Astro; бэкпорт-кандидаты — в Handoff плана
   - Проверка: `git grep -nE 'kin:diff|kin-diff|kinship|SPA_TEMPLATE_PATH|cn\.ts'` вне планов и `docs/research` (его
     удаляет S2) → пусто; `pnpm kin:diff` → скрипта нет; `pnpm check` → зелёный · Закрывает: AC7 · Зависит от: —
+  - Сделано: `docs/reference/kinship.md`, `scripts/kin-diff.mjs`, скрипт `kin:diff`, `shared/lib/cn.ts` с тестом и
+    реэкспортом удалены; строки сняты — `README.md` (команда, дерево `scripts/`, таблица документов), `CLAUDE.md`
+    (команда, карта), `docs/README.md`, `ecosystem.md` («Родство»), `/smartdev` (гейты), `/de-template` (A.10), профиль
+    `/plan`; `invariant.test.ts` — `toThrow`, строка `gate-ux` — без него; примеры `comments` — маршрут Astro и
+    комментарий разметки `.astro`; бэкпорт-кандидаты — Handoff SPA. Проверка: grep — пусто; `pnpm kin:diff` —
+    `Command "kin:diff" not found`; `pnpm check` — зелёный (626 тестов, ветви 99,35 %)
 - [ ] **S2** — `docs/research/**` удалён (R23): архив — история git (тегов, кроме версионных, нет — «Решения»); ссылки —
   в `seo-invariants`, `rendering.md`, `biome.json`, `pnpm-workspace.yaml`, `index.css`, `/de-template` — сняты,
   нормативное — в правило или `docs/reference`
@@ -251,6 +256,9 @@ reference-набор «с блогом или без», лицо шаблона 
 - Этапы A–C — трек параллельно P5 (дирижёр ускоряет программу): они не опираются на код P5; ветка `p9-lifecycle` от
   `d12b37a`, вливание в `main` — дирижёром. Этапы D–F опираются на P5 и P8 и сверяются с кодом после P8;
   `check:identity` и `check:stack` после вливания держит гейт P5 и P8, лицо, которое сдвинет P8, пересобирает `--write`.
+- S1: пример `comments` для разметки `.astro` — `{/* … */}` (HTML-комментарий уходит в страницу, его валит
+  `seo:check`), примеры кода — маршруты шаблона; строка бэклога `gate-ux` теряет пункт `toThrowError` → `toThrow` —
+  замену сделал S1 (единственное место — `invariant.test.ts`).
 
 - Решения дирижёра по черновику: объём сверх строки программы (HAR-03/04/05/07, канон guard и `/plan`) принят —
   другой фазы у них нет; AC5 программы проверяется эмуляцией «Use this template», формулировку AC5 («в worktree»)
@@ -271,11 +279,12 @@ reference-набор «с блогом или без», лицо шаблона 
   сервисов проекта — зона хаба.
 
 ## Где мы сейчас
-Этапы A–C (S1–S6) сверены с кодом `d12b37a`: пути и имена — по коду (лицо шаблона — «Контекст»; `entities/company` и
-`{{OPERATOR_*}}` сняты P5, демо-реквизиты — факты `example: true`), теги — по решению владельца (`vX.Y.Z`, в форке —
-`refs/template/*`; архив `docs/research` — история git). Этапы A–C идут треком параллельно P5: ветка `p9-lifecycle` от
-`d12b37a`, worktree `M/wt-p9`, вливание в `main` — дирижёром. Этапы D–F (S7–S13) сверяются с кодом после P8: раскладка
-`strategy/` и лока, имена загрузчика, модуля коллекций и скриптов (`check:strategy`, `--final`), что уже держат тесты
-загрузчика (страница ↔ единица карты), правки P8 в скиллах входа и `/smartdev`, ручной prune и лицо форка пилота (P8
-S13, `M/p8e/`); расхождения — правкой шагов и «Решений» коммитом `meta(plan)`. Дальше — S1 (kinship удалён), затем S2 и
-валидатор этапа A; материалы — `M/p9a/` (`notes.md` — точка продолжения).
+S1 сделан: kinship удалён (документ, скрипт, `cn.ts`, строки прозы), освобождённые файлы корзины — по месту. План сверен
+с кодом `d12b37a` по этапам A–C (лицо шаблона — «Контекст»; `entities/company` и `{{OPERATOR_*}}` сняты P5,
+демо-реквизиты — факты `example: true`), теги — по решению владельца (`vX.Y.Z`, в форке — `refs/template/*`; архив
+`docs/research` — история git). Этапы A–C идут треком параллельно P5: ветка `p9-lifecycle` от `d12b37a`, worktree
+`M/wt-p9`, вливание в `main` — дирижёром. Этапы D–F (S7–S13) сверяются с кодом после P8: раскладка `strategy/` и лока,
+имена загрузчика, модуля коллекций и скриптов (`check:strategy`, `--final`), что уже держат тесты загрузчика (страница ↔
+единица карты), правки P8 в скиллах входа и `/smartdev`, ручной prune и лицо форка пилота (P8 S13, `M/p8e/`);
+расхождения — правкой шагов и «Решений» коммитом `meta(plan)`. Дальше — S2 (`docs/research/**` удалён), затем валидатор
+этапа A; материалы — `M/p9a/` (`notes.md` — точка продолжения).

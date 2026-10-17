@@ -26,7 +26,6 @@
     "check:links": "node scripts/check-links.mjs",
     "seo:check": "node scripts/seo-check.mjs",
     "size": "size-limit",
-    "kin:diff": "node scripts/kin-diff.mjs",
     "ttfb": "node scripts/ttfb.mjs",
     "indexnow": "node scripts/indexnow.mjs",
     "geo:probe": "node scripts/geo-probe.mjs",

@@ -6,7 +6,7 @@ describe('invariant', () => {
   })
 
   it('бросает с сообщением на falsy-условии', () => {
-    expect(() => invariant(false, 'что-то сломалось')).toThrowError(
+    expect(() => invariant(false, 'что-то сломалось')).toThrow(
       'Invariant violation: что-то сломалось',
     )
   })

@@ -28,14 +28,23 @@ paths: ["src/**/*.ts", "src/**/*.astro", "scripts/**", "e2e/**", ".claude/hooks/
 
 ```ts
 // Bad — описывает что:
-// Возвращает сумму
-function add(a: number, b: number) { return a + b }
+// Отвечает ok
+export const GET: APIRoute = () => new Response('ok')
 
 // Bad — описывает текущую задачу:
-// Добавлено для тикета FE-123
-function getCsrfToken() { … }
+// Добавлено для задачи про robots.txt
+export const prerender = false
 
 // Good — поясняет почему:
-// Service Worker MSW шлёт fetch до /api/* — bypass для статики не нужен.
-await worker.start({ onUnhandledRequest: 'bypass' })
+// Liveness без зависимостей и без версии: релиз наружу не раскрывается.
+export const GET: APIRoute = () => new Response('ok', { headers: { 'cache-control': 'no-store' } })
+```
+
+В разметке `.astro` комментарий — `{/* … */}`: `<!-- … -->` уходит в HTML страницы, и `seo:check` его валит.
+
+```astro
+{/* Ширину, фон и ритм странице дают её секции (shared/ui/section): оболочка её не сужает. */}
+<main id="main" class="flex-1">
+  <slot />
+</main>
 ```

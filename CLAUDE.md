@@ -85,7 +85,6 @@ origin штампуется при старте.
 | `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` (и абсолютные URL своего сайта) существуют и ведут на каноническую форму адреса; ссылки без схемы на другой хост (`//contacts`) нет |
 | `pnpm seo:check` | после build: у каждой страницы `dist/client` мета — copy deck её плана (у записи — frontmatter), тексты превью ссылки — copy deck или заголовок и описание; title/description уникальные, в бюджетах, не общие; self-canonical, `lang`, один h1, OG с превью ссылки 1200×630, первая иконка — PNG от 48 px, hreflang у каждой пары переводов; типы JSON-LD — ровно план страницы (снимок `strategy/`), план — в границах head-kit её типа; JSON-LD = видимое, организация одна (`@id`, имя), подпись автора ⇒ его `Person`, у человека один `@id`, даты — только у записи коллекции; карта сайта = индексируемые страницы сборки; `noindex` и чужие ресурсы — только по списку `scripts/lib/site-policy.mjs`, острова — по реестру `src/shared/config/islands.ts`: на своих страницах и в бюджете (brotli); картинки и ролики — с размерами, над h1 — с приоритетом (у петли — preload постера), шрифты — Fonts API по списку; теги индексируются от порога записей; рантайм образа (`dist/server`, `docker/*.mjs`) импортирует ровно `dependencies`; серверный бандл — без конвейера картинок (`sharp`) и с данными strategy только своих on-demand страниц |
 | `pnpm size` | бюджеты `.size-limit.cjs` в brotli: CSS сборки, HTML самой тяжёлой страницы и шрифты ДС (строка — с первым файлом); серверный бандл — без сжатия |
-| `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
 | `pnpm ttfb <origin> <path…>` | TTFB запущенного сервера: медиана/p90 20 запросов (`scripts/ttfb.mjs`) |
 | `pnpm indexnow <origin> [карта-до.xml] --key <ключ>` | после выката: адреса, которые изменил релиз, — новые, изменённые и удалённые против карты до выката; ключ сверяется с живым `/<ключ>.txt`; сухой прогон, отправка — `--send` (`scripts/indexnow.mjs`, шаг `/release`) |
 | `pnpm geo:probe <origin> [strategy-path]` | GEO-шаг `/seo-audit` (вне gate): `geo_probe.py --ua-probe` соседнего strategy по шаблонам страниц сборки, флаги B и S — «чинить», кроме ожидаемых политикой сайта; сверка копии реестра ботов с базой; без соседа — строка пропуска |
@@ -118,7 +117,6 @@ origin штампуется при старте.
 | Контракт сервиса `site` с `<org>/infra`: что гарантирует образ, требования к среде и edge (Traefik, CrowdSec, журнал доступа, боты), приёмка | `docs/reference/infra-handoff.md` |
 | Путь потребителя шаблона: форк → свой сайт | `docs/getting-started.md` |
 | Устройство `.claude`-системы (правила, скиллы, план) | `docs/contributing.md` |
-| Родство с SPA-шаблоном | `docs/reference/kinship.md` + `pnpm kin:diff` |
 | Forward-only, комментарии | rules `forward-only`, `comments` |
 
 ## Инварианты

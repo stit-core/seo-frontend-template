@@ -23,7 +23,6 @@
 | [`reference/observability.md`](./reference/observability.md) | JSON-лог, `X-Request-Id`, `/healthz`, Sentry по DSN, чем меряется скорость |
 | [`reference/ecosystem.md`](./reference/ecosystem.md) | место сайта среди шаблонов stit, флоу (хаб `<org>/infra` или прямой заход), контракты с соседями, STOP на image-in-registry |
 | [`reference/infra-handoff.md`](./reference/infra-handoff.md) | контракт сервиса `site` с `<org>/infra`: что гарантирует образ, требования к среде и edge (Traefik, CrowdSec, журнал доступа), боты, приёмка |
-| [`reference/kinship.md`](./reference/kinship.md) | родство с `spa-frontend-template`, `pnpm kin:diff` |
 
 ## Для потребителя шаблона
 

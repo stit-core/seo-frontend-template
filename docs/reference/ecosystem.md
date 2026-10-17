@@ -80,12 +80,6 @@
 агент или оператор в `<org>/infra` по канону хаба (`docs/reference/ecosystem.md § Handoff-блок
 релиза` там). Контракт сервиса `site` — `infra-handoff.md`, env-контракт образа — `deployment.md`.
 
-## Родство с `spa-frontend-template`
-
-Два канонических шаблона делят **обвязку, а не код**: правила, скиллы, форму
-документации, состав гейта. Списки и сверка — `kinship.md` + `pnpm kin:diff` (advisory, вне
-гейта).
-
 ## Шаблон vs проект
 
 Шаблоны живут под оргом `stit-core` и форкаются через Gitea «Use this template».

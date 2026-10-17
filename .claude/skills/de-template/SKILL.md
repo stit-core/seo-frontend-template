@@ -174,14 +174,10 @@ strategy — `site_validate.py`, `copydeck.py check`): число и дата т
   на `docs/`. Упоминания «шаблон», «template», «форкни» уходят
 - `CONTRIBUTING.md` — про вклад в шаблон; либо переписать под свою команду, либо удалить
 - `docs/getting-started.md` — удалить: это путь потребителя шаблона
-- `docs/reference/kinship.md`, `scripts/kin-diff.mjs`, `package.json#scripts.kin:diff`
-  и строки о них в `README.md`/`CLAUDE.md`/`docs/README.md`/`docs/reference/ecosystem.md`/
-  `.claude/skills/smartdev/SKILL.md`/`.claude/skills/plan/references/repo.md` — удалить:
-  родство двух канонических шаблонов проекта не касается
 - `docs/reference/ecosystem.md` — оставить таблицу «сайт или приложение за логином», соседей,
   флоу и контракты (strategy, infra, registry, handoff), «этот шаблон» переписать на «этот
-  сайт»; убрать разделы «Родство с `spa-frontend-template`» и «Шаблон vs проект». Имена
-  шаблонов в карте соседей остаются: это происхождение форков
+  сайт»; убрать раздел «Шаблон vs проект». Имена шаблонов в карте соседей остаются: это
+  происхождение форков
 - `docs/research/**` — удалить: исследование, из которого вырос шаблон, не часть проекта;
   вместе с ним — ссылки на него в `.claude/rules/seo-invariants.md`,
   `docs/reference/rendering.md`, `biome.json` (исключение каталога) и

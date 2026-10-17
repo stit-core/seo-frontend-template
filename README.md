@@ -75,7 +75,6 @@ pnpm check:content    # контент-гейт: схема .md, даты, те�
 pnpm check:links      # после build: все внутренние ссылки в dist/client существуют
 pnpm seo:check        # после build: мета и типы JSON-LD — по плану, сниппет, hreflang, JSON-LD = видимое, острова и ресурсы
 pnpm size             # бюджеты: CSS, HTML самой тяжёлой страницы, шрифты ДС, серверный бандл
-pnpm kin:diff         # сверка обвязки с ../spa-frontend-template (advisory)
 pnpm ttfb <origin> …  # TTFB запущенного сервера: медиана/p90 20 запросов
 pnpm indexnow <origin> [карта-до.xml] --key <ключ>   # IndexNow после выката: адреса, которые изменил релиз
 pnpm geo:probe <origin>     # GEO-шаг /seo-audit: проба соседнего strategy по шаблонам страниц (advisory)
@@ -123,7 +122,7 @@ src/{content.config,middleware,env.d}.ts   навязанные Astro entry — 
 docker/           Dockerfile (4 стадии), entrypoint.sh + stamp.mjs (штамповка SITE_URL), server.mjs
 e2e/              Playwright на prod-сборке: http/ — в гейте, browser/ — в /release
 scripts/          гейты (check-gate, check-content, check-links, seo-check, lib/), validate-plan,
-                  pre-push, kin-diff, ttfb, indexnow, geo-probe, bot-sources, accept-image
+                  pre-push, ttfb, indexnow, geo-probe, bot-sources, accept-image
 docs/stack/       формы платформенных артефактов (12 kinds) — заполняет /stack-deep-dive
 .claude/          правила (path-scoped) и скиллы (init-service, scaffold, content, release…)
 ```
@@ -238,7 +237,6 @@ shutdown под Traefik и отказывается стартовать, есл
 | [`docs/reference/observability.md`](docs/reference/observability.md) | JSON-лог, `X-Request-Id`, `/healthz`, Sentry |
 | [`docs/reference/ecosystem.md`](docs/reference/ecosystem.md) | место среди шаблонов stit, флоу работы из хаба `<org>/infra` и контракты с соседями |
 | [`docs/reference/infra-handoff.md`](docs/reference/infra-handoff.md) | контракт сервиса `site` с `<org>/infra`: образ, требования к среде и edge, боты, приёмка |
-| [`docs/reference/kinship.md`](docs/reference/kinship.md) | родство с `spa-frontend-template` |
 | [`.claude/rules/forms-antispam.md`](.claude/rules/forms-antispam.md) | форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка |
 | [`CLAUDE.md`](CLAUDE.md) | гайд для агента (ядро + роутер) |
 
