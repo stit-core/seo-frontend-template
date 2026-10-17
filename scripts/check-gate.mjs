@@ -551,7 +551,8 @@ found.template = templateOutcomes()
 // origin, теги на HEAD), файл вне git дописывается после коммита, строки путей с пробелом и CR по краю — до него (CR в
 // файле фикстуры не удержать: его снимет первый же редактор). Канон (origin — репо шаблона) несёт на HEAD тег другой
 // версии и лёгкий тег своей; тот же репо с origin форка — теги на HEAD его релизы: строки «только канон» — правило
-// тега, «только форк» быть не должно.
+// тега, «только форк» быть не должно. Затем форк без .template (разворот снёс версию и пути) и с версией не vX.Y.Z:
+// строки «без .template:» и «версия 1.0.0:» — сверх прогона форка.
 function proseOutcomes() {
   const temp = mkdtempSync(join(tmpdir(), 'gate-prose-'))
   cpSync(resolve(fixtures, 'prose'), temp, { recursive: true })
@@ -573,6 +574,14 @@ function proseOutcomes() {
     return result
   }
   const runs = { canon: check(CANONICAL_ORIGIN), fork: check(FORK_ORIGIN) }
+  gitIn(temp, ['rm', '-q', '.template/version', '.template/paths'])
+  gitIn(temp, ['commit', '-q', '-m', 'без .template'])
+  runs.bare = check(FORK_ORIGIN)
+  cpSync(resolve(fixtures, 'prose/.template'), join(temp, '.template'), { recursive: true })
+  writeFileSync(join(temp, '.template/version'), '1.0.0\n')
+  gitIn(temp, ['add', '.template'])
+  gitIn(temp, ['commit', '-q', '-m', 'версия не vX.Y.Z'])
+  runs.version = check(FORK_ORIGIN)
   rmSync(temp, { recursive: true, force: true })
   const lines = {}
   for (const [mode, result] of Object.entries(runs)) {
@@ -595,6 +604,12 @@ function proseOutcomes() {
     ...lines.fork
       .filter((line) => !lines.canon.includes(line))
       .map((line) => `только форк: ${line}`),
+    ...lines.bare
+      .filter((line) => !lines.fork.includes(line))
+      .map((line) => `без .template: ${line}`),
+    ...lines.version
+      .filter((line) => !lines.fork.includes(line))
+      .map((line) => `версия 1.0.0: ${line}`),
   ]
 }
 want.prose = expected.prose ?? []
@@ -764,7 +779,9 @@ for (const section of [
     if (!wanted.has(key)) lines.push(`  ✗ ${key} — нет в expected.json (×${count})`)
   }
   problems += lines.length
-  const noun = ['identity', 'indexnow', 'template'].includes(section) ? 'исходов' : 'нарушений'
+  const noun = ['identity', 'stack', 'indexnow', 'template'].includes(section)
+    ? 'исходов'
+    : 'нарушений'
   console.info(
     lines.length === 0
       ? `✓ ${section}: ${noun} ${want[section].length} — ровно ожидаемые`

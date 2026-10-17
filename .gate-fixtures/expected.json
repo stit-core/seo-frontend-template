@@ -402,6 +402,7 @@
     "CLAUDE.md: docs/net-perechnya.md — пути нет в репо",
     "CLAUDE.md: docs/*.txt — пути нет в репо",
     "CLAUDE.md: docs/stack/routing.md — пути нет в репо",
+    "docs/guide.md: docs/net-v-ograde.md — пути нет в репо",
     "README.md: docs/ne-v-git.md — пути нет в репо (на диске есть, не в git: git add)",
     "docs/guide.md:5: маркер конфликта",
     "strategy/data.yaml:2: маркер конфликта",
@@ -412,7 +413,10 @@
     "тег v1.0.0 на HEAD — лёгкий: перенос в форке не покажет его аннотацию",
     "тег v9.9.9 на HEAD ≠ .template/version v1.0.0",
     "только канон: тег v1.0.0 на HEAD — лёгкий: перенос в форке не покажет его аннотацию",
-    "только канон: тег v9.9.9 на HEAD ≠ .template/version v1.0.0"
+    "только канон: тег v9.9.9 на HEAD ≠ .template/version v1.0.0",
+    "без .template: .template/version: файла нет — от версии обвязки идёт перенос",
+    "без .template: .template/paths: файла нет — пути шаблона, их переносит template:update",
+    "версия 1.0.0: .template/version: «1.0.0» — не vX.Y.Z"
   ],
   "identity": [
     "канон: код 0",
