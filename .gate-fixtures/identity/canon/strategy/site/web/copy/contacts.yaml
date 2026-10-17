@@ -5,4 +5,6 @@ copy_deck:
     - page_id: contacts
       meta:
         title: Контакты ssr-frontend-template
-        description: 'ООО «Пример»: Москва, ул. Примерная, 1, телефон +7 495 000-00-00, почта hello@example.com.'
+        description: >-
+          ООО «Пример»: Москва, ул.
+          Примерная, 1, офис 2, телефон +7 495 000-00-00, почта hello@example.com.

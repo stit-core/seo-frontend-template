@@ -49,18 +49,20 @@ const IDENTIFYING = {
 // Файлы лица: знак, иконки, превью и manifest; демо-записи и обложки коллекций; редиректы.
 const FACE_FILE = /^(?:public\/|src\/entities\/[^/]+\/content\/|content\/redirects\.yaml$)/
 
+// Пробельная последовательность — один пробел: перенос строки в свёрнутом скаляре YAML и неразрывный пробел типографики
+// строку лица не прячут. Строка лица хранится сведённой, текст сверяется как есть.
+const spaced = (text) => text.replace(/\s+/g, ' ').trim()
 const WORD = /[\p{L}\p{N}]/u
-const word = (char) => char !== undefined && WORD.test(char)
 // Строка лица входит в текст словом: «site-template» — не в «website-template», а имя шаблона — и в имени пакета
-// «@stit/ssr-frontend-template».
+// «@stit/ssr-frontend-template». Смещения — в тексте как есть: по ним номер строки.
 function hits(text, face) {
-  const found = []
-  for (let at = text.indexOf(face); at !== -1; at = text.indexOf(face, at + 1)) {
-    if (word(face[0]) && word(text[at - 1])) continue
-    if (word(face.at(-1)) && word(text[at + face.length])) continue
-    found.push(at)
-  }
-  return found
+  const body = face
+    .split(' ')
+    .map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .join('\\s+')
+  const left = WORD.test(face[0]) ? '(?<![\\p{L}\\p{N}])' : ''
+  const right = WORD.test(face.at(-1)) ? '(?![\\p{L}\\p{N}])' : ''
+  return [...text.matchAll(new RegExp(`${left}${body}${right}`, 'gu'))].map(({ index }) => index)
 }
 
 const yamlFiles = (pattern) =>
@@ -84,12 +86,15 @@ async function faceOf() {
     for (const fact of file?.facts ?? []) {
       const field = IDENTIFYING[fact.machine?.type]
       if (fact.example !== true || (field === undefined && !operators.has(fact.id))) continue
-      texts.push(...fact.verbatim, field === undefined ? undefined : fact.machine[field])
+      const value = field === undefined ? undefined : fact.machine[field]
+      texts.push(...fact.verbatim, value)
+      // Улица узнаётся и короткой формой — первым сегментом: «ул. Примерная», «1 Primernaya st.» без дома и офиса.
+      if (field === 'street' && typeof value === 'string') texts.push(value.split(',')[0])
     }
   }
-  const strings = [
-    ...new Set(texts.filter((text) => typeof text === 'string').map((text) => text.trim())),
-  ].filter((text) => text !== '')
+  const strings = [...new Set(texts.filter((text) => typeof text === 'string').map(spaced))].filter(
+    (text) => text !== '',
+  )
   // Строка, в которой словом стоит другая строка лица, лишняя: её место находит та.
   const minimal = strings.filter(
     (text) => !strings.some((other) => other !== text && hits(text, other).length > 0),
@@ -162,7 +167,9 @@ if (canon) {
     problems.push(`${FACE}: файла нет — лицо шаблона приходит с его обвязкой: pnpm template:update`)
   } else {
     const face = entriesOf(read(FACE).toString('utf8'))
-    const texts = face.filter((entry) => entry.startsWith('text ')).map((entry) => entry.slice(5))
+    const texts = face
+      .filter((entry) => entry.startsWith('text '))
+      .map((entry) => spaced(entry.slice(5)))
     const prints = new Map(
       face
         .filter((entry) => entry.startsWith('file '))
@@ -188,8 +195,7 @@ if (canon) {
           `${file}: файл лица шаблона байт в байт${print === file ? '' : ` (${print})`}`,
         )
       }
-      // Неразрывный пробел типографики — тот же пробел: «ООО «Пример»» не прячется за ним.
-      const text = bytes.toString('utf8').replace(/[\u00a0\u202f]/g, ' ')
+      const text = bytes.toString('utf8')
       const lines = []
       for (const face of texts) {
         const found = hits(text, face)

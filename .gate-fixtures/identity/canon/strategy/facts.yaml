@@ -1,11 +1,11 @@
-# Факты мини-шаблона: оператор и его контакты — демо (example: true).
+# Факты мини-шаблона: оператор и контакты — демо (example: true); имя — с неразрывным пробелом, улица — с офисом.
 facts_version: 1
 site: site-template
 lang: ru
 facts:
   - id: company-name
     kind: company
-    verbatim: [ООО «Пример»]
+    verbatim: [ООО «Пример»]
     example: true
   - id: company-email
     kind: company
@@ -24,8 +24,8 @@ facts:
     example: true
   - id: company-address
     kind: company
-    verbatim: ['101000, Москва, ул. Примерная, 1']
-    machine: {type: postal-address, country: RU, locality: Москва, street: 'ул. Примерная, 1'}
+    verbatim: ['101000, Москва, ул. Примерная, 1, офис 2']
+    machine: {type: postal-address, country: RU, locality: Москва, street: 'ул. Примерная, 1, офис 2'}
     example: true
   - id: company-hours
     kind: company
