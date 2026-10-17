@@ -159,15 +159,16 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 
 ## SEO
 
-`<head>` каждой страницы собирает `DocumentLayout` из props (`title`, `description`,
-`translations`, `jsonLd`, `crumbs`): title-шаблон, self-canonical, полный OG (`og:image` — кадр 1200×630
+`<head>` каждой страницы собирает `DocumentLayout` из props (`meta`, `translations`, `jsonLd`,
+`crumbs`): мета copy deck как есть (бренд — в заголовке), self-canonical, полный OG (`og:image` — кадр 1200×630
 обложки записи или `public/og-default.png`), `twitter:card`, hreflang по карте переводов страницы —
 только для реальных переводов (взаимно, + `x-default`), RSS autodiscovery фида своей локали.
-JSON-LD — в `<head>`: `Organization`/`WebSite` на главной,
-`LocalBusiness` на «О компании» — одна организация с `@id` `<origin>/#org`, на неё ссылаются сайт
-и записи; `BreadcrumbList` у страниц шаблона карты с крошками, с глубины 2 (из того же пропа
-оболочки, что видимые крошки `widgets/breadcrumbs`), `BlogPosting` у записи — с автором `Person`, когда у записи есть автор
-из реестра и подпись; в `<body>` ни одного `<script>`. Первая иконка в `<head>` — PNG 192×192:
+JSON-LD — в `<head>`, типы `seo.structured_data` плана страницы: `Organization` + `WebSite` на главной,
+`AboutPage`, `ContactPage` + `LocalBusiness` на контактах — одна организация с `@id` `<origin>/#org`
+(контакты и реквизиты — `machine` фактов страницы), на неё ссылаются сайт, страницы и записи;
+`CollectionPage` у списка и тега, `BreadcrumbList` у страниц шаблона карты с крошками, с глубины 2
+(из того же пропа оболочки, что видимые крошки `widgets/breadcrumbs`), `Article` у записи — с автором
+`Person`, когда у записи есть автор из реестра и подпись; в `<body>` ни одного `<script>`. Первая иконка в `<head>` — PNG 192×192:
 растр, который подходит выдаче Google. `robots.txt` (`ROBOTS_POLICY`; политика ИИ-ботов — поле сборки `AI_BOTS_POLICY`,
 группы — из реестра ботов базы strategy; `Clean-param` Яндексу — служебные параметры адреса
 `CLEAN_PARAMS`) и `/<INDEXNOW_KEY>.txt` — on-demand на runtime `SITE_URL`; `sitemap.xml` (сборка пишет его по

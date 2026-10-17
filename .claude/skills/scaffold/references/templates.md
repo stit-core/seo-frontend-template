@@ -52,8 +52,10 @@ const page = pageOf(files, locale)
 (`articleCards.props(page, '<section-id>', { article })`) и, у шаблона коллекции (`templateOf`), слоты записи.
 Крошки — у страницы шаблона карты с `breadcrumbs: true` и с глубины 2: секция `breadcrumbs` её плана,
 проп оболочки `crumbs={breadcrumbs.props(page, 'breadcrumbs')}`; видимые крошки и `BreadcrumbList`
-оболочка печатает из него. Служебная — проп `noindex` вместо `jsonLd`. Текста литералом в разметке нет:
-тексты — copy deck и факты, подпись интерфейса — строка словаря `t()`.
+оболочка печатает из него. Разметка — проп `jsonLd`: фабрики `shared/seo` типов `seo.structured_data`
+плана по порядку (`aboutPage({ locale, path: page.url, name: page.meta.title })`; тип без фабрики —
+фабрика вместе со страницей), `BreadcrumbList` оболочка печатает из крошек. Служебная — проп `noindex`.
+Текста литералом в разметке нет: тексты — copy deck и факты, подпись интерфейса — строка словаря `t()`.
 
 ## page — маршрут `src/pages/[...locale]/<path>.astro`
 
@@ -78,16 +80,17 @@ const { locale } = Astro.props
 ## page — тест
 
 `src/pages/_tests/pages.astro.test.ts`: импорт маршрута и строка в таблице индексируемых страниц —
-шаблон маршрута, модуль, id страницы карты (по нему тест судит крошки) и типы JSON-LD (служебная — свой тест по
-образцу подтверждения заявки):
+шаблон маршрута, модуль и id страницы карты (по нему тест судит крошки; служебная — свой тест по образцу
+подтверждения заявки):
 
 ```ts
 import * as NamePage from '../[...locale]/<path>.astro'
 
-['/[...locale]/<path>', NamePage, '<id>', () => []],
+['/[...locale]/<path>', NamePage, '<id>'],
 ```
 
 Адреса, языки и hreflang тест берёт из getStaticPaths маршрута: страница на одном языке — без hreflang.
+Типы JSON-LD — `seo.structured_data` плана: их на каждой странице снимка сверяет тест сам.
 
 ---
 

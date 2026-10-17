@@ -1,8 +1,13 @@
 import type { FactValue } from '@/shared/strategy'
 import { hoursOf } from './hours'
 
+type Day = Extract<
+  NonNullable<FactValue['machine']>,
+  { type: 'opening-hours' }
+>['hours'][number]['days'][number]
+
 // Факт часов: ряды «дни, открытие, закрытие».
-const hours = (...rows: Array<[string[], string, string]>): FactValue => ({
+const hours = (...rows: Array<[Day[], string, string]>): FactValue => ({
   id: 'company-hours',
   text: 'часы',
   machine: {
@@ -11,7 +16,7 @@ const hours = (...rows: Array<[string[], string, string]>): FactValue => ({
   },
   binds: [],
 })
-const WEEKDAYS = ['mo', 'tu', 'we', 'th', 'fr']
+const WEEKDAYS: Day[] = ['mo', 'tu', 'we', 'th', 'fr']
 const operator: FactValue = {
   id: 'company-name',
   text: 'ООО «Тест»',

@@ -21,6 +21,10 @@ export const PlanSchema = z.object({
     url: z.string().optional(),
     // План шаблона коллекции: тексты шаблона — copy deck, слоты без текста и мету страницы даёт запись коллекции.
     template: z.boolean().default(false),
+    // Типы JSON-LD страницы — `seo.structured_data` плана (head-kit `page_types` её типа): страница печатает ровно их.
+    seo: z
+      .object({ structured_data: z.array(z.string()).default([]) })
+      .default({ structured_data: [] }),
     // Правовые решения страницы: адрес политики ПДн и оператор — факт `fact:<id>`.
     legal: z
       .object({
@@ -64,11 +68,15 @@ export const PlanSchema = z.object({
 
 const Variant = z.object({ id: z.string(), text: z.string() })
 
+// Факты, на которых стоит текст copy deck (`fact:<id>`; пробел — `missing:<id>`): их называет страница.
+const FactIds = z.array(z.string().regex(/^(?:fact|missing):/)).default([])
+
 // Непустые списки — кортежем с хвостом: первый элемент есть и у типа.
 const DeckSlot = z.object({
   slot_id: z.string(),
   variants: z.tuple([Variant], Variant),
   chosen: z.string().optional(),
+  fact_ids: FactIds,
 })
 
 export const CopyDeckSchema = z.object({
@@ -83,6 +91,7 @@ export const CopyDeckSchema = z.object({
             description: z.string().optional(),
             og_title: z.string().optional(),
             og_description: z.string().optional(),
+            fact_ids: FactIds,
           })
           .optional(),
         sections: z.array(z.object({ section_id: z.string(), slots: z.array(DeckSlot) })),
@@ -107,7 +116,13 @@ const MachineSchema = z.discriminatedUnion('type', [
   }),
   z.object({
     type: z.literal('opening-hours'),
-    hours: z.array(z.object({ days: z.array(z.string()), opens: z.string(), closes: z.string() })),
+    hours: z.array(
+      z.object({
+        days: z.array(z.enum(['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su'])),
+        opens: z.string(),
+        closes: z.string(),
+      }),
+    ),
   }),
   z.object({ type: z.literal('legal-id'), scheme: z.string(), value: z.string() }),
   z.object({ type: z.literal('geo'), lat: z.number(), lon: z.number() }),

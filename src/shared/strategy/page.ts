@@ -107,6 +107,11 @@ export interface StrategyPage extends MapEntry {
   // (`legal.operator_ref`) — факт языка страницы.
   policy: Link | undefined
   operator: FactValue | undefined
+  // Типы JSON-LD страницы — `seo.structured_data` плана.
+  structuredData: string[]
+  // Факты, которые называет страница: `fact:<id>` плана (слоты данных, оператор) и `fact_ids` её текстов copy deck, — в
+  // порядке файла фактов языка страницы; из их `machine` — свойства её организации (head-kit `fields_from_facts`).
+  facts: FactValue[]
 }
 
 // Страница своего плана — с метой copy deck.
@@ -336,6 +341,21 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
 
   const meta = page.meta
   const { privacy_policy: policy, operator_ref: operator } = plan.page.legal ?? {}
+  // Факты, которые называет страница, — по месту ссылки: факта нет на языке страницы — ошибка с ключом этого места.
+  const named = new Set(
+    [
+      ...plan.sections.flatMap((section) =>
+        section.slots.data.map((slot) => [slot.fact, `${id}/${section.id}/${slot.id}`] as const),
+      ),
+      ...(operator === undefined ? [] : [[operator, `${id}/legal/operator_ref`] as const]),
+      ...(meta?.fact_ids ?? []).map((ref) => [ref, `${id}/meta`] as const),
+      ...page.sections.flatMap((section) =>
+        section.slots.flatMap((slot) =>
+          slot.fact_ids.map((ref) => [ref, `${id}/${section.section_id}/${slot.slot_id}`] as const),
+        ),
+      ),
+    ].flatMap(([ref, key]) => factOf(ref, key, [])?.id ?? []),
+  )
   return {
     id,
     ...placeOf(project, plan, locale),
@@ -354,6 +374,10 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
         ? undefined
         : address({ kind: 'route', value: policy }, `${id}/legal/privacy_policy`),
     operator: operator === undefined ? undefined : factOf(operator, `${id}/legal/operator_ref`, []),
+    structuredData: plan.page.seo.structured_data,
+    facts: [...facts.values()]
+      .filter((fact) => named.has(fact.id))
+      .map((fact) => ({ id: fact.id, text: fact.verbatim[0], machine: fact.machine, binds: [] })),
   }
 }
 

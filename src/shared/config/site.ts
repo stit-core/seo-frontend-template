@@ -1,9 +1,6 @@
 // Идентичность сайта — демо-значения шаблона; /de-template заменяет их проектными.
 export const SITE_NAME = 'ssr-frontend-template'
 
-// Описание сайта — JSON-LD WebSite.description на корне (дефолтная локаль).
-export const SITE_DESCRIPTION = 'Шаблон индексируемого сайта: static-first, SSR по необходимости'
-
 // Профили организации в других сервисах (JSON-LD Organization.sameAs).
 export const SITE_SAME_AS: readonly string[] = [
   'https://git.stit.tech/stit-core/ssr-frontend-template',

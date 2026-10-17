@@ -355,6 +355,49 @@ describe('strategy/page', () => {
     )
   })
 
+  // Факты, которые называет страница, — источник свойств её организации (head-kit `fields_from_facts`): ссылки `fact:`
+  // плана и `fact_ids` её текстов copy deck, в порядке файла фактов языка; типы её JSON-LD — `seo.structured_data` плана.
+  it('факты страницы — `fact:` плана и `fact_ids` её текстов, в порядке файла фактов; типы JSON-LD — план', () => {
+    const named = edited((files) => {
+      Object.assign(files['site/web/plans/repair.yaml'].page, {
+        seo: { structured_data: ['Service', 'BreadcrumbList'] },
+      })
+      const [page] = files['site/web/copy/repair.yaml'].copy_deck.pages
+      Object.assign(page?.meta ?? {}, { fact_ids: ['fact:chat', 'missing:price'] })
+    })
+    const page = read(named)
+    expect(page.structuredData).toEqual(['Service', 'BreadcrumbList'])
+    expect(page.facts).toStrictEqual([
+      {
+        id: 'phone',
+        text: '+7 900 000-00-01',
+        machine: { type: 'telephone', value: '+79000000001' },
+        binds: [],
+      },
+      {
+        id: 'chat',
+        text: 'Написать в MAX',
+        machine: { type: 'messenger', network: 'max', value: 'https://max.ru/demo' },
+        binds: [],
+      },
+      { id: 'studio', text: 'Студия «Демо»', machine: undefined, binds: [] },
+    ])
+    // У другого языка — свой copy deck: его тексты называют свои факты.
+    expect(read(named, 'en').facts.map(({ text }) => text)).toEqual([
+      '+7 900 000-00-01',
+      'Demo studio',
+    ])
+    expect(read(site())).toMatchObject({ structuredData: [] })
+    const unknown = edited((files) => {
+      const [page] = files['site/web/copy/repair.yaml'].copy_deck.pages
+      const [hero] = page?.sections ?? []
+      Object.assign(hero?.slots[0] ?? {}, { fact_ids: ['fact:owner'] })
+    })
+    expect(() => read(unknown)).toThrow(
+      'strategy: repair/hero/headline — fact:owner нет в фактах ru',
+    )
+  })
+
   it('без карты (лендинг) — адрес из page.url плана, родителей нет', () => {
     const files = edited((files) => {
       Reflect.deleteProperty(files, 'site/web/site-map.yaml')
@@ -658,6 +701,8 @@ describe('strategy/page', () => {
         ],
         policy: { href: '/privacy' },
         operator: undefined,
+        structuredData: [],
+        facts: [],
       })
     })
   })

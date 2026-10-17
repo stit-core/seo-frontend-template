@@ -13,7 +13,6 @@ status: draft
 |---|---|---|
 | канонический хост | `https://<domain>` — один; `www` → apex на Traefik | `SITE_URL` (env) |
 | имя сайта | _<Бренд>_ | `SITE_NAME` |
-| описание | _70–170 символов_ | `SITE_DESCRIPTION` |
 | заголовок и описание страницы | мета copy deck как есть: бренд — в заголовке (шаблоны `meta-rules.yaml` базы); тексты превью ссылки — `og_title` и `og_description`, без них — заголовок и описание | copy deck strategy |
 | профили в других сервисах | _ссылки_ | `SITE_SAME_AS` |
 | логотип | `/icon-512.png` | `SITE_LOGO_PATH` |
@@ -33,18 +32,22 @@ status: draft
 
 ## Структурированные данные (JSON-LD)
 
+Типы страницы — `seo.structured_data` её плана strategy (head-kit `page_types` её типа).
+
 | тип | где | источник полей |
 |---|---|---|
-| `Organization` + `WebSite` | `/` | `site.ts` |
-| `Organization` | `/en` | `site.ts` |
-| `LocalBusiness` | страница «о компании» — ровно те факты, что видны в тексте | `site.ts` (имя) + факты strategy (`machine`) и оператор плана |
-| `BreadcrumbList` | вложенные страницы | массив крошек страницы |
-| `BlogPosting` | запись коллекции | frontmatter; автор — `Person` из реестра `entities/author` или организация |
+| `Organization` + `WebSite` | главная каждого языка | `site.ts` (имя, логотип, профили), оператор плана, факты страницы (`machine`) |
+| `AboutPage` | «о компании» | мета copy deck; `about` — организация по `@id` |
+| `ContactPage` + `LocalBusiness` | контакты — адрес, часы, телефон и почта, что видны на странице | `site.ts`, оператор плана, факты страницы (`machine`) |
+| `CollectionPage` | список и тег коллекции | мета страницы; издатель — организация по `@id` |
+| `BreadcrumbList` | страницы с крошками по карте | секция крошек плана |
+| `Article` | запись коллекции | frontmatter; автор — `Person` из реестра `entities/author` (адрес — профиль) или организация |
 | _<тип>_ | _где_ | _откуда_ |
 
 Печатается только в `<head>` и только про видимое. Организация одна: её узлы и ссылки на неё
-(издатель сайта, автор и издатель записи) несут `@id` `<origin>/#org`, имя — бренд (`SITE_NAME`),
-юрлицо — `legalName`. `FAQPage`, `HowTo`, `SearchAction` не генерируются — `seo:check` валит
+(издатель сайта и списков, `about` страниц, автор и издатель записи) несут `@id` `<origin>/#org`,
+имя — бренд (`SITE_NAME`), юрлицо — `legalName`; контакты и реквизиты — `machine` фактов, которые
+называет страница, по таблице head-kit `fields_from_facts`. `FAQPage`, `HowTo`, `SearchAction` не генерируются — `seo:check` валит
 сборку; `<meta name="keywords">` — никогда.
 
 ## Локали и hreflang

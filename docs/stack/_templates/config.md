@@ -46,7 +46,7 @@ prerendered-выхода, `absoluteUrl()` на on-demand); публичные и
 
 | поле | назначение | пусто значит |
 |---|---|---|
-| `SITE_NAME`, `SITE_DESCRIPTION`, `SITE_SAME_AS`, `SITE_LOGO_PATH` | идентичность и JSON-LD | — |
+| `SITE_NAME`, `SITE_SAME_AS`, `SITE_LOGO_PATH` | идентичность и JSON-LD | — |
 | `OG_DEFAULT_IMAGE` | социальная карточка по умолчанию | — |
 | `AI_BOTS_POLICY` | политика ИИ-ботов: именная группа `robots.txt` и мета `deny-all` | — (умолчание `allow-all`) |
 | `CLEAN_PARAMS` | служебные параметры адреса: строка `Clean-param` прод-`robots.txt` | строки нет |

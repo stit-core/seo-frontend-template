@@ -1,5 +1,6 @@
 export { expectNoA11yViolations } from './a11y'
 export { parseHtml } from './dom'
+export { JsonLdSchema } from './json-ld'
 export { PACKAGE_LANDING } from './landing'
 export { TEST_LOCALES, testLocale, withTestLocales } from './locales'
 export { sectionFaults, unshownOf } from './section'

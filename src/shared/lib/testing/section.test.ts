@@ -27,6 +27,8 @@ const page = (binds: string[]): StrategyPage => ({
   ],
   policy: undefined,
   operator: undefined,
+  structuredData: [],
+  facts: [],
 })
 const block = { slots: { title: text, stat: fact } }
 const section = (body: string) =>

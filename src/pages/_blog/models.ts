@@ -14,7 +14,7 @@ import {
 } from '@/entities/post'
 import { type Locale, type Translations, t } from '@/shared/i18n'
 import { invariant } from '@/shared/lib'
-import { blogPosting } from '@/shared/seo'
+import { article } from '@/shared/seo'
 import { pageLocales, relatedOf } from '@/shared/strategy'
 import { articleImagesOf, ogImageOf } from './images'
 
@@ -89,7 +89,7 @@ export async function postPageModel(post: Post) {
     tags: data.tags.map((tag) => ({ label: `#${tag}`, href: tagPath(locale, tag) })),
     related: await relatedTo(post),
     jsonLd: [
-      blogPosting({
+      article({
         locale,
         path: postPath(locale, post.slug),
         title: data.title,
@@ -112,6 +112,7 @@ export async function blogListPageModel(locale: Locale, page: Page<Post>) {
   )
   return {
     translations,
+    path: blogPath(locale, page.current),
     // Страницы 2…N — свой сниппет выдачи: номер страницы в h1, title и description.
     paged: (text: string) =>
       page.current === 1 ? text : t(locale, 'blog.paged', { text, page: page.current }),
@@ -138,6 +139,7 @@ export async function tagPageModel(locale: Locale, tag: string) {
   return {
     noindex: !indexable,
     translations,
+    path: tagPath(locale, tag),
     title: t(locale, 'blog.tag', { tag }),
     description: t(locale, 'blog.tagDescription', { tag }),
     current: `#${tag}`,

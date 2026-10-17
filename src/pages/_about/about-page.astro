@@ -2,12 +2,11 @@
 import about from 'virtual:strategy/about'
 import DocumentLayout from '@/app/layouts/document.astro'
 import type { Locale } from '@/shared/i18n'
-import { localBusiness } from '@/shared/seo'
+import { aboutPage } from '@/shared/seo'
 import { pageOf, pageVersions } from '@/shared/strategy'
 import { ContactDetails, contactDetails } from '@/widgets/contact-details'
 import { HeroText, heroText } from '@/widgets/hero-text'
 import { Prose, prose } from '@/widgets/prose'
-import { businessOf } from './model'
 
 interface Props {
   locale: Locale
@@ -22,7 +21,7 @@ const page = pageOf(about, locale)
   chrome={page}
   translations={pageVersions(page.id)}
   meta={page.meta}
-  jsonLd={[localBusiness(businessOf(page))]}
+  jsonLd={[aboutPage({ locale, path: page.url, name: page.meta.title })]}
 >
   <HeroText {...heroText.props(page, 'hero')} />
   <Prose {...prose.props(page, 'about')} />

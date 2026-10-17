@@ -17,8 +17,6 @@ const { locale } = Astro.props
 const page = pageOf(home, locale)
 // Свежие записи кладёт страница из коллекции: план их не заполняет.
 const latest = (await listPosts(locale)).slice(0, 3).map(postCard)
-// WebSite печатает только корень домена (/): оттуда Google читает имя сайта.
-const jsonLd = Astro.url.pathname === '/' ? [organization(), webSite()] : [organization()]
 ---
 
 <DocumentLayout
@@ -26,7 +24,7 @@ const jsonLd = Astro.url.pathname === '/' ? [organization(), webSite()] : [organ
   chrome={page}
   translations={pageVersions(page.id)}
   meta={page.meta}
-  jsonLd={jsonLd}
+  jsonLd={[organization(page), webSite(locale)]}
 >
   <HeroText {...heroText.props(page, 'hero')} />
   <FeatureGrid {...featureGrid.props(page, 'benefits')} />

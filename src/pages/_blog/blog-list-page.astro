@@ -3,6 +3,7 @@ import files from 'virtual:strategy/blog'
 import DocumentLayout from '@/app/layouts/document.astro'
 import type { Page, Post } from '@/entities/post'
 import type { Locale } from '@/shared/i18n'
+import { collectionPage } from '@/shared/seo'
 import { pageOf } from '@/shared/strategy'
 import { ArticleCards, articleCards } from '@/widgets/article-cards'
 import { HeroText, heroText } from '@/widgets/hero-text'
@@ -28,6 +29,7 @@ const hero = heroText.props(page, 'hero')
     title: model.paged(page.meta.title),
     description: model.paged(page.meta.description),
   }}
+  jsonLd={[collectionPage({ locale, path: model.path, name: model.paged(page.meta.title) })]}
 >
   <HeroText {...hero} headline={model.paged(hero.headline)} />
   <ArticleCards

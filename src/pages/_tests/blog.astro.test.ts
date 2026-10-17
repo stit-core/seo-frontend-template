@@ -189,10 +189,10 @@ describe('маршруты блога с параметрами', () => {
     expect((await tag('/blog/tag/i18n')).hreflang).toEqual({})
   })
 
-  it('запись с переводом: hreflang пары, BlogPosting и тело записи', async () => {
+  it('запись с переводом: hreflang пары, Article и тело записи', async () => {
     const head = await page('/[...locale]/blog/[slug]', Post, '/blog/para')
     expect(head.hreflang).toEqual(pair('/blog/para', '/en/blog/pair'))
-    expect(head.jsonLd).toEqual(['BlogPosting', 'BreadcrumbList'])
+    expect(head.jsonLd).toEqual(['Article', 'BreadcrumbList'])
     const paragraphs = [...parseHtml(head.html).querySelectorAll('article p')]
     expect(paragraphs.map((paragraph) => paragraph.textContent)).toContain('Тело записи.')
   })
@@ -216,13 +216,13 @@ describe('маршруты блога с параметрами', () => {
     }
   })
 
-  // Разметка = видимое: Person печатается только вместе с подписью, теми же строками; подпись — ссылка на профиль.
-  it('автор записи: подпись — ссылка rel="author" на профиль и Person с тем же именем; @id один на обе локали', async () => {
+  // Разметка = видимое: Person печатается только вместе с подписью, теми же строками; подпись и адрес Person — профиль.
+  it('автор записи: подпись — ссылка rel="author" на профиль и Person с тем же именем и адресом профиля; @id один на обе локали', async () => {
     const post = async (path: string) => {
       const head = await page('/[...locale]/blog/[slug]', Post, path)
       const link = parseHtml(head.html).querySelector('article header a[rel="author"]')
       return {
-        author: head.blocks.find((block) => block['@type'] === 'BlogPosting')?.author,
+        author: head.blocks.find((block) => block['@type'] === 'Article')?.author,
         link: link && [link.getAttribute('href'), link.textContent?.trim()],
         signature: link?.parentElement?.textContent?.replace(/\s+/g, ' ').trim(),
       }
@@ -235,6 +235,7 @@ describe('маршруты блога с параметрами', () => {
       '@id': id,
       name: 'Анна Смирнова',
       jobTitle: 'редактор блога',
+      url: `${ORIGIN}/avtory/anna-smirnova`,
     })
     expect(ru.link).toEqual(['/avtory/anna-smirnova', 'Анна Смирнова'])
     expect(ru.signature).toBe('Анна Смирнова, редактор блога')
@@ -245,10 +246,13 @@ describe('маршруты блога с параметрами', () => {
       '@id': id,
       name: 'Anna Smirnova',
       jobTitle: 'blog editor',
+      url: `${ORIGIN}/avtory/anna-smirnova`,
     })
     expect(en.link).toEqual(['/avtory/anna-smirnova', 'Anna Smirnova'])
 
-    expect((await post('/blog/odna')).link).toEqual(['https://petr-ivanov.example', 'Пётр Иванов'])
+    const outside = await post('/blog/odna')
+    expect(outside.link).toEqual(['https://petr-ivanov.example', 'Пётр Иванов'])
+    expect(outside.author).toHaveProperty('url', 'https://petr-ivanov.example')
 
     const plain = await post('/blog/zametka-1')
     expect(plain.author).toEqual({

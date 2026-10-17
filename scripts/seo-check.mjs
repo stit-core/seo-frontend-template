@@ -650,7 +650,7 @@ function checkMarkupVisible(where, path, body, blocks, page) {
     if (type === 'Organization' && !isLocaleHome(path)) {
       fail(where, 'JSON-LD Organization вне главной: организация размечается один раз')
     }
-    if (type === 'WebSite' && path !== '/') fail(where, 'JSON-LD WebSite вне корня сайта')
+    if (type === 'WebSite' && !isLocaleHome(path)) fail(where, 'JSON-LD WebSite вне главной')
     if (typeof data.headline === 'string') {
       if (data.headline !== h1)
         fail(where, `${type}.headline «${data.headline}» ≠ видимый h1 «${h1}»`)
@@ -952,7 +952,7 @@ for (const file of walk(client)) {
     blocks.push(data)
   }
   if (isLocaleHome(path)) {
-    for (const type of ['Organization', ...(path === '/' ? ['WebSite'] : [])]) {
+    for (const type of ['Organization', 'WebSite']) {
       if (!blocks.some((data) => data['@type'] === type)) fail(where, `нет JSON-LD ${type}`)
     }
   }

@@ -3,6 +3,7 @@ import contacts from 'virtual:strategy/contacts'
 import DocumentLayout from '@/app/layouts/document.astro'
 import type { ContactErrors, ContactValues } from '@/features/contact-form'
 import { type DictKey, type Locale, t } from '@/shared/i18n'
+import { contactPage, localBusiness } from '@/shared/seo'
 import { fail, pageOf, pageVersions } from '@/shared/strategy'
 import { ContactDetails, contactDetails } from '@/widgets/contact-details'
 import { HeroText, heroText } from '@/widgets/hero-text'
@@ -37,6 +38,7 @@ const policy =
   meta={meta}
   translations={pageVersions(page.id)}
   noindex={noindex}
+  jsonLd={[contactPage({ locale, path: page.url, name: page.meta.title }), localBusiness(page)]}
 >
   <HeroText {...heroText.props(page, 'hero')} />
   <LeadForm

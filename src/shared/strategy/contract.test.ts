@@ -17,6 +17,7 @@ const slot = (variants: DeckSlot['variants'], chosen?: string): DeckSlot => ({
   slot_id: 'headline',
   variants,
   chosen,
+  fact_ids: [],
 })
 
 const facts = new Map<string, Fact>(

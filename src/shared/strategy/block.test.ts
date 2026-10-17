@@ -60,6 +60,8 @@ const page = (...sections: Section[]): StrategyPage => ({
   sections,
   policy: undefined,
   operator: undefined,
+  structuredData: [],
+  facts: [],
 })
 
 describe('strategy/block', () => {

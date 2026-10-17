@@ -3,6 +3,7 @@ import files from 'virtual:strategy/tag'
 import DocumentLayout from '@/app/layouts/document.astro'
 import { type Post, postCard } from '@/entities/post'
 import type { Locale } from '@/shared/i18n'
+import { collectionPage } from '@/shared/seo'
 import { templateOf } from '@/shared/strategy'
 import { ArticleCards, articleCards } from '@/widgets/article-cards'
 import { breadcrumbs } from '@/widgets/breadcrumbs'
@@ -26,6 +27,7 @@ const model = await tagPageModel(locale, tag)
   noindex={model.noindex}
   translations={model.translations}
   meta={{ title: model.title, description: model.description }}
+  jsonLd={[collectionPage({ locale, path: model.path, name: model.title })]}
   crumbs={breadcrumbs.props(page, 'breadcrumbs', { current: model.current })}
 >
   <HeroText

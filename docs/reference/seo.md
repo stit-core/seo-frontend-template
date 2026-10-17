@@ -15,9 +15,9 @@ JavaScript не нужен, а разметка одинакова для чел
 
 | что | где живёт |
 |---|---|
-| `<head>` из пропсов страницы: title-шаблон, description, self-canonical, OG, `twitter:card`, RSS autodiscovery | `app/layouts/document.astro` + `shared/seo/seo-head.astro` |
+| `<head>` из пропсов страницы: мета copy deck как есть (title с брендом, description, тексты превью ссылки), self-canonical, OG (`og:type` — `article` у записи), `twitter:card`, RSS autodiscovery | `app/layouts/document.astro` + `shared/seo/seo-head.astro` |
 | hreflang только для реальных переводов, взаимно, + `x-default` | `shared/seo/urls.ts` (`alternates`) |
-| JSON-LD в `<head>`: `Organization`/`WebSite`, `LocalBusiness`, `BreadcrumbList`, `BlogPosting`; организация одна — её узлы и ссылки на неё с `@id` `<origin>/#org`; автор записи — `Person` из реестра авторов с видимой подписью — ссылкой `rel="author"` на профиль | `shared/seo/json-ld.ts` + проп `jsonLd` layout'а, `entities/author`, `widgets/article-body` |
+| JSON-LD в `<head>` — типы `seo.structured_data` плана страницы: `Organization` + `WebSite` главной, `AboutPage`, `ContactPage` + `LocalBusiness`, `CollectionPage`, `Article`, `BreadcrumbList`; организация одна — её узлы и ссылки на неё с `@id` `<origin>/#org`, контакты и реквизиты — `machine` фактов страницы по таблице head-kit `fields_from_facts`; автор записи — `Person` из реестра авторов с видимой подписью — ссылкой `rel="author"` на профиль, он же `url` | `shared/seo/json-ld.ts` + проп `jsonLd` layout'а, `entities/author`, `widgets/article-body` |
 | видимые хлебные крошки и `BreadcrumbList` — из одного пропа оболочки: секция крошек плана у страницы шаблона карты с крошками и с глубины 2, ступени — родители по карте | `widgets/breadcrumbs`, проп `crumbs` layout'а, `breadcrumbsOn` (`shared/strategy`) |
 | `robots.txt` и файл ключа IndexNow на runtime origin; фиды `rss.xml` — prerendered | `src/pages/*.ts` + `shared/seo` |
 | IndexNow после выката: поисковикам уходят только адреса, которые изменил релиз | `pnpm indexnow` (`scripts/indexnow.mjs`), шаг `/release` |
@@ -55,9 +55,10 @@ hreflang, `og:image`, JSON-LD, крошки, `h1`, размеры и LCP кар�
    та же страница списка или тега на другой локали); версия одна ⇒ ни одной `<link hreflang>`.
 6. **`og:image`** — превью ссылки 1200×630 JPEG или PNG до 300 КБ: кадр обложки записи или дефолт
    сайта; URL абсолютный, файл в сборке.
-7. **JSON-LD** — только про видимое и только из белого списка типов; `FAQPage`, `HowTo`,
-   `SearchAction` не генерируются. Организацию страница заново не описывает: фабрики
-   `shared/seo` ссылаются на неё по `@id`.
+7. **JSON-LD** — только про видимое и ровно типы `seo.structured_data` плана (фабрики `shared/seo`, тип
+   без фабрики — фабрика вместе со страницей); `FAQPage`, `HowTo`, `SearchAction` не генерируются.
+   Организацию страница описывает фактами, которые называет (`fact:` плана, `fact_ids` copy deck), и
+   ссылается на неё по `@id`.
 8. **Крошки** — по карте: у страницы шаблона с `breadcrumbs: true` и только с глубины 2; один проп
    оболочки `crumbs` — и видимые крошки, и `BreadcrumbList`.
 9. **Карта сайта** — её пишет сборка по страницам `dist/client`: индексируемая страница в
@@ -97,7 +98,7 @@ hreflang, `og:image`, JSON-LD, крошки, `h1`, размеры и LCP кар�
 
 | уровень | что ловит |
 |---|---|
-| unit `shared/seo/*.test.ts` | `absoluteUrl`, `alternates`, `buildRobotsTxt` (строка `Clean-param` — в проде, не в staging) и матрица доступа «политика ИИ-ботов × бот реестра» по RFC 9309, `buildSitemap` и генератор карты по страницам каталога, `buildFeed`, фабрики JSON-LD (их выход проходит Zod-схему) |
+| unit `shared/seo/*.test.ts` | `absoluteUrl`, `alternates`, `buildRobotsTxt` (строка `Clean-param` — в проде, не в staging) и матрица доступа «политика ИИ-ботов × бот реестра» по RFC 9309, `buildSitemap` и генератор карты по страницам каталога, `buildFeed`, фабрики JSON-LD (полный объект и схема своего типа из `shared/lib/testing`; свойства организации — таблица head-kit копии каталога) |
 | Container API | `seo-head.astro`, `json-ld.astro` — разметка `<head>`; `widgets/breadcrumbs` — разметка и axe |
 | `pnpm seo:check` (в `pnpm check`) | каждая страница `dist/client`, и страница ошибки `500.html`: один `<title>` и `<h1>`, description, self-canonical, `lang`, OG с существующей картинкой, сниппет уникальный, в бюджетах и не общий, первая иконка — PNG от 48 px с файлом того же размера, полные пары hreflang на своём origin, разметка = видимое (скрытый текст не в счёт), организация одна (`@id`, имя), автор-человек подписан на странице, блок JSON-LD читается при любых атрибутах тега, микроданных нет; `noindex` в любой форме, чужие ресурсы и типы JSON-LD — по списку `scripts/lib/site-policy.mjs`, исполняемый код (и обработчики `on*=`) — острова реестра `ISLANDS` на своих страницах и в бюджете, data:-адресов нет; порог индексации тегов — в обе стороны; картинки и ролики с размерами, над h1 — с приоритетом (у петли — preload постера), шрифты — Fonts API по списку; страница у каждой опубликованной записи и маршрута `src/pages`, черновиков нет, hreflang только у сверенных пар; карта сайта — ровно индексируемые страницы сборки, `lastmod` — дата записи из frontmatter; рантайм образа (`dist/server`, `docker/*.mjs`) импортирует ровно `dependencies`; серверный бандл — без конвейера картинок (`sharp`) |
 | `pnpm check:gate` | сам `seo:check`, `check:links` и `check:content` на негативных мини-проектах `.gate-fixtures/{seo,links,content}` — ровно ожидаемые нарушения; `pnpm indexnow` на локальной заглушке — ровно изменённые адреса и ни одного запроса без подтверждённого ключа |

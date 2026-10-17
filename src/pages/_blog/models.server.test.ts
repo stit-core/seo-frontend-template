@@ -2,7 +2,7 @@ import type * as AuthorSlice from '@/entities/author'
 import { getPost, listPosts, type Post, paginate } from '@/entities/post'
 import { type Locale, t } from '@/shared/i18n'
 import { testLocale } from '@/shared/lib/testing'
-import { blogPosting } from '@/shared/seo'
+import { article } from '@/shared/seo'
 import { articleImagesOf, ogImageOf } from './images'
 import { blogListPageModel, postPageModel, tagPageModel } from './models'
 
@@ -49,7 +49,7 @@ const post = async (locale: Locale, slug: string): Promise<Post> => {
 }
 
 describe('страница записи', () => {
-  it('перевод: ссылка на slug перевода; слоты записи — её поля; BlogPosting без правки и обложки', async () => {
+  it('перевод: ссылка на slug перевода; слоты записи — её поля; Article без правки и обложки', async () => {
     const para = await post(RU, 'para')
     const model = await postPageModel(para)
     expect(model.translations).toEqual({ ru: '/blog/para', en: '/en/blog/pair' })
@@ -68,13 +68,18 @@ describe('страница записи', () => {
     })
     expect(model.tags).toEqual([{ label: '#seo', href: '/blog/tag/seo' }])
     expect(model.jsonLd).toEqual([
-      blogPosting({
+      article({
         locale: RU,
         path: '/blog/para',
         title: 'Запись с переводом',
         description: 'Анонс записи ru/para.',
         published: new Date('2026-03-01'),
-        author: { id: 'anna-smirnova', name: 'Анна Смирнова', jobTitle: 'редактор блога' },
+        author: {
+          id: 'anna-smirnova',
+          name: 'Анна Смирнова',
+          jobTitle: 'редактор блога',
+          profile: '/avtory/anna-smirnova',
+        },
       }),
     ])
 
@@ -97,7 +102,7 @@ describe('страница записи', () => {
     const plain = await postPageModel(await post(RU, 'zametka-1'))
     expect(plain.record.author).toBeUndefined()
     expect(plain.jsonLd[0]).toEqual(
-      blogPosting({
+      article({
         locale: RU,
         path: '/blog/zametka-1',
         title: 'Заметка 1',
@@ -126,14 +131,14 @@ describe('страница записи', () => {
       modified: new Date('2026-02-10'),
     })
     expect(model.jsonLd[0]).toEqual(
-      blogPosting({
+      article({
         locale: RU,
         path: '/blog/odna',
         title: 'Запись без перевода',
         description: 'Анонс записи ru/odna.',
         published: new Date('2026-02-01'),
         updated: new Date('2026-02-10'),
-        author: { id: 'petr-ivanov', name: 'Пётр Иванов' },
+        author: { id: 'petr-ivanov', name: 'Пётр Иванов', profile: 'https://petr-ivanov.example' },
       }),
     )
   })
@@ -149,14 +154,19 @@ describe('страница записи', () => {
     expect(model.record).toMatchObject({ cover, alt: 'Обложка записи' })
     const frames = (await articleImagesOf(cover)).map(({ path }) => path)
     expect(model.jsonLd[0]).toEqual(
-      blogPosting({
+      article({
         locale: RU,
         path: '/blog/para',
         title: 'Запись с переводом',
         description: 'Анонс записи ru/para.',
         published: new Date('2026-03-01'),
         imagePaths: frames,
-        author: { id: 'anna-smirnova', name: 'Анна Смирнова', jobTitle: 'редактор блога' },
+        author: {
+          id: 'anna-smirnova',
+          name: 'Анна Смирнова',
+          jobTitle: 'редактор блога',
+          profile: '/avtory/anna-smirnova',
+        },
       }),
     )
   })

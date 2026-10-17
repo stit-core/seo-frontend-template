@@ -2,7 +2,7 @@ import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import type { AstroComponentFactory } from 'astro/runtime/server/index.js'
 import type * as AuthorSlice from '@/entities/author'
 import { DEFAULT_LOCALE, type Locale, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
-import { parseHtml, sectionFaults } from '@/shared/lib/testing'
+import { JsonLdSchema, parseHtml, sectionFaults } from '@/shared/lib/testing'
 import {
   type Action,
   breadcrumbsOn,
@@ -94,20 +94,15 @@ function versionsOf(pages: Built[]): Record<string, string | undefined> {
 }
 
 describe('индексируемые страницы', () => {
-  it.each<[string, { default: AstroComponentFactory }, string, (path: string) => string[]]>([
-    [
-      '/[...locale]',
-      Home,
-      'home',
-      (path) => (path === '/' ? ['Organization', 'WebSite'] : ['Organization']),
-    ],
-    ['/[...locale]/about', About, 'about', () => ['LocalBusiness']],
-    ['/[...locale]/contacts', Contacts, 'contacts', () => []],
-    ['/[...locale]/legal/privacy', Privacy, 'privacy', () => []],
-    ['/[...locale]/blog', Blog, 'blog', () => []],
+  it.each<[string, { default: AstroComponentFactory }, string]>([
+    ['/[...locale]', Home, 'home'],
+    ['/[...locale]/about', About, 'about'],
+    ['/[...locale]/contacts', Contacts, 'contacts'],
+    ['/[...locale]/legal/privacy', Privacy, 'privacy'],
+    ['/[...locale]/blog', Blog, 'blog'],
   ])(
-    '%s: локали — её строка карты; на каждой — её язык, self-canonical, hreflang версий, JSON-LD, один h1, страница из секций, крошки по карте',
-    async (route, module, id, jsonLd) => {
+    '%s: локали — её строка карты; на каждой — её язык, self-canonical, hreflang версий, один h1, страница из секций, крошки по карте',
+    async (route, module, id) => {
       const pages = await built(route, module)
       expect(pages.length, route).toBeGreaterThan(0)
       expect(
@@ -120,7 +115,6 @@ describe('индексируемые страницы', () => {
         expect(head.canonical, path).toBe(`${ORIGIN}${path}`)
         expect(head.robots, path).toBeUndefined()
         expect(head.hreflang, path).toEqual(versionsOf(pages))
-        expect(head.jsonLd, path).toEqual(jsonLd(path))
         expect(head.h1, path).toBe(1)
         expect(head.outsideSections, path).toEqual([])
         // Крошки — у шаблона карты с крошками и с глубины 2; страницы первого уровня — без них.
@@ -204,10 +198,11 @@ const planPages = snapshot().plans.flatMap(({ page: { id } }) =>
   pageLocales(id).map((locale) => [id, locale] as const),
 )
 
-// Страница — секции своего плана: план — источник порядка и полноты, композиция страницы их только ставит.
+// Страница — секции своего плана: план — источник порядка и полноты, композиция страницы их только ставит. Так же
+// разметка: типы JSON-LD — `seo.structured_data` плана по порядку, каждый узел — в форме своего типа.
 describe('страница из блоков: план страницы', () => {
   it.each(planPages)(
-    '%s (%s): секции = план — дети <main> — секции плана по порядку (каркас ставит оболочка); слот — на странице: каждая секция целиком',
+    '%s (%s): секции = план — дети <main> — секции плана по порядку (каркас ставит оболочка); слот — на странице: каждая секция целиком; типы JSON-LD = план',
     async (id, locale) => {
       const project = snapshot()
       const url = project.map?.pages.find((page) => page.id === id)?.url ?? ''
@@ -223,8 +218,10 @@ describe('страница из блоков: план страницы', () => 
       expect(pages.length, `${id} (${locale})`).toBeGreaterThan(0)
       const faults: string[] = []
       for (const { path, props } of pages) {
-        const { html } = await render(module.default, path, props)
+        const { html, blocks: nodes, jsonLd } = await render(module.default, path, props)
         const page = strategyPage(id, locale)
+        expect(jsonLd, path).toEqual(page.structuredData)
+        for (const node of nodes) expect(JsonLdSchema.parse(node), path).toEqual(node)
         const main = parseHtml(html).querySelector('main')
         const shown = [...(main?.children ?? [])].map((child) =>
           child.getAttribute('aria-labelledby'),

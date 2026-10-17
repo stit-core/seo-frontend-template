@@ -128,14 +128,17 @@ export function contentSecurityPolicy() {
 // его форматов нет) от 8×8 и советует крупнее 48×48: первая иконка страницы — не мельче этого.
 export const ICON_MIN_SIDE = 48
 
-// Типы JSON-LD, которые печатает сайт; остальные — ошибка. FAQPage, HowTo и SearchAction не
-// размечаются вовсе (rich results сняты) — ни типом блока, ни вложенно.
+// Типы JSON-LD, которые печатает сайт, — типы планов его страниц (`seo.structured_data`); остальные — ошибка. FAQPage,
+// HowTo и SearchAction не размечаются вовсе (rich results сняты) — ни типом блока, ни вложенно.
 export const JSON_LD_TYPES = [
   'Organization',
   'WebSite',
   'LocalBusiness',
+  'AboutPage',
+  'ContactPage',
+  'CollectionPage',
   'BreadcrumbList',
-  'BlogPosting',
+  'Article',
 ]
 export const JSON_LD_FORBIDDEN = ['FAQPage', 'HowTo', 'SearchAction']
 
