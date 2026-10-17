@@ -1,0 +1,6 @@
+page:
+  id: o-partnere
+  page_type: about-page
+  seo:
+    structured_data: [AboutPage]
+sections: []

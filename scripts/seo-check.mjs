@@ -19,11 +19,11 @@
 //   (headline = h1, даты = <time>, image — кадры 16:9, 4:3 и 1:1 мастера og:image, mainEntityOfPage =
 //   canonical, крошки = BreadcrumbList, имена и контакты организации — на странице; видимое — без
 //   поддеревьев под hidden и aria-hidden); организация одна — один @id у её узлов и ссылок на неё,
-//   узел с этим @id — только типов ORG_TYPES, одно имя на всю сборку, издатель сайта и записи — она, чужая
-//   организация (место работы автора, партнёр) — не её узел; автор-человек — со своим @id, подписан на
-//   странице, подпись — его Person, имя у него на локали одно, а @id у человека — один; даты страницы
-//   — только у записи коллекции и по её источнику; микроданных (itemscope, itemprop) нет — сущности
-//   размечает только JSON-LD;
+//   узел с этим @id — только типов ORG_TYPES, одно имя на всю сборку, издатель сайта и записи — она;
+//   свою узнаёт роль узла, чужая — только в ролях человека (worksFor, memberOf); автор-человек — со
+//   своим @id, подписан на странице, подпись — его Person, имя у него на локали одно, а @id у
+//   человека — один; даты страницы — только у записи коллекции и по её источнику; микроданных
+//   (itemscope, itemprop) нет — сущности размечает только JSON-LD;
 // - тело: ни плейсхолдера origin, ни HTML-комментариев; у картинок размеры, картинка над h1 (LCP) —
 //   не lazy и с fetchpriority; фолбэк <picture> — не PNG-производная мастера; источник <source media>
 //   другой пропорции — со своими размерами, и он достижим; ролик — с постером, по кнопке — preload none или metadata, с автозапуском —
@@ -592,16 +592,21 @@ const bylinesOf = (body) =>
     },
   )
 
+// Роли, в которых организация бывает чужой, — роли человека: место работы и членство (партнёр).
+const FOREIGN_ORG_ROLES = ['worksFor', 'memberOf']
+
 function checkEntities(where, blocks, page) {
   const persons = []
-  const visit = (node, label, block) => {
+  // Роль узла — свойство, под которым он стоит; у блока роли нет.
+  const visit = (node, label, role) => {
     if (Array.isArray(node)) {
-      for (const item of node) visit(item, label, false)
+      for (const item of node) visit(item, label, role)
     } else if (node !== null && typeof node === 'object') {
       if (ORG_TYPES.includes(node['@type'])) {
-        // Узел организации сайта — блок типа организации, узел с @id на своём origin или с именем сайта. Чужая
-        // организация (место работы автора, партнёр) — не узел сайта: правила организации её не судят.
-        if (block || ownId(node['@id']) || node.name === siteName) {
+        // Свою организацию узнаёт роль узла: блок и любая роль вне FOREIGN_ORG_ROLES (издатель, about, provider,
+        // автор-организация) — организация сайта при любых имени и @id. В роли человека она своя, когда несёт @id своего
+        // origin или имя сайта; чужую правила организации не судят.
+        if (!FOREIGN_ORG_ROLES.includes(role) || ownId(node['@id']) || node.name === siteName) {
           if (node['@id'] !== ORG_ID) {
             fail(
               where,
@@ -621,12 +626,12 @@ function checkEntities(where, blocks, page) {
         checkPerson(where, label, node, page)
         persons.push(node)
       }
-      for (const [key, value] of Object.entries(node)) visit(value, `${label}.${key}`, false)
+      for (const [key, value] of Object.entries(node)) visit(value, `${label}.${key}`, key)
     }
   }
   for (const data of blocks) {
     const type = data['@type']
-    visit(data, type, true)
+    visit(data, type, undefined)
     if (type === 'WebSite' && data['@id'] !== WEBSITE_ID) {
       fail(where, `WebSite: @id ${data['@id'] ?? 'нет'}, а не ${WEBSITE_ID}`)
     }

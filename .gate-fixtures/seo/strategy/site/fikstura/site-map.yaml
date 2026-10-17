@@ -9,6 +9,7 @@ pages:
   - {id: home, url: /, parent: null}
   - {id: author, url: /author, parent: home}
   - {id: o-nas, url: /o-nas, parent: home}
+  - {id: o-partnere, url: /o-partnere, parent: home}
   - {id: organizaciya, url: /organizaciya, parent: home}
   - {id: podpis, url: /podpis, parent: home}
   - {id: tipografika, url: /tipografika, parent: home}
