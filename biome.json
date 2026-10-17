@@ -20,8 +20,7 @@
       "!**/coverage",
       "!**/node_modules",
       "!**/.vitest",
-      "!**/.gate-fixtures",
-      "!**/docs/research"
+      "!**/.gate-fixtures"
     ]
   },
   "formatter": {

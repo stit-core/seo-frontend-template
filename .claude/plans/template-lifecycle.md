@@ -32,8 +32,7 @@ reference-набор «с блогом или без», лицо шаблона 
 - Жизненный цикл: `/init-service` и `/de-template` — чек-листы (этап A `/de-template`, prune — `references/prune.md`,
   «с блогом / без блога»), `/smartdev` узнаёт свежий форк по имени пакета и демо-фактам, путь потребителя —
   `docs/getting-started.md`; `.template/`, тегов и `/upgrade` нет; стек — формы `docs/stack/_templates/<kind>.md` (12
-  kinds: 10 обязательных, `api` и `analytics` — условные), Gate `/de-template` — grep строки статуса. Лишнее в каждом
-  форке — `docs/research/**` (1057 файлов, 10 МБ).
+  kinds: 10 обязательных, `api` и `analytics` — условные), Gate `/de-template` — grep строки статуса.
 - Образец — `../go-backend-template` (`23f7804`): `.template/{version,paths}`, `scripts/tools/template-update.sh`
   (`--status`, `--remote`, `--annotation`, перенос `TO`, `FROM`, `PATHS`), skill `upgrade`, теги обвязки
   `v1.0.0`…`v1.2.0` с префиксом `template/` (аннотация по разделам — `docs/contributing.md § Версия обвязки`), archtest
@@ -111,17 +110,19 @@ reference-набор «с блогом или без», лицо шаблона 
   (с ним — строка бэклога `gate-ux`), примеры `comments` — Astro; бэкпорт-кандидаты — в Handoff плана
   - Проверка: `git grep -nE 'kin:diff|kin-diff|kinship|SPA_TEMPLATE_PATH|cn\.ts'` вне планов и `docs/research` (его
     удаляет S2) → пусто; `pnpm kin:diff` → скрипта нет; `pnpm check` → зелёный · Закрывает: AC7 · Зависит от: —
-  - Сделано: `docs/reference/kinship.md`, `scripts/kin-diff.mjs`, скрипт `kin:diff`, `shared/lib/cn.ts` с тестом и
-    реэкспортом удалены; строки сняты — `README.md` (команда, дерево `scripts/`, таблица документов), `CLAUDE.md`
-    (команда, карта), `docs/README.md`, `ecosystem.md` («Родство»), `/smartdev` (гейты), `/de-template` (A.10), профиль
-    `/plan`; `invariant.test.ts` — `toThrow`, строка `gate-ux` — без него; примеры `comments` — маршрут Astro и
-    комментарий разметки `.astro`; бэкпорт-кандидаты — Handoff SPA. Проверка: grep — пусто; `pnpm kin:diff` —
-    `Command "kin:diff" not found`; `pnpm check` — зелёный (626 тестов, ветви 99,35 %)
-- [ ] **S2** — `docs/research/**` удалён (R23): архив — история git (тегов, кроме версионных, нет — «Решения»); ссылки —
+  - Сделано: удалены `docs/reference/kinship.md`, `scripts/kin-diff.mjs`, скрипт `kin:diff`, `shared/lib/cn.ts` с тестом
+    и реэкспортом; строки — `README.md`, `CLAUDE.md`, `docs/README.md`, `ecosystem.md`, `/smartdev`, `/de-template`,
+    профиль `/plan`; `invariant.test.ts` — `toThrow`; примеры `comments` — маршрут и разметка Astro. grep — пусто;
+    `pnpm kin:diff` — `Command "kin:diff" not found`; `pnpm check` — зелёный (626 тестов, ветви 99,35 %)
+- [x] **S2** — `docs/research/**` удалён (R23): архив — история git (тегов, кроме версионных, нет — «Решения»); ссылки —
   в `seo-invariants`, `rendering.md`, `biome.json`, `pnpm-workspace.yaml`, `index.css`, `/de-template` — сняты,
   нормативное — в правило или `docs/reference`
   - Проверка: `git grep -n 'docs/research'` вне планов → пусто; `DECISIONS.md` читается из истории (`git show <коммит
     шага>~1:docs/research/ssr/DECISIONS.md`); `pnpm check` → зелёный · Закрывает: AC7 · Зависит от: —
+  - Сделано: `docs/research/**` (1057 файлов) удалён; ссылки сняты — `seo-invariants`, `rendering.md` (цифры — замер
+    spike на Astro 7.3), `biome.json`, причины в комментариях `pnpm-workspace.yaml` и `index.css`, `/de-template` (A.1,
+    A.10). grep — пусто; `DECISIONS.md` читается с родителя коммита шага; `pnpm check` — зелёный (626 тестов, ветви
+    99,35 %)
 
 ### Этап B — версия обвязки и самопроверка
 - [ ] **S3** — Версия обвязки и перенос: `.template/version` (`v1.0.0`) и `.template/paths` (пути шаблона — «Решения»);
@@ -259,6 +260,11 @@ reference-набор «с блогом или без», лицо шаблона 
 - S1: пример `comments` для разметки `.astro` — `{/* … */}` (HTML-комментарий уходит в страницу, его валит
   `seo:check`), примеры кода — маршруты шаблона; строка бэклога `gate-ux` теряет пункт `toThrowError` → `toThrow` —
   замену сделал S1 (единственное место — `invariant.test.ts`).
+- S2: нормативного в архиве, чего нет в правилах и `docs/reference`, сайт не держит: канон SEO (`02-seo-canon.md` § 3.2)
+  писан под TanStack Start и в части строк расходится с кодом, строки edge — зона хаба, нормативная часть SEO — само
+  правило `seo-invariants`. Строку `packages: [.]` шаг не трогает (граница `CLAUDE.md`), меняется причина: вложенный
+  `package.json` фикстуры `.gate-fixtures/seo` — не проект pnpm (на pnpm 10.34.6 проект один и без списка —
+  `M/p9a/s2-pnpm-workspace-probe.txt`).
 
 - Решения дирижёра по черновику: объём сверх строки программы (HAR-03/04/05/07, канон guard и `/plan`) принят —
   другой фазы у них нет; AC5 программы проверяется эмуляцией «Use this template», формулировку AC5 («в worktree»)
@@ -279,12 +285,12 @@ reference-набор «с блогом или без», лицо шаблона 
   сервисов проекта — зона хаба.
 
 ## Где мы сейчас
-S1 сделан: kinship удалён (документ, скрипт, `cn.ts`, строки прозы), освобождённые файлы корзины — по месту. План сверен
-с кодом `d12b37a` по этапам A–C (лицо шаблона — «Контекст»; `entities/company` и `{{OPERATOR_*}}` сняты P5,
-демо-реквизиты — факты `example: true`), теги — по решению владельца (`vX.Y.Z`, в форке — `refs/template/*`; архив
-`docs/research` — история git). Этапы A–C идут треком параллельно P5: ветка `p9-lifecycle` от `d12b37a`, worktree
-`M/wt-p9`, вливание в `main` — дирижёром. Этапы D–F (S7–S13) сверяются с кодом после P8: раскладка `strategy/` и лока,
-имена загрузчика, модуля коллекций и скриптов (`check:strategy`, `--final`), что уже держат тесты загрузчика (страница ↔
-единица карты), правки P8 в скиллах входа и `/smartdev`, ручной prune и лицо форка пилота (P8 S13, `M/p8e/`);
-расхождения — правкой шагов и «Решений» коммитом `meta(plan)`. Дальше — S2 (`docs/research/**` удалён), затем валидатор
-этапа A; материалы — `M/p9a/` (`notes.md` — точка продолжения).
+Этап A сделан: S1 — kinship удалён (документ, скрипт, `cn.ts`, строки прозы), освобождённые файлы корзины — по месту;
+S2 — `docs/research/**` удалён, ссылки сняты, архив — история git. План сверен с кодом `d12b37a` по этапам A–C (лицо
+шаблона — «Контекст»; `entities/company` и `{{OPERATOR_*}}` сняты P5, демо-реквизиты — факты `example: true`), теги —
+по решению владельца (`vX.Y.Z`, в форке — `refs/template/*`). Этапы A–C идут треком параллельно P5: ветка
+`p9-lifecycle` от `d12b37a`, worktree `M/wt-p9`, вливание в `main` — дирижёром. Этапы D–F (S7–S13) сверяются с кодом
+после P8: раскладка `strategy/` и лока, имена загрузчика, модуля коллекций и скриптов (`check:strategy`, `--final`), что
+уже держат тесты загрузчика (страница ↔ единица карты), правки P8 в скиллах входа и `/smartdev`, ручной prune и лицо
+форка пилота (P8 S13, `M/p8e/`); расхождения — правкой шагов и «Решений» коммитом `meta(plan)`. Дальше — валидатор
+этапа A, затем этап B (S3, S4); материалы — `M/p9a/` (`notes.md` — точка продолжения).

@@ -1,9 +1,0 @@
-
- RUN  v5.0.1 /tmp/claude-1000/-home-mm-git-stit-core-spa-frontend-template/898f0441-ccd2-421a-a06f-c178f88e788a/scratchpad/tooling-lab/vitest-lab
-
-
- Test Files  2 passed (2)
-      Tests  2 passed (2)
-   Start at  22:30:54
-   Duration  810ms (transform 42%, import 26%, environment 24%, tests 7%, worker 1%)
-

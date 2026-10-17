@@ -1,9 +1,0 @@
-node_modules
-build
-.svelte-kit
-.measure
-coverage
-test-results
-playwright-report
-.git
-*.log

@@ -74,7 +74,7 @@ FSD-карту поверхности из соседнего `<org>/strategy`
 
 ```bash
 NEW_NAME=<scope из service.md>
-git grep -lF '@stit/ssr-frontend-template' -- ':!.claude' ':!docs/research' \
+git grep -lF '@stit/ssr-frontend-template' -- ':!.claude' \
   | xargs sed -i "s|@stit/ssr-frontend-template|$NEW_NAME|g"
 ```
 
@@ -178,10 +178,6 @@ strategy — `site_validate.py`, `copydeck.py check`): число и дата т
   флоу и контракты (strategy, infra, registry, handoff), «этот шаблон» переписать на «этот
   сайт»; убрать раздел «Шаблон vs проект». Имена шаблонов в карте соседей остаются: это
   происхождение форков
-- `docs/research/**` — удалить: исследование, из которого вырос шаблон, не часть проекта;
-  вместе с ним — ссылки на него в `.claude/rules/seo-invariants.md`,
-  `docs/reference/rendering.md`, `biome.json` (исключение каталога) и
-  `src/app/styles/index.css` (комментарий к `source()`)
 - `.claude/skills/{init-service,de-template}` — удалить: одноразовые скиллы онбординга
   отработали, а их триггеры («свежий форк») на развёрнутом проекте только мешают.
   Остальные (`smartdev`, `plan`, `stack-deep-dive`, `scaffold`, `content`, `seo-audit`,

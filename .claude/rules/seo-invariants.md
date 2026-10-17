@@ -9,8 +9,7 @@ paths: ["src/shared/seo/**", "src/shared/config/site.ts", "src/app/layouts/**", 
 props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `jsonLd` и `BreadcrumbList` из пропа
 `crumbs`). Абсолютные URL —
 только через `absoluteUrl()` (`shared/seo`): runtime `SITE_URL` на on-demand, плейсхолдер
-сборки на prerender (штампует entrypoint). Канон целиком — `docs/research/ssr/02-seo-canon.md`
-§3.2; здесь — то, что держат код и гейты.
+сборки на prerender (штампует entrypoint).
 
 ## Страница (`<head>`)
 
