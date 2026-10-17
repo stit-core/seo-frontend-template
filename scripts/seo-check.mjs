@@ -254,10 +254,10 @@ const sameText = (text, source) =>
 // Сниппет выдачи: title — мета copy deck как есть, бренд в нём пишет strategy («Контакты Бренда — Москва», «Блог —
 // Бренд»). Длина — у заголовка целиком: его режет строка выдачи; «общий» и «меньше трёх слов» — о словах самой
 // страницы, без имени сайта и разделителя рядом с ним.
-function checkSnippet(where, title, description, siteName) {
-  const core = siteName
+function checkSnippet(where, title, description, ogSiteName) {
+  const core = ogSiteName
     ? title
-        .split(siteName)
+        .split(ogSiteName)
         .join(' ')
         .replace(/^[\s|:—–-]+|[\s|:—–-]+$/g, '')
     : title
@@ -1118,9 +1118,9 @@ for (const file of walk(client)) {
     const ogUrl = og('og:url')
     if (!ogUrl) fail(where, 'og:url пуст')
     else if (ogUrl !== canonical) fail(where, 'og:url не равен canonical')
-    const siteName = og('og:site_name')
-    if (!siteName) fail(where, 'og:site_name пуст')
-    if (title) checkSnippet(where, title, description, siteName)
+    const ogSiteName = og('og:site_name')
+    if (!ogSiteName) fail(where, 'og:site_name пуст')
+    if (title) checkSnippet(where, title, description, ogSiteName)
     const ogLocale = og('og:locale')
     if (ogLocale !== undefined && ogLocale !== localeInfo(locale).og) {
       fail(where, `og:locale «${ogLocale}» не соответствует локали ${locale}`)

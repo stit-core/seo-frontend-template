@@ -47,8 +47,9 @@ status: draft
 Печатается только в `<head>` и только про видимое. Организация одна: её узлы и ссылки на неё
 (издатель сайта и списков, `about` страниц, автор и издатель записи) несут `@id` `<origin>/#org`,
 имя — бренд (`SITE_NAME`), юрлицо — `legalName`; контакты и реквизиты — `machine` фактов, которые
-называет страница, по таблице head-kit `fields_from_facts`. `FAQPage`, `HowTo`, `SearchAction` не генерируются — `seo:check` валит
-сборку; `<meta name="keywords">` — никогда.
+называет страница, по таблице head-kit `fields_from_facts`. `FAQPage`, `HowTo`, `SearchAction` не генерируются:
+верхним типом блока их валит `seo:check` (типы — ровно план, а ни у одного типа страницы head-kit их нет),
+вложенными в узел — строгие схемы теста фабрик и страниц (`JsonLdSchema`); `<meta name="keywords">` — никогда.
 
 ## Локали и hreflang
 
