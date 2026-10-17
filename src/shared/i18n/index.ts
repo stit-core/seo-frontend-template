@@ -12,3 +12,4 @@ export {
   routeOf,
   SUPPORTED_LOCALES,
 } from './locale'
+export { BUTTON_TYPES, TEXT_ATTRIBUTES } from './text-attributes'

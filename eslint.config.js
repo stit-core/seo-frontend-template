@@ -5,6 +5,7 @@ import astro from 'eslint-plugin-astro'
 import boundaries from 'eslint-plugin-boundaries'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
+import { BUTTON_TYPES, TEXT_ATTRIBUTES } from './src/shared/i18n/text-attributes.ts'
 
 const EXT = ['.ts', '.tsx', '.mts', '.cts', '.js', '.mjs', '.astro']
 // Код слайсов любого расширения: frontmatter .astro, модули, клиентские <script> (виртуальные
@@ -235,55 +236,42 @@ const rawMedia = [
 ]
 // Текст страницы — данные: страница и блок печатают пропсы (copy deck по ключу page/section/slot, факты), подписи
 // интерфейса — строки словаря t(). Литерал с буквами в разметке — узел текста, строка выражения (и ветки && и
-// тернарника), литерал атрибута или пропа, set:text и set:html — мимо данных; числа и знаки без букв законны. Это ранний
-// сигнал: формы выражений (константа frontmatter, склейка, вызов) держит тест страниц «текст страницы — данные».
+// тернарника), литерал текстового атрибута или пропа компонента, set:text и set:html — мимо данных; числа и знаки без
+// букв законны. Это ранний сигнал: формы выражений (константа frontmatter, склейка, вызов) держит тест страниц «текст
+// страницы — данные».
 const LETTER = String.raw`/\p{L}/u`
 const CONTENT = ':matches(JSXElement, JSXFragment) > JSXExpressionContainer'
 const BRANCH = `${CONTENT} > :matches(LogicalExpression, ConditionalExpression)`
-// Атрибуты и пропсы без текста — по коду страниц, блоков и их фикстур: класс, id и ссылки на id, адрес, тип, имя,
-// роль, язык и дата, вид и раскладка примитива, загрузка картинки, состояние ARIA, геометрия и анимация SVG. Литерал с
-// буквами в любом другом атрибуте или пропе компонента — текст (подпись, альтернатива, подсказка, проп блока).
+// У HTML-элемента (тег строчными) текст несут только текстовые атрибуты — TEXT_ATTRIBUTES, общий список с тестом
+// страниц, и value кнопки-поля; прочие атрибуты — разметка. Проп компонента — текст по умолчанию (подпись, проп блока),
+// кроме NOT_TEXT — пропсов без текста у компонентов кода: класс и id, вид и раскладка примитива, адрес ссылки и
+// обработчика формы, тип OG, загрузка картинки — и slot Astro (место в слоте родителя).
+const HTML = "JSXOpeningElement[name.type='JSXIdentifier'][name.name=/^[a-z]/]"
 const NOT_TEXT = [
   'class',
   'id',
-  'for',
-  'href',
-  'src',
-  'action',
-  'method',
-  'rel',
-  'hreflang',
-  'lang',
-  'type',
-  'name',
-  'role',
-  'datetime',
-  'style',
-  'labelledby',
   'kind',
-  'variant',
   'tone',
   'rhythm',
   'width',
+  'labelledby',
+  'href',
+  'action',
   'ogType',
   'loading',
   'decoding',
   'fetchpriority',
   'fallbackFormat',
-  'aria-current',
-  'aria-hidden',
-  'aria-labelledby',
-  'aria-describedby',
-  'shape',
-  'd',
-  'fill',
-  'stroke',
-  'stop-color',
-  'attributeName',
-  'dur',
-  'repeatCount',
+  'slot',
 ]
-const ATTRIBUTE = `:matches(JSXAttribute[name.type='JSXIdentifier'][name.name!=/^(?:${NOT_TEXT.join('|')})$/], JSXAttribute[name.namespace.name='set'])`
+const literalIn = (attribute) =>
+  [
+    `${attribute} > Literal[value=${LETTER}]`,
+    `${attribute} > JSXExpressionContainer > Literal[value=${LETTER}]`,
+    `${attribute} > JSXExpressionContainer > TemplateLiteral > TemplateElement[value.raw=${LETTER}]`,
+  ].join(', ')
+const TEXT_ATTRIBUTE = `:matches(${HTML} > JSXAttribute[name.name=/^(?:${TEXT_ATTRIBUTES.join('|')})$/i], ${HTML}[name.name=/^input$/i]:has(> JSXAttribute[name.name=/^type$/i][value.value=/^(?:${BUTTON_TYPES.join('|')})$/i]) > JSXAttribute[name.name=/^value$/i], JSXAttribute[name.namespace.name='set'])`
+const PROP = `JSXOpeningElement:not(${HTML}) > JSXAttribute[name.type='JSXIdentifier'][name.name!=/^(?:${NOT_TEXT.join('|')})$/]`
 const markupText = [
   {
     selector: [
@@ -297,13 +285,14 @@ const markupText = [
       'Текст: литерал в разметке страницы и блока — текст секции из copy deck (план strategy, ключ page/section/slot) или подпись интерфейса t()',
   },
   {
-    selector: [
-      `${ATTRIBUTE} > Literal[value=${LETTER}]`,
-      `${ATTRIBUTE} > JSXExpressionContainer > Literal[value=${LETTER}]`,
-      `${ATTRIBUTE} > JSXExpressionContainer > TemplateLiteral > TemplateElement[value.raw=${LETTER}]`,
-    ].join(', '),
+    selector: literalIn(TEXT_ATTRIBUTE),
     message:
-      'Текст: литерал в атрибуте, пропе компонента или set:text, set:html (подпись, alt, title, проп блока) — текст секции из copy deck или подпись интерфейса t(); атрибут без текста — строка NOT_TEXT eslint.config.js',
+      'Текст: литерал в текстовом атрибуте HTML (TEXT_ATTRIBUTES из shared/i18n: alt, title, label, placeholder, aria-label…; value кнопки-поля) или set:text, set:html — текст секции из copy deck или подпись интерфейса t()',
+  },
+  {
+    selector: literalIn(PROP),
+    message:
+      'Текст: литерал в пропе компонента (подпись, проп блока) — текст секции из copy deck или подпись интерфейса t(); проп без текста — строка NOT_TEXT eslint.config.js',
   },
 ]
 // Канон разметки .astro (rules shared-ui, render-safety).

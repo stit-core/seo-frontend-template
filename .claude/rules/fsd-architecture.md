@@ -113,7 +113,7 @@ Frontmatter `.astro` и модули `.ts` исполняются на серв�
 |---|---|
 | документ-шелл, middleware (лог, адреса `redirects.yaml`, 410), токены ДС и слой сопоставления | `app/layouts/document.astro`, `app/middleware`, `app/styles/{tokens,index}.css` |
 | runtime-конфиг, идентичность сайта (`SITE_NAME`, `sameAs`, `OG_DEFAULT_IMAGE`), политика ИИ-ботов, реестр островов `ISLANDS` | `shared/config` |
-| дескриптор локалей (код, Intl, OG, самоназвание; первая — дефолтная) и правила адреса по нему, словари каркаса с подстановками `{имя}` (склейку строки словаря шаблонной строкой и `+` валит ESLint), даты | `shared/i18n` |
+| дескриптор локалей (код, Intl, OG, самоназвание; первая — дефолтная) и правила адреса по нему, словари каркаса с подстановками `{имя}` (склейку строки словаря шаблонной строкой и `+` валит ESLint), даты, атрибуты HTML с текстом для человека (`TEXT_ATTRIBUTES`: их судят lint разметки и тест «текст страницы — данные») | `shared/i18n` |
 | SEO: `absoluteUrl`/hreflang, `SeoHead`, фабрики JSON-LD + `JsonLdScript`, генераторы robots/sitemap/rss, реестр ботов `crawlers.yaml` | `shared/seo` |
 | тест-хелперы | `shared/lib/testing` |
 | канон пути и таблица адресов (данные → правила, ответ на адрес запроса) | `shared/redirects` |

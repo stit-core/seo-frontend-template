@@ -1,6 +1,14 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { SITE_NAME } from '@/shared/config'
-import { DICTS, formatDate, type Locale, localeInfo, SUPPORTED_LOCALES } from '@/shared/i18n'
+import {
+  BUTTON_TYPES,
+  DICTS,
+  formatDate,
+  type Locale,
+  localeInfo,
+  SUPPORTED_LOCALES,
+  TEXT_ATTRIBUTES,
+} from '@/shared/i18n'
 import { parseHtml } from '@/shared/lib/testing'
 import { pageLocales, snapshot, strategyPage } from '@/shared/strategy'
 import { AUTHORS, POSTS } from './fixtures'
@@ -17,18 +25,6 @@ const INLINE = new Set(
     ' ',
   ),
 )
-// Текст в атрибуте — тоже текст страницы: подпись лендмарка, альтернатива картинке, подсказка, подпись кнопки.
-const TEXT_ATTRIBUTES = [
-  'alt',
-  'title',
-  'label',
-  'placeholder',
-  'aria-label',
-  'aria-description',
-  'aria-roledescription',
-  'aria-placeholder',
-  'aria-valuetext',
-]
 
 // Участки текста `<body>`: текст блочного элемента вместе со строчными детьми и текстовые атрибуты — каждый своим
 // участком. Скрытое (`hidden`, `aria-hidden`, `sr-only`) — тоже текст страницы: его читают поиск и чтец экрана.
@@ -50,7 +46,7 @@ function runsOf(root: Element): string[] {
       if (['SCRIPT', 'STYLE', 'TEMPLATE'].includes(element.tagName)) continue
       const button =
         element.tagName === 'INPUT' &&
-        /^(?:submit|reset|button)$/i.test(element.getAttribute('type') ?? '')
+        BUTTON_TYPES.includes((element.getAttribute('type') ?? '').toLowerCase())
       for (const name of button ? [...TEXT_ATTRIBUTES, 'value'] : TEXT_ATTRIBUTES) {
         const value = element.getAttribute(name)
         if (value !== null && LETTER.test(value)) runs.push(normalize(value))

@@ -1,8 +1,10 @@
 ---
 // Нарушения: текст страницы литералом в разметке — узел текста, строка и шаблонная строка выражения, строка и шаблонная
-// строка условия и тернарника, подписи aria-label, alt и title литералом и шаблонной строкой, проп компонента литералом,
-// строкой и шаблонной строкой выражения, set:text и set:html литералом. Законно: текст пропом и выражением, числа и знаки
-// без букв, класс, id и адрес литералом, вид примитива пропом литералом.
+// строка условия и тернарника; каждый текстовый атрибут HTML (TEXT_ATTRIBUTES и value кнопки-поля каждого типа)
+// литералом, title — и шаблонной строкой; проп компонента литералом, строкой и шаблонной строкой выражения (и name),
+// set:text и set:html литералом. Законно: текст пропом и выражением, числа и знаки без букв, атрибуты HTML без текста
+// (класс, id, адрес, состояние ARIA, ссылка наружу, preload в head, data-*, value поля и опции), вид примитива пропом
+// литералом.
 import { Promo } from '@/widgets/promo'
 
 const { label, title, wide } = Astro.props as { label: string; title: string; wide: boolean }
@@ -17,11 +19,29 @@ const { label, title, wide } = Astro.props as { label: string; title: string; wi
   <p>{wide ? 'Да' : label}</p>
   <map name="karta"><area alt="Карта" href="/" shape="default" /></map>
   <p title={`Подпись ${title}`}>{label}</p>
-  <p class="text-body" id="lead">{title} — 404 · 2026</p>
+  <p class="text-body" id="lead" aria-description="Описание литералом">{title} — 404 · 2026</p>
   <a class="touch-target" href="/o-nas" aria-label={label}>{title}</a>
+  <form method="post" action="/api/contact">
+    <input name="name" autocomplete="name" placeholder="Ваше имя" />
+    <input type="hidden" name="locale" value="ru" />
+    <select name="topic"><option label="Цена" value="price" /></select>
+    <input type="submit" value="Отправить" />
+    <input type="reset" value="Сбросить" />
+    <input type="button" value="Кнопка поля" />
+  </form>
+  <table><tr><th abbr="Цена">{label}</th></tr></table>
+  <a href="/prais.pdf" download="Прайс-лист.pdf">{label}</a>
+  <iframe title={label} srcdoc="<p>Документ</p>"></iframe>
+  <input type="range" name="score" min="0" max="10" value="5" aria-valuetext="Пять из десяти" />
+  <textarea name="note" aria-placeholder="Поиск" aria-roledescription="поле поиска" aria-braillelabel="пск" aria-brailleroledescription="пп"></textarea>
+  <button type="button" aria-expanded="false" aria-controls="lead" data-state="closed">{label}</button>
+  <a href="https://example.com/" target="_blank" rel="noopener noreferrer" hreflang="en" lang="en">{label}</a>
+  <link slot="head" rel="preload" as="image" media="(max-width: 40rem)" crossorigin="anonymous" href="/x.avif" />
+  <meta slot="head" charset="utf-8" />
   <Promo label="Подробнее" />
   <Promo label={'Проп выражением'} />
   <Promo label={`Проп шаблоном ${title}`} />
+  <Promo label={label} name="Автор" />
   <Promo label={label} kind="primary" class="mt-md" />
   <p set:text="Текст set:text" />
   <Fragment set:html="<b>Разметка set:html</b>" />
