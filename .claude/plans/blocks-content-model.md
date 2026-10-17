@@ -67,7 +67,10 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
     B-12f, B-12c, B-13, B-13h, B-13r, B-14, B-14r (`s5-run`), переносы на блог — CON-04b (`lint`), B-12r, B-13l, B-14l,
     B-15b — и формы текста мимо copy deck — VL-P, VL-T, VL-S (`lint` и `test`), VL-C, VP-2 (`test`) (`s7-run`) — red. На
     коде N10 `4dae96d` (`M/p5c-n10/`) CON-04, CON-04p, CON-04b, VL-P, VL-T, VL-S, VL-C, VP-2 — red теми же слоями; V10a′
-    — red `seo:check`, V11′ — red `test` и слой `seo`: их атрибуты без текста (`slot`, `charset`) `lint` не краснит
+    — red `seo:check`, V11′ — red `test` и слой `seo`: их атрибуты без текста (`slot`, `charset`) `lint` не краснит.
+    Проза (S10): rules `fsd-architecture`, `shared-ui`, `content-invariants` (данные `strategy/`), `architecture.md`,
+    README, `/scaffold page` и `CLAUDE.md` описывают страницу из блоков своего плана и данных `strategy/`, литерал
+    текста — `lint` и тест; `COPY`, `site-header`, `pageTitle` и `/now` вне планов не названы (`grep`)
 - [ ] **AC2** — Данные — форма strategy без диалекта: `strategy/` в раскладке снимка — проект шаблона (бриф, карта,
   планы, copy deck по локалям, факты) и копии каталогов базы; валидаторы strategy по проекту — без `error`; страница
   фикстуры базы `package-landing` собирается блоками шаблона без правки кода; правленая копия каталога краснит гейт.
@@ -81,7 +84,9 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
     `not-found`, `legal-text`, `article-cards`, `article-body`, `related-links`), тест «блок ↔ каталог ↔ планы» видит
     каждый: widget — у секции плана снимка, варианты и слоты — каталога, обязательные элементы приняты; `/scaffold
     block`; правила «widget при ≥ 2 страницах» нет. Мутации на итоговом коде `368e51a`: B-08, B-09g — red `test`, B-09,
-    B-09m — red `typecheck` и слой `test` (`s3-run`), блок «на будущее» S7-RW — red `test` (`s7-run`)
+    B-09m — red `typecheck` и слой `test` (`s3-run`), блок «на будущее» S7-RW — red `test` (`s7-run`). Проза (S10):
+    `/scaffold block` — контракт `defineBlock`, тест контракта и тест блока, как в коде; «≥ 2 страниц» вне планов нет
+    (`grep`)
 - [x] **AC4** — Каркас — данные: шапка и подвал — блоки `header`, `footer` по плану страницы (`site-nav` и
   `landing-minimal`, `site` и `minimal`), пункты, подписи и реквизиты — план, copy deck и факты; крошки — с глубины 2
   по карте одним массивом для видимых и `BreadcrumbList`; 404 — пути к хабам из плана. Проверка: тесты блоков и страниц;
@@ -98,7 +103,8 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
     версии — на локалях и карте теста; сценарии § 6 правкой данных и текстов по локалям — одна локаль: `pnpm check` и
     `accept:image` зелёные, hreflang и переключателя нет; три: `pnpm check` зелёный, тройки hreflang у главной и «О
     компании», пары у прочих, переключатель — каждый перевод (`M/p5a/s2b-*`); E4, B-05, B-06 — red `test`, V14b′ —
-    red `test` и `seo:check`
+    red `test` и `seo:check`. Проза (S10): `CLAUDE.md` и README — локали 1…N одним дескриптором, страница — один файл
+    маршрута на все локали (`architecture.md`), rule `tests-pipeline` § Локали — как сценарии § 6 S9
 - [x] **AC6** — Head — copy deck и `head-kit`: `<title>`, description и OG — мета copy deck как есть; JSON-LD — ровно
   типы плана в границах `head-kit` (`ContactPage` + `LocalBusiness`, `AboutPage`, `CollectionPage`, `Article`) по графу
   `@id`, свойства организации — `machine` фактов; `seo:check` держит «типы = план», «мета = copy deck», «подпись ⇒
@@ -328,12 +334,32 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
     КБ), `pnpm test:e2e` — 194 passed, 1 skipped
 
 ### Этап E — проза и приёмка
-- [ ] **S10** — Правда прозы: rules `fsd-architecture`, `content-invariants`, `seo-invariants`, `shared-ui`,
+- [x] **S10** — Правда прозы: rules `fsd-architecture`, `content-invariants`, `seo-invariants`, `shared-ui`,
   `render-safety`, `tests-pipeline`; `docs/reference/{architecture,rendering,seo,infra-handoff}.md`, `README.md`;
   `/scaffold page` (композиция по плану, данные в `strategy/`, рецепт страницы автора) и `block`, строка «кадры
   страницы» в post-flight; строки `CLAUDE.md` — тем же коммитом
   - Проверка: `grep` по `src`, `.claude`, `docs/reference` — нет `COPY`, `site-header`, `pageTitle`, «≥ 2 страниц»,
     `/now` — только в рецепте; `pnpm check` → зелёный · Закрывает: AC1, AC3, AC5 · Зависит от: S9
+  - Сделано: проза сверена с кодом S1–S9 (`M/p5e/`): идентификаторы в бэктиках rules, `docs/reference`, README,
+    `/scaffold` и `CLAUDE.md` — по коду (вне кода — только внешние имена и ссылки на документы), утверждения — чтением
+    страниц, блоков, оболочки, `shared/strategy`, `shared/seo`, `seo-check.mjs`, политики сборки, `eslint.config.js`,
+    конфига и тестов. `CLAUDE.md`: шапка — страница из блоков плана и данных `strategy/`, локали 1…N, мета copy deck и
+    типы JSON-LD плана; `seo:check` — мета и OG = copy deck, типы JSON-LD = план в границах head-kit, подпись ⇒
+    `Person`, один `@id` у человека, даты — только у записи, данные strategy в серверном бандле — своих on-demand
+    страниц (строка «типы JSON-LD — по списку политики» снята); карта — блок и чтение `strategy/`, строка данных
+    страниц, страница из блоков, SEO по плану; инварианты — тексты страниц — данные `strategy/`, литерал — `lint` и
+    тест, страница — блоки своего плана. Rules: `content-invariants` — раздел «Данные страниц» и путь `strategy/**`;
+    `shared-ui` — `display` у первого экрана `hero-text`, путь `src/pages/**/*.astro`; `seo-invariants` (описание) и
+    `tests-pipeline` (§ Gate) — `seo:check` по плану; `fsd-architecture` — `SITE_SAME_AS`, словари подписей
+    интерфейса; `render-safety` — правда без правок. Docs: `architecture.md` — страница из блоков плана, `shared/strategy`
+    в слое, маршрут на все локали; `seo.md` — описания сайта нет, мета — copy deck; `rendering.md`, `infra-handoff.md` —
+    правда без правок. README — стек, «Контент» (страница из блоков и данных), `seo:check`. `/scaffold page` — рецепт
+    `ProfilePage` (`references/templates.md`), post-flight `page` и `block` — кадры страницы; `/scaffold block` — контракт
+    `defineBlock` и тест контракта — правда. `grep` по `src`, `.claude`, `docs/reference`, `CLAUDE.md`, README:
+    `COPY`, `site-header`, `pageTitle`, «≥ 2 страниц», `JSON_LD_TYPES`, `JSON_LD_FORBIDDEN`, `/now` — только в планах
+    (`M/p5e/grep.txt`); рецепт живой страницы `rendering.md` адреса не называет. Дефекты кода — «Решения» (S10).
+    `pnpm check` — зелёный (632 теста, покрытие 100 / 99,37 / 100 / 100, бандл 888,28 КБ), `check:gate` — те же числа,
+    что у S9 (eslint 113, steiger 4, biome 1, seo 222, links 13, content 51, plans 3, indexnow 35): фикстуры не тронуты
 - [ ] **S11** — Приёмка отдельным агентом: набор мутаций и сценарии на итоговом коде, 45 мутаций эталона, валидаторы и
   ворота strategy с планом шаблона, `pnpm check` в свежем worktree, `pnpm test:e2e`, `accept:image`; план закрыт
   - Проверка: 38 / 38 и 45 / 45; сценарии § 6 — ожидаемый итог; `pnpm check` → зелёный
@@ -536,7 +562,8 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
 - Скелет `/scaffold page` — по канону кода, без `COPY` и литералов текста (N3 валидатора этапа C): данные —
   строка карты, план и copy deck в `strategy/` по образцу «О компании», разметка — модуль `virtual:strategy/<id>`
   (`pageOf(files, locale)`), блоки секций плана, `chrome={page}`, `pageVersions(page.id)`; страница на запрос — тот же
-  скелет с `localeOf`, `private, no-store` и `noindex`. Рецепт страницы автора (`ProfilePage`) и кадры — S10.
+  скелет с `localeOf`, `private, no-store` и `noindex`. Рецепт страницы автора — `references/templates.md § page —
+  страница автора`, кадры страницы — post-flight `page` и `block` (S10).
 - Переносы эталона: шаг сдвинул якоря MUT-01, 03, 21, 22, 23 (кроме плановых MUT-02, MUT-45) — перенесены здесь же с той
   же семантикой (`M/p5a/mutations.py`); S7 и S8 получают их перенесёнными.
 - Страница читает свои план и copy deck модулем по id — `virtual:strategy/<page-id>` (плагин `yaml-modules`: файлы
@@ -816,6 +843,22 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
   `machine` — текст страницы. Держит это сосед: `claims_check.py lint-facts` — warning COPY-F-MACHINE «контакт без
   machine» с готовым значением у факта вида `company` (разбор формулировки — его работа), ворота strategy в `/release`
   (P8).
+- Правила по путям (S10): данные `strategy/` держит rule `content-invariants` — раздел «Данные страниц» и путь
+  `strategy/**` (форма снимка, тексты по ключу, факты, валидаторы соседа): правка файла снимка иначе не грузила ни одного
+  правила; rule `shared-ui` грузится и на разметку страниц (`src/pages/**/*.astro`): страница из блоков и «текст — данные»
+  — его канон. Норма слота постоянной ширины (`densities`) и `alt=""` декоративной миниатюры в `shared-ui` остаются:
+  это канон картинки, а не утверждение о блоке шаблона.
+- Рецепт `ProfilePage` (S10, `/scaffold page`): план называет `ProfilePage`, `Person` — его `mainEntity` (отдельным
+  блоком не печатается: «типы = план» считает блоки), фабрика — в `json-ld.ts` рядом с `article` на том же `person()`:
+  у подписи записи и страницы автора один `@id`, имя, роль и профиль — это и держит `seo:check`.
+- Дефекты кода, найденные S10 (шаг кода не меняет; правит следующий шаг, который трогает файл): комментарий оболочки
+  `src/app/layouts/document.astro` (острова: «предпочтения с кнопкой темы — на всём сайте, без неё — на страницах с
+  переключателем движения») расходится с реестром `shared/config/islands.ts` — остров на каждой странице при кнопке
+  темы или переключателе движения; комментарий `src/shared/ui/heading/heading.astro` («`display` — заголовок главной») —
+  `hero-text` ставит `display` на первый экран каждой страницы с ним (главная, «О компании», контакты, блог, тег).
+- Вне объёма S10 (вход strategy — P8, R01): `docs/README.md § Внешние артефакты` и `docs/getting-started.md` называют
+  входом FSD-карту strategy, о снимке `strategy/` не говорят; ссылки rules и `rendering.md` на `docs/research/**` — трек
+  P9 (R23).
 
 ## Открытые вопросы
 —
@@ -845,8 +888,13 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
 страницы, NAP `LocalBusiness` — отказ с ключом. S9 сделан (`8fc87a6`, `e917926`, `6ef3c5f`, `47ad694`, `4cb2747`) —
 `seo:check` по плану: снимок strategy модулем правил, типы JSON-LD = план в границах head-kit (списки политики сняты),
 мета и OG = copy deck (OG главной вернулись), подпись ⇒ `Person`, один человек — один `@id`, чужая организация — не узел
-сайта, даты — только у записи коллекции (`pageDateOf` — генератор и проверка); AC6 подтверждён. Дальше — независимая
-валидация этапа D (S8 + S9), затем S10 (правда прозы; строки `CLAUDE.md` о `seo:check` и инвариантах — типы JSON-LD
-судит план, а не список политики сборки). Материалы S9 — `M/p5d-s9/` (`notes.md`, наборы и сценарии `sets/`, драйвер
-`mut.py`), S8 — `M/p5d/`, N10 — `M/p5c-n10/`, фикса этапа C — `M/p5c-fix/`, S7 — `M/p5c-s7/`, S6 — `M/p5c/`, этапов A и
-B — `M/p5a/`, `M/p5b-blocks/`.
+сайта, даты — только у записи коллекции (`pageDateOf` — генератор и проверка); AC6 подтверждён; идёт независимая
+валидация этапа D на `6e7dbdf` (её фиксы ложатся после S10). Этап E: S10 сделан (`06630ec` и коммит скиллов,
+`CLAUDE.md` и плана) — проза — правда о коде S1–S9: rules, `docs/reference`, README, `/scaffold` (рецепт `ProfilePage`,
+кадры страницы в post-flight) и `CLAUDE.md` (шапка, `seo:check` по плану, карта, инварианты: тексты страниц — данные
+`strategy/`, литерал — `lint` и тест); правда прозы — в «Подтверждено» AC1, AC3, AC5; дефекты кода (два комментария) — в
+«Решениях». Дальше — после PASS этапа D: S11, приёмка отдельным агентом (набор мутаций и сценарии на итоговом коде, 45
+мутаций эталона, валидаторы и ворота strategy, `pnpm check` в свежем worktree, `test:e2e`, `accept:image`), затем план
+закрыт. Материалы S10 — `M/p5e/` (`notes.md`, `grep.txt`, сверка идентификаторов `ticks-*.txt`), S9 — `M/p5d-s9/`
+(`notes.md`, наборы и сценарии `sets/`, драйвер `mut.py`), S8 — `M/p5d/`, N10 — `M/p5c-n10/`, фикса этапа C —
+`M/p5c-fix/`, S7 — `M/p5c-s7/`, S6 — `M/p5c/`, этапов A и B — `M/p5a/`, `M/p5b-blocks/`.

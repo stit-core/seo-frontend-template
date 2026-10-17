@@ -92,6 +92,31 @@ import * as NamePage from '../[...locale]/<path>.astro'
 Адреса, языки и hreflang тест берёт из getStaticPaths маршрута: страница на одном языке — без hreflang.
 Типы JSON-LD — `seo.structured_data` плана: их на каждой странице снимка сверяет тест сам.
 
+## page — страница автора (`ProfilePage`)
+
+Страница одного человека — тип `specialist-page` head-kit (автор записей, член команды). Реестр авторов шаблона
+пуст: автор — реальный человек с разрешением, и страница приходит вместе с ним.
+
+- Реестр `src/entities/author/model/authors.ts`: имя и роль по локалям, `profile` — корневой путь страницы автора.
+  На него ведёт подпись записи (`rel="author"`), он же `url` его `Person`.
+- Данные — как у page: шаблон карты с `page_type: specialist-page` и страница на нём (`url`, `parent`), план
+  (`page.page_type: specialist-page`) и copy deck. Людей несколько — шаблон коллекции (`instances: collection`, адрес
+  с `{slug}`, план `page.template: true`): разметка читает его `templateOf`, пути — по реестру авторов.
+  `seo.structured_data` — `ProfilePage` (его `mainEntity` — `Person`) и `BreadcrumbList` у страницы с крошками по
+  карте: head-kit пускает у этого типа `ProfilePage`, `Person` и `BreadcrumbList`.
+- Фабрика — в `shared/seo/json-ld.ts` рядом с `article` и строкой public API `shared/seo`: узел `Person` — тот же, что у
+  подписи записи (`person()`: `@id` `<origin>/#author-<id>`, имя и роль на языке страницы, `url` — профиль).
+
+  ```ts
+  export const profilePage = (input: WebPageInput & { author: PersonInput }) =>
+    ({ ...webPage('ProfilePage', input), mainEntity: person(input.author) }) as const
+  ```
+
+- Имя и роль на странице — тексты её copy deck, те же строки, что в реестре. `seo:check` держит: имя и роль `Person`
+  видны на странице, подпись записи — `Person` с этим профилем, у человека (имя на языке, профиль) — один `@id`.
+- Тест — фабрика полным объектом и схемой: `ProfilePage` — строка союза `JsonLdSchema`
+  (`src/shared/lib/testing/json-ld.ts`, `mainEntity` — его `Person`); страница — строкой `pages.astro.test.ts`.
+
 ---
 
 ## collection — `model/schema.ts`

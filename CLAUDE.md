@@ -2,10 +2,12 @@
 
 Шаблон индексируемого сайта: **static-first, SSR по необходимости**. Astro 7.3 +
 `@astrojs/node` (`output: 'static'`, `standalone`) / TypeScript 6 (`astro/tsconfigs/strictest`)
-/ Tailwind v4 на собственном токен-слое / контент — Markdown в git внутри слайса сущности
-(Content Layer `glob`, Zod 4-схема) / i18n `ru` + `en` / SEO-слой `shared/seo` (canonical,
-hreflang, OG, JSON-LD; `robots.txt` on-demand на runtime origin, `sitemap.xml` и `rss.xml` — файлы
-сборки) /
+/ Tailwind v4 на собственном токен-слое / страница — блоки каталога strategy (`widgets/<block-id>`)
+в порядке секций её плана, тексты и мета — copy deck по ключу `page/section/slot`, контакты и
+реквизиты — факты: данные `strategy/` в форме снимка strategy / записи — Markdown в git внутри слайса
+сущности (Content Layer `glob`, Zod 4-схема) / локали 1…N одним дескриптором (у шаблона `ru` + `en`)
+/ SEO-слой `shared/seo` (мета copy deck, canonical, hreflang, OG, JSON-LD — типы плана; `robots.txt`
+on-demand на runtime origin, `sitemap.xml` и `rss.xml` — файлы сборки) /
 форма обратной связи без JS (PRG, антиспам-лестница, один канал доставки) / острова — предпочтения
 (тема и движение) и счётчик при заданном `METRIKA_ID` / картинки — `astro:assets` мастерам контента,
 готовые файлы ДС и ролик-петля — `shared/ui/media` / шрифты ДС — Fonts API по списку файлов / FSD под линтером
@@ -81,7 +83,7 @@ origin штампуется при старте.
 | `pnpm check:gate` | негативные фикстуры `.gate-fixtures/` обязаны валить ESLint/Steiger/Biome и свои скрипты гейта (`seo:check`, `check:links`, `check:content`, `plan:check`) — ровно нарушениями из `expected.json`, скрипт релиза `indexnow` — ровно его исходами на локальной заглушке; guard-хук — отказ каждому обходу из `guard.json` |
 | `pnpm check:content` | контент-гейт до build: схема каждого `.md`, даты не из будущего, тело (без скрытой разметки), переводы, ссылки, `content/redirects.yaml`, строка карты `rendering.md` у каждого on-demand маршрута |
 | `pnpm check:links` | после build: все внутренние `href`/`src` в `dist/client` (и абсолютные URL своего сайта) существуют и ведут на каноническую форму адреса; ссылки без схемы на другой хост (`//contacts`) нет |
-| `pnpm seo:check` | после build: у каждой страницы `dist/client` title/description (уникальные, в бюджетах, не общие), self-canonical, `lang`, один h1, OG с превью ссылки 1200×630, первая иконка — PNG от 48 px, hreflang у каждой пары переводов, JSON-LD = видимое, организация одна (`@id`, имя), карта сайта = индексируемые страницы сборки; `noindex`, чужие ресурсы и типы JSON-LD — только по списку `scripts/lib/site-policy.mjs`, острова — по реестру `src/shared/config/islands.ts`: на своих страницах и в бюджете (brotli); картинки и ролики — с размерами, над h1 — с приоритетом (у петли — preload постера), шрифты — Fonts API по списку; теги индексируются от порога записей; рантайм образа (`dist/server`, `docker/*.mjs`) импортирует ровно `dependencies`; серверный бандл — без конвейера картинок (`sharp`) |
+| `pnpm seo:check` | после build: у каждой страницы `dist/client` мета — copy deck её плана (у записи — frontmatter), тексты превью ссылки — copy deck или заголовок и описание; title/description уникальные, в бюджетах, не общие; self-canonical, `lang`, один h1, OG с превью ссылки 1200×630, первая иконка — PNG от 48 px, hreflang у каждой пары переводов; типы JSON-LD — ровно план страницы (снимок `strategy/`), план — в границах head-kit её типа; JSON-LD = видимое, организация одна (`@id`, имя), подпись автора ⇒ его `Person`, у человека один `@id`, даты — только у записи коллекции; карта сайта = индексируемые страницы сборки; `noindex` и чужие ресурсы — только по списку `scripts/lib/site-policy.mjs`, острова — по реестру `src/shared/config/islands.ts`: на своих страницах и в бюджете (brotli); картинки и ролики — с размерами, над h1 — с приоритетом (у петли — preload постера), шрифты — Fonts API по списку; теги индексируются от порога записей; рантайм образа (`dist/server`, `docker/*.mjs`) импортирует ровно `dependencies`; серверный бандл — без конвейера картинок (`sharp`) и с данными strategy только своих on-demand страниц |
 | `pnpm size` | бюджеты `.size-limit.cjs` в brotli: CSS сборки, HTML самой тяжёлой страницы и шрифты ДС (строка — с первым файлом); серверный бандл — без сжатия |
 | `pnpm kin:diff` | advisory-сверка с `../spa-frontend-template` (вне gate) |
 | `pnpm ttfb <origin> <path…>` | TTFB запущенного сервера: медиана/p90 20 запросов (`scripts/ttfb.mjs`) |
@@ -98,15 +100,16 @@ origin штампуется при старте.
 
 | Тема | Где |
 |---|---|
-| FSD под Astro: слои, навязанные entry, public API, server-only | rule `fsd-architecture` + `docs/reference/architecture.md` |
+| FSD под Astro: слои, навязанные entry, блок каталога `widgets/<block-id>` и его контракт `defineBlock`, чтение `strategy/` (`shared/strategy`), public API, server-only | rule `fsd-architecture` + `docs/reference/architecture.md` |
+| Данные страниц `strategy/`: снимок в форме strategy (бриф, карта, планы, copy deck, факты, копии каталогов базы), тексты по ключу `page/section/slot`, факты с `machine`, валидаторы соседа | rule `content-invariants` + скилл `/scaffold` (`page`, `block`) |
 | Контент: frontmatter и бюджеты, даты не из будущего, один h1, тело без скрытой разметки, черновики, переводы, `redirects.yaml`, контент-гейты | rule `content-invariants` |
 | env, `SITE_URL`, плейсхолдер и штамповка, что из env попадает в HTML | rule `env-local` |
 | Режимы рендера, карта маршрутов, кеш-заголовки, канон `astro.config.ts`, рецепт D | `docs/reference/rendering.md` + rule `render-safety` |
 | Тесты: два проекта Vitest, Container API, axe, Playwright, покрытие и пороги | rule `tests-pipeline` |
-| UI на токенах: облик — роли и проза ДС (и для плагина `frontend-design`), страница из секций, шрифты ДС (Fonts API по списку), остров предпочтений (тема и движение), картинки, ролики и LCP, scoped-CSS, 0 JS | rule `shared-ui` |
+| UI на токенах: облик — роли и проза ДС (и для плагина `frontend-design`), страница из блоков и секций, весь текст страницы — данные (литерал — `lint` и тест), шрифты ДС (Fonts API по списку), остров предпочтений (тема и движение), картинки, ролики и LCP, scoped-CSS, 0 JS | rule `shared-ui` |
 | Форма без JS: PRG, антиспам-лестница, согласие на ПДн, доставка | rule `forms-antispam` |
 | Deployment: образ, entrypoint, `server.mjs`, env-контракт | `docs/reference/deployment.md` |
-| SEO: head через `DocumentLayout`, hreflang, OG, JSON-LD, `robots.txt`/`sitemap.xml`/фиды/ключ IndexNow, staging в три контура, гейты `seo:check` и HTTP-набор | rule `seo-invariants` + `docs/reference/seo.md` |
+| SEO: head через `DocumentLayout` (мета — copy deck), hreflang, OG, JSON-LD — типы плана в границах head-kit, `robots.txt`/`sitemap.xml`/фиды/ключ IndexNow, staging в три контура, гейты `seo:check` и HTTP-набор | rule `seo-invariants` + `docs/reference/seo.md` |
 | GEO (видимость в ИИ-ответах): политика ИИ-ботов из реестра базы, ботам тот же ответ, одна организация и авторы, текст записи без скрытой разметки, проба `geo:probe` | rules `seo-invariants`, `content-invariants` + скиллы `/content`, `/seo-audit` |
 | Наблюдаемость: JSON-лог, `X-Request-Id`, `/healthz`, Sentry по DSN | `docs/reference/observability.md` |
 | Платформа проекта: 12 kinds, порядок волн, гейт `stable` | `docs/stack/README.md` |
@@ -132,12 +135,17 @@ origin штампуется при старте.
 - 0 JS по умолчанию: исполняемый код страницы — только острова реестра `ISLANDS`
   (`src/shared/config/islands.ts`). Строка острова — основание (момент спецификации движения или
   плана страницы), страницы и бюджет в brotli; в реестре — предпочтения посетителя (тема и
-  движение, инлайн-`<script>` в `<head>`) и счётчик при заданном `METRIKA_ID`. Служебные `noindex`,
-  чужие ресурсы и типы JSON-LD — по спискам политики сборки `scripts/lib/site-policy.mjs`; она же
-  строит CSP каждой страницы (инлайн-остров — по хешу тела)
-- Контент — Markdown в `src/entities/<name>/content/<locale>/`; `draft: true` виден только в
+  движение, инлайн-`<script>` в `<head>`) и счётчик при заданном `METRIKA_ID`. Служебные `noindex`
+  и чужие ресурсы — по спискам политики сборки `scripts/lib/site-policy.mjs`; она же строит CSP
+  каждой страницы (инлайн-остров — по хешу тела)
+- Тексты страниц — данные `strategy/` в форме strategy: секции — план страницы, тексты и мета — copy
+  deck по ключу `page/section/slot`, контакты и реквизиты — факты; нет секции, слота, текста или факта —
+  красная сборка, литерал текста в разметке страниц и блоков — красные `lint` и тест «текст страницы —
+  данные». Записи — Markdown в `src/entities/<name>/content/<locale>/`; `draft: true` виден только в
   `astro dev`
-- Каждая страница — через `DocumentLayout`; абсолютные URL — только `absoluteUrl()` из `shared/seo`
+- Каждая страница — через `DocumentLayout`: мета — copy deck как есть (у записи — frontmatter), типы
+  JSON-LD — ровно её план в границах head-kit, секции — блоки плана по порядку (`widgets/<block-id>` на
+  контракте `defineBlock`); абсолютные URL — только `absoluteUrl()` из `shared/seo`
 - Форма — без JS: PRG, антиспам-лестница, тело заявки не логируется
 - Лог — один `log()` из `shared/observability`, без PII
 - UI — `.astro` на токен-слое `src/app/styles/index.css`; вендорные UI-киты не подключаются

@@ -85,6 +85,9 @@ src/pages/[...locale]/<path>.astro            маршрут — один фай
 - разметка — `jsonLd` фабриками `shared/seo` ровно типов `seo.structured_data` плана по порядку;
   тип без фабрики (`Service`, `ProfilePage`) — фабрика приходит со страницей, её тест — полный
   объект и схема типа (`JsonLdSchema`, `shared/lib/testing`)
+- страница автора (тип `specialist-page`) — рецепт `ProfilePage` (`references/templates.md`): приходит с первым
+  автором реестра `entities/author` (реестр шаблона пуст), `profile` автора — её адрес, а `mainEntity` — тот же
+  `Person`, что у подписи записи: один `@id`, имя, роль и профиль
 
 Не нужно: править e2e — цели HTTP- и браузерного наборов (`e2e/site.ts`) выводятся из
 `dist/client`, `src/pages` и контента, и новая страница попадает в них сама.
@@ -260,7 +263,10 @@ pnpm steiger          # структура: public API, сегменты, име
 pnpm test             # тесты артефакта и пороги покрытия
 ```
 
-Для `collection` дополнительно `pnpm check:content`; перед claim «готово» — `pnpm check`.
+Для `collection` дополнительно `pnpm check:content`; для `page` и `block` — кадры страницы: `pnpm test:e2e`
+кладёт их в `test-results/frames/<профиль>/<путь>-<тема>.png` (десктоп `browser` и телефон `phone`, каждая тема
+сайта; путь — адрес страницы без первого слеша, остальные слеши — `_`, главная — `home`), и их смотрят глазами:
+раскладку набор судит фактами, а облик — только взгляд. Перед claim «готово» — `pnpm check`.
 
 ## Что НЕ делать
 
