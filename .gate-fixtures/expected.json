@@ -192,6 +192,7 @@
     "dist/client/vtoroe-imya/index.html: Article.author: Person без своего @id на своём origin (нет)",
     "dist/client/vtoroe-imya/index.html: Article.author: Person без своего @id на своём origin (https://example.ru/#author)",
     "dist/client/vtoroe-imya/index.html: подпись «Вера Подписанная» (rel=\"author\" → /avtory/vera) — нет Person с этим именем и профилем в разметке",
+    "dist/client/vtoroe-imya/index.html: подпись «Анна Другая» (rel=\"author\" → /avtory/drugaya) — нет Person с этим именем и профилем в разметке",
     "dist/client/xdefault/index.html: x-default не совпадает ни с одной локальной версией",
     "dist/client/_astro/site.css: @font-face с font-display block: текст невидим, пока грузится шрифт",
     "dist/client/_astro/site.css: @font-face Y: шрифт мимо списка src/app/styles/fonts.ts — его подключает Fonts API по строке списка",
