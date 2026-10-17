@@ -630,8 +630,8 @@ function checkEntities(where, blocks, page) {
         checkPerson(where, label, node, page)
         persons.push(node)
       }
-      // Потомки чужой организации — тоже чужие, своя возвращает своим потомкам суд по роли.
-      const below = org ? foreign : inForeign
+      // Потомки чужой организации — чужие на любой глубине: своей среди них делает только свой @id или имя сайта.
+      const below = inForeign || foreign
       for (const [key, value] of Object.entries(node)) visit(value, `${label}.${key}`, key, below)
     }
   }
