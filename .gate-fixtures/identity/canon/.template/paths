@@ -1,0 +1,10 @@
+# Пути мини-шаблона: их файлы — обвязка, она законно называет шаблон.
+.template
+CLAUDE.md
+package.json
+.claude
+:(exclude).claude/plans
+:(exclude).claude/skills/stack-deep-dive/state
+src/shared
+:(exclude)src/shared/config/site.ts
+docs/stack/README.md

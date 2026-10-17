@@ -1,0 +1,45 @@
+# Факты мини-шаблона: оператор и его контакты — демо (example: true).
+facts_version: 1
+site: site-template
+lang: ru
+facts:
+  - id: company-name
+    kind: company
+    verbatim: [ООО «Пример»]
+    example: true
+  - id: company-email
+    kind: company
+    verbatim: [hello@example.com]
+    machine: {type: email, value: hello@example.com}
+    example: true
+  - id: company-phone
+    kind: company
+    verbatim: [+7 495 000-00-00]
+    machine: {type: telephone, value: '+74950000000'}
+    example: true
+  - id: company-inn
+    kind: company
+    verbatim: [ИНН 7700000000]
+    machine: {type: legal-id, scheme: inn, value: '7700000000'}
+    example: true
+  - id: company-address
+    kind: company
+    verbatim: ['101000, Москва, ул. Примерная, 1']
+    machine: {type: postal-address, country: RU, locality: Москва, street: 'ул. Примерная, 1'}
+    example: true
+  - id: company-hours
+    kind: company
+    verbatim: ['Пн–Пт, 10:00–19:00']
+    machine:
+      type: opening-hours
+      hours:
+        - {days: [mo, tu, we, th, fr], opens: '10:00', closes: '19:00'}
+    example: true
+  - id: log-retention
+    kind: offer-terms
+    verbatim: [30 дней]
+    example: true
+  - id: tech-astro
+    kind: other
+    verbatim: [Astro]
+    machine: {type: url, value: 'https://astro.build'}

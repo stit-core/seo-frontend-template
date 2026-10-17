@@ -1,0 +1,5 @@
+{
+  "name": "@stit/ssr-frontend-template",
+  "private": true,
+  "type": "module"
+}

@@ -1,0 +1,26 @@
+# Факты форка: свой оператор и контакты; срок и часы — как у шаблона, это не лицо.
+facts_version: 1
+site: romashka
+lang: ru
+facts:
+  - id: company-name
+    kind: company
+    verbatim: [ООО «Ромашка»]
+  - id: company-email
+    kind: company
+    verbatim: [hello@romashka.example]
+    machine: {type: email, value: hello@romashka.example}
+  - id: company-phone
+    kind: company
+    verbatim: [+7 812 555-01-01]
+    machine: {type: telephone, value: '+78125550101'}
+  - id: company-hours
+    kind: company
+    verbatim: ['Пн–Пт, 10:00–19:00']
+    machine:
+      type: opening-hours
+      hours:
+        - {days: [mo, tu, we, th, fr], opens: '10:00', closes: '19:00'}
+  - id: log-retention
+    kind: offer-terms
+    verbatim: [30 дней]

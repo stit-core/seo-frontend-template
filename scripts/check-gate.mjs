@@ -6,7 +6,7 @@
 // урезанная секция expected.json — тоже деградация: её ловит точное совпадение. Периметр — так же:
 // guard-хук Claude Code обязан отказать каждому обходу из .gate-fixtures/guard.json и пропустить
 // работу. Скрипт релиза indexnow — сценариями на локальной заглушке, перенос обвязки
-// template:update — сценариями на мини-репо: исходы — те же строки expected.json.
+// template:update и лицо шаблона check:identity — сценариями на мини-репо: исходы — те же строки expected.json.
 import { spawn, spawnSync } from 'node:child_process'
 import {
   cpSync,
@@ -596,6 +596,65 @@ function proseOutcomes() {
 want.prose = expected.prose ?? []
 found.prose = proseOutcomes()
 
+// check:identity — сценариями на мини-репо из слоёв .gate-fixtures/identity: canon/ — шаблон с лицом и свежим
+// .template/face, fork/ поверх — свои файлы форка, traces/ поверх них — след лица каждого вида; правки сценария — до
+// коммита. Канон и форк — по origin, как у check:prose. Исход шага — код выхода и каждая строка вывода.
+function identityOutcomes() {
+  const temp = mkdtempSync(join(tmpdir(), 'gate-identity-'))
+  const lines = []
+  let repos = 0
+  const repo = (origin, layers, edits = {}) => {
+    const dir = join(temp, String(repos++))
+    for (const layer of layers) {
+      cpSync(resolve(fixtures, 'identity', layer), dir, { recursive: true })
+    }
+    for (const [file, content] of Object.entries(edits)) {
+      mkdirSync(dirname(join(dir, file)), { recursive: true })
+      writeFileSync(join(dir, file), content)
+    }
+    gitIn(dir, ['init', '-q', '-b', 'main'])
+    gitIn(dir, ['add', '-A'])
+    gitIn(dir, ['commit', '-q', '-m', 'identity'])
+    gitIn(dir, ['remote', 'add', 'origin', origin])
+    return dir
+  }
+  const check = (step, dir, ...args) => {
+    const result = spawnSync(
+      process.execPath,
+      [resolve(root, 'scripts/check-identity.mjs'), dir, ...args],
+      { env: GIT_ENV, encoding: 'utf8' },
+    )
+    if (result.error) throw result.error
+    lines.push(`${step}: код ${result.status}`)
+    for (const line of `${result.stdout}${result.stderr}`.split('\n')) {
+      if (line.trim() !== '') lines.push(`${step}: ${line.trim()}`)
+    }
+  }
+  const facts = readFileSync(resolve(fixtures, 'identity/canon/strategy/facts.yaml'), 'utf8')
+  // Демо-факт канона сменился: почта оператора.
+  const moved = { 'strategy/facts.yaml': facts.replaceAll('hello@example.com', 'team@example.org') }
+
+  check('канон', repo(CANONICAL_ORIGIN, ['canon']))
+  check(
+    'канон: разворот',
+    repo(CANONICAL_ORIGIN, ['canon'], {
+      ...moved,
+      'package.json': '{ "name": "@acme/site", "private": true, "type": "module" }\n',
+      'docs/stack/service.md':
+        '---\nid: stack.service\nkind: service\nname: service\nstatus: draft\n---\n',
+    }),
+  )
+  check('канон: --write', repo(CANONICAL_ORIGIN, ['canon'], moved), '--write')
+  check('свежий форк', repo(FORK_ORIGIN, ['canon']))
+  check('форк', repo(FORK_ORIGIN, ['canon', 'fork']))
+  check('форк со следами лица', repo(FORK_ORIGIN, ['canon', 'fork', 'traces']))
+  check('форк: --write', repo(FORK_ORIGIN, ['canon', 'fork']), '--write')
+  rmSync(temp, { recursive: true, force: true })
+  return lines
+}
+want.identity = expected.identity ?? []
+found.identity = identityOutcomes()
+
 // Guard-хук: отказ — код 2 (так Claude Code блокирует вызов), пропуск — 0.
 const guard = JSON.parse(readFileSync(resolve(fixtures, 'guard.json'), 'utf8'))
 const guardCode = (command) =>
@@ -625,6 +684,7 @@ for (const section of [
   ...Object.keys(SCRIPTS),
   'plans',
   'prose',
+  'identity',
   'indexnow',
   'template',
 ]) {
@@ -644,7 +704,7 @@ for (const section of [
     if (!wanted.has(key)) lines.push(`  ✗ ${key} — нет в expected.json (×${count})`)
   }
   problems += lines.length
-  const noun = ['indexnow', 'template'].includes(section) ? 'исходов' : 'нарушений'
+  const noun = ['identity', 'indexnow', 'template'].includes(section) ? 'исходов' : 'нарушений'
   console.info(
     lines.length === 0
       ? `✓ ${section}: ${noun} ${want[section].length} — ровно ожидаемые`

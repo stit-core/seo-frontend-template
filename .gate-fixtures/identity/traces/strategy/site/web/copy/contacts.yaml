@@ -1,0 +1,8 @@
+copy_deck:
+  site: romashka
+  product_name: ssr-frontend-template
+  pages:
+    - page_id: contacts
+      meta:
+        title: Контакты студии «Ромашка» в Санкт-Петербурге
+        description: 'ООО «Ромашка»: телефон +7 812 555-01-01, почта hello@romashka.example, Пн–Пт, 10:00–19:00.'

@@ -1,0 +1,4 @@
+- from: /old
+  to: /
+  status: 301
+  note: демо — переезд

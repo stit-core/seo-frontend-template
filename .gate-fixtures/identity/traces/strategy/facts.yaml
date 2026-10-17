@@ -1,0 +1,12 @@
+# Факты форка: почта оператора осталась демо-почтой шаблона.
+facts_version: 1
+site: romashka
+lang: ru
+facts:
+  - id: company-name
+    kind: company
+    verbatim: [ООО «Ромашка»]
+  - id: company-email
+    kind: company
+    verbatim: [hello@example.com]
+    machine: {type: email, value: hello@example.com}

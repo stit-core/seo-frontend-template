@@ -1,0 +1,5 @@
+{
+  "name": "@acme/site",
+  "private": true,
+  "type": "module"
+}

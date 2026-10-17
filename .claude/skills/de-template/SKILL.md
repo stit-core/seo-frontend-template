@@ -29,10 +29,10 @@ FSD-карту поверхности из соседнего `<org>/strategy`
 
 ## Gate (проверить ДО любых правок)
 
-1. **Не канонический шаблон.** `package.json#name` ещё
-   `@stit/ssr-frontend-template` **и** `git remote get-url origin` указывает на
-   `stit-core/ssr-frontend-template` → СТОП: это канонический репо или его копия, спроси
-   юзера явно подтвердить (допустимо только для одноразовой тест-копии).
+1. **Не канонический шаблон.** `pnpm check:identity` называет репо каноном (`origin` —
+   `stit-core/ssr-frontend-template`, правило `scripts/lib/template.mjs`) → СТОП: это канонический
+   репо или его клон без смены `origin`. Разворот на каноне краснит гейт: его `check:identity`
+   держит имя пакета шаблона и пустой `docs/stack/`.
 
 2. **Артефакты stable.** Все обязательные kinds и все заведённые условные:
    ```bash
@@ -98,7 +98,7 @@ git grep -lF '@stit/ssr-frontend-template' -- ':!.claude' \
 | `SITE_VERIFICATION` | токены Search Console и Вебмастера; нет — пустые строки |
 | `AI_BOTS_POLICY` | политика ИИ-ботов из `seo.md § robots-политика`; решения нет — остаётся `allow-all` |
 | `CLEAN_PARAMS` | к меткам кликов рекламы — служебные параметры проекта из `seo.md § robots-политика` (сессия, `ref`); своих нет — список как есть |
-| `OG_DEFAULT_IMAGE` | своя социальная карточка (путь и размеры); её описание — строка `og.alt` словаря `src/shared/i18n/dict.ts` на каждой локали |
+| `OG_DEFAULT_IMAGE` | своя социальная карточка (путь и размеры); её подпись — имя сайта (строка `og.alt` словаря) |
 
 ### A.3 Политика ПДн → copy deck `strategy/site/<surface>/copy/privacy.yaml`
 
@@ -204,10 +204,10 @@ strategy — `site_validate.py`, `copydeck.py check`): число и дата т
 
 ```bash
 grep -n 'example: true' strategy/facts*.yaml && echo "STOP: демо-факты остались"
-grep -rniE 'ssr-frontend-template|@stit/' --include='*.ts' --include='*.astro' --include='*.md' src docs README.md
 pnpm check
 ```
 
-Зелёный `pnpm check`, ни одного демо-факта, а шаблон упоминается только как
-происхождение форка (карта соседей в `docs/reference/ecosystem.md`) →
-сообщи юзеру: онбординг закрыт, дальше `/smartdev` → `/plan` → `/scaffold` → `/content`.
+Зелёный `pnpm check` — его `check:identity` называет каждую строку и файл лица шаблона в файлах
+форка, — ни одного демо-факта, а шаблон упоминается только в путях шаблона (обвязка и карта соседей
+в `docs/reference/ecosystem.md`) → сообщи юзеру: онбординг закрыт, дальше `/smartdev` → `/plan` →
+`/scaffold` → `/content`.

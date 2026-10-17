@@ -88,18 +88,15 @@ src/shared/seo/rss.ts  src/shared/seo/rss.test.ts
 
 ## Демо-значения (любой режим)
 
-Идентичность заменяется на этапе A `/de-template`, но проверить стоит здесь же —
-поиском по репозиторию:
+Идентичность заменяется на этапе A `/de-template`, проверка — здесь же:
 
 ```bash
-grep -rn 'ssr-frontend-template' --include='*.ts' --include='*.astro' --include='*.md' src docs README.md CLAUDE.md
-grep -rn 'example.com\|Пример\|+7 495 000' src/ strategy/
-grep -n 'example: true' strategy/facts*.yaml
+pnpm check:identity                          # строки и файлы лица шаблона в файлах форка — по одной строке
+grep -n 'example: true' strategy/facts*.yaml # демо-факты: реквизиты оператора не настоящие
 ```
 
-Литералы, которые не находит переименование пакета: имя сайта в
-`src/shared/seo/seo-head.astro.test.ts`; тексты и реквизиты reference-страниц — данные `strategy/`
-(copy deck и факты).
+Тексты и реквизиты reference-страниц — данные `strategy/` (copy deck и факты): `check:identity`
+называет в них имя шаблона, проект брифа и реквизиты оператора.
 
 ## После прунинга
 

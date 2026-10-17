@@ -79,7 +79,7 @@ describe('SeoHead', () => {
       'og:title': 'Запись о сниппете — Бренд',
       'og:description': 'Описание записи для сниппета.',
       'og:url': `${ORIGIN}/blog/x`,
-      'og:site_name': 'ssr-frontend-template',
+      'og:site_name': SITE_NAME,
       'og:locale': 'ru_RU',
       'og:image': `${ORIGIN}/og-default.png`,
       'og:image:width': '1200',
