@@ -1,6 +1,6 @@
 copy_deck:
   site: site-template
-  product_name: ssr-frontend-template
+  product_name: Демо-сайт
   pages:
     - page_id: contacts
       meta:

@@ -1,6 +1,6 @@
-// Идентичность сайта мини-шаблона.
-export const SITE_NAME = 'ssr-frontend-template'
+// Идентичность сайта мини-шаблона: бренд и профиль — свои строки лица, не имя шаблона.
+export const SITE_NAME = 'Демо-сайт'
 
 export const SITE_SAME_AS: readonly string[] = [
-  'https://git.stit.tech/stit-core/ssr-frontend-template',
+  'https://t.me/demo_studio',
 ]

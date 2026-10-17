@@ -1,14 +1,18 @@
-# Лицо шаблона — строки и файлы, которых нет в файлах форка (pnpm check:identity). Собирает
-# pnpm check:identity --write на каноне из его данных; руками не правится.
+# Лицо шаблона — строки и файлы, которых нет в файлах форка (pnpm check:identity); файл на пути шаблона — его
+# копия файла лица. Собирает pnpm check:identity --write на каноне из его данных; руками не правится.
 text +7 495 000-00-00
 text +74950000000
 text 7700000000
 text hello@example.com
+text https://t.me/demo_studio
 text site-template
 text ssr-frontend-template
+text Демо-сайт
+text Демо-студия
 text ООО «Пример»
 text ул. Примерная
 file 1509feb8f859298ff29fce1ce00d44c4d2eb491cf2d900c201b5b07c0fa9b186 content/redirects.yaml
 file 70b00cc412e8eefca20ab32f355f8eb1221ea443803b3e88aceaa5d6b2d10a1f public/icon-192.png
 file 556ea5f02c29972da36f3145d4fc44a4a7d8f4fbafd549e11826e1e5ef91ce9a public/manifest.webmanifest
 file 75f5cc0b65b10629cabae7d0b1f8a139d3783538520736d62cb6a5ddbaa6d46b src/entities/post/content/ru/zametka.md
+file 70b00cc412e8eefca20ab32f355f8eb1221ea443803b3e88aceaa5d6b2d10a1f src/shared/lib/testing/icon-192.png

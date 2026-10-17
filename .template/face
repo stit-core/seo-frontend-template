@@ -1,5 +1,5 @@
-# Лицо шаблона — строки и файлы, которых нет в файлах форка (pnpm check:identity). Собирает
-# pnpm check:identity --write на каноне из его данных; руками не правится.
+# Лицо шаблона — строки и файлы, которых нет в файлах форка (pnpm check:identity); файл на пути шаблона — его
+# копия файла лица. Собирает pnpm check:identity --write на каноне из его данных; руками не правится.
 text +7 495 000-00-00
 text +74950000000
 text 1 Primernaya st.
@@ -11,6 +11,7 @@ text site-template
 text ssr-frontend-template
 text ООО «Пример»
 text ул. Примерная
+file 2ce5131e98a22a282c7e25a47df9c8f0ddeac56fcf7c38c79324444988f5bf98 .gate-fixtures/seo/dist/client/icon-192.png
 file 9b3671fd53b837ee41046f7c16ae0f29e876767fff14e7ed8c720f610ccab936 content/redirects.yaml
 file 2fab1c31fd0cb657f393e538750affaae44a716bed1dee2791755ac03119fac3 public/apple-touch-icon.png
 file e7a01d149f09b1e0eaf9b67f54031517eef55fbd4640117ad18d9241095ed584 public/favicon.ico

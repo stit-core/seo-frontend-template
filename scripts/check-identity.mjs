@@ -1,11 +1,11 @@
 // Лицо шаблона (до сборки) — список .template/face: строки (имя шаблона, бренд и профили сайта, проект брифа, имя
-// оператора, его реквизиты и контакты из демо-фактов strategy/) и отпечатки файлов (знак, иконки, превью и manifest
-// public/, демо-записи и обложки коллекций, content/redirects.yaml). Канон (origin — репо шаблона,
+// оператора, его реквизиты, контакты и улица из демо-фактов strategy/) и отпечатки файлов (знак, иконки, превью и
+// manifest public/, демо-записи и обложки коллекций, content/redirects.yaml). Канон (origin — репо шаблона,
 // scripts/lib/template.mjs) лицо хранит: имя пакета — шаблона, артефактов стека нет, список свеж — его собирает
 // --write из данных канона. Форк его не несёт: в своих файлах — вне путей шаблона .template/paths, копий каталогов
-// базы strategy/kb/ и рабочих документов — ни строки, ни файла лица байт в байт, имя пакета — своё. Иначе сайт
-// клиента выходит в прод с лицом шаблона — именем и иконками в выдаче, превью в соцкарточках, демо-реквизитами в
-// подвале и политике ПДн, — а гейт зелёный.
+// базы strategy/kb/ и рабочих документов — ни строки лица, ни в одном файле — файла лица байт в байт (кроме копии
+// шаблона на её пути), в имени пакета — ни имени шаблона. Иначе сайт клиента выходит в прод с лицом шаблона — именем
+// и иконками в выдаче, превью в соцкарточках, демо-реквизитами в подвале и политике ПДн, — а гейт зелёный.
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, lstatSync, readFileSync, writeFileSync } from 'node:fs'
@@ -33,8 +33,8 @@ const files = listed()
 
 const FACE = '.template/face'
 const HEADER = [
-  '# Лицо шаблона — строки и файлы, которых нет в файлах форка (pnpm check:identity). Собирает',
-  '# pnpm check:identity --write на каноне из его данных; руками не правится.',
+  '# Лицо шаблона — строки и файлы, которых нет в файлах форка (pnpm check:identity); файл на пути шаблона — его',
+  '# копия файла лица. Собирает pnpm check:identity --write на каноне из его данных; руками не правится.',
 ]
 // Реквизит и контакт оператора — значение, по которому его узнают. Часы работы, координаты, сроки и даты — не лицо:
 // их законно повторит любой форк.
@@ -99,9 +99,16 @@ async function faceOf() {
   const minimal = strings.filter(
     (text) => !strings.some((other) => other !== text && hits(text, other).length > 0),
   )
+  const hashes = new Map(files.map((file) => [file, sha256(file)]))
+  const prints = new Set(
+    files.filter((file) => FACE_FILE.test(file)).map((file) => hashes.get(file)),
+  )
   return [
     ...minimal.sort().map((text) => `text ${text}`),
-    ...files.filter((file) => FACE_FILE.test(file)).map((file) => `file ${sha256(file)} ${file}`),
+    // Тот же файл на пути шаблона (картинка в снимке сборки фикстуры seo) — копия шаблона: форк держит её законно.
+    ...files
+      .filter((file) => prints.has(hashes.get(file)))
+      .map((file) => `file ${hashes.get(file)} ${file}`),
   ]
 }
 
@@ -158,9 +165,10 @@ if (canon) {
     )
     process.exit(1)
   }
-  if (name === TEMPLATE_PACKAGE) {
+  // Имя шаблона под своим scope (@acme/ssr-frontend-template) — тоже не своё имя.
+  if (hits(String(name ?? ''), TEMPLATE_NAME).length > 0) {
     problems.push(
-      `package.json: имя пакета ${name} — шаблона: своё — scope из docs/stack/service.md`,
+      `package.json: имя пакета ${name} — с именем шаблона: своё — scope из docs/stack/service.md`,
     )
   }
   if (!existsSync(resolve(root, FACE))) {
@@ -170,12 +178,11 @@ if (canon) {
     const texts = face
       .filter((entry) => entry.startsWith('text '))
       .map((entry) => spaced(entry.slice(5)))
-    const prints = new Map(
-      face
-        .filter((entry) => entry.startsWith('file '))
-        .map((entry) => entry.slice(5).split(' '))
-        .map(([hash, ...path]) => [hash, path.join(' ')]),
-    )
+    const prints = new Map()
+    for (const entry of face.filter((line) => line.startsWith('file '))) {
+      const [hash, ...path] = entry.slice(5).split(' ')
+      prints.set(hash, [...(prints.get(hash) ?? []), path.join(' ')])
+    }
     const paths = existsSync(resolve(root, '.template/paths'))
       ? entriesOf(read('.template/paths').toString('utf8'))
       : []
@@ -184,17 +191,21 @@ if (canon) {
     // базы, а не проекта) и рабочие документы — планы и память stack-deep-dive (называют шаблон законно: перенос
     // обвязки, происхождение форка).
     const NOT_OWN = ['strategy/kb/', '.claude/plans/', '.claude/skills/stack-deep-dive/state/']
-    const own = files.filter(
-      (file) => !template.has(file) && !NOT_OWN.some((dir) => file.startsWith(dir)),
+    const own = new Set(
+      files.filter((file) => !template.has(file) && !NOT_OWN.some((dir) => file.startsWith(dir))),
     )
-    for (const file of own) {
+    for (const file of files) {
       const bytes = read(file)
-      const print = prints.get(createHash('sha256').update(bytes).digest('hex'))
-      if (print !== undefined) {
+      // Файл лица — в любом файле форка: и свой файл в каталоге пути шаблона (знак в src/app) — файл форка. Законна
+      // только копия самого шаблона на её пути шаблона.
+      const copies = prints.get(createHash('sha256').update(bytes).digest('hex'))
+      if (copies !== undefined && !(template.has(file) && copies.includes(file))) {
+        const print = copies.find((path) => FACE_FILE.test(path)) ?? copies[0]
         problems.push(
           `${file}: файл лица шаблона байт в байт${print === file ? '' : ` (${print})`}`,
         )
       }
+      if (!own.has(file)) continue
       const text = bytes.toString('utf8')
       const lines = []
       for (const face of texts) {
@@ -208,7 +219,7 @@ if (canon) {
     }
     if (problems.length === 0) {
       console.info(
-        `check:identity: форк — в ${own.length} своих файлах лица шаблона нет (${count(face)}), имя пакета своё — ok`,
+        `check:identity: форк — лица шаблона нет: строк в ${own.size} своих файлах, файлов в ${files.length} (${count(face)}) — ok`,
       )
     }
   }
