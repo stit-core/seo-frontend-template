@@ -151,6 +151,7 @@
     "dist/client/organizaciya/index.html: LocalBusiness.parentOrganization: узел с @id организации типа «Dentist» вне ORG_TYPES (scripts/lib/site-policy.mjs)",
     "dist/client/organizaciya/index.html: LocalBusiness: @id https://__site_origin__/#company — у организации сайта он один: https://__site_origin__/#org",
     "dist/client/o-partnere/index.html: AboutPage.about: @id https://partner.example/#org — у организации сайта он один: https://__site_origin__/#org",
+    "dist/client/imya-stranicy/index.html: AboutPage.name «О компании Фикстура» ≠ <title> «Страница о компании с именем мимо заголовка — Фикстура»: имя страницы — заголовок её меты",
     "dist/client/vtoroe-imya/index.html: Article.author.worksFor: @id нет — у организации сайта он один: https://__site_origin__/#org",
     "dist/client/vtoroe-imya/index.html: Article.author.memberOf: @id https://__site_origin__/#gildiya — у организации сайта он один: https://__site_origin__/#org",
     "dist/client/vtoroe-imya/index.html: Article.author.affiliation.parentOrganization: @id нет — у организации сайта он один: https://__site_origin__/#org",

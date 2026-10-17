@@ -140,6 +140,10 @@ export const ORG_TYPES = ['Organization', 'LocalBusiness']
 // чужой узел в ней — нарушение.
 export const FOREIGN_ORG_ROLES = ['worksFor', 'memberOf', 'affiliation', 'sponsor', 'funder']
 
+// Типы узла страницы — подтипы WebPage schema.org, которые пускает head-kit: узел называет страницу заголовком её меты,
+// `name` = <title>. Тип вне списка имя со страницей не сверяет.
+export const WEB_PAGE_TYPES = ['AboutPage', 'ContactPage', 'CollectionPage', 'ProfilePage']
+
 // Сниппет выдачи индексируемой страницы: title — не длиннее ширины строки выдачи целиком и не меньше трёх своих слов
 // (без имени сайта), description — от «не из нескольких слов» до границы обрезки.
 export const TITLE_BUDGET = { minWords: 3, maxChars: 65 }

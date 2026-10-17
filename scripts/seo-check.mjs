@@ -16,13 +16,13 @@
 // - JSON-LD (любой <script> этого типа, какие бы ещё атрибуты ни стояли у тега): типы — ровно
 //   `seo.structured_data` плана страницы (снимок strategy проекта), план — в границах head-kit своего
 //   типа страницы, у страницы без плана разметки нет; правильный BreadcrumbList, разметка = видимое
-//   (headline = h1, даты = <time>, image — кадры 16:9, 4:3 и 1:1 мастера og:image, mainEntityOfPage =
-//   canonical, крошки = BreadcrumbList, имена и контакты организации — на странице; видимое — без
-//   поддеревьев под hidden и aria-hidden); организация одна — один @id у её узлов и ссылок на неё,
-//   узел с этим @id — только типов ORG_TYPES, одно имя на всю сборку, издатель сайта и записи — она;
-//   свою узнаёт роль узла, чужая — только в ролях FOREIGN_ORG_ROLES и внутри чужой; автор-человек — со
-//   своим @id, подписан на странице, подпись — его Person, имя у него на локали одно, а @id у
-//   человека — один; даты страницы — только у записи коллекции и по её источнику; микроданных
+//   (headline = h1, имя узла страницы = <title>, даты = <time>, image — кадры 16:9, 4:3 и 1:1 мастера
+//   og:image, mainEntityOfPage = canonical, крошки = BreadcrumbList, имена и контакты организации — на
+//   странице; видимое — без поддеревьев под hidden и aria-hidden); организация одна — один @id у её узлов
+//   и ссылок на неё, узел с этим @id — только типов ORG_TYPES, одно имя на всю сборку, издатель сайта и
+//   записи — она; свою узнаёт роль узла, чужая — только в ролях FOREIGN_ORG_ROLES и внутри чужой;
+//   автор-человек — со своим @id, подписан на странице, подпись — его Person, имя у него на локали одно,
+//   а @id у человека — один; даты страницы — только у записи коллекции и по её источнику; микроданных
 //   (itemscope, itemprop) нет — сущности размечает только JSON-LD;
 // - тело: ни плейсхолдера origin, ни HTML-комментариев; у картинок размеры, картинка над h1 (LCP) —
 //   не lazy и с fetchpriority; фолбэк <picture> — не PNG-производная мастера; источник <source media>
@@ -95,6 +95,7 @@ import {
   scriptViolations,
   TAG_INDEX_MIN_POSTS,
   TITLE_BUDGET,
+  WEB_PAGE_TYPES,
 } from './lib/site-policy.mjs'
 import { pageDateOf, sitemapUrls } from './lib/sitemap.mjs'
 
@@ -765,6 +766,15 @@ function checkMarkupVisible(where, body, blocks, page) {
         fail(where, `${type}.inLanguage «${data.inLanguage}» ≠ язык страницы «${page.lang}»`)
       }
     }
+    // Имя страницы — заголовок её меты: так его ставят страницы, и узел страницы называет её тем же <title>.
+    if (WEB_PAGE_TYPES.includes(type) && data.name !== undefined && page.title !== undefined) {
+      if (!sameText(String(data.name), page.title)) {
+        fail(
+          where,
+          `${type}.name «${data.name}» ≠ <title> «${page.title}»: имя страницы — заголовок её меты`,
+        )
+      }
+    }
     if (ORG_TYPES.includes(type)) {
       // Разные значения одного вида фабрики печатают списком (две почты, телефона, адреса): каждое — по норме своего вида.
       const each = (value) => [value ?? []].flat()
@@ -1087,7 +1097,7 @@ for (const file of walk(client)) {
   }
 
   const og = (name) => single(property(name), name)?.content
-  const facts = { canonical, lang, ogImage: undefined, ogType: undefined, articleTimes: {} }
+  const facts = { canonical, lang, title, ogImage: undefined, ogType: undefined, articleTimes: {} }
   if (noindex) {
     if (canonicalTags.length > 0) fail(where, 'noindex-страница с canonical')
     if (hrefs.size > 0) fail(where, 'noindex-страница с hreflang')

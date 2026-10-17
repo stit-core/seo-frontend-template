@@ -1,0 +1,6 @@
+page:
+  id: imya-stranicy
+  page_type: about-page
+  seo:
+    structured_data: [AboutPage]
+sections: []
