@@ -756,17 +756,25 @@ function checkMarkupVisible(where, body, blocks, page) {
       }
     }
     if (ORG_TYPES.includes(type)) {
+      // Разные значения одного вида фабрики печатают списком (две почты, телефона, адреса): каждое — по норме своего вида.
+      const each = (value) => [value ?? []].flat()
       for (const field of ['name', 'legalName', 'email']) {
-        if (data[field] && !visible.includes(data[field]))
-          fail(where, `${type}.${field} «${data[field]}» не виден на странице`)
+        for (const value of each(data[field])) {
+          if (value && !visible.includes(value))
+            fail(where, `${type}.${field} «${value}» не виден на странице`)
+        }
       }
-      if (data.telephone && !tels.includes(data.telephone.replace(/[^\d+]/g, ''))) {
-        fail(where, `${type}.telephone «${data.telephone}» — нет ссылки tel: с этим номером`)
+      for (const telephone of each(data.telephone)) {
+        if (telephone && !tels.includes(String(telephone).replace(/[^\d+]/g, ''))) {
+          fail(where, `${type}.telephone «${telephone}» — нет ссылки tel: с этим номером`)
+        }
       }
-      for (const field of ['streetAddress', 'addressLocality', 'postalCode']) {
-        const value = data.address?.[field]
-        if (value && !visible.includes(value))
-          fail(where, `${type}.address.${field} «${value}» не виден на странице`)
+      for (const address of each(data.address)) {
+        for (const field of ['streetAddress', 'addressLocality', 'postalCode']) {
+          const value = address?.[field]
+          if (value && !visible.includes(value))
+            fail(where, `${type}.address.${field} «${value}» не виден на странице`)
+        }
       }
     }
     if (type === 'BreadcrumbList') {

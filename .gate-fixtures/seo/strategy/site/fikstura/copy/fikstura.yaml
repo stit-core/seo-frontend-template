@@ -48,6 +48,11 @@ copy_deck:
         title: Страница с датами вне коллекций — Фикстура
         description: 'Страница мини-сборки негативной фикстуры: по ней check:gate видит, что seo:check ловит нарушение. Даты.'
       sections: []
+    - page_id: filialy
+      meta:
+        title: 'Филиалы: две почты, два телефона и два адреса — Фикстура'
+        description: 'Страница мини-сборки негативной фикстуры: по ней check:gate видит, что seo:check ловит нарушение. Филиалы.'
+      sections: []
     - page_id: meta
       meta:
         title: Мета страницы из copy deck — Фикстура

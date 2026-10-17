@@ -17,3 +17,4 @@ pages:
   - {id: meta, url: /meta, parent: home}
   - {id: vtoroy-id, url: /vtoroy-id, parent: home}
   - {id: datirovannaya, url: /datirovannaya, parent: home}
+  - {id: filialy, url: /filialy, parent: home}

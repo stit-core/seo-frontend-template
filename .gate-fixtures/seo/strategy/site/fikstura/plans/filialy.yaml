@@ -1,0 +1,6 @@
+page:
+  id: filialy
+  page_type: contacts-page
+  seo:
+    structured_data: [LocalBusiness]
+sections: []
