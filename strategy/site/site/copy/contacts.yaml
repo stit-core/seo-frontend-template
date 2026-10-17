@@ -2,7 +2,7 @@
 # 10-templates-recipes/copy-deck.schema.json): секции и слоты — id плана plans/contacts.yaml.
 copy_deck:
   version: 1
-  date: '2026-10-16'
+  date: '2026-10-17'
   site: site-template
   product_name: ssr-frontend-template
   lang: ru
@@ -16,11 +16,11 @@ copy_deck:
       page_type: contacts-page
       status: assumed
       meta:
-        title: 'Контакты студии в Москве: заявка, почта и телефон'
+        title: Контакты ssr-frontend-template — Москва, ул. Примерная, 1
         description: >-
-          Форма заявки, которая работает без JavaScript: браузер отправляет POST, сервер проверяет заявку и отвечает
-          редиректом. Почта, телефон и адрес — рядом.
-        fact_ids: []
+          101000, Москва, ул. Примерная, 1, офис 2; Пн–Пт, 10:00–19:00 (МСК); телефон +7 495 000-00-00, почта и форма
+          заявки без JavaScript.
+        fact_ids: ['fact:company-address', 'fact:company-hours', 'fact:company-phone', 'fact:company-email']
       sections:
         - section_id: header
           section_role: header

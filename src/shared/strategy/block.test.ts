@@ -56,7 +56,6 @@ const page = (...sections: Section[]): StrategyPage => ({
     description: 'Описание',
     ogTitle: undefined,
     ogDescription: undefined,
-    ogImageAlt: undefined,
   },
   sections,
   policy: undefined,

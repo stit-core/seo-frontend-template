@@ -57,7 +57,7 @@
     "dist/client/blog/statya/index.html: BlogPosting.author: @id нет — у организации сайта он один: https://__site_origin__/#org",
     "dist/client/blog/statya/index.html: BlogPosting.publisher — не Organization: издатель сайта и записи — организация по @id",
     "dist/client/dlinnyy/index.html: первая иконка /net-ikonki.png: файла нет в dist/client",
-    "dist/client/dlinnyy/index.html: title — 82 знаков без суффикса сайта, бюджет 65",
+    "dist/client/dlinnyy/index.html: title — 93 знаков, бюджет 65",
     "dist/client/dlinnyy/index.html: description — 188 знаков, бюджет 70–170",
     "dist/client/domen/index.html: canonical на https://example.ru, а не на плейсхолдере: сборка шла с SITE_URL",
     "dist/client/domen/index.html: hreflang ru на чужом origin: https://example.ru/domen",

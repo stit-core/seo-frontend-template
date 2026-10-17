@@ -34,7 +34,6 @@ const page = (
     description: 'Студия теста',
     ogTitle: undefined,
     ogDescription: undefined,
-    ogImageAlt: undefined,
   },
   sections: [
     {

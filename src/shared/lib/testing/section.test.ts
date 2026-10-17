@@ -11,7 +11,6 @@ const page = (binds: string[]): StrategyPage => ({
     description: 'Главная страница',
     ogTitle: undefined,
     ogDescription: undefined,
-    ogImageAlt: undefined,
   },
   sections: [
     {

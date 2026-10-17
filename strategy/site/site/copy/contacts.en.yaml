@@ -2,7 +2,7 @@
 # id секций и слотов, что у copy/contacts.yaml.
 copy_deck:
   version: 1
-  date: '2026-10-16'
+  date: '2026-10-17'
   site: site-template
   product_name: ssr-frontend-template
   lang: en
@@ -19,11 +19,11 @@ copy_deck:
       page_type: contacts-page
       status: assumed
       meta:
-        title: 'Studio contacts in Moscow: request form, email and phone'
+        title: ssr-frontend-template contacts — Moscow, 1 Primernaya st.
         description: >-
-          A request form that works without JavaScript: the browser sends a POST, the server checks the request and
-          answers with a redirect. Email, phone and address are below.
-        fact_ids: []
+          1 Primernaya st., office 2, Moscow, 101000; Mon–Fri, 10:00–19:00 (MSK); phone +7 495 000-00-00, email and a
+          request form without JavaScript.
+        fact_ids: ['fact:company-address', 'fact:company-hours', 'fact:company-phone', 'fact:company-email']
       sections:
         - section_id: header
           section_role: header

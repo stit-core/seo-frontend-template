@@ -2,7 +2,7 @@
 # copy-deck.schema.json): секции и слоты — id плана plans/not-found.yaml, текст слота — выбранный вариант.
 copy_deck:
   version: 1
-  date: '2026-10-16'
+  date: '2026-10-17'
   site: site-template
   product_name: ssr-frontend-template
   lang: ru
@@ -16,7 +16,7 @@ copy_deck:
       page_type: not-found-page
       status: assumed
       meta:
-        title: Страница не найдена
+        title: Страница не найдена — ssr-frontend-template
         description: >-
           Такой страницы на сайте нет: адрес изменился или в нём опечатка. Начните с главной или откройте нужный раздел.
         fact_ids: []

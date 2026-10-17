@@ -14,7 +14,7 @@ status: draft
 | канонический хост | `https://<domain>` — один; `www` → apex на Traefik | `SITE_URL` (env) |
 | имя сайта | _<Бренд>_ | `SITE_NAME` |
 | описание | _70–170 символов_ | `SITE_DESCRIPTION` |
-| title-шаблон | `%s — <Бренд>`; один для `<title>` и `og:title` | `shared/seo/meta.ts` |
+| заголовок и описание страницы | мета copy deck как есть: бренд — в заголовке (шаблоны `meta-rules.yaml` базы); тексты превью ссылки — `og_title` и `og_description`, без них — заголовок и описание | copy deck strategy |
 | профили в других сервисах | _ссылки_ | `SITE_SAME_AS` |
 | логотип | `/icon-512.png` | `SITE_LOGO_PATH` |
 | иконки | `icon-192.png` 192×192 — первой: она подходит выдаче Google (растр; минимум — 8×8, рекомендация — крупнее 48×48; SVG в списке его форматов нет) · `favicon.ico` 32×32 · `icon.svg` · `apple-touch-icon.png` 180×180 · manifest | `public/`, порядок — `app/layouts/document.astro` |

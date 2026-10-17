@@ -11,9 +11,9 @@
 `plans/<id>.yaml` и copy deck `copy/<id>.yaml` (на другом языке — `copy/<id>.<lang>.yaml`) — форма
 strategy: образец — план и copy deck «О компании» проекта шаблона (`plans/about.yaml`, `copy/about.yaml`).
 Секции плана — блоки каталога по порядку страницы, шапка и подвал — тоже секции; тексты слотов — в copy
-deck по ключу `page/section/slot`, мета — `meta.title` и `meta.description`, контакты и реквизиты —
-факты (`facts*.yaml`). Валидаторы соседа по проекту — без `error` (`site_validate.py`, `copydeck.py
-check`).
+deck по ключу `page/section/slot`, мета — `meta` страницы (заголовок с брендом, описание), контакты и
+реквизиты — факты (`facts*.yaml`). Валидаторы соседа по проекту — без `error` (`site_validate.py`,
+`copydeck.py check`).
 
 ## page — разметка `src/pages/_<name>/<name>-page.astro`
 
@@ -38,8 +38,7 @@ const page = pageOf(files, locale)
   locale={locale}
   chrome={page}
   translations={pageVersions(page.id)}
-  title={page.meta.title}
-  description={page.meta.description}
+  meta={page.meta}
 >
   <HeroText {...heroText.props(page, 'hero')} />
   <Prose {...prose.props(page, '<section-id>')} />
@@ -372,8 +371,7 @@ Astro.response.headers.set('cache-control', 'private, no-store')
 <DocumentLayout
   locale={locale}
   chrome={page}
-  title={page.meta.title}
-  description={page.meta.description}
+  meta={page.meta}
   noindex
 >
   <HeroText {...heroText.props(page, 'hero')} />

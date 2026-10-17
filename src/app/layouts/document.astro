@@ -9,7 +9,14 @@ import { fontFamilies } from '@/app/styles/fonts'
 import { PreferencesInit } from '@/features/preferences'
 import { ISLANDS, standsOn, THEME } from '@/shared/config'
 import { type Locale, localePath, routeOf, type Translations, t } from '@/shared/i18n'
-import { breadcrumbList, type JsonLd, JsonLdScript, type OgImage, SeoHead } from '@/shared/seo'
+import {
+  breadcrumbList,
+  type JsonLd,
+  JsonLdScript,
+  type OgImage,
+  type PageMeta,
+  SeoHead,
+} from '@/shared/seo'
 import { type BlockProps, pageLink, type StrategyPage } from '@/shared/strategy'
 import { Container } from '@/shared/ui/section'
 import { Breadcrumbs, type breadcrumbs } from '@/widgets/breadcrumbs'
@@ -18,17 +25,17 @@ import { Header, header } from '@/widgets/header'
 
 interface Props {
   locale: Locale
-  // Заголовок без имени сайта (шаблон добавит суффикс) и уникальный description страницы.
-  title: string
-  description: string
+  // Мета страницы — copy deck как есть (у записи коллекции — её поля): заголовок с брендом, описание и тексты превью
+  // ссылки; title и description уникальны среди страниц сборки.
+  meta: PageMeta
   // Карта переводов страницы: локаль → адрес версии (своя — тоже). Из неё — hreflang и переводы в переключателе
   // языка.
   translations?: Translations | undefined
   // Служебная страница (404, подтверждение заявки, ответ формы) и тонкая (тег ниже порога записей):
   // noindex, без canonical, OG и hreflang.
   noindex?: boolean | undefined
-  ogType?: 'website' | 'article'
   ogImage?: OgImage | undefined
+  // Даты записи коллекции: страница записи — статья (og:type article и article:*).
   article?: { published: Date; modified?: Date | undefined } | undefined
   // JSON-LD страницы в <head>: Organization/WebSite главной, LocalBusiness «О компании», BlogPosting записи.
   jsonLd?: readonly JsonLd[]
@@ -41,11 +48,9 @@ interface Props {
 
 const {
   locale,
-  title,
-  description,
+  meta,
   translations,
   noindex,
-  ogType,
   ogImage,
   article,
   jsonLd = [],
@@ -91,13 +96,11 @@ const fonts = fontFamilies().map(({ variable, preload }) => ({
       <Font cssVariable={cssVariable} preload={preload} />
     ))}
     <SeoHead
-      title={title}
-      description={description}
+      meta={meta}
       locale={locale}
       translations={translations}
       feed={feed}
       noindex={noindex}
-      ogType={ogType}
       ogImage={ogImage}
       article={article}
     />

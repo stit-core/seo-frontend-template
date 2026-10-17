@@ -143,8 +143,8 @@ export const JSON_LD_FORBIDDEN = ['FAQPage', 'HowTo', 'SearchAction']
 // (Dentist, AutoRepair) — строкой и здесь, и в JSON_LD_TYPES: иначе правила сущности его не видят.
 export const ORG_TYPES = ['Organization', 'LocalBusiness']
 
-// Сниппет выдачи индексируемой страницы: title без суффикса сайта — не меньше трёх слов и не
-// длиннее ширины строки выдачи, description — от «не из нескольких слов» до границы обрезки.
+// Сниппет выдачи индексируемой страницы: title — не длиннее ширины строки выдачи целиком и не меньше трёх своих слов
+// (без имени сайта), description — от «не из нескольких слов» до границы обрезки.
 export const TITLE_BUDGET = { minWords: 3, maxChars: 65 }
 export const DESCRIPTION_BUDGET = { minChars: 70, maxChars: 170 }
 

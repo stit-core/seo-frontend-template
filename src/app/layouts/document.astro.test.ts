@@ -81,8 +81,11 @@ async function render(
   const html = await container.renderToString(DocumentLayout, {
     props: {
       locale: DEFAULT_LOCALE,
-      title: 'Страница для проверки оболочки',
-      description: 'Страница существует только в тесте: оболочка печатает её head и каркас сайта.',
+      meta: {
+        title: 'Страница для проверки оболочки',
+        description:
+          'Страница существует только в тесте: оболочка печатает её head и каркас сайта.',
+      },
       chrome,
       crumbs,
     },

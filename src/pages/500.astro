@@ -16,8 +16,7 @@ const locale = DEFAULT_LOCALE
 <DocumentLayout
   locale={locale}
   chrome={pageOf(home, locale)}
-  title={t(locale, 'error.title')}
-  description={t(locale, 'error.lead')}
+  meta={{ title: t(locale, 'error.title'), description: t(locale, 'error.lead') }}
   noindex
 >
   <Section labelledby="page-title">

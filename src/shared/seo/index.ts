@@ -1,7 +1,7 @@
 export type { Crumb, JsonLd, LocalBusinessInput } from './json-ld'
 export { blogPosting, breadcrumbList, localBusiness, organization, webSite } from './json-ld'
 export { default as JsonLdScript } from './json-ld.astro'
-export type { OgImage } from './meta'
+export type { OgImage, PageMeta } from './meta'
 export { buildRobotsTxt } from './robots'
 export { buildFeed } from './rss'
 export { default as SeoHead } from './seo-head.astro'

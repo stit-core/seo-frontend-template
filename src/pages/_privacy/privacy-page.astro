@@ -13,12 +13,6 @@ const { locale } = Astro.props
 const page = pageOf(privacy, locale)
 ---
 
-<DocumentLayout
-  locale={locale}
-  chrome={page}
-  translations={pageVersions(page.id)}
-  title={page.meta.title}
-  description={page.meta.description}
->
+<DocumentLayout locale={locale} chrome={page} translations={pageVersions(page.id)} meta={page.meta}>
   <LegalText {...legalText.props(page, 'legal')} />
 </DocumentLayout>

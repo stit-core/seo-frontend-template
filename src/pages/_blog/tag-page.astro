@@ -25,8 +25,7 @@ const model = await tagPageModel(locale, tag)
   chrome={page}
   noindex={model.noindex}
   translations={model.translations}
-  title={model.title}
-  description={model.description}
+  meta={{ title: model.title, description: model.description }}
   crumbs={breadcrumbs.props(page, 'breadcrumbs', { current: model.current })}
 >
   <HeroText

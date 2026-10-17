@@ -14,15 +14,19 @@ props страницы (`shared/seo/seo-head.astro` + JSON-LD из пропа `j
 
 ## Страница (`<head>`)
 
-- Каждая страница — через `DocumentLayout` с `title` (без имени сайта: шаблон `%s — SITE_NAME`
-  один для `<title>` и `og:title`) и `description`; оба уникальны среди всех страниц сборки.
-  Сниппет индексируемой страницы — в бюджетах: title без суффикса сайта — от трёх слов до 65
-  знаков и не общий («Контакты», «Блог», «О компании» — их заменит поисковик), description —
-  70–170 знаков; всё это держит `seo:check` по `scripts/lib/site-policy.mjs`, у записей те же
-  числа — ещё и Zod-схема коллекции
+- Каждая страница — через `DocumentLayout` с `meta`: мета copy deck как есть (у записи коллекции — её
+  `title` и `description`) — `<title>` и description; бренд в заголовке пишет strategy, суффикса у
+  оболочки нет. Тексты превью ссылки — `og_title` и `og_description` copy deck, без них — заголовок
+  и описание; `seo:check` сверяет og:title с `<title>` и og:description с description. title и
+  description уникальны среди всех страниц сборки. Сниппет индексируемой страницы — в бюджетах:
+  заголовок целиком — до 65 знаков, без имени сайта — от трёх слов и не общий («Контакты», «Блог —
+  Бренд», «О компании» — их заменит поисковик), description — 70–170 знаков; всё это держит
+  `seo:check` по `scripts/lib/site-policy.mjs`, у записей те же числа — ещё и Zod-схема коллекции
 - Индексируемая (prerendered) страница: self-canonical абсолютным URL без query и хвостового
   слеша (`absoluteUrl()` нормализует путь сам), `<meta name="robots">` не печатается; полный OG
-  (`type/title/description/url/site_name/locale` + `image` с `width/height/alt`), `twitter:card`.
+  (`type/title/description/url/site_name/locale` + `image` с `width/height/alt`), `twitter:card`;
+  `og:type` — от типа страницы: `article` у записи коллекции (проп `article` — её даты, с ними и
+  `article:*_time`), у остальных — `website`.
   Регистр пути не нормализуется; cross-domain canonical запрещён. Canonical — единственная форма
   адреса, по которой сервер отдаёт страницу: с любой другой (хвостовой и двойной слеш,
   `/index.html`, точки, другая запись процентов) обёртка процесса отвечает одним 301 на неё, со

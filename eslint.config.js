@@ -245,7 +245,7 @@ const BRANCH = `${CONTENT} > :matches(LogicalExpression, ConditionalExpression)`
 // У HTML-элемента (тег строчными) текст несут только текстовые атрибуты — TEXT_ATTRIBUTES, общий список с тестом
 // страниц, и value кнопки-поля; прочие атрибуты — разметка. Проп компонента — текст по умолчанию (подпись, проп блока),
 // кроме NOT_TEXT — пропсов без текста у компонентов кода: класс и id, вид и раскладка примитива, адрес ссылки и
-// обработчика формы, тип OG, загрузка картинки — и slot Astro (место в слоте родителя).
+// обработчика формы, загрузка картинки — и slot Astro (место в слоте родителя).
 const HTML = "JSXOpeningElement[name.type='JSXIdentifier'][name.name=/^[a-z]/]"
 const NOT_TEXT = [
   'class',
@@ -257,7 +257,6 @@ const NOT_TEXT = [
   'labelledby',
   'href',
   'action',
-  'ogType',
   'loading',
   'decoding',
   'fetchpriority',

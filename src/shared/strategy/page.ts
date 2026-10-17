@@ -90,7 +90,6 @@ export interface Meta {
   description: string
   ogTitle: string | undefined
   ogDescription: string | undefined
-  ogImageAlt: string | undefined
 }
 
 export interface MapEntry {
@@ -348,7 +347,6 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
             meta?.description ?? fail(`${id}/meta/description`, `нет текста в copy deck ${locale}`),
           ogTitle: meta?.og_title,
           ogDescription: meta?.og_description,
-          ogImageAlt: meta?.og_image_alt,
         },
     sections,
     policy:

@@ -2,12 +2,11 @@
 import { AI_BOTS_POLICY, SITE_NAME, SITE_VERIFICATION } from '@/shared/config'
 import { isoDate, type Locale, localeInfo, type Translations, t } from '@/shared/i18n'
 import { aiBotsMeta } from './ai-bots'
-import { defaultOgImage, type OgImage, pageTitle } from './meta'
+import { defaultOgImage, type OgImage, type PageMeta } from './meta'
 import { absoluteUrl, alternates } from './urls'
 
 interface Props {
-  title: string
-  description: string
+  meta: PageMeta
   locale: Locale
   // Карта переводов страницы (своя версия — тоже); без второй версии hreflang не выводится.
   translations?: Translations | undefined
@@ -16,25 +15,21 @@ interface Props {
   // Служебная или тонкая страница (404, ответ формы, тег ниже порога): только noindex — без canonical,
   // OG и hreflang.
   noindex?: boolean | undefined
-  ogType?: 'website' | 'article' | undefined
   ogImage?: OgImage | undefined
-  // Даты записи для article:*; только при ogType="article".
+  // Даты записи коллекции: её страница — статья (og:type article и article:*), остальные — website.
   article?: { published: Date; modified?: Date | undefined } | undefined
 }
 
 const {
-  title,
-  description,
+  meta,
   locale,
   translations = {},
   feed,
   noindex = false,
-  ogType = 'website',
   ogImage = defaultOgImage(locale),
   article,
 } = Astro.props
 
-const fullTitle = pageTitle(title)
 // Origin — runtime SITE_URL на on-demand; на prerender — плейсхолдер сборки, его штампует entrypoint.
 const path = Astro.url.pathname
 const canonical = absoluteUrl(path)
@@ -44,8 +39,8 @@ const others = links.flatMap((link) =>
 )
 ---
 
-<title>{fullTitle}</title>
-<meta name="description" content={description} />
+<title>{meta.title}</title>
+<meta name="description" content={meta.description} />
 {noindex && <meta name="robots" content="noindex" />}
 {!noindex && (
   <Fragment>
@@ -53,9 +48,9 @@ const others = links.flatMap((link) =>
     {links.map((link) => (
       <link rel="alternate" hreflang={link.hreflang} href={link.href} />
     ))}
-    <meta property="og:type" content={ogType} />
-    <meta property="og:title" content={fullTitle} />
-    <meta property="og:description" content={description} />
+    <meta property="og:type" content={article ? 'article' : 'website'} />
+    <meta property="og:title" content={meta.ogTitle ?? meta.title} />
+    <meta property="og:description" content={meta.ogDescription ?? meta.description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:locale" content={localeInfo(locale).og} />

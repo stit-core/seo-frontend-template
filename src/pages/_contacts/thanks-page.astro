@@ -18,8 +18,7 @@ const page = pageOf(thanks, locale)
   locale={locale}
   chrome={page}
   translations={pageVersions(page.id)}
-  title={page.meta.title}
-  description={page.meta.description}
+  meta={page.meta}
   noindex
 >
   <ThankYou {...thankYou.props(page, 'confirmation')} />

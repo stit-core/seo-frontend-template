@@ -49,7 +49,9 @@ const hreflang = (doc: Doc) =>
     link.getAttribute('href'),
   ])
 
-const base = { title: 'Запись', description: 'Описание записи для сниппета.', locale: 'ru' }
+// Мета страницы — copy deck как есть: заголовок strategy уже с брендом, суффикса оболочка не ставит.
+const meta = { title: 'Запись о сниппете — Бренд', description: 'Описание записи для сниппета.' }
+const base = { meta, locale: 'ru' }
 
 describe('SeoHead', () => {
   afterEach(() => {
@@ -65,16 +67,17 @@ describe('SeoHead', () => {
     }>()
   })
 
-  it('индексируемая страница: title-шаблон, self-canonical, OG с дефолтной картинкой, twitter:card', async () => {
+  it('индексируемая страница: title и description — мета как есть, self-canonical, OG с дефолтной картинкой, twitter:card', async () => {
     const doc = await render('/blog/x', base)
-    expect(doc.title).toBe('Запись — ssr-frontend-template')
+    expect(doc.title).toBe('Запись о сниппете — Бренд')
     expect(content(doc, 'name="description"')).toBe('Описание записи для сниппета.')
     expect(href(doc, 'rel="canonical"')).toBe(`${ORIGIN}/blog/x`)
     expect(doc.querySelector('meta[name="robots"]')).toBeNull()
     expect(hreflang(doc)).toEqual([])
     expect(og(doc)).toMatchObject({
       'og:type': 'website',
-      'og:title': 'Запись — ssr-frontend-template',
+      'og:title': 'Запись о сниппете — Бренд',
+      'og:description': 'Описание записи для сниппета.',
       'og:url': `${ORIGIN}/blog/x`,
       'og:site_name': 'ssr-frontend-template',
       'og:locale': 'ru_RU',
@@ -87,6 +90,23 @@ describe('SeoHead', () => {
     expect(content(doc, 'name="twitter:card"')).toBe('summary_large_image')
     expect(doc.querySelector('link[type="application/rss+xml"]')).toBeNull()
     expect(doc.querySelector('meta[name="keywords"]')).toBeNull()
+  })
+
+  it('тексты превью ссылки — свои у copy deck: og:title и og:description, а <title> и description — мета', async () => {
+    const doc = await render('/blog/x', {
+      ...base,
+      meta: {
+        ...meta,
+        ogTitle: 'Запись о сниппете',
+        ogDescription: 'Что получит читатель по ссылке.',
+      },
+    })
+    expect(doc.title).toBe('Запись о сниппете — Бренд')
+    expect(content(doc, 'name="description"')).toBe('Описание записи для сниппета.')
+    expect(og(doc)).toMatchObject({
+      'og:title': 'Запись о сниппете',
+      'og:description': 'Что получит читатель по ссылке.',
+    })
   })
 
   it('фид языка страницы: автообнаружение — его абсолютный адрес и имя блога с брендом', async () => {
@@ -129,10 +149,10 @@ describe('SeoHead', () => {
     ])
   })
 
-  it('запись: og:type article, обложка и даты', async () => {
+  // Тип OG — от типа страницы: даты записи коллекции делают её статьёй, отдельного пропа типа нет.
+  it('запись: og:type article по датам записи, обложка и даты', async () => {
     const doc = await render('/blog/x', {
       ...base,
-      ogType: 'article',
       ogImage: { path: '/_astro/cover.abc_og.jpg', width: 1200, height: 630, alt: 'Обложка' },
       article: { published: new Date('2026-09-08'), modified: new Date('2026-09-10') },
     })
@@ -178,6 +198,6 @@ describe('SeoHead', () => {
     expect(doc.querySelector('link[rel="canonical"], link[hreflang]')).toBeNull()
     expect(og(doc)).toEqual({})
     expect(doc.querySelector('meta[name="twitter:card"]')).toBeNull()
-    expect(doc.title).toBe('Запись — ssr-frontend-template')
+    expect(doc.title).toBe('Запись о сниппете — Бренд')
   })
 })

@@ -2,7 +2,7 @@
 # 10-templates-recipes/copy-deck.schema.json): секции и слоты — id плана plans/thank-you.yaml.
 copy_deck:
   version: 1
-  date: '2026-10-16'
+  date: '2026-10-17'
   site: site-template
   product_name: ssr-frontend-template
   lang: ru
@@ -16,7 +16,7 @@ copy_deck:
       page_type: thank-you-page
       status: assumed
       meta:
-        title: Заявка отправлена
+        title: Заявка отправлена — ssr-frontend-template
         description: >-
           Заявка принята: ответим на указанную почту, обычно в течение одного рабочего дня.
         fact_ids: ['fact:response-time']

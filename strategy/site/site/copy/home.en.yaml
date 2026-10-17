@@ -2,7 +2,7 @@
 # что у copy/home.yaml.
 copy_deck:
   version: 1
-  date: '2026-10-14'
+  date: '2026-10-17'
   site: site-template
   product_name: ssr-frontend-template
   lang: en
@@ -19,12 +19,10 @@ copy_deck:
       page_type: home-multipage
       status: assumed
       meta:
-        title: Indexable site template
+        title: ssr-frontend-template — an indexable site template on Astro
         description: >-
           An Astro site template that builds its pages ahead of time: JavaScript only as islands by decision, one
           Docker image for every environment.
-        og_title: Indexable site template
-        og_description: Pages are built ahead of time; the server ships them as files and renders only on request.
         fact_ids: []
       sections:
         - section_id: header

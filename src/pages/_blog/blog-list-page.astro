@@ -23,8 +23,11 @@ const hero = heroText.props(page, 'hero')
   locale={locale}
   chrome={page}
   translations={model.translations}
-  title={model.paged(page.meta.title)}
-  description={model.paged(page.meta.description)}
+  meta={{
+    ...page.meta,
+    title: model.paged(page.meta.title),
+    description: model.paged(page.meta.description),
+  }}
 >
   <HeroText {...hero} headline={model.paged(hero.headline)} />
   <ArticleCards

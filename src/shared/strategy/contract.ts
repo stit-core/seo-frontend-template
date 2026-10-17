@@ -83,7 +83,6 @@ export const CopyDeckSchema = z.object({
             description: z.string().optional(),
             og_title: z.string().optional(),
             og_description: z.string().optional(),
-            og_image_alt: z.string().optional(),
           })
           .optional(),
         sections: z.array(z.object({ section_id: z.string(), slots: z.array(DeckSlot) })),

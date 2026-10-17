@@ -209,18 +209,24 @@ const FONT_DISPLAY = ['swap', 'fallback', 'optional']
 const FONT_FAMILIES = new Set(fonts.map(({ family }) => family))
 const listedFamilyOf = (name) => /^(.+)-[\da-f]+(?: fallback: .+)?$/.exec(name)?.[1]
 
-// Сниппет выдачи: title без суффикса сайта и description — в бюджетах и не общие.
+// Сниппет выдачи: title — мета copy deck как есть, бренд в нём пишет strategy («Контакты Бренда — Москва», «Блог —
+// Бренд»). Длина — у заголовка целиком: его режет строка выдачи; «общий» и «меньше трёх слов» — о словах самой
+// страницы, без имени сайта и разделителя рядом с ним.
 function checkSnippet(where, title, description, siteName) {
-  const suffix = siteName ? ` — ${siteName}` : ''
-  const core = suffix && title.endsWith(suffix) ? title.slice(0, -suffix.length) : title
+  const core = siteName
+    ? title
+        .split(siteName)
+        .join(' ')
+        .replace(/^[\s|:—–-]+|[\s|:—–-]+$/g, '')
+    : title
   const words = core.match(/[\p{L}\p{N}]+/gu)?.length ?? 0
   if (GENERIC_TITLE.test(core)) fail(where, `title «${core}» — общий: поисковик заменит его сам`)
   else if (words < TITLE_BUDGET.minWords) {
     fail(where, `title «${core}» — меньше ${TITLE_BUDGET.minWords} слов`)
   }
-  const chars = [...core].length
+  const chars = [...title].length
   if (chars > TITLE_BUDGET.maxChars) {
-    fail(where, `title — ${chars} знаков без суффикса сайта, бюджет ${TITLE_BUDGET.maxChars}`)
+    fail(where, `title — ${chars} знаков, бюджет ${TITLE_BUDGET.maxChars}`)
   }
   const length = [...(description ?? '')].length
   const { minChars, maxChars } = DESCRIPTION_BUDGET

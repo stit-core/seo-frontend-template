@@ -23,7 +23,9 @@ const page = pageOf(contacts, locale)
 // Ответ с ошибками называет отказ первым словом заголовка окна: вкладка и чтец экрана сообщают о
 // нём раньше текста страницы.
 const failed = errors !== undefined || notice !== undefined
-const title = failed ? t(locale, 'form.failed', { title: page.meta.title }) : page.meta.title
+const meta = failed
+  ? { ...page.meta, title: t(locale, 'form.failed', { title: page.meta.title }) }
+  : page.meta
 // Согласие на обработку ПДн ссылается на политику — её версию по карте; без политики форму не собрать.
 const policy =
   page.policy ?? fail(`${page.id}/legal/privacy_policy`, 'у страницы с формой нет политики ПДн')
@@ -32,8 +34,7 @@ const policy =
 <DocumentLayout
   locale={locale}
   chrome={page}
-  title={title}
-  description={page.meta.description}
+  meta={meta}
   translations={pageVersions(page.id)}
   noindex={noindex}
 >

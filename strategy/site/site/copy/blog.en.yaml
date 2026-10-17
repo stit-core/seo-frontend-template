@@ -2,7 +2,7 @@
 # секций и слотов, что у copy/blog.yaml.
 copy_deck:
   version: 1
-  date: '2026-10-16'
+  date: '2026-10-17'
   site: site-template
   product_name: ssr-frontend-template
   lang: en
@@ -19,7 +19,7 @@ copy_deck:
       page_type: blog-index-page
       status: assumed
       meta:
-        title: Blog on fast, indexable sites
+        title: ssr-frontend-template blog on indexable sites
         description: >-
           Short notes on content sites: prerendering, zero JavaScript, honest status codes, canonical and
           hreflang, images, sitemaps and one image for every environment

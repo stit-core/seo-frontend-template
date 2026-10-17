@@ -2,7 +2,7 @@
 # id секций и слотов, что у copy/thank-you.yaml.
 copy_deck:
   version: 1
-  date: '2026-10-16'
+  date: '2026-10-17'
   site: site-template
   product_name: ssr-frontend-template
   lang: en
@@ -19,7 +19,7 @@ copy_deck:
       page_type: thank-you-page
       status: assumed
       meta:
-        title: Request sent
+        title: Request sent — ssr-frontend-template
         description: >-
           The request is in: we reply to the email you left, usually within one business day.
         fact_ids: ['fact:response-time']

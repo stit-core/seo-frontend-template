@@ -21,8 +21,7 @@ const page = pageOf(about, locale)
   locale={locale}
   chrome={page}
   translations={pageVersions(page.id)}
-  title={page.meta.title}
-  description={page.meta.description}
+  meta={page.meta}
   jsonLd={[localBusiness(businessOf(page))]}
 >
   <HeroText {...heroText.props(page, 'hero')} />

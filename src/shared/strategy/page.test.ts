@@ -287,7 +287,6 @@ describe('strategy/page', () => {
         description: 'Turnkey flat renovation.',
         ogTitle: 'Turnkey renovation',
         ogDescription: 'From survey to keys.',
-        ogImageAlt: 'A renovated kitchen',
       },
     })
     expect(page.sections[0]?.slots).toMatchObject({
@@ -304,7 +303,6 @@ describe('strategy/page', () => {
       description: 'Ремонт квартир под ключ.',
       ogTitle: undefined,
       ogDescription: undefined,
-      ogImageAlt: undefined,
     })
   })
 
@@ -619,7 +617,6 @@ describe('strategy/page', () => {
           description: 'Заявка на замер принята. Студия ремонта «Отвес», Нижний Новгород.',
           ogTitle: 'Заявка на замер принята',
           ogDescription: 'Прораб позвонит и договорится о дне замера.',
-          ogImageAlt: undefined,
         },
         sections: [
           {

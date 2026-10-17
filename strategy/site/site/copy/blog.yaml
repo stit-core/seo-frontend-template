@@ -2,7 +2,7 @@
 # 10-templates-recipes/copy-deck.schema.json): секции и слоты — id плана plans/blog.yaml.
 copy_deck:
   version: 1
-  date: '2026-10-16'
+  date: '2026-10-17'
   site: site-template
   product_name: ssr-frontend-template
   lang: ru
@@ -16,7 +16,7 @@ copy_deck:
       page_type: blog-index-page
       status: assumed
       meta:
-        title: Блог о быстрых индексируемых сайтах
+        title: Блог ssr-frontend-template об индексируемых сайтах
         description: >-
           Короткие заметки о контентных сайтах: prerender, ноль JavaScript, честные статусы, canonical и hreflang,
           картинки, sitemap и один образ на все среды

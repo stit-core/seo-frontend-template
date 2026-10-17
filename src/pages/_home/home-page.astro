@@ -25,8 +25,7 @@ const jsonLd = Astro.url.pathname === '/' ? [organization(), webSite()] : [organ
   locale={locale}
   chrome={page}
   translations={pageVersions(page.id)}
-  title={page.meta.title}
-  description={page.meta.description}
+  meta={page.meta}
   jsonLd={jsonLd}
 >
   <HeroText {...heroText.props(page, 'hero')} />

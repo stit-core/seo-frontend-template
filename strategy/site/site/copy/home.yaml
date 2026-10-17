@@ -2,7 +2,7 @@
 # copy-deck.schema.json): секции и слоты — id плана plans/home.yaml, текст слота — выбранный вариант.
 copy_deck:
   version: 1
-  date: '2026-10-14'
+  date: '2026-10-17'
   site: site-template
   product_name: ssr-frontend-template
   lang: ru
@@ -16,12 +16,10 @@ copy_deck:
       page_type: home-multipage
       status: assumed
       meta:
-        title: Шаблон индексируемого сайта
+        title: ssr-frontend-template — шаблон индексируемого сайта на Astro
         description: >-
           Шаблон сайта на Astro, который собирает страницы заранее: JavaScript — только острова по решению, один
           Docker-образ на все среды.
-        og_title: Шаблон индексируемого сайта
-        og_description: Страницы собираются заранее, сервер отдаёт их как файлы и включает рендер только по запросу.
         fact_ids: []
       sections:
         - section_id: header

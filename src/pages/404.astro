@@ -14,12 +14,6 @@ const locale = localeOf(Astro.url.pathname)
 const page = pageOf(files, locale)
 ---
 
-<DocumentLayout
-  locale={locale}
-  title={page.meta.title}
-  description={page.meta.description}
-  chrome={page}
-  noindex
->
+<DocumentLayout locale={locale} meta={page.meta} chrome={page} noindex>
   <NotFound {...notFound.props(page, 'not-found')} />
 </DocumentLayout>
