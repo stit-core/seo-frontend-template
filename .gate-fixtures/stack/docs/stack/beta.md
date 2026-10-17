@@ -1,5 +1,5 @@
 ---
-id: stack.beta
+id: stack.betta
 kind: beta
 name: betta
 status: Stable

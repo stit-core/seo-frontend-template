@@ -16,6 +16,8 @@ status: draft
 | _<система>_ | _id_ |
 | пиксель рекламы | _нет_ |
 
+Цель на странице — _событие `<name>`_.
+
 ## Generates
 
 - `src/app/analytics/*`

@@ -2,8 +2,10 @@
 // (условный — с пометкой «Условный kind.» до первой секции): список не дублируется. У артефакта — frontmatter формы: id
 // stack.<kind>, kind и name — имя файла, status draft или stable. У stable — каждая секция формы на месте и в ней
 // решение. Заглушка формы — её курсив (кроме пометки _нет_ — это решение «нет»), плейсхолдер, который форма пишет
-// только в курсиве (<site>, <Бренд>), и <org>, <domain> — организация и домен проекта, их называет service.md; TBD,
-// TODO, FIXME, прочерк, многоточие, вопросы и таблица без строк — тоже не решение.
+// только в курсиве (<site>, <Бренд>), и <org>, <domain> — организация и домен проекта, их называет service.md. Секция
+// из одних TBD, TODO, FIXME, прочерков, многоточий и вопросов и таблица без строк — без решения; ячейку и пункт из
+// TBD, TODO, FIXME, многоточия или вопросов (ячейку — и пустую) проверка называет строкой с номером, как курсив формы:
+// подпись поля в первой колонке таблицы ячейку значения решением не делает. Прочерк в ячейке — законное «нет».
 // --stable — вход /de-template: все обязательные kinds и заведённые условные — stable. Иначе стек «промоутится» одной
 // заменой статуса, и разворот берёт из формы <org> в registry и _<Бренд>_ в идентичность.
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
@@ -62,20 +64,28 @@ function frontmatter(source) {
   }
 }
 
-// Заглушка вместо решения: TBD, TODO или FIXME словом (с хвостом или без), прочерк, многоточие, вопросы. Регистр,
-// `_*` и скобки не в счёт; Todoist и TODO-лист — слова, а не заглушки.
-function stub(value) {
-  const bare = value
+const bare = (value) =>
+  value
     .toUpperCase()
     .replace(/[_*`()]/g, '')
     .trim()
-  return (
-    /^(?:TBD|TODO|FIXME)(?:[^\p{L}\p{N}-].*)?$/u.test(bare) ||
-    /^(?:—|–|-|\.\.\.|…|\?+)?[.:;!]?$/.test(bare)
-  )
-}
-// Решение в секции: строка, пункт, чекбокс или цитата не из одних заглушек; у таблицы — строка под разделителем, где
-// хоть одна ячейка — не заглушка. Заглушки формы из строки вычтены.
+// Заглушка вместо значения: TBD, TODO или FIXME словом (с хвостом или без), многоточие, вопросы. Регистр, `_*` и скобки
+// не в счёт; Todoist и TODO-лист — слова, а не заглушки.
+const placeholder = (value) =>
+  /^(?:TBD|TODO|FIXME)(?:[^\p{L}\p{N}-].*)?$/u.test(bare(value)) ||
+  /^(?:\.\.\.|…|\?+)[.:;!]?$/.test(bare(value))
+// Решения нет: заглушка, прочерк или пусто.
+const stub = (value) => placeholder(value) || /^(?:—|–|-)?[.:;!]?$/.test(bare(value))
+// Разделитель таблицы — строка из `|`, `-` и `:`; строка таблицы под ним — значения.
+const TABLE_RULE = /^\|[\s:|-]*-[\s:|-]*$/
+const itemOf = (value) =>
+  value.replace(/^(?:[-*+]|\d+[.)])\s+/, '').replace(/^(?:\[[ xX]\]|>)\s*/, '')
+const cellsOf = (value) =>
+  value
+    .replace(/^\||(?<!\\)\|$/g, '')
+    .split(/(?<!\\)\|/)
+    .map((cell) => cell.trim())
+
 // Заглушки формы в строке — её курсив и плейсхолдеры вне него; остаток — то, что написал архитектор.
 function stubsIn(line, form) {
   let rest = line
@@ -92,26 +102,48 @@ function stubsIn(line, form) {
   }
   return { found, rest }
 }
+// Решение в секции: строка, пункт, чекбокс или цитата не из одних заглушек; у таблицы — строка под разделителем, где
+// хоть одна ячейка — не заглушка. Заглушки формы из строки вычтены.
 function decided(rows, form) {
   let tableRows = false
   for (const { line } of rows) {
     const value = stubsIn(line, form).rest.trim()
     if (!value.startsWith('|')) tableRows = false
     if (value === '' || value.startsWith('#')) continue
-    if (/^\|[-:|\s]*$/.test(value)) {
+    if (TABLE_RULE.test(value)) {
       tableRows = true
       continue
     }
     if (value.startsWith('|')) {
-      if (tableRows && value.split('|').some((cell) => cell.trim() !== '' && !stub(cell))) {
-        return true
-      }
+      if (tableRows && cellsOf(value).some((cell) => !stub(cell))) return true
       continue
     }
-    const item = value.replace(/^(?:[-*+]|\d+[.)])\s+/, '').replace(/^(?:\[[ xX]\]|>)\s*/, '')
-    if (!stub(item)) return true
+    if (!stub(itemOf(value))) return true
   }
   return false
+}
+// Значение без решения — строкой с номером: ячейка строки таблицы (и пустая), пункт, чекбокс, цитата или строка из
+// одной заглушки. Прочерк не в счёт: у форм это законное «нет» значения.
+function blanks(rows) {
+  const found = []
+  let tableRows = false
+  for (const { line, number } of rows) {
+    const value = line.trim()
+    if (!value.startsWith('|')) tableRows = false
+    if (value === '' || value.startsWith('#')) continue
+    if (TABLE_RULE.test(value)) {
+      tableRows = true
+    } else if (!value.startsWith('|')) {
+      const item = itemOf(value)
+      if (placeholder(item)) found.push([number, `${item} — заглушка, а не решение`])
+    } else if (tableRows) {
+      for (const cell of cellsOf(value)) {
+        if (cell === '') found.push([number, 'пустая ячейка — не решение'])
+        else if (placeholder(cell)) found.push([number, `${cell} — заглушка, а не решение`])
+      }
+    }
+  }
+  return found
 }
 
 const forms = new Map(
@@ -182,11 +214,15 @@ for (const name of markdown(STACK)) {
       )
     }
   }
+  const named = [...sections.values()].flatMap(blanks)
   source.split('\n').forEach((line, index) => {
     for (const span of stubsIn(line, form).found) {
-      problems.push(`${file}:${index + 1}: ${span} — заглушка формы, а не решение`)
+      named.push([index + 1, `${span} — заглушка формы, а не решение`])
     }
   })
+  problems.push(
+    ...named.sort(([a], [b]) => a - b).map(([number, what]) => `${file}:${number}: ${what}`),
+  )
 }
 
 if (stable) {
