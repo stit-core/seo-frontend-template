@@ -668,7 +668,7 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
   шаблон записи `post` (`breadcrumbs` `full-path`, `article-body` `longread`, `related-links` `list`), шаблон тега `tag`
   (`breadcrumbs`, `hero-text`, `article-cards`). Политика первого экрана: список и тег — `offer-cta` (призыв в первом
   экране), запись — `poster` (заголовок и начало текста, призыва в первом экране записи нет). `structured_data` — типы
-  `head-kit` страниц (`CollectionPage`, `Article`, `BreadcrumbList`), печатает их S8. Валидаторы strategy 0.2.2:
+  `head-kit` страниц (`CollectionPage`, `Article`, `BreadcrumbList`), их печатают фабрики JSON-LD (S8). Валидаторы strategy 0.2.2:
   `site_validate.py` — 0 error (PL-A05 × 2: «коротко» и источники `article-body` план записи не заполняет — у записи блога
   таких полей нет), `copydeck.py check` — 0 error (COPY-D-PLAN шаблонов — слоты записи без текста, так и задумано).
 - Блок `article-body` (S7) принимает обязательные элементы каталога: «коротко», источники и разделы (`part`) — их даёт план

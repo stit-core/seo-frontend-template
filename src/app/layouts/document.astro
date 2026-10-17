@@ -37,7 +37,7 @@ interface Props {
   ogImage?: OgImage | undefined
   // Даты записи коллекции: страница записи — статья (og:type article и article:*).
   article?: { published: Date; modified?: Date | undefined } | undefined
-  // JSON-LD страницы в <head>: Organization/WebSite главной, LocalBusiness «О компании», BlogPosting записи.
+  // JSON-LD страницы в <head> — узлы типов её плана (`seo.structured_data`); BreadcrumbList оболочка ставит из крошек.
   jsonLd?: readonly JsonLd[]
   // Каркас — шапка и подвал: секции плана этой страницы strategy; у страницы без своего плана — главной, она задаёт
   // общие шапку и подвал сайта. Своего умолчания у оболочки нет: на запросе она читала бы план главной.
