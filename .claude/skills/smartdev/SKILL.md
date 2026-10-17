@@ -64,5 +64,5 @@ description: Cockpit сессии — сводка состояния (ветк�
 стек: 10 из 10 обязательных stable; api заведён, analytics нет
 зависимости: цикл обновлений 2026-09-02 — пора ежемесячной процедуры
 карта: ../strategy/docs/projects/acme/fsd/web/ — на месте
-следующий шаг: /scaffold page /services (ru + en)
+следующий шаг: /scaffold page services (ru + en)
 ```

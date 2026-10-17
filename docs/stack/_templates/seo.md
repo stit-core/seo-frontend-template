@@ -109,7 +109,8 @@ hreflang выводится только для реально существу�
 
 - `src/shared/config/site.ts` — идентичность, OG, verification, политика ИИ-ботов, `CLEAN_PARAMS`
 - `src/shared/seo/*` — canonical, hreflang, OG, JSON-LD, robots, sitemap, фиды
-- `src/pages/{robots.txt,rss.xml,[key].txt}.ts`, карта сайта из сборки (`scripts/lib/sitemap.mjs`)
+- `src/pages/{robots.txt,[key].txt}.ts`, `src/pages/[...locale]/rss.xml.ts`, карта сайта из сборки
+  (`scripts/lib/sitemap.mjs`)
 - `e2e/http/seo.spec.ts` + `pnpm seo:check` — гейты head'а и карты сайта
 - `config.md` — env `SITE_URL`, `ROBOTS_POLICY`, `INDEXNOW_KEY`
 - чек-лист `/release` и прогон `/seo-audit`

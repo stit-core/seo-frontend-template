@@ -1,0 +1,8 @@
+{
+  "name": "prose-fixture",
+  "private": true,
+  "scripts": {
+    "check": "pnpm check:prose",
+    "check:prose": "node scripts/check-prose.mjs"
+  }
+}

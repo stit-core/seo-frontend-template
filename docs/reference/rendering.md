@@ -212,7 +212,7 @@ git-контента D не нужен: публикация = релиз.
 
 **Что обязательно дописать.**
 
-- single-flight в `src/fetch.ts` (`Map<key, Promise<Response>>`): `memoryCache` не дедуплицирует
+- single-flight запроса к источнику (`Map<key, Promise<Response>>`): `memoryCache` не дедуплицирует
   параллельные промахи — без него холодный старт под трафиком даёт лавину рендеров;
 - прогрев «горячих» URL при старте, фоном, не блокируя `/healthz`;
 - `POST /internal/revalidate` (HMAC-подпись тела, `{ paths | tags }`, ответ 202, неизвестный

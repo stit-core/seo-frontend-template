@@ -71,6 +71,7 @@ pnpm test:http        # после build: HTTP-набор на prod-сервер
 pnpm test:e2e         # build + браузерный набор: axe, раскладка, переход, петля, тема, форма без JS
 pnpm steiger          # структурный линтер FSD
 pnpm check:gate       # негативные фикстуры обязаны валить линтеры и скрипты гейта
+pnpm check:prose      # проза обвязки: пути, скрипты, скиллы и правила есть в репо; .template; маркеров конфликта нет
 pnpm check:content    # контент-гейт: схема .md, даты, тело без скрытой разметки, переводы, ссылки, redirects.yaml
 pnpm check:links      # после build: все внутренние ссылки в dist/client существуют
 pnpm seo:check        # после build: мета и типы JSON-LD — по плану, сниппет, hreflang, JSON-LD = видимое, острова и ресурсы
@@ -112,7 +113,7 @@ src/widgets/      блоки каталога strategy (пропсы — эле�
                   (их ставит оболочка по секциям плана страницы)
 src/features/     contact-form (форма без JS и её обработчик), preferences (остров предпочтений:
                   тема и движение)
-src/entities/     post: content/{ru,en}/*.md + covers/, model, api, lib; author: реестр авторов
+src/entities/     post: content/<locale>/*.md + covers/, model, api, lib; author: реестр авторов
                   (в шаблоне пуст): имя, роль и профиль для подписи записи
 src/shared/       config (runtime env, Zod; идентичность сайта), i18n, lib (+ testing), redirects,
                   seo (absoluteUrl, hreflang, SeoHead, JSON-LD, robots/sitemap/rss), strategy (чтение

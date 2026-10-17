@@ -166,5 +166,5 @@ training meta-externalagent — —
   `docker stop` останавливает сайт.
 - **Среда** — `make accept SVC=site` в хабе после каждой выкатки (код 0) и `make status` без
   `ATTENTION`, в профиле среды; что из этого документа приёмка проверяет —
-  `docs/reference/runbook.md § Приёмка сайта` в `<org>/infra`.
+  `<org>/infra/docs/reference/runbook.md § Приёмка сайта`.
 - **Домен** — `/seo-audit` по прод-домену здесь.

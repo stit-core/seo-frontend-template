@@ -52,7 +52,7 @@ ref: docs/stack/content.md
   маркетолог?». Плохо: «разобраться с контентом».
 - **Cross-kind blocker** — частый случай: писать в state того роллапа, который
   недополучил. `state/config.md` → «`api` объявил `SMTP_URL` — добавить в таблицу
-  (**blocker**)»; `state/rendering.md` → «страница `/services` из карты без режима».
+  (**blocker**)»; `state/rendering.md` → «страница `/about` из карты без режима».
 
 ### `## Платформенные решения`
 

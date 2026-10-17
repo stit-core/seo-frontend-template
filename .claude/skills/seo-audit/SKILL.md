@@ -119,11 +119,11 @@ seo-audit · <домен или dist/client>
 
 зелёное: build, check:links (802 ссылки), seo:check (34 страницы, 11 пар hreflang), size
 красное:
-  • /services — description дублирует /about (seo:check)
-  • /old-price — 200 вместо 410: строка есть в redirects.yaml, но файл страницы вернулся
+  • /contacts — description дублирует /about (seo:check)
+  • /blog/staraya-zametka — 200 вместо 410: строка есть в redirects.yaml, но запись вернулась
 GEO: реестр ботов — копия равна базе; 16 шаблонов, чинить:
   • /blog/<slug> — S ua-PerplexityBot-status-429: бота режет edge
-чинить: 1) переписать description /services; 2) удалить src/pages/old-price.astro;
+чинить: 1) переписать description /contacts; 2) снять вернувшуюся запись <slug>;
         3) allowlist ИИ-ботов в CrowdSec — задание для <org>/infra
 дальше руками: Rich Results Test по /blog/<slug>, PSI mobile по главной
 ```

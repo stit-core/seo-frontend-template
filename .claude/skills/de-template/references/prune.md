@@ -8,7 +8,8 @@ Reference-набор шаблона — **живой образец**, а не �
 
 ## Что остаётся в любом режиме
 
-`src/pages/{index,about,contacts/*,legal/privacy,404,500,healthz,robots.txt,[key].txt,api/contact}`,
+`src/pages/[...locale]/{index,about,contacts/*,legal/privacy}`,
+`src/pages/{404,500,healthz,robots.txt,[key].txt,api/contact}`,
 файлы страниц `_about/`, `_contacts/`, `_privacy/`, `src/features/{contact-form,preferences}`,
 `src/widgets/{header,footer,breadcrumbs}` и блоки страниц, данные `strategy/`,
 `src/shared/**`, `src/app/**`, `.gate-fixtures/`, `docker/`, `scripts/`, гейты. Фикстуры гейта на
@@ -34,7 +35,7 @@ Reference-набор шаблона — **живой образец**, а не �
    сборки, а своя вёрстка записи может весить иначе
 5. Переименовать коллекцию под свой домен (`post` → `article`, `case`, `vacancy`) — если
    переименовываешь: каталог слайса, `src/content.config.ts`, реестр `scripts/lib/content.mjs`,
-   импорты `@/entities/post`, маршруты `src/pages/blog/**`
+   импорты `@/entities/post`, маршруты `src/pages/[...locale]/blog/**`
 
 ---
 

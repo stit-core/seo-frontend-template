@@ -65,7 +65,7 @@
 |---|---|---|
 | `strategy: projects/<slug>/fsd/<surface>/` | `site/` | карта слайсов — вход `/scaffold` и `/de-template` |
 | `strategy: projects/<slug>/{interface,screens}/<surface>/` | `site/` | контекст: аудитории, ситуации, экраны, блоки — из них растут тексты страниц |
-| `strategy: .claude/skills/design-deep-dive/` (база знаний и утилиты) | `site/` | нормы SEO и GEO: реестр ботов `crawlers.yaml` — копией в `src/shared/seo` (сверяет `pnpm geo:probe`), `geo_probe.py` — шаг `/seo-audit`, `copy_lint.py` — шаг `/content`; утилиты запускаются из чекаута соседа его окружением, без соседа шаги пропускаются |
+| `../strategy/.claude/skills/design-deep-dive/` (база знаний и утилиты) | `site/` | нормы SEO и GEO: реестр ботов `crawlers.yaml` — копией в `src/shared/seo` (сверяет `pnpm geo:probe`), `geo_probe.py` — шаг `/seo-audit`, `copy_lint.py` — шаг `/content`; утилиты запускаются из чекаута соседа его окружением, без соседа шаги пропускаются |
 | `docs/stack/**` (здесь) | `/de-template`, `/scaffold` | платформенные решения: источник контента, маршруты, режимы, env |
 | `docs/reference/deployment.md` (здесь) | `infra/` | env-контракт образа |
 | `docs/reference/infra-handoff.md` (здесь) | `infra/` | контракт сервиса `site`: что гарантирует образ, требования к среде и edge, боты, приёмка; исполняет стек хаба |

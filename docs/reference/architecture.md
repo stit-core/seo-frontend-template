@@ -53,8 +53,8 @@ deck по ключу `page/section/slot`, шапку и подвал оболо�
 
 `src/content.config.ts`, `src/middleware.ts`, `src/env.d.ts` — не слои, а тонкие входы:
 реэкспорт, декларация типов, регистрация коллекций. Логика — в `app/middleware`,
-`entities/<x>/model`, `features/<x>/api`. Других файлов вне слоёв нет: `src/components`,
-`src/lib` или новый вход Astro ESLint не пропустит, пока вход не объявлен в `ASTRO_ENTRIES`
+`entities/<x>/model`, `features/<x>/api`. Других файлов вне слоёв нет: каталог `components/` или
+`lib/` в `src` или новый вход Astro ESLint не пропустит, пока вход не объявлен в `ASTRO_ENTRIES`
 `eslint.config.js`.
 
 `content.config.ts` импортирует коллекцию **напрямую из модуля** слайса: через баррель
@@ -94,7 +94,7 @@ src/
 │                 · thank-you · not-found · legal-text · article-cards · article-body · related-links
 │                 · header · footer · breadcrumbs
 ├─ features/      contact-form · preferences
-├─ entities/      post (content/{ru,en}/*.md + covers, model, api, lib) · author
+├─ entities/      post (content/<locale>/*.md + covers, model, api, lib) · author
 └─ shared/        config · i18n · seo · redirects · strategy · observability · antispam · lib
                   · ui/{section,heading,term-list,media,action,card}
 ```

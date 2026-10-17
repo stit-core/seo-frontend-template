@@ -1,0 +1,3 @@
+- from: /old
+  to: /about
+  status: 301

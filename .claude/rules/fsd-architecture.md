@@ -66,7 +66,7 @@ record)`): наборы записей (`records`: свежие, список, �
 (`env.d.ts`). ESLint знает их списком `ASTRO_ENTRIES` (`eslint.config.js`; импорт — только
 `app` и `entities`, `no-restricted-imports` выключен), Steiger их игнорирует. Логика — в
 `app/middleware`, `features/<x>/api`, `entities/<x>/model`. Любой другой файл вне слоёв
-(`src/components`, `src/lib`, новый вход Astro) — ошибка `boundaries/no-unknown-files`: вход
+(каталог `components/` или `lib/` в `src`, новый вход Astro) — ошибка `boundaries/no-unknown-files`: вход
 заводится строкой в `ASTRO_ENTRIES`.
 `content.config.ts` импортирует коллекцию **напрямую из модуля** слайса
 (`@/entities/<x>/model/collection`): через баррель dev-сервер теряет конфиг контента. Там же
@@ -103,7 +103,7 @@ Frontmatter `.astro` и модули `.ts` исполняются на серв�
 ## Сегменты слайса
 
 `ui/` `model/` `api/` `lib/` `config/` + `content/` (markdown-коллекция сущности:
-`content/<locale>/<slug>.md`, обложки в `content/covers/`).
+`src/entities/<name>/content/<locale>/<slug>.md`, обложки — в `src/entities/<name>/content/covers/`).
 Группировка по типу (`components/`, `hooks/`, `utils/`, `types/`) запрещена — Steiger
 `segments-by-purpose`.
 

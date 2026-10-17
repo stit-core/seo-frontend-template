@@ -1,6 +1,6 @@
 // Гейт на гейт: негативные фикстуры .gate-fixtures/ обязаны валить линтеры (ESLint, Steiger,
 // Biome — теми же конфигами, что и src/) и собственные скрипты гейта (seo:check, check:links,
-// check:content, plan:check) — ровно нарушениями из expected.json, не больше и не меньше. Иначе
+// check:content, plan:check, check:prose) — ровно нарушениями из expected.json, не больше и не меньше. Иначе
 // деградация (Steiger fail-open, выключенная a11y-группа Biome, потерянный резолвер boundaries,
 // ослабленная проверка скрипта) остаётся незамеченной: прогон зелёный, а держать нечем. Пустая или
 // урезанная секция expected.json — тоже деградация: её ловит точное совпадение. Периметр — так же:
@@ -8,7 +8,15 @@
 // работу. Скрипт релиза indexnow — сценариями на локальной заглушке, перенос обвязки
 // template:update — сценариями на мини-репо: исходы — те же строки expected.json.
 import { spawn, spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
@@ -252,21 +260,22 @@ const GIT_ENV = {
   LC_ALL: 'C',
 }
 const CANONICAL_ORIGIN = 'git@git.stit.tech:stit-core/ssr-frontend-template.git'
+const FORK_ORIGIN = 'git@git.stit.tech:acme/site.git'
+const gitIn = (cwd, args) => {
+  const result = spawnSync('git', args, { cwd, env: GIT_ENV, encoding: 'utf8' })
+  if (result.error) throw result.error
+  if (result.status !== 0) throw new Error(`check:gate: git ${args.join(' ')}: ${result.stderr}`)
+  return result.stdout
+}
 
 function templateOutcomes() {
   const temp = mkdtempSync(join(tmpdir(), 'gate-template-'))
   const lines = []
   const labels = new Map()
-  const exec = (cwd, args, options = {}) => {
-    const result = spawnSync('git', args, { cwd, env: GIT_ENV, encoding: 'utf8', ...options })
-    if (result.error) throw result.error
-    if (result.status !== 0) throw new Error(`check:gate: git ${args.join(' ')}: ${result.stderr}`)
-    return result.stdout
-  }
   const repo = (name) => {
     const dir = join(temp, name)
     mkdirSync(dir)
-    exec(dir, ['init', '-q', '-b', 'main'])
+    gitIn(dir, ['init', '-q', '-b', 'main'])
     return dir
   }
   // Коммит: файлы (null — удалить); с именем — коммит шаблона, его хеш в выводе движка заменит имя.
@@ -279,11 +288,11 @@ function templateOutcomes() {
         writeFileSync(path, content)
       }
     }
-    exec(dir, ['add', '-A'])
-    exec(dir, ['commit', '-q', '-m', label ?? 'commit'])
-    if (label) labels.set(exec(dir, ['rev-parse', 'HEAD']).trim(), `{${label}}`)
+    gitIn(dir, ['add', '-A'])
+    gitIn(dir, ['commit', '-q', '-m', label ?? 'commit'])
+    if (label) labels.set(gitIn(dir, ['rev-parse', 'HEAD']).trim(), `{${label}}`)
   }
-  const tag = (dir, name, message = name) => exec(dir, ['tag', '-a', name, '-m', message])
+  const tag = (dir, name, message = name) => gitIn(dir, ['tag', '-a', name, '-m', message])
   // Форк — новый репо из дерева коммита шаблона одним коммитом, как «Use this template»; extra — правки до него.
   const fork = (name, template, rev, extra = {}) => {
     const dir = repo(name)
@@ -317,14 +326,14 @@ function templateOutcomes() {
         : 'нет'
       lines.push(`${step}: ${file} — ${content}`)
     }
-    const index = exec(dir, ['-c', 'core.quotePath=false', 'status', '--porcelain'])
+    const index = gitIn(dir, ['-c', 'core.quotePath=false', 'status', '--porcelain'])
     for (const line of index.split('\n').filter(Boolean)) lines.push(`${step}: индекс ${line}`)
   }
   const refs = (step, dir) => {
-    const all = exec(dir, ['for-each-ref', '--format=%(refname)', 'refs/tags', 'refs/template'])
+    const all = gitIn(dir, ['for-each-ref', '--format=%(refname)', 'refs/tags', 'refs/template'])
     lines.push(`${step}: ссылки — ${all.trim().split('\n').filter(Boolean).join(' ') || 'нет'}`)
   }
-  const remote = (dir, template) => exec(dir, ['remote', 'add', '--no-tags', 'template', template])
+  const remote = (dir, template) => gitIn(dir, ['remote', 'add', '--no-tags', 'template', template])
 
   // Перенос: правки форка целы (трёхстороннее слияние), конфликт — в индексе, «нет в форке» и «шаблон удалил, форк
   // менял» названы, путь :(exclude) и код вне путей шаблона — форка; имена со скобками маршрута и не в ASCII — как
@@ -376,7 +385,7 @@ function templateOutcomes() {
     })
     tag(f, 'v1.0.0', 'релиз форка')
     tag(f, 'v2.0.0', 'релиз форка')
-    exec(f, ['remote', 'add', 'origin', 'git@git.stit.tech:acme/site.git'])
+    gitIn(f, ['remote', 'add', 'origin', FORK_ORIGIN])
     remote(f, t)
     update('перенос: статус', f, '--status')
     update('перенос: превью', f)
@@ -518,12 +527,12 @@ function templateOutcomes() {
     remote(f, t)
     update('remote: в шаблоне новее', f, '--remote')
     refs('remote: в шаблоне новее', f)
-    exec(f, ['remote', 'set-url', 'template', join(temp, 'net-takogo.git')])
+    gitIn(f, ['remote', 'set-url', 'template', join(temp, 'net-takogo.git')])
     update('remote: не ответил', f, '--remote')
-    exec(f, ['remote', 'set-url', 'template', t])
+    gitIn(f, ['remote', 'set-url', 'template', t])
     commit(f, { '.template/version': 'v1.1.0\n' })
     update('remote: новее нет', f, '--remote')
-    exec(t, ['remote', 'add', 'origin', CANONICAL_ORIGIN])
+    gitIn(t, ['remote', 'add', 'origin', CANONICAL_ORIGIN])
     update('канон: remote', t, '--remote')
     update('канон: статус', t, '--status')
     commit(t, { '.template/version': 'v1.2.0\n' })
@@ -535,6 +544,57 @@ function templateOutcomes() {
 }
 want.template = expected.template ?? []
 found.template = templateOutcomes()
+
+// check:prose — на мини-репо из .gate-fixtures/prose во временном каталоге: у проверки свой git (что отслеживается,
+// origin, теги на HEAD), файл вне git дописывается после коммита. Канон (origin — репо шаблона) несёт на HEAD тег
+// другой версии и лёгкий тег своей; тот же репо с origin форка — теги на HEAD его релизы: строки «только канон» —
+// правило тега, «только форк» быть не должно.
+function proseOutcomes() {
+  const temp = mkdtempSync(join(tmpdir(), 'gate-prose-'))
+  cpSync(resolve(fixtures, 'prose'), temp, { recursive: true })
+  gitIn(temp, ['init', '-q', '-b', 'main'])
+  gitIn(temp, ['add', '-A'])
+  gitIn(temp, ['commit', '-q', '-m', 'prose'])
+  gitIn(temp, ['tag', '-a', 'v9.9.9', '-m', 'v9.9.9'])
+  gitIn(temp, ['tag', 'v1.0.0'])
+  writeFileSync(join(temp, 'docs/ne-v-git.md'), '# Вне git\n')
+  const check = (origin) => {
+    gitIn(temp, ['remote', 'add', 'origin', origin])
+    const result = spawnSync(process.execPath, [resolve(root, 'scripts/check-prose.mjs'), temp], {
+      env: GIT_ENV,
+      encoding: 'utf8',
+    })
+    gitIn(temp, ['remote', 'remove', 'origin'])
+    if (result.error) throw result.error
+    return result
+  }
+  const runs = { canon: check(CANONICAL_ORIGIN), fork: check(FORK_ORIGIN) }
+  rmSync(temp, { recursive: true, force: true })
+  const lines = {}
+  for (const [mode, result] of Object.entries(runs)) {
+    if (result.status !== 1) {
+      console.error(
+        `check:gate: check-prose.mjs на фикстуре (${mode}) вышел с кодом ${result.status}, а не 1\n${result.stdout}${result.stderr}`,
+      )
+      process.exit(1)
+    }
+    lines[mode] = result.stderr
+      .split('\n')
+      .filter((line) => line.startsWith('  '))
+      .map((line) => line.slice(2))
+  }
+  return [
+    ...lines.canon,
+    ...lines.canon
+      .filter((line) => !lines.fork.includes(line))
+      .map((line) => `только канон: ${line}`),
+    ...lines.fork
+      .filter((line) => !lines.canon.includes(line))
+      .map((line) => `только форк: ${line}`),
+  ]
+}
+want.prose = expected.prose ?? []
+found.prose = proseOutcomes()
 
 // Guard-хук: отказ — код 2 (так Claude Code блокирует вызов), пропуск — 0.
 const guard = JSON.parse(readFileSync(resolve(fixtures, 'guard.json'), 'utf8'))
@@ -560,7 +620,14 @@ console.info(
     ? `✓ guard: обходов ${guard.block.length} — отказ, обычных команд ${guard.allow?.length ?? 0} — пропуск`
     : `✗ guard:\n${guardLines.join('\n')}`,
 )
-for (const section of [...LINTERS, ...Object.keys(SCRIPTS), 'plans', 'indexnow', 'template']) {
+for (const section of [
+  ...LINTERS,
+  ...Object.keys(SCRIPTS),
+  'plans',
+  'prose',
+  'indexnow',
+  'template',
+]) {
   if (want[section].length === 0) {
     console.error(`✗ ${section}: секция expected.json пуста — гейт на гейт выключен`)
     problems++

@@ -1,0 +1,8 @@
+# Пути мини-репо: строка без файлов — нарушение.
+.template
+CLAUDE.md
+.claude
+:(exclude).claude/plans
+docs
+net-takogo-puti
+:(exclude)docs/net-isklyucheniya
