@@ -26,8 +26,8 @@ const INLINE = new Set(
   ),
 )
 
-// Участки текста `<body>`: текст блочного элемента вместе со строчными детьми и текстовые атрибуты — каждый своим
-// участком. Скрытое (`hidden`, `aria-hidden`, `sr-only`) — тоже текст страницы: его читают поиск и чтец экрана.
+// Участки текста `<body>` и `<head>`: текст блочного элемента вместе со строчными детьми и текстовые атрибуты — каждый
+// своим участком. Скрытое (`hidden`, `aria-hidden`, `sr-only`) — тоже текст страницы: его читают поиск и чтец экрана.
 function runsOf(root: Element): string[] {
   const runs: string[] = []
   let run = ''
@@ -62,13 +62,27 @@ function runsOf(root: Element): string[] {
   return runs
 }
 
+// Тексты <head> для человека: заголовок окна и сниппета, описание и тексты превью ссылки — тоже слова страницы.
+const HEAD_META = ['description', 'og:title', 'og:description', 'og:image:alt']
+
+// Участки текста <head>: заголовок и текстовые атрибуты (подпись фида) — как в теле, мета — своим участком.
+function headRunsOf(head: Element): string[] {
+  const meta = [...head.querySelectorAll('meta')].flatMap((tag) => {
+    const name = tag.getAttribute('name') ?? tag.getAttribute('property') ?? ''
+    const content = tag.getAttribute('content') ?? ''
+    return HEAD_META.includes(name) && LETTER.test(content) ? [normalize(content)] : []
+  })
+  return [...runsOf(head), ...meta]
+}
+
 // Слова страницы мимо данных: из каждого участка вычитаются тексты данных — длинные первыми, чтобы короткая строка не
 // разрезала длинную; остаток с буквами — текст, которого нет ни в одном источнике. Ответ — остатки с участком.
 export function strayText(html: string, texts: Iterable<string>): string[] {
   const known = [...new Set([...texts].map(normalize).filter((text) => LETTER.test(text)))].sort(
     (a, b) => b.length - a.length,
   )
-  return runsOf(parseHtml(html).body).flatMap((run) => {
+  const page = parseHtml(html)
+  return [...headRunsOf(page.head), ...runsOf(page.body)].flatMap((run) => {
     const rest = known.reduce((left, text) => left.split(text).join('\u0000'), run)
     const stray = rest
       .split('\u0000')

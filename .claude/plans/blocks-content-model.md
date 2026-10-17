@@ -449,8 +449,10 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
   `/api/contact` не меняется: на нём лимит edge (`site-form` шаблона инфры).
 - Текст страницы — данные (B1 валидатора этапа C): главная защита — тест страниц по смыслу (`pages.astro.test.ts`,
   хелпер `src/pages/_tests/texts.ts`; ответ формы с ошибками и сбой доставки — `contact.astro.test.ts`). У каждой
-  страницы сборки и on-demand страницы карты на каждом её языке из текста `<body>` вычитаются тексты страниц снимка на
-  языке (copy deck по ключу и мета), формулировки фактов, адреса каналов без подписи (почта, телефон), строки словаря без
+  страницы сборки и on-demand страницы карты на каждом её языке из текста `<body>` и текстов `<head>` (`<title>`,
+  description, `og:title`, `og:description`, `og:image:alt`; N2 валидатора этапа D: мету тега, страниц 2…N и 500
+  `seo:check` с copy deck не сверяет) вычитаются тексты страниц снимка на языке (copy deck по ключу и мета),
+  формулировки фактов, адреса каналов без подписи (почта, телефон), строки словаря без
   подстановок (подстановка — сама данные: тег, номер страницы, заголовок), самоназвания языков, `SITE_NAME` и значения
   записей коллекции фикстур языка — заголовок, анонс, теги, автор, даты в формате сайта, альтернатива обложки и тело
   записи (текст коллекции, а не разметки); длинные строки — первыми, чтобы короткая не резала длинную. Участок текста —
@@ -468,9 +470,10 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
   - Текстовые атрибуты HTML-элемента (тег строчными) — один список `TEXT_ATTRIBUTES` (`shared/i18n/text-attributes.ts`)
     у lint и теста «текст страницы — данные» (N10 валидатора этапа C): текст, который браузер показывает или читает
     вслух. Это переводимые атрибуты стандарта HTML — `abbr`, `alt`, `download`, `label`, `placeholder`, `srcdoc`, `title`
-    (код `lang` — не текст, `style` запрещён каноном UI, `content` меты — head оболочки: «мета = copy deck» держит
-    `seo:check` S9), строки ARIA для человека (`aria-label`, `aria-description`, `aria-roledescription`,
-    `aria-placeholder`, `aria-valuetext`, `aria-braillelabel`, `aria-brailleroledescription`) и `value` кнопки-поля: у
+    (код `lang` — не текст, `style` запрещён каноном UI, `content` меты — head оболочки: его тексты тест «текст
+    страницы — данные» читает по имени меты, мету страницы плана с copy deck сверяет `seo:check`), строки ARIA для
+    человека (`aria-label`, `aria-description`, `aria-roledescription`, `aria-placeholder`, `aria-valuetext`,
+    `aria-braillelabel`, `aria-brailleroledescription`) и `value` кнопки-поля: у
     `<input>` типов `submit`, `reset`, `button` это по стандарту подпись (`BUTTON_TYPES`), у `<button>` и `<option>`
     `value` — данные формы. Прочие атрибуты HTML — разметка
     (`aria-expanded`, `target`, `slot`, `as`, `media`, `crossorigin`, `charset`, `data-*`…): блоки P8 (аккордеон, внешняя
