@@ -92,7 +92,7 @@ import {
   TAG_INDEX_MIN_POSTS,
   TITLE_BUDGET,
 } from './lib/site-policy.mjs'
-import { sitemapUrls } from './lib/sitemap.mjs'
+import { pageDateOf, sitemapUrls } from './lib/sitemap.mjs'
 
 // Корень проекта; другой корень — негативные фикстуры check:gate (`.gate-fixtures/<скрипт>`).
 const root = resolve(process.argv[2] ?? resolve(import.meta.dirname, '..'))
@@ -1155,6 +1155,29 @@ for (const file of walk(client)) {
     plan,
   )
   checkMarkupVisible(where, body, blocks, facts)
+  // Даты — только у записи коллекции, и это даты её источника: правка, без неё — публикация frontmatter. Дату страницы
+  // берут генератор карты (pageDateOf) и разметка записи; у страницы вне коллекций дат нет.
+  const dates = [
+    ['article:*_time', pageDateOf(tags)],
+    ...blocks.map((data) => [data['@type'], data.dateModified ?? data.datePublished]),
+  ].filter(([, date]) => date !== undefined)
+  if (!entryPaths.has(path) && !draftPaths.has(path)) {
+    if (dates.length > 0) {
+      fail(
+        where,
+        `даты у страницы вне коллекций (${dates.map(([of, date]) => `${of} ${date}`).join(', ')}): даты публикации и правки — только у записи коллекции`,
+      )
+    }
+  } else {
+    for (const [of, date] of dates) {
+      if (entryDates.has(path) && date !== entryDates.get(path)) {
+        fail(
+          where,
+          `${of}: дата ${date}, а запись по источнику — ${entryDates.get(path)} (правка, без неё — публикация)`,
+        )
+      }
+    }
+  }
   checkEntities(where, blocks, { lang, visible: textOf(body), bylines: bylinesOf(body) })
 
   pages.set(path, { where, title, description, canonical, hrefs, noindex })

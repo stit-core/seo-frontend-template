@@ -58,6 +58,8 @@
     "dist/client/blog/statya/index.html: Article.publisher — не Organization: издатель сайта и записи — организация по @id",
     "dist/client/blog/statya/index.html: JSON-LD «Article» — у страницы нет плана strategy: тип разметки даёт план",
     "dist/client/blog/statya/index.html: JSON-LD «BreadcrumbList» — у страницы нет плана strategy: тип разметки даёт план",
+    "dist/client/blog/statya/index.html: article:*_time: дата 2026-02-02, а запись по источнику — 2026-02-20 (правка, без неё — публикация)",
+    "dist/client/blog/statya/index.html: Article: дата 2026-03-03, а запись по источнику — 2026-02-20 (правка, без неё — публикация)",
     "dist/client/dlinnyy/index.html: первая иконка /net-ikonki.png: файла нет в dist/client",
     "dist/client/dlinnyy/index.html: title — 93 знаков, бюджет 65",
     "dist/client/dlinnyy/index.html: description — 188 знаков, бюджет 70–170",
@@ -249,7 +251,8 @@
     "dist/client/meta/index.html: og:title «Мета страницы из copy deck — Фикстура — Фикстура» — не og_title copy deck страницы meta: «Мета из copy deck»",
     "dist/client/meta/index.html: og:description — не og_description copy deck страницы meta",
     "dist/client/vtoroy-id/index.html: Article.author: у имени «Анна Автор» на ru второй @id https://__site_origin__/#author-anna-kopiya, в dist/client/tipografika/index.html — https://__site_origin__/#author-anna: один человек — один @id",
-    "dist/client/vtoroy-id/index.html: Article.author: у профиля https://__site_origin__/avtory/anna второй @id https://__site_origin__/#author-anna-kopiya, в dist/client/en/author/index.html — https://__site_origin__/#author-anna: один человек — один @id"
+    "dist/client/vtoroy-id/index.html: Article.author: у профиля https://__site_origin__/avtory/anna второй @id https://__site_origin__/#author-anna-kopiya, в dist/client/en/author/index.html — https://__site_origin__/#author-anna: один человек — один @id",
+    "dist/client/datirovannaya/index.html: даты у страницы вне коллекций (article:*_time 2026-03-05, Article 2026-03-05): даты публикации и правки — только у записи коллекции"
   ],
   "links": [
     "dist/client/index.html: /rss.xml — не существует",
