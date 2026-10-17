@@ -80,6 +80,7 @@ pnpm indexnow <origin> [карта-до.xml] --key <ключ>   # IndexNow по�
 pnpm geo:probe <origin>     # GEO-шаг /seo-audit: проба соседнего strategy по шаблонам страниц (advisory)
 pnpm bots:sources           # источники сетей ботов реестра — configs/crowdsec/ai-bots.sources хаба <org>/infra
 pnpm accept:image <image>   # приёмка собранного образа до пуша в registry
+pnpm template:update        # обвязка шаблона в форк: новые теги шаблона, перенос до тега — TO=vX.Y.Z
 pnpm check            # gate — состав: .claude/rules/tests-pipeline.md § Gate
 ```
 
@@ -122,7 +123,8 @@ src/{content.config,middleware,env.d}.ts   навязанные Astro entry — 
 docker/           Dockerfile (4 стадии), entrypoint.sh + stamp.mjs (штамповка SITE_URL), server.mjs
 e2e/              Playwright на prod-сборке: http/ — в гейте, browser/ — в /release
 scripts/          гейты (check-gate, check-content, check-links, seo-check, lib/), validate-plan,
-                  pre-push, ttfb, indexnow, geo-probe, bot-sources, accept-image
+                  pre-push, ttfb, indexnow, geo-probe, bot-sources, accept-image, template-update
+.template/        версия обвязки шаблона и пути шаблона — их переносит в форк template-update
 docs/stack/       формы платформенных артефактов (12 kinds) — заполняет /stack-deep-dive
 .claude/          правила (path-scoped) и скиллы (init-service, scaffold, content, release…)
 ```

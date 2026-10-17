@@ -5,13 +5,13 @@
 // ослабленная проверка скрипта) остаётся незамеченной: прогон зелёный, а держать нечем. Пустая или
 // урезанная секция expected.json — тоже деградация: её ловит точное совпадение. Периметр — так же:
 // guard-хук Claude Code обязан отказать каждому обходу из .gate-fixtures/guard.json и пропустить
-// работу. Скрипт релиза indexnow — сценариями на локальной заглушке: исходы — те же строки
-// expected.json.
+// работу. Скрипт релиза indexnow — сценариями на локальной заглушке, перенос обвязки
+// template:update — сценариями на мини-репо: исходы — те же строки expected.json.
 import { spawn, spawnSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { createServer } from 'node:http'
 import { tmpdir } from 'node:os'
-import { isAbsolute, join, relative, resolve } from 'node:path'
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 
 const root = resolve(import.meta.dirname, '..')
 const fixtures = resolve(root, '.gate-fixtures')
@@ -233,6 +233,309 @@ async function indexNowOutcomes() {
 want.indexnow = expected.indexnow ?? []
 found.indexnow = await indexNowOutcomes()
 
+// Перенос обвязки (scripts/template-update.sh) — сценариями на мини-репо во временном каталоге: шаблон с
+// аннотированными тегами и форк из дерева его коммита («Use this template») с remote template. Git — без окружения
+// и конфигов вызывающего (хук git задаёт GIT_DIR своего репо) и с одним временем коммитов: хеши у каждого прогона те
+// же, а в строке исхода коммит шаблона назван по имени. Исход шага — код выхода и вывод движка; состояние форка —
+// файлы, индекс и ссылки: его релизы — в refs/tags, теги шаблона — в refs/template.
+const TEMPLATE_UPDATE = resolve(root, 'scripts/template-update.sh')
+const GIT_ENV = {
+  ...Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_'))),
+  GIT_CONFIG_GLOBAL: '/dev/null',
+  GIT_CONFIG_NOSYSTEM: '1',
+  GIT_AUTHOR_NAME: 'gate',
+  GIT_AUTHOR_EMAIL: 'gate@example.com',
+  GIT_AUTHOR_DATE: '2026-01-01T00:00:00Z',
+  GIT_COMMITTER_NAME: 'gate',
+  GIT_COMMITTER_EMAIL: 'gate@example.com',
+  GIT_COMMITTER_DATE: '2026-01-01T00:00:00Z',
+  LC_ALL: 'C',
+}
+const CANONICAL_ORIGIN = 'git@git.stit.tech:stit-core/ssr-frontend-template.git'
+
+function templateOutcomes() {
+  const temp = mkdtempSync(join(tmpdir(), 'gate-template-'))
+  const lines = []
+  const labels = new Map()
+  const exec = (cwd, args, options = {}) => {
+    const result = spawnSync('git', args, { cwd, env: GIT_ENV, encoding: 'utf8', ...options })
+    if (result.error) throw result.error
+    if (result.status !== 0) throw new Error(`check:gate: git ${args.join(' ')}: ${result.stderr}`)
+    return result.stdout
+  }
+  const repo = (name) => {
+    const dir = join(temp, name)
+    mkdirSync(dir)
+    exec(dir, ['init', '-q', '-b', 'main'])
+    return dir
+  }
+  // Коммит: файлы (null — удалить); с именем — коммит шаблона, его хеш в выводе движка заменит имя.
+  const commit = (dir, files, label) => {
+    for (const [file, content] of Object.entries(files)) {
+      const path = join(dir, file)
+      if (content === null) rmSync(path)
+      else {
+        mkdirSync(dirname(path), { recursive: true })
+        writeFileSync(path, content)
+      }
+    }
+    exec(dir, ['add', '-A'])
+    exec(dir, ['commit', '-q', '-m', label ?? 'commit'])
+    if (label) labels.set(exec(dir, ['rev-parse', 'HEAD']).trim(), `{${label}}`)
+  }
+  const tag = (dir, name, message = name) => exec(dir, ['tag', '-a', name, '-m', message])
+  // Форк — новый репо из дерева коммита шаблона одним коммитом, как «Use this template»; extra — правки до него.
+  const fork = (name, template, rev, extra = {}) => {
+    const dir = repo(name)
+    const archive = spawnSync('git', ['archive', rev], { cwd: template, env: GIT_ENV })
+    if (archive.status !== 0) throw new Error(`check:gate: git archive ${rev}: ${archive.stderr}`)
+    const tar = spawnSync('tar', ['-x', '-C', dir], { input: archive.stdout })
+    if (tar.status !== 0) throw new Error(`check:gate: tar: ${tar.stderr}`)
+    commit(dir, extra)
+    return dir
+  }
+  const update = (step, dir, ...args) => {
+    const result = spawnSync('bash', ['-c', 'bash "$0" "$@" 2>&1', TEMPLATE_UPDATE, ...args], {
+      cwd: dir,
+      env: GIT_ENV,
+      encoding: 'utf8',
+    })
+    if (result.error) throw result.error
+    lines.push(`${step}: код ${result.status}`)
+    for (const line of result.stdout.split('\n')) {
+      if (line.trim() === '') continue
+      lines.push(
+        `${step}: ${line.trimEnd().replace(/\b[0-9a-f]{40}\b/g, (sha) => labels.get(sha) ?? sha)}`,
+      )
+    }
+  }
+  const state = (step, dir, files = []) => {
+    for (const file of files) {
+      const path = join(dir, file)
+      const content = existsSync(path)
+        ? readFileSync(path, 'utf8').trimEnd().replaceAll('\n', '⏎')
+        : 'нет'
+      lines.push(`${step}: ${file} — ${content}`)
+    }
+    const index = exec(dir, ['-c', 'core.quotePath=false', 'status', '--porcelain'])
+    for (const line of index.split('\n').filter(Boolean)) lines.push(`${step}: индекс ${line}`)
+  }
+  const refs = (step, dir) => {
+    const all = exec(dir, ['for-each-ref', '--format=%(refname)', 'refs/tags', 'refs/template'])
+    lines.push(`${step}: ссылки — ${all.trim().split('\n').filter(Boolean).join(' ') || 'нет'}`)
+  }
+  const remote = (dir, template) => exec(dir, ['remote', 'add', '--no-tags', 'template', template])
+
+  // Перенос: правки форка целы (трёхстороннее слияние), конфликт — в индексе, «нет в форке» и «шаблон удалил, форк
+  // менял» названы, путь :(exclude) и код вне путей шаблона — форка; имена со скобками маршрута и не в ASCII — как
+  // есть. Релизы форка v1.0.0 и v2.0.0 — его теги, а не версии шаблона: ни базой, ни целью переноса они не становятся.
+  {
+    const t = repo('t1')
+    commit(t, {
+      '.template/paths': '# пути шаблона\n.template\nh\n:(exclude)h/own\n',
+      '.template/version': 'v1.0.0\n',
+      'h/rule.md': 'r1\nr2\nr3\n',
+      'h/merged.md': 'm1\nm2\nm3\nm4\nm5\nm6\nm7\nm8\n',
+      'h/conflict.md': 'c1\nc2\nc3\n',
+      'h/dropped.md': 'd1\n',
+      'h/[key].md': 'k1\n',
+      'h/цены.md': 'ц1\n',
+      'h/removed.md': 'x1\n',
+      'h/edited.md': 'e1\n',
+      'h/gone.md': 'g1\n',
+      'h/own/local.md': 'o1\n',
+      'c/page.md': 'p1\n',
+    })
+    tag(t, 'v1.0.0', 'v1.0.0\n\nОбвязка:\n- первая версия')
+    commit(t, {
+      '.template/version': 'v1.1.0\n',
+      'h/rule.md': 'r1\nr2 v2\nr3\n',
+      'h/merged.md': 'm1\nm2 v2\nm3\nm4\nm5\nm6\nm7\nm8\n',
+      'h/conflict.md': 'c1\nc2 template\nc3\n',
+      'h/dropped.md': 'd1 v2\n',
+      'h/[key].md': 'k2\n',
+      'h/цены.md': 'ц2\n',
+      'h/own/local.md': 'o1 v2\n',
+      'h/new.md': 'n1\n',
+      'h/removed.md': null,
+      'h/edited.md': null,
+      'h/gone.md': null,
+      'c/page.md': 'p2\n',
+    })
+    tag(t, 'v1.1.0', 'v1.1.0\n\nBreaking:\n- h/rule.md → правка форка')
+    const f = fork('f1', t, 'v1.0.0')
+    commit(f, {
+      'h/merged.md': 'm1\nm2\nm3\nm4\nm5\nm6\nm7 fork\nm8\n',
+      'h/conflict.md': 'c1\nc2 fork\nc3\n',
+      'h/edited.md': 'e1 fork\n',
+      'h/own/local.md': 'o1 fork\n',
+      'c/page.md': 'p1 fork\n',
+      'h/dropped.md': null,
+      'h/gone.md': null,
+      'h/[key].md': null,
+    })
+    tag(f, 'v1.0.0', 'релиз форка')
+    tag(f, 'v2.0.0', 'релиз форка')
+    exec(f, ['remote', 'add', 'origin', 'git@git.stit.tech:acme/site.git'])
+    remote(f, t)
+    update('перенос: статус', f, '--status')
+    update('перенос: превью', f)
+    update('перенос: статус после превью', f, '--status')
+    update('перенос: до релиза форка', f, 'TO=v2.0.0')
+    update('перенос', f, 'TO=v1.1.0')
+    state('перенос', f, [
+      '.template/version',
+      'h/rule.md',
+      'h/merged.md',
+      'h/edited.md',
+      'h/new.md',
+      'h/цены.md',
+      'h/dropped.md',
+      'h/[key].md',
+      'h/removed.md',
+      'h/own/local.md',
+      'c/page.md',
+    ])
+    refs('перенос', f)
+  }
+
+  // Первая база — коммит шаблона с деревом первого коммита форка: форк с кончика main между тегами — без ложных
+  // конфликтов, форк до .template получает её тем же переносом, форк с тега — от тега; форк, правленный до первого
+  // коммита, переносится от тега версии, и движок это называет.
+  {
+    const t = repo('t2')
+    commit(t, { 'h/l.md': 'l0\n' }, 'до .template')
+    commit(t, { '.template/paths': '.template\nh\n', '.template/version': 'v1.0.0\n' })
+    tag(t, 'v1.0.0')
+    commit(t, { 'h/l.md': 'l1\n', 'h/n.md': 'n1\n' }, 'между тегами')
+    commit(t, { '.template/version': 'v1.1.0\n', 'h/l.md': 'l2\n', 'h/n.md': 'n2\n' })
+    tag(t, 'v1.1.0')
+    // Превью — у форка не с тега: его база и где сверить, что из пунктов тега у форка уже есть.
+    const cases = [
+      ['между тегами', 'HEAD~1', {}, true],
+      ['до .template', 'HEAD~3', {}, true],
+      ['с тега', 'v1.0.0', {}, false],
+      ['правлен до первого коммита', 'v1.0.0', { 'x.md': 'fork\n' }, false],
+    ]
+    for (const [index, [name, rev, extra, preview]] of cases.entries()) {
+      const f = fork(`f2-${index}`, t, rev, extra)
+      commit(f, { 'own.md': 'fork\n' })
+      remote(f, t)
+      if (preview) update(`первая база, ${name}: превью`, f)
+      update(`первая база, ${name}`, f, 'TO=v1.1.0')
+      state(`первая база, ${name}`, f, ['.template/version', 'h/l.md', 'h/n.md'])
+    }
+  }
+
+  // TO не новее версии форка — отказ: перенос до своей версии её не сдвинул бы, и следующий повторил бы те же
+  // правки. Форк, созданный раньше тега своей версии, получает их переносом до следующего тега.
+  {
+    const t = repo('t3')
+    commit(t, {
+      '.template/paths': '.template\nh\n',
+      '.template/version': 'v1.0.0\n',
+      'h/k.md': 'k0\n',
+    })
+    tag(t, 'v1.0.0')
+    commit(t, { '.template/version': 'v1.1.0\n' }, 'выпуск v1.1.0')
+    commit(t, { 'h/k.md': 'k1\n' })
+    tag(t, 'v1.1.0')
+    commit(t, { '.template/version': 'v1.2.0\n', 'h/q.md': 'q1\n' })
+    tag(t, 'v1.2.0')
+    const f = fork('f3', t, 'HEAD~2')
+    commit(f, { 'own.md': 'fork\n' })
+    remote(f, t)
+    update('до тега версии: превью', f)
+    update('до тега версии', f, 'TO=v1.1.0')
+    state('до тега версии', f)
+    update('после тега версии', f, 'TO=v1.2.0')
+    state('после тега версии', f, ['.template/version', 'h/k.md', 'h/q.md'])
+  }
+
+  // PATHS — код форка вне путей шаблона тем же трёхсторонним слиянием: пункты «Безопасность» и «Платформа»
+  // решаются до переноса (без PATHS — отказ с ними, PATHS=- — код не едет), опечатка и путь, который исключает
+  // .template/paths, — отказ до переноса.
+  {
+    const t = repo('t4')
+    commit(t, {
+      '.template/paths': '.template\nh\n:(exclude)h/spec\n',
+      '.template/version': 'v1.0.0\n',
+      'h/rule.md': 'r1\n',
+      'h/spec/mutants.md': 'm1\n',
+      'c/auth/login.md': 'weak\n',
+      'c/auth/limit.md': 'A1\n\nB2\n\nC3\n',
+      'c/cmd/main.md': 'main\n',
+    })
+    tag(t, 'v1.0.0')
+    commit(t, {
+      '.template/version': 'v1.1.0\n',
+      'h/rule.md': 'r2\n',
+      'h/spec/mutants.md': 'm2\n',
+      'c/auth/login.md': 'strict\n',
+      'c/auth/limit.md': 'A10\n\nB2\n\nC3\n',
+      'c/cmd/main.md': 'main run\n',
+    })
+    tag(
+      t,
+      'v1.1.0',
+      "v1.1.0\n\nБезопасность:\n- c/auth: строгая проверка входа\n  → PATHS='c/auth'\n\nОбвязка:\n- h/rule.md: r2",
+    )
+    const code = [
+      'h/rule.md',
+      'h/spec/mutants.md',
+      'c/auth/login.md',
+      'c/auth/limit.md',
+      'c/cmd/main.md',
+    ]
+    const cases = [
+      ['без решения', [], []],
+      ['PATHS=-', ['PATHS=-'], code],
+      ['по запросу', ['PATHS=c/auth c/cmd'], code],
+      ['опечатка', ['PATHS=c/auth c/autth'], []],
+      ['исключённый путь', ['PATHS=c/auth h/spec'], []],
+    ]
+    for (const [index, [name, args, files]] of cases.entries()) {
+      const f = fork(`f4-${index}`, t, 'v1.0.0')
+      commit(f, { 'c/auth/limit.md': 'A1\n\nB2\n\nC30\n' })
+      remote(f, t)
+      update(`PATHS, ${name}`, f, 'TO=v1.1.0', ...args)
+      state(`PATHS, ${name}`, f, files)
+    }
+  }
+
+  // --remote — теги remote template через ls-remote, без записи в форк; нет remote — 1, не ответил — 2. Канон — по
+  // origin: remote не спрашивает, а до тега своей версии статус так и говорит.
+  {
+    const t = repo('t5')
+    commit(t, { '.template/paths': '.template\n', '.template/version': 'v1.0.0\n' })
+    tag(t, 'v1.0.0')
+    commit(t, { '.template/version': 'v1.1.0\n' })
+    tag(t, 'v1.1.0')
+    const f = fork('f5', t, 'v1.0.0')
+    commit(f, { 'own.md': 'fork\n' })
+    tag(f, 'v3.0.0', 'релиз форка')
+    update('remote: нет remote template', f, '--remote')
+    remote(f, t)
+    update('remote: в шаблоне новее', f, '--remote')
+    refs('remote: в шаблоне новее', f)
+    exec(f, ['remote', 'set-url', 'template', join(temp, 'net-takogo.git')])
+    update('remote: не ответил', f, '--remote')
+    exec(f, ['remote', 'set-url', 'template', t])
+    commit(f, { '.template/version': 'v1.1.0\n' })
+    update('remote: новее нет', f, '--remote')
+    exec(t, ['remote', 'add', 'origin', CANONICAL_ORIGIN])
+    update('канон: remote', t, '--remote')
+    update('канон: статус', t, '--status')
+    commit(t, { '.template/version': 'v1.2.0\n' })
+    update('канон: статус до тега', t, '--status')
+  }
+
+  rmSync(temp, { recursive: true, force: true })
+  return lines
+}
+want.template = expected.template ?? []
+found.template = templateOutcomes()
+
 // Guard-хук: отказ — код 2 (так Claude Code блокирует вызов), пропуск — 0.
 const guard = JSON.parse(readFileSync(resolve(fixtures, 'guard.json'), 'utf8'))
 const guardCode = (command) =>
@@ -257,7 +560,7 @@ console.info(
     ? `✓ guard: обходов ${guard.block.length} — отказ, обычных команд ${guard.allow?.length ?? 0} — пропуск`
     : `✗ guard:\n${guardLines.join('\n')}`,
 )
-for (const section of [...LINTERS, ...Object.keys(SCRIPTS), 'plans', 'indexnow']) {
+for (const section of [...LINTERS, ...Object.keys(SCRIPTS), 'plans', 'indexnow', 'template']) {
   if (want[section].length === 0) {
     console.error(`✗ ${section}: секция expected.json пуста — гейт на гейт выключен`)
     problems++
@@ -274,7 +577,7 @@ for (const section of [...LINTERS, ...Object.keys(SCRIPTS), 'plans', 'indexnow']
     if (!wanted.has(key)) lines.push(`  ✗ ${key} — нет в expected.json (×${count})`)
   }
   problems += lines.length
-  const noun = section === 'indexnow' ? 'исходов' : 'нарушений'
+  const noun = ['indexnow', 'template'].includes(section) ? 'исходов' : 'нарушений'
   console.info(
     lines.length === 0
       ? `✓ ${section}: ${noun} ${want[section].length} — ровно ожидаемые`

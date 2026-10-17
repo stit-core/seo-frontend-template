@@ -1,0 +1,61 @@
+# Пути шаблона: pnpm template:update переносит в форк их изменения между тегами шаблона. Строка — путь
+# (файл или каталог) или :(exclude)<путь>. Остальное в репо — страницы, коллекции, форма и данные форка
+# (strategy/, content/, public/, README): правки шаблона там тег называет в разделах «Безопасность» и
+# «Платформа» с путями — форк берёт их тем же переносом (PATHS). pnpm-lock.yaml — не путь: после переноса —
+# pnpm install.
+.template
+CLAUDE.md
+.claude
+:(exclude).claude/plans
+:(exclude).claude/skills/stack-deep-dive/state
+scripts
+.gate-fixtures
+e2e
+docker
+.dockerignore
+.env.example
+.gitignore
+.nvmrc
+.commitlintrc.cjs
+.prettierignore
+.prettierrc.json
+.size-limit.cjs
+astro.config.ts
+biome.json
+eslint.config.js
+lefthook.yml
+package.json
+pnpm-workspace.yaml
+steiger.config.ts
+tsconfig.json
+vitest.config.ts
+docs/README.md
+docs/contributing.md
+docs/getting-started.md
+docs/reference
+docs/stack/README.md
+docs/stack/_templates
+src/app
+:(exclude)src/app/styles/tokens.css
+:(exclude)src/app/styles/fonts.ts
+src/shared
+:(exclude)src/shared/config/site.ts
+src/widgets
+src/features/preferences
+src/content.config.ts
+src/env.d.ts
+src/middleware.ts
+src/pages/404.astro
+src/pages/500.astro
+src/pages/_image.ts
+src/pages/healthz.ts
+src/pages/robots.txt.ts
+src/pages/[key].txt.ts
+src/pages/_tests/blocks.astro.test.ts
+src/pages/_tests/catalog.ts
+src/pages/_tests/endpoints.server.test.ts
+src/pages/_tests/island-file.server.test.ts
+src/pages/_tests/pages.astro.test.ts
+src/pages/_tests/routes.ts
+src/pages/_tests/size-limit.server.test.ts
+src/pages/_tests/texts.ts
