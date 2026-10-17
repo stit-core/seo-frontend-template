@@ -72,6 +72,7 @@ import {
   jsonLdBlocks,
   normalizeSpace,
   textOf,
+  withoutHidden,
 } from './lib/html.mjs'
 import { localizedRoute, pageRoutes, routePattern, walk } from './lib/routes.mjs'
 import {
@@ -104,6 +105,7 @@ const {
   ISLANDS: islands,
   FONTS: fonts,
   LOCALES: locales,
+  SITE_NAME: siteName,
 } = await import(pathToFileURL(resolve(root, 'scripts/lib/site-policy.mjs')).href)
 const { SUPPORTED_LOCALES, localeInfo, localeOf, localeParam, localePath, routeOf } =
   localeRules(locales)
@@ -524,18 +526,21 @@ function visibleCrumbs(body) {
   })
 }
 
-// Сущности разметки — одни на сайт, где бы в блоке ни стоял узел или ссылка. Организация (типы
-// ORG_TYPES политики) — с одним @id, сайт и запись называют её издателем; имена собираются со всей
-// сборки: второе имя — вторая сущность для поисковика. Автор-человек — со своим @id; его имя и
-// роль видны на странице (подпись), и у одного @id на одной локали имя одно.
+// Сущности разметки — одни на сайт, где бы в блоке ни стоял узел или ссылка. Организация сайта (типы ORG_TYPES
+// политики) — с одним @id, сайт и запись называют её издателем; имена собираются со всей сборки: второе имя — вторая
+// сущность для поисковика. Автор-человек — со своим @id; его имя и роль видны на странице, подпись автора — его узел в
+// разметке, у одного @id на одной локали имя одно, а у одного человека — один @id на весь сайт.
 const ORG_ID = `${OWN_ORIGIN}/#org`
 const WEBSITE_ID = `${OWN_ORIGIN}/#website`
+const ownId = (id) => typeof id === 'string' && id.startsWith(`${OWN_ORIGIN}/`)
 const orgNames = new Map()
 const personNames = new Map()
+// Человек по имени на языке и по адресу профиля → его @id и где он впервые встретился.
+const personIds = new Map()
 
 function checkPerson(where, label, node, { lang, visible }) {
   const id = node['@id']
-  if (typeof id !== 'string' || !id.startsWith(`${OWN_ORIGIN}/`)) {
+  if (!ownId(id)) {
     fail(where, `${label}: Person без своего @id на своём origin (${id ?? 'нет'})`)
     return
   }
@@ -556,21 +561,52 @@ function checkPerson(where, label, node, { lang, visible }) {
       `${label}: у автора ${id} здесь имя «${node.name}», а в ${known.where} — «${known.name}»`,
     )
   }
+  // Один человек — один @id: тот же человек — то же имя на языке страницы или тот же профиль на любой локали.
+  for (const [by, value] of [
+    [`имени «${node.name}» на ${lang}`, node.name && `${lang} ${node.name}`],
+    [`профиля ${node.url}`, node.url],
+  ]) {
+    if (!value) continue
+    const seen = personIds.get(value)
+    if (seen === undefined) personIds.set(value, { id, where })
+    else if (seen.id !== id) {
+      fail(
+        where,
+        `${label}: у ${by} второй @id ${id}, в ${seen.where} — ${seen.id}: один человек — один @id`,
+      )
+    }
+  }
 }
 
+// Подпись автора — ссылка rel="author" в видимом теле страницы: имя и адрес профиля.
+const bylinesOf = (body) =>
+  [...withoutHidden(body).matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)].flatMap(
+    ([, attrs = '', inner = '']) => {
+      const link = attributesOf(attrs)
+      return (link.get('rel') ?? '').toLowerCase().split(/\s+/).includes('author')
+        ? [{ name: textOf(inner), href: decode(link.get('href') ?? '') }]
+        : []
+    },
+  )
+
 function checkEntities(where, blocks, page) {
-  const visit = (node, label) => {
+  const persons = []
+  const visit = (node, label, block) => {
     if (Array.isArray(node)) {
-      for (const item of node) visit(item, label)
+      for (const item of node) visit(item, label, false)
     } else if (node !== null && typeof node === 'object') {
       if (ORG_TYPES.includes(node['@type'])) {
-        if (node['@id'] !== ORG_ID) {
-          fail(
-            where,
-            `${label}: @id ${node['@id'] ?? 'нет'} — у организации сайта он один: ${ORG_ID}`,
-          )
+        // Узел организации сайта — блок типа организации, узел с @id на своём origin или с именем сайта. Чужая
+        // организация (место работы автора, партнёр) — не узел сайта: правила организации её не судят.
+        if (block || ownId(node['@id']) || node.name === siteName) {
+          if (node['@id'] !== ORG_ID) {
+            fail(
+              where,
+              `${label}: @id ${node['@id'] ?? 'нет'} — у организации сайта он один: ${ORG_ID}`,
+            )
+          }
+          if (node.name && !orgNames.has(node.name)) orgNames.set(node.name, where)
         }
-        if (node.name && !orgNames.has(node.name)) orgNames.set(node.name, where)
       } else if (node['@id'] === ORG_ID) {
         // Подтип (Dentist) с @id организации мимо списка типов выпал бы из всех правил сущности.
         fail(
@@ -578,13 +614,16 @@ function checkEntities(where, blocks, page) {
           `${label}: узел с @id организации типа «${node['@type']}» вне ORG_TYPES (scripts/lib/site-policy.mjs)`,
         )
       }
-      if (node['@type'] === 'Person') checkPerson(where, label, node, page)
-      for (const [key, value] of Object.entries(node)) visit(value, `${label}.${key}`)
+      if (node['@type'] === 'Person') {
+        checkPerson(where, label, node, page)
+        persons.push(node)
+      }
+      for (const [key, value] of Object.entries(node)) visit(value, `${label}.${key}`, false)
     }
   }
   for (const data of blocks) {
     const type = data['@type']
-    visit(data, type)
+    visit(data, type, true)
     if (type === 'WebSite' && data['@id'] !== WEBSITE_ID) {
       fail(where, `WebSite: @id ${data['@id'] ?? 'нет'}, а не ${WEBSITE_ID}`)
     }
@@ -593,6 +632,19 @@ function checkEntities(where, blocks, page) {
       fail(
         where,
         `${type}.publisher — не Organization: издатель сайта и записи — организация по @id`,
+      )
+    }
+  }
+  // Подпись ⇒ Person: у подписи автора на странице — его узел в разметке с тем же именем и адресом профиля.
+  const profileOf = (url) => URL.parse(url ?? '', OWN_ORIGIN)?.href
+  for (const { name, href } of page.bylines) {
+    const signed = persons.some(
+      (person) => person.name === name && profileOf(person.url) === profileOf(href),
+    )
+    if (!signed) {
+      fail(
+        where,
+        `подпись «${name}» (rel="author" → ${href}) — нет Person с этим именем и профилем в разметке`,
       )
     }
   }
@@ -1103,7 +1155,7 @@ for (const file of walk(client)) {
     plan,
   )
   checkMarkupVisible(where, body, blocks, facts)
-  checkEntities(where, blocks, { lang, visible: textOf(body) })
+  checkEntities(where, blocks, { lang, visible: textOf(body), bylines: bylinesOf(body) })
 
   pages.set(path, { where, title, description, canonical, hrefs, noindex })
 }

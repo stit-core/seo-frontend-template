@@ -15,3 +15,4 @@ pages:
   - {id: vtoroe-imya, url: /vtoroe-imya, parent: home}
   - {id: blogposting, url: /blogposting, parent: home}
   - {id: meta, url: /meta, parent: home}
+  - {id: vtoroy-id, url: /vtoroy-id, parent: home}

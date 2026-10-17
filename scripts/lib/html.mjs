@@ -125,7 +125,7 @@ const VOID = new Set('area base br col embed hr img input link meta source track
  * `type="hidden"` — значения других атрибутов, а не признак.
  * @param {string} fragment
  */
-function withoutHidden(fragment) {
+export function withoutHidden(fragment) {
   let visible = ''
   let from = 0
   // Скрытый элемент, по содержимому которого идёт разбор: глубина считает вложенные теги его имени.

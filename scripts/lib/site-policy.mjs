@@ -12,6 +12,8 @@ import { isJsonLd } from './html.mjs'
 /** @typedef {import('../../src/shared/config/islands.ts').Island} Island */
 
 export { FONTS } from '../../src/app/styles/fonts.ts'
+// Имя сайта — бренд, имя организации в разметке: по нему seo:check отличает ссылку на организацию сайта от чужой.
+export { SITE_NAME } from '../../src/shared/config/site.ts'
 // Дескриптор локалей сайта: по нему скрипты гейта читают язык адреса, маршрут страницы и локаль OG.
 export { LOCALES } from '../../src/shared/i18n/locale.ts'
 // Реестр островов — данные приложения (src/shared/config/islands.ts): по нему оболочка печатает

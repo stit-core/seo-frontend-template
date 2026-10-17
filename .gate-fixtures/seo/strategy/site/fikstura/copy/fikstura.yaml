@@ -38,6 +38,11 @@ copy_deck:
         title: Запись с типом разметки не из плана — Фикстура
         description: 'Страница мини-сборки негативной фикстуры: по ней check:gate видит, что seo:check ловит нарушение. Тип записи.'
       sections: []
+    - page_id: vtoroy-id
+      meta:
+        title: Тот же автор под вторым идентификатором — Фикстура
+        description: 'Страница мини-сборки негативной фикстуры: по ней check:gate видит, что seo:check ловит нарушение. Второй @id.'
+      sections: []
     - page_id: meta
       meta:
         title: Мета страницы из copy deck — Фикстура

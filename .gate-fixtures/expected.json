@@ -189,6 +189,7 @@
     "dist/client/vtoroe-imya/index.html: Article.author: Person.name «Невидимый Автор» не виден — автор в разметке подписан на странице",
     "dist/client/vtoroe-imya/index.html: Article.author: Person без своего @id на своём origin (нет)",
     "dist/client/vtoroe-imya/index.html: Article.author: Person без своего @id на своём origin (https://example.ru/#author)",
+    "dist/client/vtoroe-imya/index.html: подпись «Вера Подписанная» (rel=\"author\" → /avtory/vera) — нет Person с этим именем и профилем в разметке",
     "dist/client/xdefault/index.html: x-default не совпадает ни с одной локальной версией",
     "dist/client/_astro/site.css: @font-face с font-display block: текст невидим, пока грузится шрифт",
     "dist/client/_astro/site.css: @font-face Y: шрифт мимо списка src/app/styles/fonts.ts — его подключает Fonts API по строке списка",
@@ -246,7 +247,9 @@
     "dist/client/index.html: нет JSON-LD «WebSite» — тип плана home",
     "dist/client/meta/index.html: <title> «Мета страницы из copy deck — Фикстура — Фикстура» — не мета copy deck страницы meta: «Мета страницы из copy deck — Фикстура»",
     "dist/client/meta/index.html: og:title «Мета страницы из copy deck — Фикстура — Фикстура» — не og_title copy deck страницы meta: «Мета из copy deck»",
-    "dist/client/meta/index.html: og:description — не og_description copy deck страницы meta"
+    "dist/client/meta/index.html: og:description — не og_description copy deck страницы meta",
+    "dist/client/vtoroy-id/index.html: Article.author: у имени «Анна Автор» на ru второй @id https://__site_origin__/#author-anna-kopiya, в dist/client/tipografika/index.html — https://__site_origin__/#author-anna: один человек — один @id",
+    "dist/client/vtoroy-id/index.html: Article.author: у профиля https://__site_origin__/avtory/anna второй @id https://__site_origin__/#author-anna-kopiya, в dist/client/en/author/index.html — https://__site_origin__/#author-anna: один человек — один @id"
   ],
   "links": [
     "dist/client/index.html: /rss.xml — не существует",
