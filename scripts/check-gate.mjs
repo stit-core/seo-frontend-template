@@ -9,6 +9,7 @@
 // template:update и лицо шаблона check:identity — сценариями на мини-репо: исходы — те же строки expected.json.
 import { spawn, spawnSync } from 'node:child_process'
 import {
+  appendFileSync,
   cpSync,
   existsSync,
   mkdirSync,
@@ -547,12 +548,14 @@ want.template = expected.template ?? []
 found.template = templateOutcomes()
 
 // check:prose — на мини-репо из .gate-fixtures/prose во временном каталоге: у проверки свой git (что отслеживается,
-// origin, теги на HEAD), файл вне git дописывается после коммита. Канон (origin — репо шаблона) несёт на HEAD тег
-// другой версии и лёгкий тег своей; тот же репо с origin форка — теги на HEAD его релизы: строки «только канон» —
-// правило тега, «только форк» быть не должно.
+// origin, теги на HEAD), файл вне git дописывается после коммита, строки путей с пробелом и CR по краю — до него (CR в
+// файле фикстуры не удержать: его снимет первый же редактор). Канон (origin — репо шаблона) несёт на HEAD тег другой
+// версии и лёгкий тег своей; тот же репо с origin форка — теги на HEAD его релизы: строки «только канон» — правило
+// тега, «только форк» быть не должно.
 function proseOutcomes() {
   const temp = mkdtempSync(join(tmpdir(), 'gate-prose-'))
   cpSync(resolve(fixtures, 'prose'), temp, { recursive: true })
+  appendFileSync(join(temp, '.template/paths'), 'docs/guide.md \nREADME.md\r\n')
   gitIn(temp, ['init', '-q', '-b', 'main'])
   gitIn(temp, ['add', '-A'])
   gitIn(temp, ['commit', '-q', '-m', 'prose'])

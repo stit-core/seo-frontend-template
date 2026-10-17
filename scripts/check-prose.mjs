@@ -2,8 +2,9 @@
 // README, docs/ и .claude (правила и скиллы) — есть в репо пути (от корня, от каталога документа, слой FSD — от src/;
 // <…> — плейсхолдер, а не ссылка, glob — хотя бы один файл), pnpm-скрипты, скиллы (`/имя`, skill `имя`) и правила
 // (rule `имя` и каждое имя перечня после); маркеров конфликта нет ни в одном файле репо; строки .template/paths —
-// пути репо, .template/version — vX.Y.Z; на каноне тег v* на HEAD равен версии и аннотирован. Иначе агент идёт по
-// мёртвой ссылке, а форк — по сорванному переносу. Репо — то, что отслеживает git: неотслеживаемого файла в клоне нет.
+// пути репо без пробела и CR по краю, .template/version — vX.Y.Z; на каноне тег v* на HEAD равен версии и аннотирован.
+// Иначе агент идёт по мёртвой ссылке, а форк — по сорванному переносу. Репо — то, что отслеживает git:
+// неотслеживаемого файла в клоне нет.
 // `/имя`, которое не скилл, — адрес сайта (маршрут src/pages на любой локали, переезд redirects.yaml), встроенная
 // команда, скилл соседнего strategy или корень файловой системы. Проза путей шаблона адрес не первой локали проверяемого
 // проекта пишет плейсхолдером `/<lang>`: перенос несёт её в форк, а локали у форка свои.
@@ -132,12 +133,12 @@ const address = (path) => moved.has(path) || routes.some((pattern) => pattern.te
 // Пути шаблона — строки .template/paths (`:(exclude)<путь>` — вычет): их прозу template:update переносит в форк как
 // есть. Адрес на префиксе не первой локали проверяемого проекта в ней называет локаль шаблона, которой у форка может не
 // быть: в одноязычном форке `/en` — мёртвая ссылка.
-const templatePaths = tracked.has('.template/paths')
+const templateLines = tracked.has('.template/paths')
   ? readFileSync(resolve(root, '.template/paths'), 'utf8')
       .split('\n')
-      .map((line) => line.trim())
-      .filter((entry) => entry !== '' && !entry.startsWith('#'))
+      .filter((line) => line.trim() !== '' && !line.trim().startsWith('#'))
   : []
+const templatePaths = templateLines.map((line) => line.trim())
 const EXCLUDE = ':(exclude)'
 const covers = (entry, file) => {
   const path = entry.replace(/\/+$/, '')
@@ -338,7 +339,15 @@ else if (!/^v\d+\.\d+\.\d+$/.test(version))
 if (!tracked.has('.template/paths'))
   problems.push('.template/paths: файла нет — пути шаблона, их переносит template:update')
 else {
-  for (const entry of templatePaths) {
+  for (const line of templateLines) {
+    const entry = line.trim()
+    // Перенос берёт строку как есть: с пробелом или CR по краю путь ничего не выбирает, и его правки молча теряются.
+    if (entry !== line) {
+      problems.push(
+        `.template/paths: ${JSON.stringify(line)} — пробел или CR по краю строки: перенос её молча потеряет`,
+      )
+      continue
+    }
     if (!inRepo(entry.replace(/^:\(exclude\)/, '').replace(/\/+$/, ''))) {
       problems.push(`.template/paths: ${entry} — пути нет в репо`)
     }

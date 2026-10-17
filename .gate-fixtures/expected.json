@@ -407,6 +407,8 @@
     "strategy/data.yaml:2: маркер конфликта",
     ".template/paths: net-takogo-puti — пути нет в репо",
     ".template/paths: :(exclude)docs/net-isklyucheniya — пути нет в репо",
+    ".template/paths: \"docs/guide.md \" — пробел или CR по краю строки: перенос её молча потеряет",
+    ".template/paths: \"README.md\\r\" — пробел или CR по краю строки: перенос её молча потеряет",
     "тег v1.0.0 на HEAD — лёгкий: перенос в форке не покажет его аннотацию",
     "тег v9.9.9 на HEAD ≠ .template/version v1.0.0",
     "только канон: тег v1.0.0 на HEAD — лёгкий: перенос в форке не покажет его аннотацию",
