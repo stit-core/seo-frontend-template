@@ -265,12 +265,34 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
     зелёный (598 тестов, покрытие 100 / 98,78 / 100 / 100, бандл 882,06 КБ), `pnpm test:e2e` — 194 passed, 1 skipped
 
 ### Этап D — head
-- [ ] **S8** — Head из copy deck и плана: `<title>`, description и OG — мета copy deck как есть (у записи — frontmatter),
+- [x] **S8** — Head из copy deck и плана: `<title>`, description и OG — мета copy deck как есть (у записи — frontmatter),
   `og:type` — от типа страницы; фабрики JSON-LD — типы плана по графу `@id` (`ContactPage`, `AboutPage`, `CollectionPage`
   ссылаются на `/#org` и `/#website`; `Article`, `LocalBusiness`), свойства организации — `machine` фактов по
   `fields_from_facts` (телефон, почта, адрес, часы, гео, ИНН); схемы Zod фабрик — в тесте
   - Проверка: unit фабрик полным объектом; B-17, B-18 → красный; перенос MUT-01, MUT-04, MUT-07, MUT-08, MUT-10
     · Закрывает: AC6 · Зависит от: S6, S7
+  - Сделано: мета head — copy deck как есть (`48b61fd`): проп оболочки `meta`, суффикса сайта нет — бренд в заголовках copy
+    deck по шаблонам `meta-rules.yaml` базы, у контактов — мета contacts-page с `fact_ids` каналов; OG-тексты — `og_title`
+    и `og_description` copy deck или заголовок и описание; `og:type` — `article` по датам записи, пропа `ogType` нет;
+    `seo:check` — длина заголовка целиком, «общий» и «от трёх слов» — без имени сайта (фикстура `uslugi`). JSON-LD по плану
+    (`08bf3cb`, `b7bd2da`): страница печатает фабриками ровно типы `seo.structured_data` — `Organization` + `WebSite`
+    главной на каждом языке, `AboutPage`, `ContactPage` + `LocalBusiness`, `CollectionPage`, `Article`, `BreadcrumbList`
+    оболочки; граф `@id` — `isPartOf` → `/#website`, `about` и `publisher` → `/#org`; свойства организации — `machine`
+    фактов страницы (`fact:` плана и `fact_ids` copy deck, `StrategyPage.facts`) по таблице head-kit `fields_from_facts`
+    (часы `openingHoursSpecification`, координаты, ИНН и НДС включительно; тест сверяет реализацию с копией каталога), ядро
+    узла одно у главной и контактов; `LocalBusiness` — NAP: без факта адреса и с каналом-ссылкой мимо `machine` фактов —
+    отказ с ключом; `Person.url` — профиль реестра; схемы Zod — `JsonLdSchema` (`shared/lib/testing`), в прод-модуле — TS-тип;
+    `_about/model.ts` и `SITE_DESCRIPTION` сняты; тест страниц — типы = план и схема узла на каждой странице снимка и языке;
+    `seo:check` — `JSON_LD_TYPES` типов планов, `WebSite` на главной каждой локали (фикстуры — `Article`, `o-nas`).
+    Валидаторы strategy 0.2.2: `copydeck.py check` 13 copy deck — 0 error, `site_validate.py` — 0 error (warning — SB-L03,
+    PL-A05 × 2), `lint-facts` ru и en — 0 error. Мутации (`M/p5d/`, набор шага — `sets/s8_mutations.py`): набор шага — 22 из
+    22 red (B-17, B-18, проба V-MACHINE — red `test` и `build`, свои 19), эталон — 45 из 45 (MUT-08 — на machine адреса,
+    MUT-01, 04, 07, 10 — якоря на месте, слои red; MUT-02 и MUT-44 — слой `seo` зелёный, гейт красный, как в S6), наборы S7
+    — 36, S6 — 23 (B-07b, V11′, V12t′ перенесены, S6-B → S6-B′ на телефоне факта), S5 — 27 (слой `test` — 11 из 11), S4 —
+    16, S3 — 11, S2 — 5, S1 — 5 — red. Сценарии § 6 правкой данных (копии `sets/`): одна, три локали, «только en», «en по
+    умолчанию» — `pnpm check` зелёный, ветви 99,35 % у каждого (ветки «корень» у разметки главной нет), бандл 876,3, 895,54,
+    874,76, 888,62 из 925 КБ; у «только en» — `test:e2e` 100 passed, 1 skipped. `pnpm check` — зелёный (629 тестов, покрытие
+    100 / 99,35 / 100 / 100, бандл 887,87 КБ), `pnpm test:e2e` — 194 passed, 1 skipped
 - [ ] **S9** — `seo:check` по плану: типы JSON-LD страницы = план, план — в границах `head-kit` её типа (`JSON_LD_TYPES`
   и `JSON_LD_FORBIDDEN` сняты); мета и OG = copy deck; подпись ⇒ `Person`, один человек — один `@id`, узел чужой
   организации — не узел сайта, дата правки — только у записи коллекции (генератор карты и проверка — одной нормой)
@@ -358,6 +380,10 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
   сайта, профиль вне сайта — как есть.
 - Схемы Zod узлов (S8, COD-10) — `JsonLdSchema` (`shared/lib/testing/json-ld.ts`) у теста фабрик и теста страниц; в
   прод-модуле — TS-тип `JsonLd`. Схемы строгие: лишнее свойство — ошибка.
+- Unit фабрик полным объектом (S8) — на фикстуре: литералы каждого вида таблицы (два телефона и повтор номера, адрес с
+  регионом, часы двумя рядами, гео, ИНН, НДС; адрес ссылки, мессенджер, ОГРН и факт без `machine` — не свойства). На данных
+  шаблона — схема каждого узла каждой страницы снимка на каждом языке и одна сущность организации главной и контактов: тест
+  на данных сайта литералов его данных не знает (форк меняет факты — тест тот же).
 - Типы JSON-LD — ровно `seo.structured_data` плана в границах `head-kit#page_types` его типа с подтипами (`FAQPage`,
   `HowTo`, `SearchAction` нет ни у одного типа — списки политики снимаются). Запись — `Article`; главная — `Organization`
   + `WebSite`, «О компании» — `AboutPage`, контакты — `ContactPage` + `LocalBusiness` (узел `/#org`): «типы = план» при
@@ -728,7 +754,11 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
 `lint` (текстовые атрибуты HTML — один список `TEXT_ATTRIBUTES` с тестом, проп компонента — текст по умолчанию), запись
 в пропсах — наборы записей и слоты шаблона (AC1, AC3). Неблокирующие замечания перепроверки этапа C
 (`M/validation-blocks-content-model-C.md`) сняты: N10 — `4dae96d` (`M/p5c-n10/`), N12 — правда AC1 и «Решений», N13 —
-строка S2 плана `forms-consent-collections`. Идёт этап D, S8 (head из copy deck и плана): мета head — copy deck как есть
-(`meta` оболочки, суффикса нет, `og:type` от записи), дальше — JSON-LD по типам плана и фактам, затем S9. Материалы S8 —
-`M/p5d/` (`notes.md` — точка продолжения), N10 — `M/p5c-n10/`, фикса этапа C — `M/p5c-fix/` (наборы и пробы `sets/`,
-драйвер `mut.py`), S7 — `M/p5c-s7/`, S6 — `M/p5c/`, этапов A и B — `M/p5a/`, `M/p5b-blocks/`.
+строка S2 плана `forms-consent-collections`. Идёт этап D: S8 сделан (`48b61fd`, `08bf3cb`, `b7bd2da`) — мета head — copy
+deck как есть, `og:type` от записи, JSON-LD — типы плана по графу `@id`, свойства организации — таблица head-kit над
+фактами страницы, NAP `LocalBusiness` — отказ с ключом. Дальше — S9 другим исполнителем: `seo:check` по плану — типы =
+план в границах `head-kit` (`JSON_LD_TYPES` и `JSON_LD_FORBIDDEN` сняты), мета и OG = copy deck (сверка og:title =
+`<title>` уходит, OG-тексты copy deck главной возвращаются — CON-09b), подпись ⇒ `Person`, один человек — один `@id`,
+чужие организации, дата правки — только у записи; затем валидация этапа D. Материалы S8 — `M/p5d/` (наборы и сценарии
+`sets/`, драйвер `mut.py`, `notes.md`), N10 — `M/p5c-n10/`, фикса этапа C — `M/p5c-fix/`, S7 — `M/p5c-s7/`, S6 —
+`M/p5c/`, этапов A и B — `M/p5a/`, `M/p5b-blocks/`.
