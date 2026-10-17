@@ -514,6 +514,28 @@ function templateOutcomes() {
     }
   }
 
+  // Форк с кончика main после последнего тега: превью называет базу — тег версии, форк новее него; с выходом следующего
+  // тега база находится по дереву, и перенос берёт только правки после неё.
+  {
+    const t = repo('t6')
+    commit(t, {
+      '.template/paths': '.template\nh\n',
+      '.template/version': 'v1.0.0\n',
+      'h/a.md': 'a0\n',
+    })
+    tag(t, 'v1.0.0')
+    commit(t, { 'h/a.md': 'a1\n' }, 'после тега')
+    const f = fork('f6', t, 'HEAD')
+    commit(f, { 'own.md': 'fork\n' })
+    remote(f, t)
+    update('после последнего тега: превью', f)
+    commit(t, { '.template/version': 'v1.1.0\n', 'h/a.md': 'a2\n', 'h/b.md': 'b1\n' })
+    tag(t, 'v1.1.0')
+    update('после последнего тега, вышел v1.1.0: превью', f)
+    update('после последнего тега, вышел v1.1.0', f, 'TO=v1.1.0')
+    state('после последнего тега, вышел v1.1.0', f, ['.template/version', 'h/a.md', 'h/b.md'])
+  }
+
   // --remote — теги remote template через ls-remote, без записи в форк; нет remote — 1, не ответил — 2. Канон — по
   // origin: remote не спрашивает, а до тега своей версии статус так и говорит.
   {
