@@ -7,40 +7,28 @@ import {
   type Translations,
 } from '@/shared/i18n'
 import {
-  type CopyDeck,
-  CopyDeckSchema,
   chosenText,
+  deckPageOf,
   elementOf,
   type Fact,
-  type Facts,
-  FactsSchema,
   fail,
   hasBreadcrumbs,
   langOf,
   type Machine,
   mapPage,
   type Plan,
-  PlanSchema,
   type PlanSlot,
   type PlanTarget,
+  type Project,
   pageLanguages,
   parentsOf,
-  parseFile,
+  projectOf,
   relatedRule,
   type SiteMap,
-  SiteMapSchema,
   type SlotKind,
   targetAddress,
   untranslatedFallback,
 } from './contract'
-
-// Данные strategy одного проекта в раскладке снимка: карта, планы и copy deck поверхности, факты по языкам.
-export interface Project {
-  map: SiteMap | undefined
-  plans: Plan[]
-  decks: CopyDeck[]
-  facts: Facts[]
-}
 
 // Ссылка на цель плана: адрес и язык цели, когда это версия страницы на другом языке.
 export interface Link {
@@ -116,27 +104,6 @@ export interface StrategyPage extends MapEntry {
 
 // Страница своего плана — с метой copy deck.
 export type PlanPage = StrategyPage & { meta: Meta }
-
-// Пути — от корня снимка: `facts.yaml`, `facts.en.yaml`, `site/<поверхность>/{site-map.yaml,plans/…,copy/…}`.
-export function projectOf(files: Readonly<Record<string, unknown>>): Project {
-  const project: Project = { map: undefined, plans: [], decks: [], facts: [] }
-  const surfaces = new Set<string | undefined>()
-  for (const [path, data] of Object.entries(files)) {
-    const [root, surface, kind] = path.split('/')
-    if (root !== 'site') {
-      project.facts.push(parseFile(FactsSchema, data, path))
-      continue
-    }
-    surfaces.add(surface)
-    if (kind === 'site-map.yaml') project.map = parseFile(SiteMapSchema, data, path)
-    else if (kind === 'plans') project.plans.push(parseFile(PlanSchema, data, path))
-    else project.decks.push(parseFile(CopyDeckSchema, data, path))
-  }
-  if (surfaces.size > 1) {
-    throw new Error(`strategy/site: поверхностей ${surfaces.size} — сайт собирается из одной`)
-  }
-  return project
-}
 
 const mapOf = (project: Project, id: string): SiteMap => project.map ?? fail(id, 'нет карты сайта')
 
@@ -240,12 +207,7 @@ function placeOf(project: Project, plan: Plan, locale: Locale) {
 export function readPage(project: Project, id: string, locale: Locale): StrategyPage {
   const plan = project.plans.find((candidate) => candidate.page.id === id) ?? fail(id, 'нет плана')
   const { template } = plan.page
-  const page =
-    project.decks
-      .filter((deck) => langOf(deck.copy_deck.lang) === locale)
-      .flatMap((deck) => deck.copy_deck.pages)
-      .find((candidate) => candidate.page_id === id) ??
-    fail(id, `нет страницы в copy deck ${locale}`)
+  const page = deckPageOf(project, id, locale) ?? fail(id, `нет страницы в copy deck ${locale}`)
   const facts = new Map<string, Fact>(
     project.facts
       .filter((file) => langOf(file.lang) === locale)

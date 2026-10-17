@@ -1,0 +1,6 @@
+page:
+  id: author
+  page_type: article-page
+  seo:
+    structured_data: [Article]
+sections: []

@@ -1,0 +1,6 @@
+page:
+  id: vne-kita
+  page_type: about-page
+  seo:
+    structured_data: [AboutPage, FAQPage]
+sections: []

@@ -2,11 +2,15 @@ import {
   chosenText,
   type DeckSlot,
   type Fact,
+  HeadKitSchema,
   hasBreadcrumbs,
+  headKitTypes,
   langOf,
   mapLanguages,
+  pageAt,
   pageLanguages,
   parentsOf,
+  projectOf,
   relatedRule,
   SiteMapSchema,
   targetAddress,
@@ -215,5 +219,66 @@ describe('strategy/contract', () => {
         `strategy: ${id} — у шаблона нет правила связанных в linking.related_rules карты`,
       )
     }
+  })
+
+  // По адресу страницы сборки скрипты гейта находят её план: адрес строки карты, страницы 2…N — строка списка.
+  describe('страница по адресу', () => {
+    const plan = (id: string, url?: string) => ({
+      page: { id, page_type: 'service-page', url },
+      sections: [],
+    })
+
+    it('строка карты: параметр `{x}` — любой сегмент; страница 2…N списка — строка списка с номером', () => {
+      const project = projectOf({
+        'site/web/site-map.yaml': {
+          languages: { primary: 'ru' },
+          pages: [
+            { id: 'home', url: '/', parent: null },
+            { id: 'blog', url: '/blog', parent: 'home' },
+            { id: 'post', url: '/blog/{slug}', parent: 'blog' },
+            { id: 'tag', url: '/blog/tag/{slug}', parent: 'blog' },
+          ],
+        },
+      })
+      expect(pageAt(project, '/')).toEqual({ id: 'home' })
+      expect(pageAt(project, '/blog')).toEqual({ id: 'blog' })
+      expect(pageAt(project, '/blog/zapis')).toEqual({ id: 'post' })
+      expect(pageAt(project, '/blog/tag/astro')).toEqual({ id: 'tag' })
+      expect(pageAt(project, '/blog/page/2')).toEqual({ id: 'blog', list: 2 })
+      expect(pageAt(project, '/page/3')).toEqual({ id: 'home', list: 3 })
+      for (const route of ['/500', '/blog/zapis/lishnee', '/kontakty/page/2']) {
+        expect(pageAt(project, route), route).toBeUndefined()
+      }
+    })
+
+    it('у лендинга без карты — page.url плана; план без него адреса не даёт', () => {
+      const project = projectOf({
+        'site/promo/plans/home.yaml': plan('home', '/'),
+        'site/promo/plans/offer.yaml': plan('offer'),
+        'site/promo/plans/spasibo.yaml': plan('spasibo', '/spasibo'),
+      })
+      expect(pageAt(project, '/spasibo')).toEqual({ id: 'spasibo' })
+      expect(pageAt(project, '/')).toEqual({ id: 'home' })
+      for (const route of ['/offer', '/kontakty']) expect(pageAt(project, route)).toBeUndefined()
+    })
+  })
+
+  // Граница плана — head-kit (plan_fields.structured_data): типы строки page_types и подтипы, а BreadcrumbList — по
+  // крошкам страницы, не по её типу.
+  it('типы head-kit типа страницы — его типы, подтипы и BreadcrumbList; типа нет в head-kit — undefined', () => {
+    const headKit = HeadKitSchema.parse({
+      page_types: {
+        'home-multipage': {
+          structured_data: ['Organization', 'WebSite'],
+          structured_data_subtypes: { Organization: ['LocalBusiness'] },
+        },
+        'legal-page': { structured_data: [] },
+      },
+    })
+    expect(headKitTypes(headKit, 'home-multipage')).toEqual(
+      new Set(['Organization', 'WebSite', 'LocalBusiness', 'BreadcrumbList']),
+    )
+    expect(headKitTypes(headKit, 'legal-page')).toEqual(new Set(['BreadcrumbList']))
+    expect(headKitTypes(headKit, 'faq-page')).toBeUndefined()
   })
 })

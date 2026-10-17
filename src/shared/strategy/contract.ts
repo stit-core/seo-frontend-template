@@ -18,6 +18,8 @@ const PlanSlot = z.object({
 export const PlanSchema = z.object({
   page: z.object({
     id: z.string(),
+    // Тип страницы словаря strategy: по нему head-kit называет её типы JSON-LD (`page_types`).
+    page_type: z.string(),
     url: z.string().optional(),
     // План шаблона коллекции: тексты шаблона — copy deck, слоты без текста и мету страницы даёт запись коллекции.
     template: z.boolean().default(false),
@@ -185,6 +187,17 @@ export const SiteMapSchema = z.object({
     .optional(),
 })
 
+// head-kit базы: типы JSON-LD по типу страницы — `page_types` (типы и подтипы, допустимые вместо типа).
+export const HeadKitSchema = z.object({
+  page_types: z.record(
+    z.string(),
+    z.object({
+      structured_data: z.array(z.string()).default([]),
+      structured_data_subtypes: z.record(z.string(), z.array(z.string())).default({}),
+    }),
+  ),
+})
+
 export type Plan = z.infer<typeof PlanSchema>
 export type PlanSlot = z.infer<typeof PlanSlot>
 export type CopyDeck = z.infer<typeof CopyDeckSchema>
@@ -194,6 +207,7 @@ export type Facts = z.infer<typeof FactsSchema>
 export type Machine = z.infer<typeof MachineSchema>
 export type SiteMap = z.infer<typeof SiteMapSchema>
 export type PlanTarget = z.infer<typeof Target>
+export type HeadKit = z.infer<typeof HeadKitSchema>
 
 // Файл снимка по своей схеме; ошибка называет файл и поле.
 export function parseFile<S extends z.ZodType>(
@@ -211,8 +225,83 @@ export function fail(key: string, why: string): never {
   throw new Error(`strategy: ${key} — ${why}`)
 }
 
+// Данные strategy одного проекта в раскладке снимка: карта, планы и copy deck поверхности, факты по языкам.
+export interface Project {
+  map: SiteMap | undefined
+  plans: Plan[]
+  decks: CopyDeck[]
+  facts: Facts[]
+}
+
+// Пути — от корня снимка: `facts.yaml`, `facts.en.yaml`, `site/<поверхность>/{site-map.yaml,plans/…,copy/…}`. Проект
+// собирают сборка (модули снимка) и скрипты гейта (файлы с диска).
+export function projectOf(files: Readonly<Record<string, unknown>>): Project {
+  const project: Project = { map: undefined, plans: [], decks: [], facts: [] }
+  const surfaces = new Set<string | undefined>()
+  for (const [path, data] of Object.entries(files)) {
+    const [root, surface, kind] = path.split('/')
+    if (root !== 'site') {
+      project.facts.push(parseFile(FactsSchema, data, path))
+      continue
+    }
+    surfaces.add(surface)
+    if (kind === 'site-map.yaml') project.map = parseFile(SiteMapSchema, data, path)
+    else if (kind === 'plans') project.plans.push(parseFile(PlanSchema, data, path))
+    else project.decks.push(parseFile(CopyDeckSchema, data, path))
+  }
+  if (surfaces.size > 1) {
+    throw new Error(`strategy/site: поверхностей ${surfaces.size} — сайт собирается из одной`)
+  }
+  return project
+}
+
 // Язык файла — первый подтег BCP 47: copy deck и факты пишут `ru`, `ru-RU` или `fil-PH`.
 export const langOf = (lang: string): string => lang.replace(/-.*/, '')
+
+// Страница copy deck на языке: тексты и мета страницы плана.
+export const deckPageOf = (project: Project, id: string, lang: string) =>
+  project.decks
+    .filter((deck) => langOf(deck.copy_deck.lang) === lang)
+    .flatMap((deck) => deck.copy_deck.pages)
+    .find((page) => page.page_id === id)
+
+// Страница проекта по адресу без префикса языка: строка карты с этим адресом (`{x}` — любой сегмент) или страница 2…N
+// списка строки (`<адрес>/page/<n>`, номер — `list`); у лендинга без карты — `page.url` его плана (план без него адреса
+// не даёт). Адреса нет ни у одной страницы — страницы нет.
+export function pageAt(project: Project, route: string): { id: string; list?: number } | undefined {
+  const pages =
+    project.map?.pages ??
+    project.plans.flatMap(({ page: { id, url } }) => (url === undefined ? [] : [{ id, url }]))
+  const at = (path: string) =>
+    pages.find(({ url }) => {
+      const want = url.split('/')
+      const have = path.split('/')
+      return (
+        want.length === have.length &&
+        want.every((segment, index) =>
+          /^\{[^}]+\}$/.test(segment) ? have[index] !== '' : segment === have[index],
+        )
+      )
+    })
+  const own = at(route)
+  if (own !== undefined) return { id: own.id }
+  const [, base = '', number = ''] = /^(.*)\/page\/(\d+)$/.exec(route) ?? []
+  const list = number === '' ? undefined : at(base || '/')
+  return list === undefined ? undefined : { id: list.id, list: Number(number) }
+}
+
+// Типы JSON-LD, которые head-kit допускает в плане страницы этого типа (`plan_fields.structured_data`): типы строки
+// `page_types` и подтипы её `structured_data_subtypes`. BreadcrumbList ставят видимые крошки страницы
+// (`recipes.breadcrumb`), а не её тип. Типа страницы нет в head-kit — undefined.
+export function headKitTypes(headKit: HeadKit, pageType: string): Set<string> | undefined {
+  const row = headKit.page_types[pageType]
+  if (row === undefined) return undefined
+  return new Set([
+    ...row.structured_data,
+    ...Object.values(row.structured_data_subtypes).flat(),
+    'BreadcrumbList',
+  ])
+}
 
 // Языки карты: основной — первым, затем версии в порядке карты.
 export function mapLanguages(map: SiteMap): string[] {

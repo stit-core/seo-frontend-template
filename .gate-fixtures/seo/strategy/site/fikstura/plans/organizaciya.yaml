@@ -1,0 +1,6 @@
+page:
+  id: organizaciya
+  page_type: contacts-page
+  seo:
+    structured_data: [ContactPage, LocalBusiness]
+sections: []

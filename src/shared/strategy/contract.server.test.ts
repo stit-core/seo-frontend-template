@@ -18,7 +18,16 @@ describe('strategy/contract — модуль для скриптов', () => {
     )
     expect(run.stderr).toBe('')
     expect(run.stdout.trim().split(' ')).toEqual(
-      expect.arrayContaining(['PlanSchema', 'CopyDeckSchema', 'chosenText', 'targetAddress']),
+      expect.arrayContaining([
+        'PlanSchema',
+        'CopyDeckSchema',
+        'HeadKitSchema',
+        'chosenText',
+        'targetAddress',
+        'projectOf',
+        'pageAt',
+        'headKitTypes',
+      ]),
     )
   })
 })

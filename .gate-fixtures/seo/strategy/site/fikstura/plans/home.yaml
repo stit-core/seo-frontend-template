@@ -1,0 +1,6 @@
+page:
+  id: home
+  page_type: home-multipage
+  seo:
+    structured_data: [Organization, WebSite]
+sections: []

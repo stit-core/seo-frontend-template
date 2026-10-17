@@ -1,8 +1,8 @@
 // Политика сборки одним списком: что разрешено сверх строгого умолчания («индексируемая
-// страница без noindex, без скриптов и без чужих ресурсов»), типы разметки и бюджеты сниппета
-// выдачи. Держат её seo:check (каждая страница dist/client), HTTP-набор (on-demand страницы и
-// заголовки) и браузер — CSP строится отсюда же. Список расширяется решением — служебная
-// страница, остров, сторонний сервис, тип разметки, — а не по месту в скрипте.
+// страница без noindex, без скриптов и без чужих ресурсов») и бюджеты сниппета выдачи. Держат её
+// seo:check (каждая страница dist/client), HTTP-набор (on-demand страницы и заголовки) и браузер —
+// CSP строится отсюда же. Список расширяется решением — служебная страница, остров, сторонний
+// сервис, — а не по месту в скрипте; типы разметки страницы — её план strategy.
 import { createHash } from 'node:crypto'
 import { brotliCompressSync, constants } from 'node:zlib'
 import { ISLANDS, standsOn } from '../../src/shared/config/islands.ts'
@@ -128,22 +128,8 @@ export function contentSecurityPolicy() {
 // его форматов нет) от 8×8 и советует крупнее 48×48: первая иконка страницы — не мельче этого.
 export const ICON_MIN_SIDE = 48
 
-// Типы JSON-LD, которые печатает сайт, — типы планов его страниц (`seo.structured_data`); остальные — ошибка. FAQPage,
-// HowTo и SearchAction не размечаются вовсе (rich results сняты) — ни типом блока, ни вложенно.
-export const JSON_LD_TYPES = [
-  'Organization',
-  'WebSite',
-  'LocalBusiness',
-  'AboutPage',
-  'ContactPage',
-  'CollectionPage',
-  'BreadcrumbList',
-  'Article',
-]
-export const JSON_LD_FORBIDDEN = ['FAQPage', 'HowTo', 'SearchAction']
-
 // Типы узла организации сайта: у него сверяются @id, имя и видимые факты. Подтип LocalBusiness
-// (Dentist, AutoRepair) — строкой и здесь, и в JSON_LD_TYPES: иначе правила сущности его не видят.
+// (Dentist, AutoRepair) — строкой здесь: иначе правила сущности его не видят.
 export const ORG_TYPES = ['Organization', 'LocalBusiness']
 
 // Сниппет выдачи индексируемой страницы: title — не длиннее ширины строки выдачи целиком и не меньше трёх своих слов

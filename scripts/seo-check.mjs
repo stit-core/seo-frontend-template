@@ -12,8 +12,9 @@
 // - hreflang — полный взаимный набор (self + x-default) у каждой пары переводов из источника
 //   (главные, списки и теги под префиксами локалей; записи — twin по translationKey) и только у
 //   них; язык адреса и og:locale — по локалям проверяемого проекта;
-// - JSON-LD (любой <script> этого типа, какие бы ещё атрибуты ни стояли у тега): типы из списка
-//   политики, Organization/WebSite только на главной, правильный BreadcrumbList, разметка = видимое
+// - JSON-LD (любой <script> этого типа, какие бы ещё атрибуты ни стояли у тега): типы — ровно
+//   `seo.structured_data` плана страницы (снимок strategy проекта), план — в границах head-kit своего
+//   типа страницы, у страницы без плана разметки нет; правильный BreadcrumbList, разметка = видимое
 //   (headline = h1, даты = <time>, image — кадры 16:9, 4:3 и 1:1 мастера og:image, mainEntityOfPage =
 //   canonical, крошки = BreadcrumbList, имена и контакты организации — на странице; видимое — без
 //   поддеревьев под hidden и aria-hidden); организация одна — один @id у её узлов и ссылок на неё,
@@ -44,7 +45,7 @@
 //   страниц его нет.
 // On-demand ответы (robots.txt, 404, ответ формы) и проштампованные карту и фиды проверяет HTTP-набор
 // (`pnpm test:http`) — им нужен сервер.
-import { existsSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, globSync, readFileSync, statSync } from 'node:fs'
 import { isBuiltin } from 'node:module'
 import { basename, dirname, relative, resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -53,6 +54,13 @@ import sharp from 'sharp'
 import ts from 'typescript'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
 import { localeRules } from '../src/shared/i18n/locale.ts'
+import {
+  HeadKitSchema,
+  headKitTypes,
+  pageAt,
+  parseFile,
+  projectOf,
+} from '../src/shared/strategy/contract.ts'
 import { collectionsOf, splitFrontmatter } from './lib/content.mjs'
 import {
   attributesOf,
@@ -73,8 +81,6 @@ import {
   FONT_PRELOAD_MAX,
   GENERIC_TITLE,
   ICON_MIN_SIDE,
-  JSON_LD_FORBIDDEN,
-  JSON_LD_TYPES,
   NOINDEX_ROUTES,
   OG_IMAGE,
   ORG_TYPES,
@@ -107,6 +113,32 @@ if (!existsSync(client)) {
   console.error('seo:check: dist/client не найден — сначала pnpm build')
   process.exit(1)
 }
+
+// Снимок strategy проверяемого проекта (`strategy/`): карта, планы и copy deck поверхности — схемами и правилами модуля
+// контракта, как их читает сборка; head-kit — копия каталога базы. У мини-проекта check:gate снимок свой.
+const snapshot = resolve(root, 'strategy')
+const HEAD_KIT = 'kb/site/07-seo-geo-performance-analytics/head-kit.yaml'
+if (!existsSync(resolve(snapshot, HEAD_KIT))) {
+  console.error(`seo:check: нет strategy/${HEAD_KIT} — снимок strategy проекта неполный`)
+  process.exit(1)
+}
+const snapshotFile = (path) => load(readFileSync(resolve(snapshot, path), 'utf8'))
+const snapshotFiles = Object.fromEntries(
+  globSync(['site/*/site-map.yaml', 'site/*/plans/*.yaml', 'site/*/copy/*.yaml'], {
+    cwd: snapshot,
+  })
+    .sort()
+    .map((path) => [path, snapshotFile(path)]),
+)
+const project = projectOf(snapshotFiles)
+const headKit = parseFile(HeadKitSchema, snapshotFile(HEAD_KIT), HEAD_KIT)
+const plans = new Map(project.plans.map((plan) => [plan.page.id, plan]))
+// Файл плана в снимке — место нарушения плана.
+const planFiles = new Map(
+  Object.entries(snapshotFiles)
+    .filter(([path]) => path.includes('/plans/'))
+    .map(([path, data]) => [data.page.id, `strategy/${path}`]),
+)
 
 // Картинки сборки — размеры, формат и вес из самих файлов: с ними сверяются превью ссылки и кадры
 // разметки, а не с обещанием мета-тегов. Файл, который не читается как картинка, в карте отсутствует.
@@ -634,7 +666,7 @@ function checkArticleImages(where, type, image, ogImage) {
 }
 
 // Разметка = видимое: JSON-LD не добавляет фактов, которых нет на странице.
-function checkMarkupVisible(where, path, body, blocks, page) {
+function checkMarkupVisible(where, body, blocks, page) {
   const visible = textOf(body)
   const times = new Set(
     [...body.matchAll(/<time\b[^>]*\bdatetime="([^"]+)"/g)].map(([, value]) => value),
@@ -647,10 +679,6 @@ function checkMarkupVisible(where, path, body, blocks, page) {
   let crumbLists = 0
   for (const data of blocks) {
     const type = data['@type']
-    if (type === 'Organization' && !isLocaleHome(path)) {
-      fail(where, 'JSON-LD Organization вне главной: организация размечается один раз')
-    }
-    if (type === 'WebSite' && !isLocaleHome(path)) fail(where, 'JSON-LD WebSite вне главной')
     if (typeof data.headline === 'string') {
       if (data.headline !== h1)
         fail(where, `${type}.headline «${data.headline}» ≠ видимый h1 «${h1}»`)
@@ -703,6 +731,48 @@ function checkMarkupVisible(where, path, body, blocks, page) {
         fail(where, `${name} ${time} — нет такой <time datetime> на странице`)
     }
   }
+}
+
+// ---------- планы ----------
+// План — в границах head-kit своего типа страницы (plan_fields.structured_data): тип не из её page_types и не подтип —
+// тип «на всякий случай»; FAQPage, HowTo и SearchAction нет ни у одного типа страницы.
+for (const { page } of project.plans) {
+  const where = planFiles.get(page.id) ?? `strategy: план ${page.id}`
+  const allowed = headKitTypes(headKit, page.page_type)
+  if (allowed === undefined) {
+    fail(
+      where,
+      `тип страницы «${page.page_type}» — нет в head-kit page_types: типы JSON-LD не сверить`,
+    )
+    continue
+  }
+  for (const type of page.seo.structured_data) {
+    if (!allowed.has(type)) {
+      fail(
+        where,
+        `seo.structured_data: ${type} вне head-kit для ${page.page_type} (${[...allowed].join(', ')})`,
+      )
+    }
+  }
+}
+
+// Типы JSON-LD страницы — ровно `seo.structured_data` её плана, каждый по разу; у страницы без плана разметки нет: тип
+// разметки даёт только план.
+function checkTypes(where, types, plan) {
+  const missing = [...(plan?.page.seo.structured_data ?? [])]
+  for (const type of types) {
+    const index = missing.indexOf(type)
+    if (index >= 0) missing.splice(index, 1)
+    else if (plan === undefined) {
+      fail(where, `JSON-LD «${type}» — у страницы нет плана strategy: тип разметки даёт план`)
+    } else {
+      fail(
+        where,
+        `JSON-LD «${type}» — не тип плана ${plan.page.id} (seo.structured_data: ${plan.page.seo.structured_data.join(', ') || 'пусто'})`,
+      )
+    }
+  }
+  for (const type of missing) fail(where, `нет JSON-LD «${type}» — тип плана ${plan?.page.id}`)
 }
 
 // ---------- страницы ----------
@@ -939,24 +1009,18 @@ for (const file of walk(client)) {
     }
     if (data['@context'] !== 'https://schema.org')
       fail(where, `JSON-LD @context «${data['@context']}»`)
-    if (!JSON_LD_TYPES.includes(data['@type'])) {
-      fail(
-        where,
-        `JSON-LD @type «${data['@type']}» вне JSON_LD_TYPES (scripts/lib/site-policy.mjs)`,
-      )
-    }
-    for (const forbidden of JSON_LD_FORBIDDEN) {
-      if (json.includes(`"${forbidden}"`)) fail(where, `JSON-LD содержит ${forbidden}`)
-    }
     if (data['@type'] === 'BreadcrumbList') checkBreadcrumbList(where, data, canonical)
     blocks.push(data)
   }
-  if (isLocaleHome(path)) {
-    for (const type of ['Organization', 'WebSite']) {
-      if (!blocks.some((data) => data['@type'] === type)) fail(where, `нет JSON-LD ${type}`)
-    }
-  }
-  checkMarkupVisible(where, path, body, blocks, facts)
+  // План страницы — строка карты по её адресу, у страниц 2…N списка — план списка.
+  const at = pageAt(project, routeOf(path))
+  const plan = at && plans.get(at.id)
+  checkTypes(
+    where,
+    blocks.map((data) => data['@type']),
+    plan,
+  )
+  checkMarkupVisible(where, body, blocks, facts)
   checkEntities(where, blocks, { lang, visible: textOf(body) })
 
   pages.set(path, { where, title, description, canonical, hrefs, noindex })

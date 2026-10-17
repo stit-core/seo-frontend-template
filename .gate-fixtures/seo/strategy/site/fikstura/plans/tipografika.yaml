@@ -1,0 +1,6 @@
+page:
+  id: tipografika
+  page_type: case-page
+  seo:
+    structured_data: [Article, BreadcrumbList]
+sections: []

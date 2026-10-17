@@ -1,0 +1,16 @@
+# Карта мини-проекта seo:check: страницы фикстуры, у которых есть план strategy; записи блога и прочие страницы — вне
+# карты, без плана.
+languages:
+  primary: ru
+  versions:
+    - {lang: ru, scope: all-pages}
+    - {lang: en, scope: selected-pages, pages: [home, author]}
+pages:
+  - {id: home, url: /, parent: null}
+  - {id: author, url: /author, parent: home}
+  - {id: o-nas, url: /o-nas, parent: home}
+  - {id: organizaciya, url: /organizaciya, parent: home}
+  - {id: podpis, url: /podpis, parent: home}
+  - {id: tipografika, url: /tipografika, parent: home}
+  - {id: vtoroe-imya, url: /vtoroe-imya, parent: home}
+  - {id: blogposting, url: /blogposting, parent: home}

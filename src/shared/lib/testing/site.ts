@@ -258,7 +258,7 @@ export const TEST_SITE = {
     linking: { related_rules: [{ id: 'post-tags', by: 'shared-tag', max: 3 }] },
   },
   'site/test/plans/home.yaml': {
-    page: { id: 'home' },
+    page: { id: 'home', page_type: 'home-multipage' },
     sections: [
       {
         id: 'header',
@@ -313,7 +313,7 @@ export const TEST_SITE = {
     ],
   },
   'site/test/plans/about.yaml': {
-    page: { id: 'about' },
+    page: { id: 'about', page_type: 'about-page' },
     sections: [
       {
         id: 'story',
@@ -355,7 +355,7 @@ export const TEST_SITE = {
     ],
   },
   'site/test/plans/contacts.yaml': {
-    page: { id: 'contacts' },
+    page: { id: 'contacts', page_type: 'contacts-page' },
     sections: [
       {
         id: 'request',
@@ -370,7 +370,7 @@ export const TEST_SITE = {
     ],
   },
   'site/test/plans/thank-you.yaml': {
-    page: { id: 'thank-you' },
+    page: { id: 'thank-you', page_type: 'thank-you-page' },
     sections: [
       {
         id: 'confirmation',
@@ -385,7 +385,7 @@ export const TEST_SITE = {
     ],
   },
   'site/test/plans/privacy.yaml': {
-    page: { id: 'privacy' },
+    page: { id: 'privacy', page_type: 'legal-page' },
     sections: [
       {
         id: 'policy',
@@ -411,7 +411,7 @@ export const TEST_SITE = {
     ],
   },
   'site/test/plans/not-found.yaml': {
-    page: { id: 'not-found' },
+    page: { id: 'not-found', page_type: 'not-found-page' },
     sections: [
       {
         id: 'not-found',
@@ -442,9 +442,12 @@ export const TEST_SITE = {
       },
     ],
   },
-  'site/test/plans/blog.yaml': { page: { id: 'blog' }, sections: [heroSection, cardsSection] },
+  'site/test/plans/blog.yaml': {
+    page: { id: 'blog', page_type: 'blog-index-page' },
+    sections: [heroSection, cardsSection],
+  },
   'site/test/plans/post.yaml': {
-    page: { id: 'post', template: true },
+    page: { id: 'post', page_type: 'article-page', template: true },
     sections: [
       crumbsSection,
       {
@@ -467,7 +470,7 @@ export const TEST_SITE = {
     ],
   },
   'site/test/plans/tag.yaml': {
-    page: { id: 'tag', template: true },
+    page: { id: 'tag', page_type: 'blog-index-page', template: true },
     sections: [crumbsSection, heroSection, cardsSection],
   },
   'site/test/copy/home.yaml': homeDeck(

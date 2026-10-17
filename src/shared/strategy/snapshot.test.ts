@@ -1,11 +1,10 @@
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '@/shared/i18n'
-import { langOf, mapLanguages } from './contract'
+import { langOf, mapLanguages, projectOf } from './contract'
 import {
   type PageFiles,
   pageLink,
   pageLocales,
   pageOf,
-  projectOf,
   snapshot,
   strategyPage,
   templateOf,
@@ -116,7 +115,7 @@ describe('снимок сайта strategy/', () => {
   // У шаблона коллекции слоты без текста и мету даёт запись: прочитанный как страница, он скрыл бы пропуск текста.
   it('шаблон коллекции читает templateOf, план одной страницы — pageOf; не та функция — ошибка с ключом', () => {
     const plan = (template: boolean) => ({
-      'site/x/plans/a.yaml': { page: { id: 'a', template }, sections: [] },
+      'site/x/plans/a.yaml': { page: { id: 'a', page_type: 'about-page', template }, sections: [] },
     })
     expect(() => pageOf(plan(true), DEFAULT_LOCALE)).toThrow(
       'strategy: a — план шаблона коллекции — его читает templateOf',
@@ -128,7 +127,7 @@ describe('снимок сайта strategy/', () => {
 
   it('модуль без плана или с двумя планами — ошибка', () => {
     const { plans } = snapshot()
-    const plan = (id: string) => ({ ...plans[0], page: { id } })
+    const plan = (id: string) => ({ ...plans[0], page: { id, page_type: 'about-page' } })
     expect(() => pageOf({}, DEFAULT_LOCALE)).toThrow(
       'strategy: в модуле страницы планов 0, а нужен один',
     )

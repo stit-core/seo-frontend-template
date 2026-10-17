@@ -1,5 +1,6 @@
 import { PACKAGE_LANDING, testLocale } from '@/shared/lib/testing'
-import { languagesOf, linkOf, localesOf, projectOf, readPage, siteOf, versionsOf } from './page'
+import { projectOf } from './contract'
+import { languagesOf, linkOf, localesOf, readPage, siteOf, versionsOf } from './page'
 
 // Чтение проверяется на локалях теста — ru, en и de, — а не на локалях сайта: фикстура проекта от них не зависит.
 // Снимок сайта — на дескрипторе сайта (snapshot.test.ts).
@@ -57,7 +58,7 @@ const site = () => ({
     ],
   },
   'site/web/plans/repair.yaml': {
-    page: { id: 'repair' },
+    page: { id: 'repair', page_type: 'service-page' },
     sections: [
       {
         id: 'hero',

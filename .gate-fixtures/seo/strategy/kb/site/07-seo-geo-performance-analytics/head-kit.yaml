@@ -1,0 +1,8 @@
+# head-kit мини-проекта seo:check — свои строки page_types, а не каталог базы: гейт на гейт не меняется от версии базы.
+page_types:
+  home-multipage: {structured_data: [Organization, WebSite], structured_data_subtypes: {Organization: [LocalBusiness]}}
+  about-page: {structured_data: [AboutPage, Organization]}
+  contacts-page: {structured_data: [ContactPage, LocalBusiness]}
+  article-page: {structured_data: [Article, BreadcrumbList]}
+  case-page: {structured_data: [Article, BreadcrumbList]}
+  legal-page: {structured_data: []}

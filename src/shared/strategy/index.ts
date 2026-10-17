@@ -14,7 +14,7 @@ export {
   unshown,
   untargeted,
 } from './block'
-export { elementOf, fail } from './contract'
+export { elementOf, fail, projectOf } from './contract'
 export type {
   Action,
   FactValue,
@@ -37,7 +37,6 @@ export {
   pageLocales,
   pageOf,
   pageVersions,
-  projectOf,
   relatedOf,
   siteOf,
   snapshot,
