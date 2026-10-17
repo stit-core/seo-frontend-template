@@ -394,7 +394,6 @@ export default defineConfig(
       'playwright-report/**',
       'test-results/**',
       '.gate-fixtures/**',
-      'docs/**',
       // Worktree агентов: чужая незаконченная работа не роняет lint этого дерева.
       '.claude/**',
     ],
