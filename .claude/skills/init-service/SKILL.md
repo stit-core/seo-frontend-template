@@ -53,8 +53,8 @@ description: Оркестратор онбординга форка ssr-frontend
 - Скопировать нужные `docs/stack/_templates/*.md` → `docs/stack/*.md`
   (10 обязательных; `api` и `analytics` — по ответу в первой волне)
 - `/stack-deep-dive` ведёт волнами поверх дефолтов шаблона
-- Gate: все обязательные и все заведённые условные — `status: stable`,
-  `Generates` непусты, blocker'ов в `state/` нет
+- Gate: `pnpm check:stack --stable` зелёный — обязательные и заведённые условные `stable`, в каждой
+  секции формы решение; blocker'ов в `state/` нет
 
 ### 3. Развернуть фундамент → `/de-template`
 

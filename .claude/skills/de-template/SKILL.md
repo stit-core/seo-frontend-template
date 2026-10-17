@@ -34,15 +34,12 @@ FSD-карту поверхности из соседнего `<org>/strategy`
    репо или его клон без смены `origin`. Разворот на каноне краснит гейт: его `check:identity`
    держит имя пакета шаблона и пустой `docs/stack/`.
 
-2. **Артефакты stable.** Все обязательные kinds и все заведённые условные:
+2. **Артефакты stable.** Все обязательные kinds и все заведённые условные, в каждой секции формы — решение:
    ```bash
-   for k in service runtime content routing rendering seo styling observability config dependencies; do
-     grep -q '^status: stable' "docs/stack/$k.md" || { echo "STOP: docs/stack/$k.md не stable"; exit 1; }
-   done
-   for k in api analytics; do
-     [ -f "docs/stack/$k.md" ] && { grep -q '^status: stable' "docs/stack/$k.md" || echo "STOP: docs/stack/$k.md не stable"; }
-   done
+   pnpm check:stack --stable
    ```
+   Красный — СТОП: строка называет kind без артефакта, артефакт не `stable` и каждую заглушку формы — к
+   `/stack-deep-dive`.
    FSD-карта: `fsd/<surface>/` в strategy существует, записи первого разворота — `stable`.
 
 3. **State чист**:

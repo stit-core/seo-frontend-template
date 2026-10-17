@@ -1,7 +1,7 @@
 // Гейт на гейт: негативные фикстуры .gate-fixtures/ обязаны валить линтеры (ESLint, Steiger,
 // Biome — теми же конфигами, что и src/) и собственные скрипты гейта (seo:check, check:links,
-// check:content, plan:check, check:prose) — ровно нарушениями из expected.json, не больше и не меньше. Иначе
-// деградация (Steiger fail-open, выключенная a11y-группа Biome, потерянный резолвер boundaries,
+// check:content, plan:check, check:prose, check:stack) — ровно нарушениями из expected.json, не больше и
+// не меньше. Иначе деградация (Steiger fail-open, выключенная a11y-группа Biome, потерянный резолвер boundaries,
 // ослабленная проверка скрипта) остаётся незамеченной: прогон зелёный, а держать нечем. Пустая или
 // урезанная секция expected.json — тоже деградация: её ловит точное совпадение. Периметр — так же:
 // guard-хук Claude Code обязан отказать каждому обходу из .gate-fixtures/guard.json и пропустить
@@ -13,6 +13,7 @@ import {
   existsSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   rmSync,
   writeFileSync,
@@ -655,6 +656,61 @@ function identityOutcomes() {
 want.identity = expected.identity ?? []
 found.identity = identityOutcomes()
 
+// check:stack — на мини-проекте .gate-fixtures/stack: обычный прогон и --stable (строки «--stable:» — только его), и
+// формы шаблона docs/stack/_templates как есть со status: stable — каждую валидатор отвергает: одна замена статуса
+// заглушки формы решением не делает.
+function stackOutcomes() {
+  const run = (...args) => {
+    const result = spawnSync(
+      process.execPath,
+      [resolve(root, 'scripts/check-stack.mjs'), ...args],
+      {
+        encoding: 'utf8',
+      },
+    )
+    if (result.error) throw result.error
+    const lines = result.stderr
+      .split('\n')
+      .filter((line) => line.startsWith('  '))
+      .map((line) => line.slice(2))
+    return { code: result.status, lines }
+  }
+  const plain = run(resolve(fixtures, 'stack'))
+  const strict = run('--stable', resolve(fixtures, 'stack'))
+  const temp = mkdtempSync(join(tmpdir(), 'gate-stack-'))
+  const forms = resolve(root, 'docs/stack/_templates')
+  cpSync(forms, join(temp, 'docs/stack/_templates'), { recursive: true })
+  const kinds = readdirSync(forms)
+    .filter((name) => name.endsWith('.md'))
+    .map((name) => name.slice(0, -'.md'.length))
+    .sort()
+  for (const kind of kinds) {
+    const form = readFileSync(join(forms, `${kind}.md`), 'utf8')
+    writeFileSync(
+      join(temp, `docs/stack/${kind}.md`),
+      form.replace(/^status: draft$/m, 'status: stable'),
+    )
+  }
+  const asIs = run(temp)
+  rmSync(temp, { recursive: true, force: true })
+  return [
+    `фикстура: код ${plain.code}`,
+    ...plain.lines,
+    `--stable: код ${strict.code}`,
+    ...strict.lines
+      .filter((line) => !plain.lines.includes(line))
+      .map((line) => `--stable: ${line}`),
+    ...kinds.map(
+      (kind) =>
+        `форма ${kind} как есть со status: stable — ${
+          asIs.lines.some((line) => line.startsWith(`docs/stack/${kind}.md`)) ? 'отказ' : 'ПРИНЯТА'
+        }`,
+    ),
+  ]
+}
+want.stack = expected.stack ?? []
+found.stack = stackOutcomes()
+
 // Guard-хук: отказ — код 2 (так Claude Code блокирует вызов), пропуск — 0.
 const guard = JSON.parse(readFileSync(resolve(fixtures, 'guard.json'), 'utf8'))
 const guardCode = (command) =>
@@ -685,6 +741,7 @@ for (const section of [
   'plans',
   'prose',
   'identity',
+  'stack',
   'indexnow',
   'template',
 ]) {

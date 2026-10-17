@@ -26,6 +26,7 @@
     "check:links": "node scripts/check-links.mjs",
     "check:prose": "node scripts/check-prose.mjs",
     "check:identity": "node scripts/check-identity.mjs",
+    "check:stack": "node scripts/check-stack.mjs",
     "seo:check": "node scripts/seo-check.mjs",
     "size": "size-limit",
     "ttfb": "node scripts/ttfb.mjs",
@@ -35,7 +36,7 @@
     "accept:image": "sh scripts/accept-image.sh",
     "plan:check": "bash scripts/validate-plan.sh",
     "template:update": "bash scripts/template-update.sh",
-    "check": "pnpm plan:check && pnpm check:prose && pnpm check:identity && pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm steiger && pnpm check:gate && pnpm check:content && pnpm build && pnpm check:links && pnpm seo:check && pnpm size && pnpm test:http",
+    "check": "pnpm plan:check && pnpm check:prose && pnpm check:identity && pnpm check:stack && pnpm typecheck && pnpm lint && pnpm format:check && pnpm test && pnpm steiger && pnpm check:gate && pnpm check:content && pnpm build && pnpm check:links && pnpm seo:check && pnpm size && pnpm test:http",
     "prepare": "lefthook install"
   },
   "dependencies": {

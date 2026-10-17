@@ -73,6 +73,7 @@ pnpm steiger          # структурный линтер FSD
 pnpm check:gate       # негативные фикстуры обязаны валить линтеры и скрипты гейта
 pnpm check:prose      # проза обвязки: пути, скрипты, скиллы и правила есть в репо; .template; маркеров конфликта нет
 pnpm check:identity   # лицо шаблона: канон его хранит (.template/face — --write), форк не несёт ни строки, ни файла
+pnpm check:stack      # стек: у stable docs/stack/<kind>.md — секции формы и решение в каждой; --stable — вход /de-template
 pnpm check:content    # контент-гейт: схема .md, даты, тело без скрытой разметки, переводы, ссылки, redirects.yaml
 pnpm check:links      # после build: все внутренние ссылки в dist/client существуют
 pnpm seo:check        # после build: мета и типы JSON-LD — по плану, сниппет, hreflang, JSON-LD = видимое, острова и ресурсы
