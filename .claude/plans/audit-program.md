@@ -285,7 +285,7 @@ GEO-шаг `/seo-audit`; облик сменный — ДС одним файл�
 канону первого релиза, edge и CrowdSec — по контракту сайта; контракт strategy → сайт исполним кодом. Идёт S6 — P5:
 план `blocks-content-model` (11 шагов, этапы A–E) — этапы A (данные `strategy/` и чтение, локали 1…N), B (блоки
 каталога, каркас) и C (страницы и блог из блоков) приняты валидатором, этап D (head по copy deck и `head-kit`, `seo:check`
-по плану: S8, S9) сделан, идёт его валидация; S10 (проза) сделан; затем S11 (приёмка); второй план фазы,
-`forms-consent-collections`, — после него. Параллельным треком идёт S10 — P9 `template-lifecycle`: этап A (kinship и
-`docs/research` удалены) принят и влит в `main`, на ветке `p9-lifecycle` идёт этап B (версия обвязки, `check:prose`),
-затем C (лицо и стек).
+по плану: S8, S9) и S10 (проза) сделаны, этап D — на перепроверке; затем S11 (приёмка); второй план фазы,
+`forms-consent-collections`, — после него. Параллельным треком идёт S10 — P9 `template-lifecycle`: этапы A (kinship и
+`docs/research` удалены) и B (версия обвязки `.template/` и `template:update`, `check:prose`) приняты и влиты в `main`,
+на ветке `p9-lifecycle` — фиксы этапа C (`check:identity`, `check:stack`).
