@@ -1,6 +1,6 @@
 ---
-description: Контент в git — frontmatter и бюджеты, даты не из будущего, один h1, alt, тело без скрытой разметки, переводы и черновики, реестр авторов, редиректы как данные (YAML → данные на сборке; адреса миграции, один хоп), контентные гейты check:content / check:links.
-paths: ["src/entities/*/content/**", "src/entities/*/model/schema.ts", "src/entities/*/api/**", "src/entities/author/**", "src/shared/redirects/**", "src/app/middleware/redirects.ts", "content/redirects.yaml", "astro.config.ts", "content/**", "scripts/check-content.mjs", "scripts/check-links.mjs", "scripts/lib/content.mjs"]
+description: Контент в git — frontmatter и бюджеты, даты не из будущего, один h1, alt, тело без скрытой разметки, переводы и черновики, реестр авторов, тексты страниц — данные strategy/ в форме strategy, редиректы как данные (YAML → данные на сборке; адреса миграции, один хоп), контентные гейты check:content / check:links.
+paths: ["strategy/**", "src/entities/*/content/**", "src/entities/*/model/schema.ts", "src/entities/*/api/**", "src/entities/author/**", "src/shared/redirects/**", "src/app/middleware/redirects.ts", "content/redirects.yaml", "astro.config.ts", "content/**", "scripts/check-content.mjs", "scripts/check-links.mjs", "scripts/lib/content.mjs"]
 ---
 
 # Контент-инварианты
@@ -8,7 +8,7 @@ paths: ["src/entities/*/content/**", "src/entities/*/model/schema.ts", "src/enti
 Контент — Markdown в git внутри слайса сущности (`src/entities/<name>/content/`), схема —
 Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллекция — `model/collection.ts`
 (`glob({ base })`), доступ — `api/queries.ts`. Ошибка схемы = красная сборка; раньше и
-понятнее её ловит `pnpm check:content`.
+понятнее её ловит `pnpm check:content`. Тексты страниц — данные `strategy/` (§ Данные страниц).
 
 ## Файл записи
 
@@ -150,6 +150,22 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
   без схемы на другой хост (`//contacts` — так склеивается путь с лишним слешем) в разметке нет —
   `check:links` читает ссылку как браузер; кириллицу в пути и сегменты `.` и `..` браузер приводит сам до
   запроса — такая ссылка законна, а существование её цели сверяется в записи файла: имя — буквами
+
+## Данные страниц — `strategy/`
+
+- `strategy/` — снимок strategy на месте: проект одной поверхности (`facts.yaml` и `facts.<lang>.yaml`,
+  `site/<поверхность>/{site-brief,site-map}.yaml`, `plans/<страница>.yaml`, `copy/<страница>.yaml` и `.<lang>.yaml`) и
+  копии каталогов базы `kb/` байт в байт с тега strategy (отпечатки — `KB_SHA256` политики сборки, сверяет
+  `kb.test.ts`). Форма файла — схемы strategy без диалекта: правка — в той же форме, а с соседом — его валидаторы без
+  `error` (`site_validate.py` по папке поверхности, `copydeck.py check`, `claims_check.py lint-facts`); гейт сайта их
+  не гоняет
+- Тексты страницы — copy deck по ключу `page/section/slot` (выбранный вариант), мета — `meta` copy deck: бренд в
+  заголовке пишет strategy; число и дата текста — факт (`fact_ids`), контакты и реквизиты — факты с `machine`. Демо-факты
+  шаблона — `example: true`: пока хоть один на месте, форк не развёрнут (`/de-template`)
+- Ссылки внутри файлов (`refs`, `facts_ref`, `page_plan_ref`) — пути проекта strategy: код их не разрешает
+- Читает снимок `shared/strategy` (rule `fsd-architecture`): файл не по схеме чтения — ошибка сборки с путём и полем; нет
+  страницы, секции, слота, меты или факта — с ключом `page/section/slot`; каждая страница copy deck читается на своём
+  языке, языки карты — локали дескриптора (`snapshot.test.ts`)
 
 ## Гейты
 

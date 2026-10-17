@@ -1,5 +1,5 @@
 ---
-description: SEO-канон шаблона — head через DocumentLayout (title/description уникальны, self-canonical, hreflang только для реальных переводов, OG полный), JSON-LD в head только про видимое и только допустимые типы, одна организация и авторы по @id, политика ИИ-ботов из реестра базы, robots.txt и ключ IndexNow on-demand на runtime origin, sitemap.xml и фиды — файлы сборки, staging в три контура, ботам тот же ответ, гейты seo:check и HTTP-набор, GEO-проба geo:probe.
+description: SEO-канон шаблона — head через DocumentLayout (мета — copy deck как есть, title/description уникальны, self-canonical, hreflang только для реальных переводов, OG полный), JSON-LD в head только про видимое и ровно типы плана страницы в границах head-kit, одна организация и авторы по @id, подпись автора — его Person, даты — только у записи, политика ИИ-ботов из реестра базы, robots.txt и ключ IndexNow on-demand на runtime origin, sitemap.xml и фиды — файлы сборки, staging в три контура, ботам тот же ответ, гейты seo:check и HTTP-набор, GEO-проба geo:probe.
 paths: ["src/shared/seo/**", "src/shared/config/site.ts", "src/app/layouts/**", "src/pages/**", "src/widgets/breadcrumbs/**", "scripts/seo-check.mjs", "scripts/lib/html.mjs", "scripts/lib/sitemap.mjs", "e2e/http/**", "public/**"]
 ---
 

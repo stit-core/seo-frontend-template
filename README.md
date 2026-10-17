@@ -21,7 +21,8 @@ Astro 7 + Node-адаптер, Feature-Sliced Design под линтером, Ja
 ## Стек
 
 Astro 7.3 + `@astrojs/node` (`output: 'static'`, standalone) · TypeScript 6
-(`astro/tsconfigs/strictest`) · Tailwind v4 на собственном токен-слое · контент — Markdown
+(`astro/tsconfigs/strictest`) · Tailwind v4 на собственном токен-слое · страница — блоки каталога
+strategy по её плану, тексты — copy deck, контакты — факты (данные `strategy/`) · записи — Markdown
 в git внутри слайса (Content Layer + Zod 4) · локали 1…N одним дескриптором (у шаблона `ru` без
 префикса + `en` под `/en`) ·
 редиректы как данные (`content/redirects.yaml`) · SEO-слой `shared/seo` (canonical, hreflang,
@@ -72,7 +73,7 @@ pnpm steiger          # структурный линтер FSD
 pnpm check:gate       # негативные фикстуры обязаны валить линтеры и скрипты гейта
 pnpm check:content    # контент-гейт: схема .md, даты, тело без скрытой разметки, переводы, ссылки, redirects.yaml
 pnpm check:links      # после build: все внутренние ссылки в dist/client существуют
-pnpm seo:check        # после build: head, сниппет, hreflang, JSON-LD = видимое, острова и ресурсы каждой страницы
+pnpm seo:check        # после build: мета и типы JSON-LD — по плану, сниппет, hreflang, JSON-LD = видимое, острова и ресурсы
 pnpm size             # бюджеты: CSS, HTML самой тяжёлой страницы, шрифты ДС, серверный бандл
 pnpm kin:diff         # сверка обвязки с ../spa-frontend-template (advisory)
 pnpm ttfb <origin> …  # TTFB запущенного сервера: медиана/p90 20 запросов
@@ -128,6 +129,11 @@ docs/stack/       формы платформенных артефактов (12
 ```
 
 ## Контент
+
+Страница — блоки каталога strategy (`src/widgets/<block-id>`) в порядке секций её плана; тексты и мета — copy
+deck по ключу `page/section/slot`, контакты и реквизиты — факты: данные `strategy/` в форме strategy. Нет секции,
+слота, текста или факта — красная сборка, литерал текста в разметке страниц и блоков — красные `lint` и тест
+страниц.
 
 Записи — Markdown в `src/entities/post/content/<locale>/<slug>.md` с frontmatter под
 Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `translationKey`,
