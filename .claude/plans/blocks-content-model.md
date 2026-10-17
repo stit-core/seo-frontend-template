@@ -357,7 +357,8 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
     `ProfilePage` (`references/templates.md`), post-flight `page` и `block` — кадры страницы; `/scaffold block` — контракт
     `defineBlock` и тест контракта — правда. `grep` по `src`, `.claude`, `docs/reference`, `CLAUDE.md`, README:
     `COPY`, `site-header`, `pageTitle`, «≥ 2 страниц», `JSON_LD_TYPES`, `JSON_LD_FORBIDDEN`, `/now` — только в планах
-    (`M/p5e/grep.txt`); рецепт живой страницы `rendering.md` адреса не называет. Дефекты кода — «Решения» (S10).
+    (`M/p5e/grep.txt`); рецепт живой страницы `rendering.md` адреса не называет. Комментарии оболочки (острова) и
+    заголовка (`display` — первый экран `hero-text`) — правда реестра и блока.
     `pnpm check` — зелёный (632 теста, покрытие 100 / 99,37 / 100 / 100, бандл 888,28 КБ), `check:gate` — те же числа,
     что у S9 (eslint 113, steiger 4, biome 1, seo 222, links 13, content 51, plans 3, indexnow 35): фикстуры не тронуты
 - [ ] **S11** — Приёмка отдельным агентом: набор мутаций и сценарии на итоговом коде, 45 мутаций эталона, валидаторы и
@@ -867,11 +868,6 @@ strategy: тексты — объекты `COPY` и литералы в `.astro`
 - Рецепт `ProfilePage` (S10, `/scaffold page`): план называет `ProfilePage`, `Person` — его `mainEntity` (отдельным
   блоком не печатается: «типы = план» считает блоки), фабрика — в `json-ld.ts` рядом с `article` на том же `person()`:
   у подписи записи и страницы автора один `@id`, имя, роль и профиль — это и держит `seo:check`.
-- Дефекты кода, найденные S10 (шаг кода не меняет; правит следующий шаг, который трогает файл): комментарий оболочки
-  `src/app/layouts/document.astro` (острова: «предпочтения с кнопкой темы — на всём сайте, без неё — на страницах с
-  переключателем движения») расходится с реестром `shared/config/islands.ts` — остров на каждой странице при кнопке
-  темы или переключателе движения; комментарий `src/shared/ui/heading/heading.astro` («`display` — заголовок главной») —
-  `hero-text` ставит `display` на первый экран каждой страницы с ним (главная, «О компании», контакты, блог, тег).
 - Вне объёма S10 (вход strategy — P8, R01): `docs/README.md § Внешние артефакты` и `docs/getting-started.md` называют
   входом FSD-карту strategy, о снимке `strategy/` не говорят; ссылки rules и `rendering.md` на `docs/research/**` — трек
   P9 (R23).

@@ -2,7 +2,7 @@
 interface Props {
   level: 1 | 2 | 3
   // Роль текста; по умолчанию — по уровню: страница, раздел, карточка. `display` — заголовок
-  // главной: от границы tablet он крупнее.
+  // первого экрана (блок hero-text): от границы tablet он крупнее.
   kind?: 'display' | 'page' | 'section' | 'card' | undefined
   id?: string | undefined
 }
