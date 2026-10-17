@@ -23,6 +23,8 @@ copy_deck:
         description: >-
           An Astro site template that builds its pages ahead of time: JavaScript only as islands by decision, one
           Docker image for every environment.
+        og_title: Indexable site template
+        og_description: Pages are built ahead of time; the server ships them as files and renders only on request.
         fact_ids: []
       sections:
         - section_id: header

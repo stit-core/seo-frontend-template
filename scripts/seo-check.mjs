@@ -55,6 +55,7 @@ import ts from 'typescript'
 import { SITE_ORIGIN_PLACEHOLDER } from '../src/shared/config/runtime.ts'
 import { localeRules } from '../src/shared/i18n/locale.ts'
 import {
+  deckPageOf,
   HeadKitSchema,
   headKitTypes,
   pageAt,
@@ -240,6 +241,10 @@ const FONT_DISPLAY = ['swap', 'fallback', 'optional']
 // семейства списка с хешем сборки (`"Golos Text-1a2b…"`), метрический фолбэк — `"… fallback: Arial"`.
 const FONT_FAMILIES = new Set(fonts.map(({ family }) => family))
 const listedFamilyOf = (name) => /^(.+)-[\da-f]+(?: fallback: .+)?$/.exec(name)?.[1]
+
+// Текст меты и её источник сравниваются в одной нормализации пробелов: неразрывный пробел типографики — пробел.
+const sameText = (text, source) =>
+  text !== undefined && source !== undefined && normalizeSpace(text) === normalizeSpace(source)
 
 // Сниппет выдачи: title — мета copy deck как есть, бренд в нём пишет strategy («Контакты Бренда — Москва», «Блог —
 // Бренд»). Длина — у заголовка целиком: его режет строка выдачи; «общий» и «меньше трёх слов» — о словах самой
@@ -775,6 +780,49 @@ function checkTypes(where, types, plan) {
   for (const type of missing) fail(where, `нет JSON-LD «${type}» — тип плана ${plan?.page.id}`)
 }
 
+// ---------- источник: записи коллекций ----------
+// Записи коллекций — источник, с которым сверяется сборка: страницы записей и черновиков, теги, даты, мета и пары
+// переводов (twin по translationKey).
+const groups = new Map()
+const pair = (key, locale, path) => {
+  if (!groups.has(key)) groups.set(key, new Map())
+  groups.get(key).set(locale, path)
+}
+const entryPaths = new Set()
+const draftPaths = new Set()
+// Страницы тегов коллекций: адрес → число опубликованных записей локали с этим тегом.
+const tagPosts = new Map()
+// Дата последнего изменения записи — правка, без неё публикация: ею карта сайта датирует страницу.
+const entryDates = new Map()
+// Мета записи — её title и description из frontmatter: страница записи печатает их как есть.
+const entryMeta = new Map()
+const day = (date) => new Date(date).toISOString().slice(0, 10)
+for (const collection of collections) {
+  const dir = resolve(root, collection.dir)
+  if (!existsSync(dir)) {
+    fail(collection.dir, 'каталога коллекции нет — поправьте реестр scripts/lib/content.mjs')
+    continue
+  }
+  for (const file of walk(dir).filter((name) => name.endsWith('.md'))) {
+    const [locale, name] = relative(dir, file).split(sep)
+    const data = load(splitFrontmatter(readFileSync(file, 'utf8')).frontmatter)
+    const path = localePath(locale, collection.entryRoute(name.replace(/\.md$/, '')))
+    if (data.draft === true) {
+      draftPaths.add(path)
+      continue
+    }
+    entryPaths.add(path)
+    entryMeta.set(path, { title: data.title, description: data.description })
+    const changed = data.updatedDate ?? data.pubDate
+    if (changed !== undefined) entryDates.set(path, day(changed))
+    for (const tag of collection.tagRoute ? (data.tags ?? []) : []) {
+      const tagPath = localePath(locale, collection.tagRoute(tag))
+      tagPosts.set(tagPath, (tagPosts.get(tagPath) ?? 0) + 1)
+    }
+    pair(`${collection.name}:${data.translationKey}`, locale, path)
+  }
+}
+
 // ---------- страницы ----------
 // Остров — решение с основанием и ценой: строка реестра без них — код без решения.
 for (const [name, island] of Object.entries(islands)) {
@@ -859,6 +907,30 @@ for (const file of walk(client)) {
   const descriptionTag = single(meta('description'), 'meta description')
   const description = descriptionTag?.content?.trim()
   if (descriptionTag && !description) fail(where, 'description без content или пустой')
+
+  // Мета — copy deck как есть: у страницы плана одной страницы — мета её copy deck на языке страницы, у записи коллекции
+  // — её title и description. Страницы 2…N списка дополняют мету номером (строка словаря), у тега и страницы без плана —
+  // мета словаря: их держат правила сниппета. План страницы — строка карты по её адресу, у страниц 2…N — план списка.
+  const at = pageAt(project, routeOf(path))
+  const plan = at && plans.get(at.id)
+  const deck =
+    plan && !plan.page.template ? deckPageOf(project, plan.page.id, locale)?.meta : undefined
+  if (plan && !plan.page.template && deck === undefined) {
+    fail(where, `нет меты страницы ${plan.page.id} в copy deck ${locale}`)
+  }
+  const record = entryMeta.get(path)
+  const source =
+    deck && at.list === undefined
+      ? { ...deck, of: `copy deck страницы ${plan.page.id}` }
+      : record && { ...record, of: 'записи (frontmatter)' }
+  for (const [label, value, want] of [
+    ['<title>', title, source?.title],
+    ['description', description, source?.description],
+  ]) {
+    if (value !== undefined && want !== undefined && !sameText(value, want)) {
+      fail(where, `${label} «${value}» — не мета ${source.of}: «${want}»`)
+    }
+  }
 
   const h1 = html.match(/<h1[\s>]/g)?.length ?? 0
   if (h1 !== 1) fail(where, `h1: ожидается ровно один, найдено ${h1}`)
@@ -963,10 +1035,23 @@ for (const file of walk(client)) {
         'article:modified_time': property('article:modified_time')[0]?.content,
       }
     }
-    if (og('og:title') !== title) fail(where, 'og:title не равен <title>')
+    // Тексты превью ссылки — свои у copy deck страницы (`og_title`, `og_description`), без них — заголовок и описание.
+    const ogTitle = og('og:title')
+    if (deck?.og_title !== undefined) {
+      if (!sameText(ogTitle, deck.og_title)) {
+        fail(
+          where,
+          `og:title «${ogTitle}» — не og_title copy deck страницы ${plan.page.id}: «${deck.og_title}»`,
+        )
+      }
+    } else if (ogTitle !== title) fail(where, 'og:title не равен <title>')
     const ogDescription = og('og:description')
     if (!ogDescription) fail(where, 'og:description без content или пустой')
-    else if (ogDescription !== description) fail(where, 'og:description не равен description')
+    else if (deck?.og_description !== undefined) {
+      if (!sameText(ogDescription, deck.og_description)) {
+        fail(where, `og:description — не og_description copy deck страницы ${plan.page.id}`)
+      }
+    } else if (ogDescription !== description) fail(where, 'og:description не равен description')
     const ogUrl = og('og:url')
     if (!ogUrl) fail(where, 'og:url пуст')
     else if (ogUrl !== canonical) fail(where, 'og:url не равен canonical')
@@ -1012,9 +1097,6 @@ for (const file of walk(client)) {
     if (data['@type'] === 'BreadcrumbList') checkBreadcrumbList(where, data, canonical)
     blocks.push(data)
   }
-  // План страницы — строка карты по её адресу, у страниц 2…N списка — план списка.
-  const at = pageAt(project, routeOf(path))
-  const plan = at && plans.get(at.id)
   checkTypes(
     where,
     blocks.map((data) => data['@type']),
@@ -1244,42 +1326,6 @@ for (const [, page] of pages) {
 // списки и теги — один маршрут под префиксами локалей; записи — twin по translationKey из
 // frontmatter (черновиков в сборке нет). Без неё страница, чей перевод выпал из карты переводов,
 // теряет hreflang молча.
-const groups = new Map()
-const pair = (key, locale, path) => {
-  if (!groups.has(key)) groups.set(key, new Map())
-  groups.get(key).set(locale, path)
-}
-const entryPaths = new Set()
-const draftPaths = new Set()
-// Страницы тегов коллекций: адрес → число опубликованных записей локали с этим тегом.
-const tagPosts = new Map()
-// Дата последнего изменения записи — правка, без неё публикация: ею карта сайта датирует страницу.
-const entryDates = new Map()
-const day = (date) => new Date(date).toISOString().slice(0, 10)
-for (const collection of collections) {
-  const dir = resolve(root, collection.dir)
-  if (!existsSync(dir)) {
-    fail(collection.dir, 'каталога коллекции нет — поправьте реестр scripts/lib/content.mjs')
-    continue
-  }
-  for (const file of walk(dir).filter((name) => name.endsWith('.md'))) {
-    const [locale, name] = relative(dir, file).split(sep)
-    const data = load(splitFrontmatter(readFileSync(file, 'utf8')).frontmatter)
-    const path = localePath(locale, collection.entryRoute(name.replace(/\.md$/, '')))
-    if (data.draft === true) {
-      draftPaths.add(path)
-      continue
-    }
-    entryPaths.add(path)
-    const changed = data.updatedDate ?? data.pubDate
-    if (changed !== undefined) entryDates.set(path, day(changed))
-    for (const tag of collection.tagRoute ? (data.tags ?? []) : []) {
-      const tagPath = localePath(locale, collection.tagRoute(tag))
-      tagPosts.set(tagPath, (tagPosts.get(tagPath) ?? 0) + 1)
-    }
-    pair(`${collection.name}:${data.translationKey}`, locale, path)
-  }
-}
 for (const [path, page] of pages) {
   // Служебные страницы hreflang не выводят: у пары noindex-страниц нечего сверять.
   if (!entryPaths.has(path) && !page.noindex) pair(`route:${routeOf(path)}`, localeOf(path), path)

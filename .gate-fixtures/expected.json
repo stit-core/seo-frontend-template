@@ -234,6 +234,7 @@
     "dist/client/blog/zapis/index.html: нет hreflang en → /en/blog/post, а перевод есть",
     "dist/client/blog/zapis/index.html: нет hreflang ru → /blog/zapis, а перевод есть",
     "dist/client/blog/raz/index.html: hreflang есть, а пары переводов в источнике нет",
+    "dist/client/blog/raz/index.html: <title> «Запись раз с чужим переводом — Фикстура» — не мета записи (frontmatter): «Запись раз с чужим переводом»",
     "dist/client/en/blog/dva/index.html: hreflang есть, а пары переводов в источнике нет",
     "dist/client/hreflang/index.html: hreflang есть, а пары переводов в источнике нет",
     "dist/client/xdefault/index.html: hreflang есть, а пары переводов в источнике нет",
@@ -242,7 +243,10 @@
     "strategy/site/fikstura/plans/vne-kita.yaml: seo.structured_data: FAQPage вне head-kit для about-page (AboutPage, Organization, BreadcrumbList)",
     "dist/client/blogposting/index.html: JSON-LD «BlogPosting» — не тип плана blogposting (seo.structured_data: Article)",
     "dist/client/blogposting/index.html: нет JSON-LD «Article» — тип плана blogposting",
-    "dist/client/index.html: нет JSON-LD «WebSite» — тип плана home"
+    "dist/client/index.html: нет JSON-LD «WebSite» — тип плана home",
+    "dist/client/meta/index.html: <title> «Мета страницы из copy deck — Фикстура — Фикстура» — не мета copy deck страницы meta: «Мета страницы из copy deck — Фикстура»",
+    "dist/client/meta/index.html: og:title «Мета страницы из copy deck — Фикстура — Фикстура» — не og_title copy deck страницы meta: «Мета из copy deck»",
+    "dist/client/meta/index.html: og:description — не og_description copy deck страницы meta"
   ],
   "links": [
     "dist/client/index.html: /rss.xml — не существует",

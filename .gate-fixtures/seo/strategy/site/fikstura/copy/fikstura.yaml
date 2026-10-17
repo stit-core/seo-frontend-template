@@ -1,0 +1,47 @@
+# Copy deck мини-проекта seo:check на ru: мета страниц с планом. Мета страницы `meta` — copy deck, а страница печатает
+# заголовок с брендом дважды и превью ссылки копиями заголовка и описания.
+copy_deck:
+  lang: ru
+  pages:
+    - page_id: home
+      meta:
+        title: Главная страница фикстуры гейта на гейт — Фикстура
+        description: 'Страница мини-сборки негативной фикстуры: по ней check:gate видит, что seo:check ловит нарушение. Главная.'
+      sections: []
+    - page_id: o-nas
+      meta:
+        title: Страница о компании с невидимыми фактами — Фикстура
+        description: 'Страница мини-сборки негативной фикстуры: по ней check:gate видит, что seo:check ловит нарушение. О нас.'
+      sections: []
+    - page_id: organizaciya
+      meta:
+        title: Вторая организация с другим именем — Фикстура
+        description: 'Страница мини-сборки негативной фикстуры: по ней check:gate видит, что seo:check ловит нарушение. Организация.'
+      sections: []
+    - page_id: podpis
+      meta:
+        title: Запись со скрытой подписью автора — Фикстура
+        description: 'Страница мини-сборки негативной фикстуры: по ней check:gate видит, что seo:check ловит нарушение. Подпись.'
+      sections: []
+    - page_id: tipografika
+      meta:
+        title: 'Кейс: +64 % трафика за полгода — Фикстура'
+        description: 'Страница мини-сборки фикстуры: типографика с неразрывными пробелами в h1, крошках и разметке — без нарушений.'
+      sections: []
+    - page_id: vtoroe-imya
+      meta:
+        title: Запись с автором под другим именем — Фикстура
+        description: 'Страница мини-сборки негативной фикстуры: по ней check:gate видит, что seo:check ловит нарушение. Автор.'
+      sections: []
+    - page_id: blogposting
+      meta:
+        title: Запись с типом разметки не из плана — Фикстура
+        description: 'Страница мини-сборки негативной фикстуры: по ней check:gate видит, что seo:check ловит нарушение. Тип записи.'
+      sections: []
+    - page_id: meta
+      meta:
+        title: Мета страницы из copy deck — Фикстура
+        description: 'Страница мини-сборки негативной фикстуры: по ней check:gate видит, что seo:check ловит нарушение. Мета.'
+        og_title: Мета из copy deck
+        og_description: Превью ссылки на страницу меты из copy deck фикстуры.
+      sections: []

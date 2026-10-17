@@ -1,0 +1,14 @@
+# Copy deck мини-проекта seo:check на en: мета страниц с планом на втором языке.
+copy_deck:
+  lang: en
+  pages:
+    - page_id: home
+      meta:
+        title: Fixture home page of the gate on the gate — Фикстура
+        description: 'Страница мини-сборки негативной фикстуры: по ней check:gate видит, что seo:check ловит нарушение. English home.'
+      sections: []
+    - page_id: author
+      meta:
+        title: Post signed by its author — Фикстура
+        description: 'Fixture mini-build page without violations: the same author on another locale keeps the @id and takes a localized name.'
+      sections: []
