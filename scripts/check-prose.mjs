@@ -78,13 +78,7 @@ const PNPM_CALL = /\bpnpm\s+(?:run\s+)?([a-z][\w:.-]*)/g
 
 const skill = (name) => tracked.has(`.claude/skills/${name}/SKILL.md`)
 // Встроенные команды Claude Code и скилл соседнего strategy (карта сайта проектируется там): не скиллы репо.
-const NOT_REPO_SKILLS = new Set([
-  'clear',
-  'compact',
-  'code-review',
-  'security-review',
-  'fsd-deep-dive',
-])
+const NOT_REPO_SKILLS = new Set(['clear', 'code-review', 'security-review', 'fsd-deep-dive'])
 // Корни файловой системы — `/app` образа, `/tmp`: пути, а не скиллы.
 const FS_ROOTS = new Set([
   'app',
