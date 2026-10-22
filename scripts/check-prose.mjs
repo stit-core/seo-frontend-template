@@ -316,11 +316,14 @@ for (const { doc, ref, paths } of deadPaths) {
   )
 }
 
-// Маркер конфликта переноса в прозе, данных или скрипте сборку не ломает — без проверки он прошёл бы гейт.
+// Маркер конфликта переноса в прозе, данных или скрипте сборку не ломает — без проверки он прошёл бы гейт. Нарочные
+// маркеры — только в мини-проекте этой проверки: их сверяет check:gate. Мини-проекты других проверок — пути шаблона,
+// перенос в них тоже конфликтует.
 const MARKER = /^(?:<{7}|>{7})(?: |$)/m
+const MARKED = '.gate-fixtures/prose/'
 let scanned = 0
 for (const file of files) {
-  if (MINI_PROJECT.test(file) || !lstatSync(resolve(root, file)).isFile()) continue
+  if (file.startsWith(MARKED) || !lstatSync(resolve(root, file)).isFile()) continue
   scanned++
   const text = readFileSync(resolve(root, file), 'utf8')
   const marker = MARKER.exec(text)

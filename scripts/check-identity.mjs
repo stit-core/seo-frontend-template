@@ -175,9 +175,7 @@ if (canon) {
     problems.push(`${FACE}: файла нет — лицо шаблона приходит с его обвязкой: pnpm template:update`)
   } else {
     const face = entriesOf(read(FACE).toString('utf8'))
-    const texts = face
-      .filter((entry) => entry.startsWith('text '))
-      .map((entry) => spaced(entry.slice(5)))
+    const texts = face.filter((entry) => entry.startsWith('text ')).map((entry) => entry.slice(5))
     const prints = new Map()
     for (const entry of face.filter((line) => line.startsWith('file '))) {
       const [hash, ...path] = entry.slice(5).split(' ')
