@@ -1,7 +1,7 @@
 import { join } from 'node:path'
 import type { Page, TestInfo } from '@playwright/test'
 import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
-import { pageTemplates, pageText } from '../site'
+import { leadForms, pageTemplates, sectionText } from '../site'
 import { expect, test } from './csp'
 import { SITE_THEMES } from './themes'
 
@@ -231,19 +231,26 @@ for (const path of PAGES) {
   })
 }
 
-test('ответ формы с ошибками', async ({ page }, testInfo) => {
-  await page.goto('/contacts')
-  // Нативная проверка отключена: ошибки должен вернуть сервер.
-  await page.locator('form[method="post"]').evaluate((form: HTMLFormElement) => {
-    form.noValidate = true
+// Ответ с ошибками — у каждой формы плана: её страница и набор.
+for (const plan of leadForms()) {
+  test(`ответ формы с ошибками: ${plan.id}`, async ({ page }, testInfo) => {
+    const locale = plan.locales[0] ?? DEFAULT_LOCALE
+    await page.goto(localePath(locale, plan.url))
+    const form = page
+      .locator('form')
+      .filter({ has: page.locator(`input[name="form_id"][value="${plan.id}"]`) })
+    // Нативная проверка отключена: ошибки должен вернуть сервер.
+    await form.evaluate((element: HTMLFormElement) => {
+      element.noValidate = true
+    })
+    await form
+      .getByRole('button', { name: sectionText(plan.page, plan.section, 'cta-label', locale) })
+      .click()
+    await expect(page.getByRole('alert')).toBeVisible()
+    await inspect(page)
+    await frames(page, testInfo, `${plan.id.replace('/', '_')}_oshibki`)
   })
-  await page
-    .getByRole('button', { name: pageText('contacts', 'lead-form', 'cta-label', DEFAULT_LOCALE) })
-    .click()
-  await expect(page.getByRole('alert')).toBeVisible()
-  await inspect(page)
-  await frames(page, testInfo, 'contacts_oshibki')
-})
+}
 
 // Главная — не колонка: на ней полоса фона на всё окно и сетка шире колонки чтения.
 for (const locale of SUPPORTED_LOCALES) {

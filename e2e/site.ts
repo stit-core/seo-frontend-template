@@ -308,29 +308,53 @@ function strategyFiles<T>(kind: 'plans' | 'copy', parse: (data: unknown, path: s
   const dir = resolve(root, 'strategy/site')
   return readdirSync(dir, { recursive: true, encoding: 'utf8' })
     .filter((path) => path.split(sep).at(-2) === kind && path.endsWith('.yaml'))
+    .sort()
     .map((path) => parse(load(readFileSync(resolve(dir, path), 'utf8')), `site/${path}`))
 }
 
-// Текст элемента блока страницы на языке — из copy deck этого языка по плану страницы: секция блока, слот с этим
-// элементом анатомии (заголовок 404, подпись кнопки формы, подтверждение заявки). Нет его — отказ: страница ответила бы
+const plans = () => strategyFiles('plans', (data, path) => parseFile(PlanSchema, data, path))
+
+// Текст слота секции плана на языке — выбранный вариант copy deck этого языка. Нет его — отказ: страница ответила бы
 // без этого текста.
-export function pageText(page: string, block: string, element: string, locale: Locale): string {
-  const plan = strategyFiles('plans', (data, path) => parseFile(PlanSchema, data, path)).find(
-    (candidate) => candidate.page.id === page,
-  )
-  const section = plan?.sections.find((candidate) => candidate.block === block)
-  const slot = section?.slots.text.find(
-    (candidate) => elementOf(candidate, 'text')?.element === element,
-  )
+function slotText(page: string, section: string, slot: string, locale: Locale): string {
   const found = strategyFiles('copy', (data, path) => parseFile(CopyDeckSchema, data, path))
     .filter(({ copy_deck: deck }) => langOf(deck.lang) === locale)
     .flatMap(({ copy_deck: deck }) => deck.pages)
     .find(({ page_id: id }) => id === page)
-    ?.sections.find(({ section_id: id }) => id === section?.id)
-    ?.slots.find(({ slot_id: id }) => id === slot?.id)
-  const key = `${page}/${section?.id ?? block}/${slot?.id ?? element}`
+    ?.sections.find(({ section_id: id }) => id === section)
+    ?.slots.find(({ slot_id: id }) => id === slot)
+  const key = `${page}/${section}/${slot}`
   if (found === undefined) throw new Error(`strategy: ${key} — нет текста на ${locale}`)
   return chosenText(found, key)
+}
+
+// Текст элемента анатомии секции плана на языке (подпись кнопки формы, подтверждение заявки).
+export function sectionText(
+  page: string,
+  section: string,
+  element: string,
+  locale: Locale,
+): string {
+  const slot = plans()
+    .find((candidate) => candidate.page.id === page)
+    ?.sections.find((candidate) => candidate.id === section)
+    ?.slots.text.find((candidate) => elementOf(candidate, 'text')?.element === element)
+  return slotText(page, section, slot?.id ?? element, locale)
+}
+
+// Текст элемента блока страницы на языке — у секции этого блока (заголовок 404).
+export function pageText(page: string, block: string, element: string, locale: Locale): string {
+  const section = plans()
+    .find((candidate) => candidate.page.id === page)
+    ?.sections.find((candidate) => candidate.block === block)
+  return sectionText(page, section?.id ?? block, element, locale)
+}
+
+// Заголовок страницы карты по адресу на языке — текст слота `seo.h1` её плана: h1 страницы — он (тест страниц).
+export function pageTitle(route: string, locale: Locale): string {
+  const id = siteMap().pages.find((candidate) => candidate.url === route)?.id ?? route
+  const h1 = plans().find((candidate) => candidate.page.id === id)?.page.seo.h1 ?? '.'
+  return slotText(id, h1.slice(0, h1.indexOf('.')), h1.slice(h1.indexOf('.') + 1), locale)
 }
 
 // Форма заявки страницы по плану: form_id — `<страница>/<секция>`, адрес страницы (`page.url` плана, без языка),
@@ -338,6 +362,8 @@ export function pageText(page: string, block: string, element: string, locale: L
 // одно из».
 export interface PlanForm {
   id: string
+  page: string
+  section: string
   url: string
   // Языки страницы формы по карте: на каждом — своя версия формы.
   locales: Locale[]
@@ -347,39 +373,46 @@ export interface PlanForm {
   oneOf: string[]
 }
 
-export function leadFormOf(page: string): PlanForm {
-  const plan = strategyFiles('plans', (data, path) => parseFile(PlanSchema, data, path)).find(
-    (candidate) => candidate.page.id === page,
-  )
-  const [section, form] =
-    plan?.sections.flatMap((candidate) =>
-      candidate.slots.action.flatMap((slot) =>
-        slot.form ? [[candidate, slot.form] as const] : [],
-      ),
-    )[0] ?? []
-  if (plan?.page.url === undefined || section === undefined || form?.thank_you_page === undefined)
-    throw new Error(`e2e: у страницы ${page} нет формы`)
+// Формы планов — каждая форма каждой страницы: обработчик знает их все, наборы проверяют каждую.
+export function leadForms(): PlanForm[] {
   const path = 'kb/site/05-conversion-funnels/lead-forms.yaml'
   const catalog = parseFile(
     LeadFormsSchema,
     load(readFileSync(resolve(root, 'strategy', path), 'utf8')),
     path,
   )
-  const set = catalog.form_sets.find((candidate) => `lead-forms.yaml#${candidate.id}` === form.ref)
-  if (set === undefined) throw new Error(`e2e: набора ${form.ref} нет в каталоге`)
-  return {
-    id: `${page}/${section.id}`,
-    url: plan.page.url,
-    locales: SUPPORTED_LOCALES.filter((locale) => pageLanguages(siteMap(), page).includes(locale)),
-    thankYou: form.thank_you_page,
-    honeypot: catalog.defaults.antispam.honeypot.field,
-    fields: set.fields.map(({ field, required }) => ({
-      id: field,
-      type: catalog.fields[field]?.type ?? '',
-      required,
-    })),
-    oneOf: set.one_of_required,
-  }
+  return plans().flatMap(({ page, sections }) =>
+    sections.flatMap((section) =>
+      section.slots.action.flatMap(({ form }) => {
+        if (form === undefined) return []
+        if (page.url === undefined || form.thank_you_page === undefined)
+          throw new Error(`e2e: у формы ${page.id}/${section.id} нет адреса или «спасибо»`)
+        const set = catalog.form_sets.find(
+          (candidate) => `lead-forms.yaml#${candidate.id}` === form.ref,
+        )
+        if (set === undefined) throw new Error(`e2e: набора ${form.ref} нет в каталоге`)
+        return [
+          {
+            id: `${page.id}/${section.id}`,
+            page: page.id,
+            section: section.id,
+            url: page.url,
+            locales: SUPPORTED_LOCALES.filter((locale) =>
+              pageLanguages(siteMap(), page.id).includes(locale),
+            ),
+            thankYou: form.thank_you_page,
+            honeypot: catalog.defaults.antispam.honeypot.field,
+            fields: set.fields.map(({ field, required }) => ({
+              id: field,
+              type: catalog.fields[field]?.type ?? '',
+              required,
+            })),
+            oneOf: set.one_of_required,
+          },
+        ]
+      }),
+    ),
+  )
 }
 
 // Поля заявки, которую примет форма плана: обязательные и первое поле «хотя бы одного из» — значениями своего вида;
