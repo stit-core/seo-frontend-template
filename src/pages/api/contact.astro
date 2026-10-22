@@ -1,65 +1,44 @@
 ---
 // Обработчик формы: on-demand, потому что ему нужны тело запроса, его заголовки и живой конфиг доставки. Успех — PRG-303
-// на страницу «спасибо» плана формы (F5 не переотправляет заявку), ошибка — страница формы с сохранёнными полями и
-// честным статусом. Маршрут — страница, а не endpoint: без JS ответ на POST обязан быть разметкой, а не JSON.
+// на страницу «спасибо» плана формы (F5 не переотправляет заявку), ошибка — исходная страница формы с сохранёнными
+// полями и честным статусом. Маршрут — страница, а не endpoint: без JS ответ на POST обязан быть разметкой, а не JSON.
 export const prerender = false
 
 import privacy from 'virtual:strategy/consent/privacy'
 import contacts from 'virtual:strategy/contacts'
-import { type FormEntry, handleLeadRequest } from '@/features/lead-form'
-import { pageLocales, pageOf, policyOf } from '@/shared/strategy'
-import { leadForm } from '@/widgets/lead-form'
+import {
+  formPageOf,
+  formsOf,
+  handleLeadRequest,
+  refererLocale,
+  refusalOf,
+} from '@/features/lead-form'
 import ContactsPage from '../_contacts/contacts-page.astro'
 
-// Отказ до разбора заявки — короткий текст, а не страница: возвращать в форму нечего.
-const REFUSALS = {
-  forbidden: { status: 403, text: 'Заявка отклонена: запрос пришёл с чужого адреса.' },
-  'bad-request': { status: 400, text: 'Заявка отклонена: тело запроса — не форма.' },
-  'too-large': { status: 413, text: 'Заявка отклонена: тело запроса слишком велико.' },
-} as const
+// Страницы с формой плана — данные, проекция политики согласия и композиция: обработчик знает каждую их форму, а ответ
+// с ошибками рисует исходную страницу. Страницу плана с формой без строки здесь называет тест маршрута.
+const forms = formsOf([{ files: contacts, consent: privacy, page: ContactsPage }])
+const locale = refererLocale(Astro.request)
 
-// Адрес обработчика в адресной строке — не страница: GET возвращает на форму.
-if (Astro.request.method !== 'POST') return Astro.redirect('/contacts', 303)
+// Адрес обработчика в адресной строке — не страница: GET возвращает на страницу формы.
+if (Astro.request.method !== 'POST') return Astro.redirect(formPageOf(forms, locale), 303)
 
-// Форма заявки — форма плана контактов на версии страницы, с которой она пришла (`form_id`, `page_url`).
-const formOf = (formId: string, pageUrl: string): FormEntry | undefined => {
-  for (const locale of pageLocales('contacts')) {
-    const page = pageOf(contacts, locale)
-    if (page.url !== pageUrl) continue
-    const { form } = leadForm.props(page, 'lead-form')
-    if (form.id === formId) return { form, policy: policyOf(page, privacy), locale }
-  }
-  return undefined
-}
+const outcome = await handleLeadRequest(Astro.request, { rid: Astro.locals.rid, forms })
 
-const outcome = await handleLeadRequest(Astro.request, { rid: Astro.locals.rid, formOf })
-
-if (
-  outcome.status === 'forbidden' ||
-  outcome.status === 'bad-request' ||
-  outcome.status === 'too-large'
-) {
-  const { status, text } = REFUSALS[outcome.status]
-  return new Response(text, {
-    status,
-    headers: {
-      'content-type': 'text/plain; charset=utf-8',
-      'cache-control': 'private, no-store',
-      'x-robots-tag': 'noindex',
-    },
-  })
-}
+if (!('entry' in outcome)) return refusalOf(outcome.status, locale)
 
 if (outcome.status === 'accepted') return Astro.redirect(outcome.entry.form.thankYou.href, 303)
 
 // Ответ персональный — в полях то, что прислал человек: ни кешу, ни индексу он не достаётся.
 Astro.response.status = outcome.status === 'failed' ? 500 : 200
 Astro.response.headers.set('cache-control', 'private, no-store')
+const { form, locale: formLocale, page: Page } = outcome.entry
 const answer = {
+  form: form.id,
   submission: outcome.submission,
   faults: outcome.status === 'invalid' ? outcome.faults : {},
   failed: outcome.status === 'failed',
 }
 ---
 
-<ContactsPage locale={outcome.entry.locale} answer={answer} noindex />
+<Page locale={formLocale} answer={answer} noindex />

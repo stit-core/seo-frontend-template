@@ -25,8 +25,10 @@ interface Props {
 }
 
 const { id, locale, action, form, policy, submitLabel, consentLabel, answer } = Astro.props
-const values = answer?.submission.values ?? {}
-const faults = answer?.faults ?? {}
+// Ответ — у формы, которой он пришёл: на странице с двумя формами другая остаётся пустой и фокус не забирает.
+const own = answer?.form === form.id ? answer : undefined
+const values = own?.submission.values ?? {}
+const faults = own?.faults ?? {}
 const where = `${form.id}/form`
 const labelOf = (field: string) => textOf(locale, `label.${field}`, where)
 const oneOfKey = [...form.oneOf].sort().join('+')
@@ -59,7 +61,7 @@ const lang = policy.hreflang
 
 {/* Сводка получает фокус при загрузке ответа, без JS: чтец экрана и клавиатура начинают с
 отказа, а не с начала страницы; `role="alert"` при загрузке объявляют не все чтецы. */}
-{(failures.length > 0 || answer?.failed) && (
+{(failures.length > 0 || own?.failed) && (
   <div
     role="alert"
     aria-labelledby={`${id}-summary`}
@@ -70,7 +72,7 @@ const lang = policy.hreflang
     <h3 id={`${id}-summary`} class="text-body-strong">
       {t(locale, 'summary')}
     </h3>
-    {answer?.failed && <p class="mt-xs">{t(locale, 'delivery')}</p>}
+    {own?.failed && <p class="mt-xs">{t(locale, 'delivery')}</p>}
     {failures.length > 0 && (
       <ul class="mt-xs list-disc space-y-2xs pl-lg text-helper">
         {failures.map((failure) => (
@@ -185,7 +187,7 @@ const lang = policy.hreflang
         type="checkbox"
         value="1"
         required
-        checked={answer?.submission.consent}
+        checked={own?.submission.consent}
         aria-invalid={faults[CONSENT_FIELD] ? 'true' : undefined}
         aria-describedby={describedBy(CONSENT_FIELD, `${id}-policy`)}
       />

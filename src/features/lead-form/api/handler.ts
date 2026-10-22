@@ -1,8 +1,8 @@
 import { isTooLarge, isTrapped, isTrustedOrigin, readForm } from '@/shared/antispam'
 import { getRuntimeConfig } from '@/shared/config'
-import type { Locale } from '@/shared/i18n'
+import { type Locale, localeOf } from '@/shared/i18n'
 import { captureServerError, type LogFields, type LogLevel, log } from '@/shared/observability'
-import type { LeadForm, Policy } from '@/shared/strategy'
+import { t } from '../lib/text'
 import {
   type Faults,
   FORM_ID_FIELD,
@@ -12,28 +12,24 @@ import {
   submissionOf,
 } from '../model/schema'
 import { deliverLead } from './delivery'
+import type { FormEntry } from './forms'
 
-// Форма, которой пришла заявка: форма плана на версии своей страницы и политика, на которую ссылается её согласие.
-export interface FormEntry {
-  form: LeadForm
-  policy: Policy
-  locale: Locale
-}
-
-export interface LeadContext {
+export interface LeadContext<P> {
   // X-Request-Id ответа: по нему событие формы сходится со строкой лога запроса.
   rid: string
-  // Форма по скрытым полям заявки: `form_id` и `page_url` — форма плана на версии её страницы, иначе её нет.
-  formOf: (formId: string, pageUrl: string) => FormEntry | undefined
+  // Белый список — формы плана на версиях своих страниц (`formsOf`): `form_id` и `page_url` заявки называют одну из них.
+  forms: readonly FormEntry<P>[]
 }
 
-export type LeadOutcome =
-  | { status: 'accepted'; entry: FormEntry }
-  | { status: 'invalid'; entry: FormEntry; submission: Submission; faults: Faults }
-  | { status: 'failed'; entry: FormEntry; submission: Submission }
-  | { status: 'forbidden' }
-  | { status: 'bad-request' }
-  | { status: 'too-large' }
+// Отказ до разбора заявки — статус и строка словаря `refusal.<отказ>`.
+const REFUSALS = { forbidden: 403, 'bad-request': 400, 'too-large': 413 } as const
+export type Refusal = keyof typeof REFUSALS
+
+export type LeadOutcome<P> =
+  | { status: 'accepted'; entry: FormEntry<P> }
+  | { status: 'invalid'; entry: FormEntry<P>; submission: Submission; faults: Faults }
+  | { status: 'failed'; entry: FormEntry<P>; submission: Submission }
+  | { status: Refusal }
 
 // Тело заявки — персональные данные: в лог уходит только факт, канал и число попыток.
 const logLead = (level: LogLevel, fields: LogFields): void =>
@@ -44,30 +40,46 @@ const field = (data: FormData, name: string): string => {
   return typeof value === 'string' ? value : ''
 }
 
-// Метки рекламы — скрытые поля, которые без JS ставит сервер (`hidden_fields_without_js.server` каталога): из query
-// Referer — страницы с формой того же сайта (Referrer-Policy сайта отдаёт своим запросам полный адрес).
-function trackingOf(request: Request, names: readonly string[]): Record<string, string> {
+// Referer — страница с формой того же сайта: Referrer-Policy сайта отдаёт своим запросам полный адрес.
+const refererOf = (request: Request): URL | null => {
   const referer = request.headers.get('referer')
-  if (referer === null) return {}
-  try {
-    const query = new URL(referer).searchParams
-    return Object.fromEntries(
-      names.flatMap((name) => {
-        const value = query.get(name)?.trim().slice(0, 200)
-        return value ? [[name, value]] : []
-      }),
-    )
-  } catch {
-    return {}
-  }
+  return referer === null ? null : URL.parse(referer)
 }
+
+// Метки рекламы — скрытые поля, которые без JS ставит сервер (`hidden_fields_without_js.server` каталога), из query
+// Referer.
+function trackingOf(request: Request, names: readonly string[]): Record<string, string> {
+  const query = refererOf(request)?.searchParams
+  return Object.fromEntries(
+    names.flatMap((name) => {
+      const value = query?.get(name)?.trim().slice(0, 200)
+      return value ? [[name, value]] : []
+    }),
+  )
+}
+
+// Язык ответа без разобранной формы (отказ, GET) — префикс пути Referer, без него — основной: поля локали в
+// непрочитанном теле нет.
+export const refererLocale = (request: Request): Locale =>
+  localeOf(refererOf(request)?.pathname ?? '/')
+
+// Отказ до разбора заявки — короткий текст, а не страница: возвращать в форму нечего; вне кеша и индекса.
+export const refusalOf = (refusal: Refusal, locale: Locale): Response =>
+  new Response(t(locale, `refusal.${refusal}`), {
+    status: REFUSALS[refusal],
+    headers: {
+      'content-type': 'text/plain; charset=utf-8',
+      'cache-control': 'private, no-store',
+      'x-robots-tag': 'noindex',
+    },
+  })
 
 // Антиспам-лестница (rule forms-antispam): origin-check → размер и форма тела → ловушка → правила набора, согласие
 // включительно, → доставка с записью согласия.
-export async function handleLeadRequest(
+export async function handleLeadRequest<P>(
   request: Request,
-  context: LeadContext,
-): Promise<LeadOutcome> {
+  context: LeadContext<P>,
+): Promise<LeadOutcome<P>> {
   if (!isTrustedOrigin(request)) {
     logLead('warn', { result: 'forbidden', rid: context.rid })
     return { status: 'forbidden' }
@@ -79,7 +91,12 @@ export async function handleLeadRequest(
   }
 
   const data = await readForm(request)
-  const entry = data && context.formOf(field(data, FORM_ID_FIELD), field(data, PAGE_URL_FIELD))
+  const entry =
+    data &&
+    context.forms.find(
+      ({ form }) =>
+        form.id === field(data, FORM_ID_FIELD) && form.page === field(data, PAGE_URL_FIELD),
+    )
   if (data === undefined || entry === undefined) {
     logLead('warn', { result: 'bad-request', rid: context.rid })
     return { status: 'bad-request' }

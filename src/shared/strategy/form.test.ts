@@ -65,15 +65,16 @@ describe('форма действия плана — набор каталога
     expect([en.page, en.thankYou.href]).toEqual(['/en/contacts', '/en/contacts/spasibo'])
   })
 
-  // Поля — набор, который называет план, а не набор шаблона: у callback телефон обязателен, время — варианты каталога.
-  it('поля набора form.ref плана: callback — телефон обязателен, «хотя бы одного из» нет', () => {
+  // Поля и «спасибо» — те, что называет план, а не набор и адрес шаблона: у callback телефон обязателен, время — варианты
+  // каталога.
+  it('поля набора form.ref и страница «спасибо» плана: callback — телефон обязателен, «хотя бы одного из» нет', () => {
     const form = formOf(
-      withForm({
-        ref: 'lead-forms.yaml#callback',
-        thank_you_page: '/contacts/spasibo',
-      }).strategyPage('contacts', RU),
+      withForm({ ref: 'lead-forms.yaml#callback', thank_you_page: '/about' }).strategyPage(
+        'contacts',
+        RU,
+      ),
     )
-    expect([form.set, form.oneOf]).toEqual(['callback', []])
+    expect([form.set, form.oneOf, form.thankYou]).toEqual(['callback', [], { href: '/about' }])
     expect(form.fields.map(({ id, required, options }) => [id, required, options])).toEqual([
       ['phone', true, []],
       ['name', false, []],

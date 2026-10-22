@@ -87,3 +87,25 @@ export const CALLBACK_FORM: LeadForm = {
   ],
   oneOf: [],
 }
+
+// Значения, которые примет поле своего вида: правила набора на сервере судят вид и длину.
+const VALUES: Readonly<Record<string, string>> = {
+  text: 'Мария',
+  email: 'maria@example.com',
+  tel: '+7 900 000-00-00',
+  textarea: 'Нужен сайт с блогом и формой заявки.',
+}
+
+// Заявка, которую примет форма набора: обязательные поля и первое поле «хотя бы одного из» — значения своего вида
+// (вариант выбора — первый), согласие и скрытые поля сборки.
+export function filledFormOf(form: LeadForm): Record<string, string> {
+  const answered = form.fields.filter((field) => field.required || field.id === form.oneOf[0])
+  return {
+    ...Object.fromEntries(
+      answered.map((field) => [field.id, field.options[0] ?? VALUES[field.type] ?? '']),
+    ),
+    consent: '1',
+    form_id: form.id,
+    page_url: form.page,
+  }
+}

@@ -1,17 +1,20 @@
-import { DEFAULT_LOCALE } from '@/shared/i18n'
+import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '@/shared/i18n'
 import { LEAD_FORM } from '@/shared/lib/testing'
-import { type FormEntry, handleLeadRequest } from './handler'
+import { FORM_DICTS } from '../config/dict'
+import type { FormEntry } from './forms'
+import { handleLeadRequest, refererLocale, refusalOf } from './handler'
 
 const ORIGIN = 'http://localhost:3000'
 const BACKEND = 'http://backend.internal/leads'
 const POLICY = { href: '/legal/privacy', title: 'Политика', revision: '10 октября 2026 года' }
-const ENTRY: FormEntry = { form: LEAD_FORM, policy: POLICY, locale: DEFAULT_LOCALE }
-// Форма по скрытым полям заявки: форма контактов на своей странице, иначе её нет.
-const context = {
-  rid: 'test-rid',
-  formOf: (formId: string, pageUrl: string) =>
-    formId === LEAD_FORM.id && pageUrl === LEAD_FORM.page ? ENTRY : undefined,
+const ENTRY: FormEntry<string> = {
+  form: LEAD_FORM,
+  policy: POLICY,
+  locale: DEFAULT_LOCALE,
+  page: 'contacts',
 }
+// Белый список — форма контактов на своей странице: другая форма или страница — формы нет.
+const context = { rid: 'test-rid', forms: [ENTRY] }
 
 const TASK = 'Нужен сайт с блогом, формой заявки и картой сайта.'
 const filled = {
@@ -216,4 +219,43 @@ describe('обработчик формы', () => {
     await handleLeadRequest(post(filled), context)
     expect(console.error).toHaveBeenCalledOnce()
   })
+})
+
+describe('ответ без разобранной формы', () => {
+  const from = (referer?: string) =>
+    new Request(`${ORIGIN}/api/contact`, referer === undefined ? {} : { headers: { referer } })
+
+  it('язык — префикс пути Referer; без Referer или не адресом — основной', () => {
+    for (const locale of SUPPORTED_LOCALES) {
+      expect(refererLocale(from(`${ORIGIN}${localePath(locale, '/contacts')}?utm_source=x`))).toBe(
+        locale,
+      )
+    }
+    expect([refererLocale(from()), refererLocale(from('not a url'))]).toEqual([
+      DEFAULT_LOCALE,
+      DEFAULT_LOCALE,
+    ])
+  })
+
+  it.each([
+    ['forbidden', 403],
+    ['bad-request', 400],
+    ['too-large', 413],
+  ] as const)(
+    'отказ %s — %i текстом словаря языка, вне кеша и индекса',
+    async (refusal, status) => {
+      for (const locale of SUPPORTED_LOCALES) {
+        const response = refusalOf(refusal, locale)
+        expect([response.status, await response.text()], locale).toEqual([
+          status,
+          FORM_DICTS[locale][`refusal.${refusal}`],
+        ])
+        expect(Object.fromEntries(response.headers), locale).toEqual({
+          'content-type': 'text/plain; charset=utf-8',
+          'cache-control': 'private, no-store',
+          'x-robots-tag': 'noindex',
+        })
+      }
+    },
+  )
 })

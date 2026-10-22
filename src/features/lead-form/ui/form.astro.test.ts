@@ -27,6 +27,7 @@ const render = async (extra: Record<string, unknown> = {}) => {
 }
 
 const answer = {
+  form: LEAD_FORM.id,
   submission: {
     values: { name: 'М', email: 'not-an-email', phone: '', 'contact-channel': 'call', task: '' },
     consent: false,
@@ -178,6 +179,25 @@ describe('Form — форма-движок по набору плана', () => 
     await expect(render({ form })).rejects.toThrow(
       'strategy: contacts/lead-form/form — нет строки label.nickname',
     )
+  })
+
+  // Две формы на странице — секции плана: id полей, сводки и согласия от секции, ответ — у формы, которой он пришёл.
+  it('две формы на странице: id без дублей, сводка с фокусом и присланное — только у отказавшей', async () => {
+    const container = await AstroContainer.create()
+    const second = await container.renderToString(Form, {
+      props: { ...props, id: 'callback', form: CALLBACK_FORM, answer },
+    })
+    const html = `<main><div id="first">${await render({ answer })}</div><div id="second">${second}</div></main>`
+    const doc = parseHtml(html)
+    const ids = [...doc.querySelectorAll('[id]')].map((element) => element.id)
+    expect(ids.filter((id, index) => ids.indexOf(id) !== index)).toEqual([])
+    // Ответ пришёл первой форме: сводка с фокусом и отказы — у неё, вторая пустая.
+    expect(doc.querySelector('#first [role="alert"]')?.hasAttribute('autofocus')).toBe(true)
+    expect(
+      doc.querySelectorAll('#second [role="alert"], #second [autofocus], #second [aria-invalid]'),
+    ).toHaveLength(0)
+    expect(doc.querySelector('#callback-name')?.getAttribute('value')).toBe('')
+    await expectNoA11yViolations(html)
   })
 
   it('не имеет нарушений доступности — и пустая, и с отказами', async () => {

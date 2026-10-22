@@ -24,9 +24,12 @@ import {
   CopyDeckSchema,
   chosenText,
   elementOf,
+  LeadFormsSchema,
   langOf,
   PlanSchema,
+  pageLanguages,
   parseFile,
+  SiteMapSchema,
 } from '../src/shared/strategy/contract.ts'
 
 const root = resolve(import.meta.dirname, '..')
@@ -330,18 +333,98 @@ export function pageText(page: string, block: string, element: string, locale: L
   return chosenText(found, key)
 }
 
-// Правила content/redirects.yaml.
-// Форма заявки страницы плана: form_id — `<страница>/<секция блока lead-form>`, адрес — `page.url` плана (без языка).
-export function leadFormOf(page: string): { id: string; url: string } {
+// Форма заявки страницы по плану: form_id — `<страница>/<секция>`, адрес страницы (`page.url` плана, без языка),
+// страница «спасибо» (`form.thank_you_page`), ловушка каталога и поля набора `form.ref` — вид, обязательность, «хотя бы
+// одно из».
+export interface PlanForm {
+  id: string
+  url: string
+  // Языки страницы формы по карте: на каждом — своя версия формы.
+  locales: Locale[]
+  thankYou: string
+  honeypot: string
+  fields: { id: string; type: string; required: boolean }[]
+  oneOf: string[]
+}
+
+export function leadFormOf(page: string): PlanForm {
   const plan = strategyFiles('plans', (data, path) => parseFile(PlanSchema, data, path)).find(
     (candidate) => candidate.page.id === page,
   )
-  const section = plan?.sections.find((candidate) => candidate.block === 'lead-form')
-  if (plan?.page.url === undefined || section === undefined)
+  const [section, form] =
+    plan?.sections.flatMap((candidate) =>
+      candidate.slots.action.flatMap((slot) =>
+        slot.form ? [[candidate, slot.form] as const] : [],
+      ),
+    )[0] ?? []
+  if (plan?.page.url === undefined || section === undefined || form?.thank_you_page === undefined)
     throw new Error(`e2e: у страницы ${page} нет формы`)
-  return { id: `${page}/${section.id}`, url: plan.page.url }
+  const path = 'kb/site/05-conversion-funnels/lead-forms.yaml'
+  const catalog = parseFile(
+    LeadFormsSchema,
+    load(readFileSync(resolve(root, 'strategy', path), 'utf8')),
+    path,
+  )
+  const set = catalog.form_sets.find((candidate) => `lead-forms.yaml#${candidate.id}` === form.ref)
+  if (set === undefined) throw new Error(`e2e: набора ${form.ref} нет в каталоге`)
+  return {
+    id: `${page}/${section.id}`,
+    url: plan.page.url,
+    locales: SUPPORTED_LOCALES.filter((locale) => pageLanguages(siteMap(), page).includes(locale)),
+    thankYou: form.thank_you_page,
+    honeypot: catalog.defaults.antispam.honeypot.field,
+    fields: set.fields.map(({ field, required }) => ({
+      id: field,
+      type: catalog.fields[field]?.type ?? '',
+      required,
+    })),
+    oneOf: set.one_of_required,
+  }
 }
 
+// Поля заявки, которую примет форма плана: обязательные и первое поле «хотя бы одного из» — значениями своего вида;
+// метка заявки — в первом поле почты или текста (приёмник узнаёт заявку по любому значению её полей). Обязательный
+// выбор варианта набору без JS не заполнить вслепую — отказ.
+export function leadFieldsOf(form: PlanForm, marker: string): Record<string, string> {
+  const answered = form.fields.filter((field) => field.required || field.id === form.oneOf[0])
+  const carrier = form.fields.find((field) => ['email', 'text', 'textarea'].includes(field.type))
+  const values: Record<string, string> = {
+    text: 'Мария',
+    email: 'maria@example.com',
+    tel: '+7 900 000-00-00',
+    textarea: 'Нужен сайт с блогом, формой заявки и картой сайта. Бюджет обсудим.',
+  }
+  return Object.fromEntries(
+    [...new Set([...answered, ...(carrier ? [carrier] : [])])].map((field) => {
+      const value = field === carrier ? marker : values[field.type]
+      if (value === undefined)
+        throw new Error(`e2e: поле ${field.id} вида ${field.type} не заполнить`)
+      return [field.id, value]
+    }),
+  )
+}
+
+// Карта сайта снимка strategy — одна поверхность.
+function siteMap() {
+  const dir = resolve(root, 'strategy/site')
+  const [surface] = readdirSync(dir)
+  const path = `site/${surface}/site-map.yaml`
+  return parseFile(SiteMapSchema, load(readFileSync(resolve(root, 'strategy', path), 'utf8')), path)
+}
+
+// Адрес страницы карты в ссылке с языка — как его ставит сайт: версия на этом языке, без неё — основного, без неё —
+// первая версия страницы.
+export function pagePathOf(route: string, locale: Locale): string {
+  const map = siteMap()
+  const page = map.pages.find((candidate) => candidate.url === route)
+  const langs = page === undefined ? [locale] : pageLanguages(map, page.id)
+  const target = [locale, langOf(map.languages.primary), ...langs].find((lang) =>
+    langs.includes(lang),
+  )
+  return localePath(SUPPORTED_LOCALES.find((candidate) => candidate === target) ?? locale, route)
+}
+
+// Правила content/redirects.yaml.
 export function redirects(): readonly RedirectRule[] {
   const data = load(readFileSync(resolve(root, 'content/redirects.yaml'), 'utf8'))
   return buildRedirectTable(data).rules

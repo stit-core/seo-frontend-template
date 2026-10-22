@@ -1,10 +1,16 @@
 import privacy from 'virtual:strategy/consent/privacy'
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { FORM_DICTS, failedTitle } from '@/features/lead-form'
-import { DEFAULT_LOCALE, type Locale, localePath } from '@/shared/i18n'
-import { parseHtml } from '@/shared/lib/testing'
-import { pageLocales, policyOf, strategyPage } from '@/shared/strategy'
-import { leadForm } from '@/widgets/lead-form'
+import { DEFAULT_LOCALE, type Locale, localePath, SUPPORTED_LOCALES } from '@/shared/i18n'
+import { filledFormOf, parseHtml } from '@/shared/lib/testing'
+import {
+  form as formSlot,
+  type LeadForm,
+  pageLocales,
+  policyOf,
+  snapshot,
+  strategyPage,
+} from '@/shared/strategy'
 import Contacts from '../[...locale]/contacts/index.astro'
 import Contact from '../api/contact.astro'
 import { pageTexts, strayText } from './texts'
@@ -57,98 +63,114 @@ const outlineFaults = (levels: number[]) => [
   ),
 ]
 
-// Форма контактов на версии страницы: скрытые поля сборки — id формы и адрес страницы.
+// Формы планов снимка на каждом языке своей страницы — белый список, который обязан знать обработчик.
+const FORMS = snapshot().plans.flatMap(({ page }) =>
+  pageLocales(page.id).flatMap((locale) =>
+    strategyPage(page.id, locale)
+      .sections.flatMap((section) =>
+        Object.values(section.slots).filter(
+          (value): value is LeadForm => formSlot.safeParse(value).success,
+        ),
+      )
+      .map((form) => ({ form, locale, page: page.id })),
+  ),
+)
+const [FIRST] = FORMS
+if (FIRST === undefined) throw new Error('у планов снимка нет формы')
+// Форма контактов на версии страницы: заявка, которую она примет, и страница, с которой она пришла.
 const formOn = (locale: Locale) =>
-  leadForm.props(strategyPage('contacts', locale), 'lead-form').form
-const hidden = (locale: Locale = DEFAULT_LOCALE) => ({
-  form_id: formOn(locale).id,
-  page_url: formOn(locale).page,
-})
-const filled = {
-  name: 'Мария',
-  email: 'maria@example.com',
-  task: 'Нужен сайт с блогом и формой заявки.',
-  consent: '1',
-}
+  FORMS.find((entry) => entry.page === FIRST.page && entry.locale === locale)?.form ?? FIRST.form
+const filled = (locale: Locale = DEFAULT_LOCALE) => filledFormOf(formOn(locale))
+// Запрос со страницы сайта: язык ответа без разобранной формы — префикс её пути.
+const from = (path: string) => ({ referer: `${ORIGIN}${path}` })
 const failedPrefix = (locale: Locale) => failedTitle(locale, '')
+// Присланное в поле ответа: значение ввода или текст многострочного поля.
+const sentBack = (doc: ReturnType<typeof parseHtml>, name: string) => {
+  const control = doc.querySelector(`form [name="${name}"]`)
+  return control?.tagName === 'TEXTAREA' ? control.textContent : control?.getAttribute('value')
+}
 
 describe('/api/contact', () => {
-  // Форма стоит на версиях страницы контактов: локаль отправителя — одна из них.
-  it('принятая заявка — 303 на подтверждение своей локали (PRG)', async () => {
-    const locales = pageLocales('contacts')
-    for (const locale of locales) {
-      const response = await send(post({ ...filled, ...hidden(locale) }))
+  // Обработчик знает каждую форму плана: заявка формы любой страницы на любом её языке — PRG на «спасибо» её плана.
+  it('принятая заявка каждой формы плана — 303 на «спасибо» своего плана на языке страницы (PRG)', async () => {
+    for (const { form, locale } of FORMS) {
+      const response = await send(post(filledFormOf(form)))
       // У 303 только Location: тело и кеш-заголовки редиректа не нужны — его никто не кеширует.
-      expect([response.status, [...response.headers]], locale).toEqual([
+      expect([response.status, [...response.headers]], `${form.id} ${locale}`).toEqual([
         303,
-        [['location', formOn(locale).thankYou.href]],
+        [['location', form.thankYou.href]],
       ])
-      expect(formOn(locale).thankYou.href, locale).toBe(localePath(locale, '/contacts/spasibo'))
     }
-    expect(fetchMock).toHaveBeenCalledTimes(locales.length)
+    expect(fetchMock).toHaveBeenCalledTimes(FORMS.length)
   })
 
-  it('GET обработчика — 303 обратно на форму', async () => {
-    const response = await send({ method: 'GET' })
-    expect([response.status, response.headers.get('location')]).toEqual([303, '/contacts'])
+  // Адрес обработчика в адресной строке — не страница: GET ведёт на страницу формы того языка, с которого пришёл.
+  it('GET обработчика — 303 на страницу формы на языке Referer, без него — основного языка', async () => {
+    const pagesOn = (locale: Locale) =>
+      FORMS.filter((entry) => entry.locale === locale).map((entry) => entry.form.page)
+    for (const locale of pageLocales(FIRST.page)) {
+      const response = await send({ method: 'GET', headers: from(formOn(locale).page) })
+      expect(response.status, locale).toBe(303)
+      expect(pagesOn(locale), locale).toContain(response.headers.get('location'))
+    }
+    const anonymous = await send({ method: 'GET' })
+    expect(pagesOn(DEFAULT_LOCALE)).toContain(anonymous.headers.get('location'))
   })
 
   it.each([
-    ['чужой Origin', 403, post({ ...filled, ...hidden() }, { origin: 'https://evil.example' })],
-    [
-      'тело — не форма',
-      400,
-      {
-        method: 'POST',
-        headers: { origin: ORIGIN, 'content-type': 'application/json' },
-        body: '{}',
-      },
-    ],
-    [
-      'тело больше лимита',
-      413,
-      post({ ...filled, ...hidden() }, { 'content-length': String(1024 * 1024) }),
-    ],
-    [
-      'форма не из плана',
-      400,
-      post({ ...filled, form_id: 'contacts/other', page_url: '/contacts' }),
-    ],
-  ])(
-    'отказ до разбора (%s) — %i коротким текстом вне кеша и индекса',
-    async (_case, status, init) => {
-      const response = await send(init)
-      expect(response.status).toBe(status)
-      expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8')
-      expect(response.headers.get('cache-control')).toBe('private, no-store')
-      expect(response.headers.get('x-robots-tag')).toBe('noindex')
+    ['чужой Origin', 403, 'forbidden', { origin: 'https://evil.example' }, undefined],
+    ['тело — не форма', 400, 'bad-request', { 'content-type': 'application/json' }, '{}'],
+    ['тело больше лимита', 413, 'too-large', { 'content-length': String(1024 * 1024) }, undefined],
+    ['форма не из плана', 400, 'bad-request', {}, { form_id: `${FIRST.form.id}-x` }],
+  ] as const)(
+    'отказ до разбора (%s) — %i текстом словаря на языке страницы формы, вне кеша и индекса',
+    async (_case, status, refusal, headers, body) => {
+      for (const locale of SUPPORTED_LOCALES) {
+        const fields = { ...filled(locale), ...(typeof body === 'object' ? body : {}) }
+        const init = post(fields, { ...from(localePath(locale, '/')), ...headers })
+        const response = await send(typeof body === 'string' ? { ...init, body } : init)
+        expect([response.status, await response.text()], locale).toEqual([
+          status,
+          FORM_DICTS[locale][`refusal.${refusal}`],
+        ])
+        expect(response.headers.get('content-type')).toBe('text/plain; charset=utf-8')
+        expect(response.headers.get('cache-control')).toBe('private, no-store')
+        expect(response.headers.get('x-robots-tag')).toBe('noindex')
+      }
       expect(fetchMock).not.toHaveBeenCalled()
     },
   )
 
-  it('ошибка валидации — 200 с той же формой и полями на языке отправителя; ответ персональный', async () => {
-    for (const locale of pageLocales('contacts')) {
-      const response = await send(post({ ...filled, ...hidden(locale), consent: '' }))
-      expect(response.status, locale).toBe(200)
-      expect(response.headers.get('cache-control'), locale).toBe('private, no-store')
+  // Ответ с ошибками — исходная страница формы: её заголовок окна с отказом, её поля и сводка.
+  it('ошибка валидации каждой формы плана — 200 с её страницей и полями на языке отправителя; ответ персональный', async () => {
+    for (const { form, locale, page } of FORMS) {
+      const fields = filledFormOf(form)
+      const response = await send(post({ ...fields, consent: '' }))
+      const where = `${form.id} ${locale}`
+      expect(response.status, where).toBe(200)
+      expect(response.headers.get('cache-control'), where).toBe('private, no-store')
       const html = await response.text()
       const doc = parseHtml(html)
-      expect(doc.documentElement.getAttribute('lang'), locale).toBe(locale)
-      expect(doc.querySelector('meta[name="robots"]')?.getAttribute('content'), locale).toBe(
+      expect(doc.documentElement.getAttribute('lang'), where).toBe(locale)
+      expect(doc.querySelector('meta[name="robots"]')?.getAttribute('content'), where).toBe(
         'noindex',
       )
-      expect(html, locale).toContain('role="alert"')
-      expect(html, locale).toContain('value="Мария"')
       // Отказ — первое слово заголовка окна: вкладка и чтец экрана называют его раньше страницы.
-      expect(doc.title.startsWith(failedPrefix(locale)), locale).toBe(true)
-      expect(outlineFaults(headingLevels(doc)), locale).toEqual([])
+      expect(doc.title, where).toBe(
+        failedTitle(locale, strategyPage(page, locale).meta?.title ?? ''),
+      )
+      expect(doc.querySelectorAll('[role="alert"]'), where).toHaveLength(1)
+      for (const field of form.fields.filter(({ id }) => id in fields)) {
+        expect(sentBack(doc, field.id), `${where} ${field.id}`).toBe(fields[field.id])
+      }
+      expect(outlineFaults(headingLevels(doc)), where).toEqual([])
     }
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it('сбой доставки — 500 с той же формой и текстом о сбое', async () => {
     vi.stubEnv('FORM_BACKEND_URL', '')
-    const response = await send(post({ ...filled, ...hidden() }))
+    const response = await send(post(filled()))
     expect(response.status).toBe(500)
     expect(response.headers.get('cache-control')).toBe('private, no-store')
     const html = await response.text()
@@ -162,13 +184,14 @@ describe('/api/contact', () => {
   // Текст ответа — данные, как у каждой страницы (тест страниц «текст страницы — данные»): секции — copy deck, отказы и
   // подписи полей — словарь, в полях — присланное человеком.
   it('ответ с ошибками — весь текст страницы данные: отказ каждого поля, сбой доставки и присланное', async () => {
-    for (const locale of pageLocales('contacts')) {
+    for (const locale of pageLocales(FIRST.page)) {
+      const hidden = { form_id: formOn(locale).id, page_url: formOn(locale).page }
       // Каждое поле набора с отказом: пустое обязательное, почта и телефон не по форме, «хотя бы одно из».
       for (const fields of [
         {},
         { email: 'not-an-email', phone: '12', 'contact-channel': 'pigeon' },
       ]) {
-        const answer = await (await send(post({ ...hidden(locale), ...fields }))).text()
+        const answer = await (await send(post({ ...hidden, ...fields }))).text()
         expect(answer, locale).toContain('role="alert"')
         expect(
           strayText(answer, (lang) => [...pageTexts(lang), ...Object.values(fields)]),
@@ -177,9 +200,11 @@ describe('/api/contact', () => {
       }
     }
     vi.stubEnv('FORM_BACKEND_URL', '')
-    const failed = await (await send(post({ ...filled, ...hidden() }))).text()
+    const failed = await (await send(post(filled()))).text()
     expect(failed).toContain(FORM_DICTS[DEFAULT_LOCALE].delivery)
-    expect(strayText(failed, (lang) => [...pageTexts(lang), ...Object.values(filled)])).toEqual([])
+    expect(strayText(failed, (lang) => [...pageTexts(lang), ...Object.values(filled())])).toEqual(
+      [],
+    )
   })
 
   // Согласие ссылается на политику плана контактов — её версию по карте: на языке без версии политики ссылка ведёт на
@@ -192,7 +217,7 @@ describe('/api/contact', () => {
         request: new Request(`${ORIGIN}${localePath(locale, '/contacts')}`),
         partial: false,
       })
-      const answer = await (await send(post({ ...filled, ...hidden(locale), consent: '' }))).text()
+      const answer = await (await send(post({ ...filled(locale), consent: '' }))).text()
       for (const html of [page, answer]) {
         const link = parseHtml(html).querySelector('[id$="-policy"] a')
         expect(

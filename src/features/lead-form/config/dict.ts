@@ -1,9 +1,10 @@
 import type { Locale } from '@/shared/i18n'
 
-// Микрокопия формы на каждую локаль дескриптора — данные без кода (их читают и тесты браузера): подписи полей каталога `lead-forms.yaml` (`label.<поле>`; `label`
-// каталога — образец русской), варианты выбора (`option.<поле>.<вариант>`), «хотя бы одно из» набора
-// (`oneOf.<поле>+<поле>` по алфавиту), метки обязательности, сводка, ошибки, сбой доставки и письмо оператору. Поля и
-// варианты без JS, которые форма не собирает (файл, варианты из фактов), подписей не несут.
+// Микрокопия формы на каждую локаль дескриптора — данные без кода (их читают и тесты браузера): подписи полей каталога
+// `lead-forms.yaml` (`label.<поле>`; `label` каталога — образец русской), варианты выбора (`option.<поле>.<вариант>`),
+// «хотя бы одно из» набора (`oneOf.<поле>+<поле>` по алфавиту), метки обязательности, сводка, ошибки, сбой доставки,
+// отказы обработчика до разбора заявки (`refusal.<отказ>`) и письмо оператору. Поля и варианты без JS, которые форма не
+// собирает (файл, варианты из фактов), подписей не несут.
 const ru = {
   'label.name': 'Имя',
   'label.phone': 'Телефон',
@@ -48,6 +49,9 @@ const ru = {
   'error.option': 'Выберите вариант в поле «{label}».',
   'error.consent': 'Без согласия на обработку данных заявку принять нельзя.',
   delivery: 'Заявка не ушла: сбой доставки. Отправьте её ещё раз чуть позже.',
+  'refusal.forbidden': 'Заявка отклонена: запрос пришёл с чужого адреса.',
+  'refusal.bad-request': 'Заявка отклонена: это не форма сайта.',
+  'refusal.too-large': 'Заявка отклонена: тело запроса слишком велико.',
   'mail.subject': 'Заявка с сайта {site}: {form}',
   'mail.field': '{label}: {value}',
   'mail.consent': 'Согласие на обработку ПДн: редакция политики {version}, {at}',
@@ -97,6 +101,9 @@ const en = {
   'error.option': 'Choose an option in «{label}».',
   'error.consent': 'Without consent to data processing the request cannot be accepted.',
   delivery: 'The request did not go through: delivery failed. Send it again a little later.',
+  'refusal.forbidden': 'Request refused: it came from another site.',
+  'refusal.bad-request': 'Request refused: this is not a form of the site.',
+  'refusal.too-large': 'Request refused: the request body is too large.',
   'mail.subject': 'Request from {site}: {form}',
   'mail.field': '{label}: {value}',
   'mail.consent': 'Consent to personal data processing: policy revision {version}, {at}',
