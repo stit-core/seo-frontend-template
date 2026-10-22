@@ -471,11 +471,16 @@ export const TEST_SITE = {
     ],
   },
   'site/test/plans/blog.yaml': {
-    page: { id: 'blog', page_type: 'blog-index-page' },
+    page: { id: 'blog', page_type: 'blog-index-page', legal: { privacy_policy: '/legal/privacy' } },
     sections: [heroSection, cardsSection],
   },
   'site/test/plans/post.yaml': {
-    page: { id: 'post', page_type: 'article-page', template: true },
+    page: {
+      id: 'post',
+      page_type: 'article-page',
+      template: true,
+      legal: { privacy_policy: '/legal/privacy' },
+    },
     sections: [
       crumbsSection,
       {
@@ -498,7 +503,12 @@ export const TEST_SITE = {
     ],
   },
   'site/test/plans/tag.yaml': {
-    page: { id: 'tag', page_type: 'blog-index-page', template: true },
+    page: {
+      id: 'tag',
+      page_type: 'blog-index-page',
+      template: true,
+      legal: { privacy_policy: '/legal/privacy' },
+    },
     sections: [crumbsSection, heroSection, cardsSection],
   },
   'site/test/copy/home.yaml': homeDeck(
