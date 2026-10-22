@@ -161,6 +161,7 @@
     "dist/client/vtoroe-imya/index.html: Article.author.worksFor: @id нет — у организации сайта он один: https://__site_origin__/#org",
     "dist/client/vtoroe-imya/index.html: Article.author.memberOf: @id https://__site_origin__/#gildiya — у организации сайта он один: https://__site_origin__/#org",
     "dist/client/vtoroe-imya/index.html: Article.author.affiliation.parentOrganization: @id нет — у организации сайта он один: https://__site_origin__/#org",
+    "dist/client/vtoroe-imya/index.html: Article.author.affiliation.subOrganization: @id https://__site_origin__/#filial — у организации сайта он один: https://__site_origin__/#org",
     "dist/client/organizaciya/index.html: нет JSON-LD «ContactPage» — тип плана organizaciya",
     "dist/client/origin/index.html: плейсхолдер origin в <body>: абсолютный URL своего сайта вне <head>",
     "dist/client/ostrova/index.html: остров razdel вне своих страниц (/blog/*): где он стоит, решает его строка ISLANDS (src/shared/config/islands.ts)",
