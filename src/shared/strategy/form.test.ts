@@ -14,8 +14,8 @@ const site = siteOf(projectOf(TEST_SITE))
 const PLAN = 'site/test/plans/contacts.yaml'
 type Plan = (typeof TEST_SITE)[typeof PLAN]
 
-// Контакты проекта теста с другой формой действия секции формы.
-const withForm = (form: Record<string, unknown>) => {
+// Контакты проекта теста с другой формой действия секции формы (и другими файлами проекта).
+const withForm = (form: Record<string, unknown>, files: Record<string, unknown> = {}) => {
   const plan: Plan = TEST_SITE[PLAN]
   const [section] = plan.sections
   const action = section?.slots.action.map((slot) =>
@@ -24,6 +24,7 @@ const withForm = (form: Record<string, unknown>) => {
   return siteOf(
     projectOf({
       ...TEST_SITE,
+      ...files,
       [PLAN]: { ...plan, sections: [{ ...section, slots: { ...section?.slots, action } }] },
     }),
   )
@@ -87,6 +88,24 @@ describe('форма действия плана — набор каталога
     expect(formOf().fields.find((field) => field.id === 'contact-channel')?.options).toEqual([
       'telegram',
     ])
+  })
+
+  // Ответ на почту — только набору, который спрашивает адрес: у consultation-request поля почты нет.
+  it('вариант «Почта» — канал фактов и только в наборе с полем почты', () => {
+    const ru = TEST_SITE['facts.yaml']
+    const email = { type: 'email', value: 'test@example.com' }
+    const facts = {
+      'facts.yaml': {
+        ...ru,
+        facts: [...ru.facts, { id: 'company-email', verbatim: [email.value], machine: email }],
+      },
+    }
+    const channelsOf = (ref: string) =>
+      formOf(
+        withForm({ ref, thank_you_page: '/contacts/spasibo' }, facts).strategyPage('contacts', RU),
+      ).fields.find((field) => field.id === 'contact-channel')?.options
+    expect(channelsOf('lead-forms.yaml#contact-message')).toEqual(['telegram', 'email'])
+    expect(channelsOf('lead-forms.yaml#consultation-request')).toEqual(['telegram'])
   })
 
   it.each([

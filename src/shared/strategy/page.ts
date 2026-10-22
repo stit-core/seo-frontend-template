@@ -253,8 +253,8 @@ const LEAD_FORMS = parseFile(
 )
 const FIELD_TYPES = new Set<string>(['text', 'textarea', 'email', 'tel', 'radio'])
 
-// Варианты поля канала связи — только каналы, которые бизнес ведёт (fields.contact-channel каталога): звонок и почта —
-// факты с machine telephone и email, мессенджер — факт messenger своей сети.
+// Каналы связи, которые бизнес ведёт (fields.contact-channel каталога): звонок и почта — факты с machine telephone и
+// email, мессенджер — факт messenger своей сети.
 function channelOf(option: string, facts: ReadonlyMap<string, Fact>): boolean {
   const machines = [...facts.values()].flatMap((fact) => (fact.machine ? [fact.machine] : []))
   if (option === 'call') return machines.some((machine) => machine.type === 'telephone')
@@ -290,6 +290,9 @@ function formOf(
     fail(key, 'form.marketing_consent — текста согласия на рекламу у секции нет')
   if (Math.max(set.steps, form.steps ?? 1) > 1)
     fail(key, `${form.ref} — шагов больше одного: форма без JS — один шаг`)
+  // Почта — канал ответа, только когда набор спрашивает адрес: без поля почты ответить письмом некуда.
+  const asksEmail = set.fields.some(({ field }) => LEAD_FORMS.fields[field]?.type === 'email')
+  const replies = (option: string) => channelOf(option, facts) && (option !== 'email' || asksEmail)
   const fields = set.fields.flatMap(({ field, required }): FormField[] => {
     const entry = LEAD_FORMS.fields[field] ?? fail(key, `${form.ref}: поля ${field} нет в каталоге`)
     if (!FIELD_TYPES.has(entry.type))
@@ -297,8 +300,7 @@ function formOf(
     const listed = entry.options ?? entry.options_ru_2026 ?? []
     if (typeof listed === 'string')
       fail(key, `${form.ref}: варианты поля ${field} — ${listed}, а не список`)
-    const options =
-      field === 'contact-channel' ? listed.filter((option) => channelOf(option, facts)) : listed
+    const options = field === 'contact-channel' ? listed.filter(replies) : listed
     if (entry.type === 'radio' && options.length === 0) return []
     return [
       {
