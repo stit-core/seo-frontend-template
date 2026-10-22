@@ -132,13 +132,13 @@ const address = (path) => moved.has(path) || routes.some((pattern) => pattern.te
 
 // Пути шаблона — строки .template/paths (`:(exclude)<путь>` — вычет): их прозу template:update переносит в форк как
 // есть. Адрес на префиксе не первой локали проверяемого проекта в ней называет локаль шаблона, которой у форка может не
-// быть: в одноязычном форке `/en` — мёртвая ссылка.
-const templateLines = tracked.has('.template/paths')
+// быть: в одноязычном форке `/en` — мёртвая ссылка. Строка — как её берёт перенос: без пустых и комментариев, но не
+// обрезанная: с пробелом или CR по краю она ничего не выбирает (её называет проверка .template ниже).
+const templatePaths = tracked.has('.template/paths')
   ? readFileSync(resolve(root, '.template/paths'), 'utf8')
       .split('\n')
-      .filter((line) => line.trim() !== '' && !line.trim().startsWith('#'))
+      .filter((line) => !/^\s*(?:#|$)/.test(line))
   : []
-const templatePaths = templateLines.map((line) => line.trim())
 const EXCLUDE = ':(exclude)'
 const covers = (entry, file) => {
   const path = entry.replace(/\/+$/, '')
@@ -342,7 +342,7 @@ else if (!/^v\d+\.\d+\.\d+$/.test(version))
 if (!tracked.has('.template/paths'))
   problems.push('.template/paths: файла нет — пути шаблона, их переносит template:update')
 else {
-  for (const line of templateLines) {
+  for (const line of templatePaths) {
     const entry = line.trim()
     // Перенос берёт строку как есть: с пробелом или CR по краю путь ничего не выбирает, и его правки молча теряются.
     if (entry !== line) {
