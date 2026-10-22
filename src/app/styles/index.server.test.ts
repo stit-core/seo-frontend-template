@@ -381,6 +381,13 @@ it('правила слоя не знают тему', () => {
   expect(source.match(/prefers-color-scheme|data-theme|light-dark\(|(?<!\w)dark:/g)).toBeNull()
 })
 
+// Ловушка формы — для бота: поле на месте и в разметке, но человеку его не видно — тот же блок, что `sr-only`.
+it('ловушка формы скрыта от человека — как sr-only', () => {
+  const declarations = (utility: string) => rule(utility).replace(/\s+/g, ' ').trim()
+  expect(declarations('sr-only')).toContain('position: absolute')
+  expect(declarations('honeypot')).toBe(declarations('sr-only'))
+})
+
 // Без правила слоя выделение получает `bolder` браузера и становится тяжелее подзаголовка.
 it('выделение в строке — насыщенность роли, а не bolder браузера', () => {
   const weights = Array.from(

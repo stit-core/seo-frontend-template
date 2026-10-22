@@ -3,6 +3,7 @@ import { DEFAULT_LOCALE } from '@/shared/i18n'
 import { CALLBACK_FORM, expectNoA11yViolations, LEAD_FORM, parseHtml } from '@/shared/lib/testing'
 import { FORM_DICTS } from '../config/dict'
 import { t } from '../lib/text'
+import { CONSENT_FIELD, submissionOf } from '../model/schema'
 import Form from './form.astro'
 
 const dict: Readonly<Record<string, string>> = FORM_DICTS[DEFAULT_LOCALE]
@@ -107,6 +108,34 @@ describe('Form — форма-движок по набору плана', () => 
     // Форма работает без JS; пустая форма фокус не забирает.
     expect(html).not.toContain('<script')
     expect(parseHtml(html).querySelector('[role="alert"], [autofocus]')).toBeNull()
+  })
+
+  // Ловушка — для бота: чтец экрана её не объявляет, с клавиатуры её не встретить, автозаполнение браузера в неё не
+  // пишет; не видна она классом слоя (тест токен-слоя).
+  it('ловушка набора скрыта от человека: вне чтеца, вне порядка Tab, без автозаполнения', async () => {
+    const trap = parseHtml(await render()).querySelector(`[name="${LEAD_FORM.honeypot}"]`)
+    const box = trap?.closest('.honeypot')
+    expect(box?.getAttribute('aria-hidden')).toBe('true')
+    expect([
+      trap?.getAttribute('type'),
+      trap?.getAttribute('tabindex'),
+      trap?.getAttribute('autocomplete'),
+      trap?.hasAttribute('required'),
+    ]).toEqual(['text', '-1', 'off', false])
+  })
+
+  // Отмеченная галочка шлёт своё значение (без атрибута — «on»): согласием сервер считает именно его. Обязательна и не
+  // отмечена заранее: одна цель — одна галочка.
+  it('галочка согласия: обязательна, не отмечена, её значение — согласие для сервера', async () => {
+    const consent = parseHtml(await render()).querySelector(`[name="${CONSENT_FIELD}"]`)
+    expect([
+      consent?.getAttribute('type'),
+      consent?.hasAttribute('required'),
+      consent?.hasAttribute('checked'),
+    ]).toEqual(['checkbox', true, false])
+    const sent = new FormData()
+    sent.set(CONSENT_FIELD, consent?.getAttribute('value') ?? 'on')
+    expect(submissionOf(LEAD_FORM, sent).consent).toBe(true)
   })
 
   it('ответ с отказами: сводка с заголовком и фокусом, ссылки на поля по порядку, присланное — в полях', async () => {
