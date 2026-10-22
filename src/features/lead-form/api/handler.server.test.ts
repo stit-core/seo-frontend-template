@@ -162,6 +162,13 @@ describe('обработчик формы', () => {
     expect(fetchMock).not.toHaveBeenCalled()
   })
 
+  // Отказ правил набора пишет имена полей, а не присланное: адрес и имя отправителя в лог не попадают и здесь.
+  it('отказ правил с присланными именем и адресом — в логе только имена полей', async () => {
+    const outcome = await handleLeadRequest(post({ ...filled, task: '' }), context)
+    expect(outcome).toMatchObject({ status: 'invalid', faults: { task: 'required' } })
+    expect(logged()).toContain('"fields":"task"')
+  })
+
   it.each([
     ['чужой Origin', post(filled, { origin: 'https://evil.example' }), 'forbidden'],
     ['тело больше лимита', post(filled, { 'content-length': String(64 * 1024 + 1) }), 'too-large'],

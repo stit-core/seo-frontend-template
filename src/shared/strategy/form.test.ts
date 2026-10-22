@@ -65,6 +65,22 @@ describe('форма действия плана — набор каталога
     expect([en.page, en.thankYou.href]).toEqual(['/en/contacts', '/en/contacts/spasibo'])
   })
 
+  // Поля — набор, который называет план, а не набор шаблона: у callback телефон обязателен, время — варианты каталога.
+  it('поля набора form.ref плана: callback — телефон обязателен, «хотя бы одного из» нет', () => {
+    const form = formOf(
+      withForm({
+        ref: 'lead-forms.yaml#callback',
+        thank_you_page: '/contacts/spasibo',
+      }).strategyPage('contacts', RU),
+    )
+    expect([form.set, form.oneOf]).toEqual(['callback', []])
+    expect(form.fields.map(({ id, required, options }) => [id, required, options])).toEqual([
+      ['phone', true, []],
+      ['name', false, []],
+      ['preferred-time', false, ['now-working-hours', 'morning', 'afternoon', 'evening']],
+    ])
+  })
+
   // Канал связи — только каналы, которые бизнес ведёт: у проекта теста — мессенджер Telegram.
   it('варианты канала связи — каналы фактов: телефона и почты у проекта теста нет', () => {
     expect(formOf().fields.find((field) => field.id === 'contact-channel')?.options).toEqual([
