@@ -5,7 +5,8 @@
 // пути репо, .template/version — vX.Y.Z; на каноне тег v* на HEAD равен версии и аннотирован. Иначе агент идёт по
 // мёртвой ссылке, а форк — по сорванному переносу. Репо — то, что отслеживает git: неотслеживаемого файла в клоне нет.
 // `/имя`, которое не скилл, — адрес сайта (маршрут src/pages на любой локали, переезд redirects.yaml), встроенная
-// команда, скилл соседнего strategy или корень файловой системы.
+// команда, скилл соседнего strategy или корень файловой системы. Проза путей шаблона адрес не первой локали проверяемого
+// проекта пишет плейсхолдером `/<lang>`: перенос несёт её в форк, а локали у форка свои.
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, lstatSync, readFileSync } from 'node:fs'
 import { posix, resolve } from 'node:path'
@@ -128,6 +129,28 @@ const moved = new Set(
 )
 const address = (path) => moved.has(path) || routes.some((pattern) => pattern.test(path))
 
+// Пути шаблона — строки .template/paths (`:(exclude)<путь>` — вычет): их прозу template:update переносит в форк как
+// есть. Адрес на префиксе не первой локали проверяемого проекта в ней называет локаль шаблона, которой у форка может не
+// быть: в одноязычном форке `/en` — мёртвая ссылка.
+const templatePaths = tracked.has('.template/paths')
+  ? readFileSync(resolve(root, '.template/paths'), 'utf8')
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((entry) => entry !== '' && !entry.startsWith('#'))
+  : []
+const EXCLUDE = ':(exclude)'
+const covers = (entry, file) => {
+  const path = entry.replace(/\/+$/, '')
+  return file === path || file.startsWith(`${path}/`)
+}
+const ofTemplate = (file) =>
+  templatePaths.some((entry) => !entry.startsWith(EXCLUDE) && covers(entry, file)) &&
+  !templatePaths.some(
+    (entry) => entry.startsWith(EXCLUDE) && covers(entry.slice(EXCLUDE.length), file),
+  )
+const LOCALE_ADDRESS =
+  prefixes.length === 0 ? undefined : new RegExp(`^/(?:${prefixes.join('|')})(?:/|$)`)
+
 // Слово перед `имя`: rule или правило — .claude/rules/<имя>.md, skill или скилл — скилл.
 const NAMED_BY = /(?:^|[\s(«"])(rules?|правил\p{L}*|skills?|скилл\p{L}*)\s+$/iu
 // Между именами перечня после rule или skill: «правила `a`, `b` и `c`».
@@ -196,6 +219,7 @@ const deadPaths = []
 let references = 0
 for (const doc of prose) {
   const text = readFileSync(resolve(root, doc), 'utf8')
+  const templateDoc = ofTemplate(doc)
   let listKind = ''
   let previousEnd = 0
   for (const match of text.matchAll(CODE)) {
@@ -239,6 +263,13 @@ for (const doc of prose) {
       ref = ref.split('#')[0].split(':')[0]
       if (ref.startsWith('./')) ref = ref.slice(2)
       if (ref.startsWith('@/')) ref = `src/${ref.slice(2)}`
+      // В ограде код в бэктиках — текст: адрес в нём (комментарий примера) — тоже адрес.
+      const bare = ref.replace(/^`+|`+$/g, '')
+      if (templateDoc && LOCALE_ADDRESS?.test(bare)) {
+        references++
+        problems.push(`${doc}: ${bare} — адрес локали в прозе шаблона — /<lang>`)
+        continue
+      }
       const slash = SLASH_NAME.exec(ref)
       if (slash) {
         const [, name] = slash
@@ -307,9 +338,7 @@ else if (!/^v\d+\.\d+\.\d+$/.test(version))
 if (!tracked.has('.template/paths'))
   problems.push('.template/paths: файла нет — пути шаблона, их переносит template:update')
 else {
-  for (const line of readFileSync(resolve(root, '.template/paths'), 'utf8').split('\n')) {
-    const entry = line.trim()
-    if (entry === '' || entry.startsWith('#')) continue
+  for (const entry of templatePaths) {
     if (!inRepo(entry.replace(/^:\(exclude\)/, '').replace(/\/+$/, ''))) {
       problems.push(`.template/paths: ${entry} — пути нет в репо`)
     }

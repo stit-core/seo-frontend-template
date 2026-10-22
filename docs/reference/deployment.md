@@ -182,7 +182,7 @@ prerendered-страница печатается на сборке, а обра
   логируется со статусом 500 и тем же `rid`, ответ строит Astro), `Cache-Control: no-cache`
   на HTML без явного заголовка (404/410 включительно; ответ формы ставит `private, no-store`
   сам). Режимы и карта маршрутов — `rendering.md`
-- Нормализация — обёртка, один 301 на конечный адрес: `/en/` → `/en`, `/about/index.html` →
+- Нормализация — обёртка, один 301 на конечный адрес: `/<lang>/` → `/<lang>`, `/about/index.html` →
   `/about`, `/old/` → цель правила `redirects.yaml`; `/about.html` → 404 при
   `build.format: 'directory'`, заглавные в своём адресе — 404 (`rendering.md § Нормализация URL`)
 - Сжатия в процессе нет — жмёт Traefik (`compress`)

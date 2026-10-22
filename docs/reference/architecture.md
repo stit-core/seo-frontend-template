@@ -32,8 +32,9 @@ app → pages → widgets → features → entities → shared
 
 ## `src/pages` = роутинг
 
-Страница — один файл на все локали: `[...locale]/index.astro` → `/` и `/en`, `[...locale]/about.astro` →
-`/about` и `/en/about` (сегмент дефолтной локали пуст, языки страницы — строка карты strategy);
+Страница — один файл на все локали: `[...locale]/index.astro` → `/` и `/<lang>`, `[...locale]/about.astro` →
+`/about` и `/<lang>/about` (сегмент дефолтной локали пуст, у другой — её код `<lang>`; языки страницы — строка карты
+strategy);
 служебный маршрут — свой файл (`healthz.ts` → `/healthz`). Подпапки — сегменты URL, а не слайсы, поэтому правила Steiger о public API и сегментах слайсов
 (`public-api`, `no-layer-public-api`, `no-segmentless-slices`, `no-segments-on-sliced-layers`) на
 `pages` выключены.

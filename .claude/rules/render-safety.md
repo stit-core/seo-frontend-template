@@ -74,7 +74,7 @@ paths: ["src/pages/**", "src/app/**", "src/**/api/**", "public/**", "astro.confi
 ## Конфиг
 
 `astro.config.ts`: `output: 'static'`, `build.format: 'directory'` (`'file'` с node-адаптером
-отдаёт 404 на `/blog` и `/en`), `trailingSlash` — из `TRAILING_SLASH` (`shared/redirects/table.ts`:
+отдаёт 404 на `/blog` и `/<lang>`), `trailingSlash` — из `TRAILING_SLASH` (`shared/redirects/table.ts`:
 рядом с каноном пути обёртки, который срезает слеш сам, — другая форма меняет оба места, их
 согласие держит тест таблицы), `session: false` (fs-драйвер сессий пишет в cacheDir), `prefetch: false` и без `<ClientRouter/>` (без островов — ни байта JS; переход между страницами — CSS View Transitions токен-слоя, rule `shared-ui`),
 `experimentalDisableStreaming: true`, `markdown.syntaxHighlight: false` (Shiki инлайнит сырые

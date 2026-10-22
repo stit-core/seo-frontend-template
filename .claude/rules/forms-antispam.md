@@ -11,7 +11,7 @@ paths: ["src/features/contact-form/**", "src/pages/api/**", "src/pages/_contacts
 
 ## Маршруты и ответы
 
-- Страница с формой (`/contacts`, `/en/contacts`) — **prerendered и индексируемая**; обработчик
+- Страница с формой (`/contacts`, `/<lang>/contacts`) — **prerendered и индексируемая**; обработчик
   (`pages/api/contact.astro`) — `prerender = false` и **страница**, а не endpoint: без JS ответом
   на POST обязана быть разметка
 - Успех — **PRG**: `303` на `/contacts/spasibo` (своя локаль), F5 не переотправляет заявку;

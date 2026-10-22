@@ -388,7 +388,7 @@ import { localeOf } from '@/shared/i18n'
 import { pageOf } from '@/shared/strategy'
 import { HeroText, heroText } from '@/widgets/hero-text'
 
-// Язык — по префиксу запрошенного пути: под `/en/…` человек читает английскую версию.
+// Язык — по префиксу запрошенного пути: под `/<lang>/…` человек читает версию этого языка.
 const locale = localeOf(Astro.url.pathname)
 const page = pageOf(files, locale)
 

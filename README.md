@@ -24,7 +24,7 @@ Astro 7.3 + `@astrojs/node` (`output: 'static'`, standalone) · TypeScript 6
 (`astro/tsconfigs/strictest`) · Tailwind v4 на собственном токен-слое · страница — блоки каталога
 strategy по её плану, тексты — copy deck, контакты — факты (данные `strategy/`) · записи — Markdown
 в git внутри слайса (Content Layer + Zod 4) · локали 1…N одним дескриптором (у шаблона `ru` без
-префикса + `en` под `/en`) ·
+префикса + `en` с префиксом) ·
 редиректы как данные (`content/redirects.yaml`) · SEO-слой `shared/seo` (canonical, hreflang,
 OG, JSON-LD; `robots.txt` on-demand на runtime origin, `sitemap.xml` и `rss.xml` — файлы сборки) · Biome 2 +
 Prettier (только `*.astro`) ·

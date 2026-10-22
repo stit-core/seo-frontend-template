@@ -13,5 +13,6 @@
 - Не ссылки: плейсхолдер `src/entities/<name>/content/`, путь соседа `../strategy/site/`, адрес `/blog/x`.
 - Скрипты: `pnpm check` есть, `pnpm kin:diff` — нет; `pnpm exec x` — команда pnpm.
 - Скиллы: `/demo` есть, `/net-takogo` — нет; skill `demo`; встроенная команда `/clear`, корень `/tmp`.
-- Адрес сайта — не скилл: `/about`, `/healthz`, `/en` (локаль), `/old` (переезд); `/net-adresa` — ни то ни другое.
+- Адрес сайта — не скилл: `/about`, `/healthz`, `/old` (переезд); `/net-adresa` — ни то ни другое.
+- Адрес локали в прозе шаблона — плейсхолдер `/<lang>` и `/<lang>/about`; `/en` и `/en/about` — нарушения.
 - Правила: rule `demo` есть, rule `net-pravila` — нет; правила `demo`, `net-v-perechne` и `docs`.

@@ -147,7 +147,7 @@ strategy — `site_validate.py`, `copydeck.py check`): число и дата т
 
 Два теста ходят по этому файлу и переезжают вместе с ним:
 `src/app/middleware/index.server.test.ts` (кейс «адреса … до роутинга» знает демо-адреса
-`/old`, `/blog/staraya-zametka` и `/en/blog/old-note` — подставить свои) и
+`/old` и `/blog/staraya-zametka` — подставить свои) и
 `src/app/middleware/redirects.test.ts` (условие «таблица непуста» — если своих редиректов
 нет, файл остаётся с одним комментарием, а условие меняется на «таблица строится»:
 пустая таблица валидна).

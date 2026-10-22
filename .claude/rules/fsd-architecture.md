@@ -20,7 +20,7 @@ app → pages → widgets → features → entities → shared
 
 ## `src/pages` = роутинг Astro
 
-Страница — один файл маршрута на все локали: `[...locale]/index.astro` → `/` и `/en`; пути и проп
+Страница — один файл маршрута на все локали: `[...locale]/index.astro` → `/` и `/<lang>`; пути и проп
 `locale` — из `getStaticPaths` (`localeRoutes`, `shared/strategy`: языки страницы — строка карты),
 у дефолтной локали сегмента нет. Служебный маршрут — свой файл: `healthz.ts` → `/healthz`.
 Подпапки — сегменты URL, не слайсы (правила слайсов Steiger на `pages` выключены).

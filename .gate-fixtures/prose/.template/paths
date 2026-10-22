@@ -6,3 +6,4 @@ CLAUDE.md
 docs
 net-takogo-puti
 :(exclude)docs/net-isklyucheniya
+:(exclude)docs/forka.md

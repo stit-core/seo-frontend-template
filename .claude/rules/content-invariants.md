@@ -14,7 +14,7 @@ Zod в `model/schema.ts` (прямой `import { z } from 'zod'`), коллек�
 
 - Путь: `content/<locale>/<slug>.md`. **Язык задаёт каталог** — поля `lang` нет; `<locale>`
   ∈ `SUPPORTED_LOCALES` (`shared/i18n`); slug — только `a-z`, `0-9`, дефисы. Id записи —
-  `<locale>/<slug>`, URL — `/blog/<slug>` (`/en/blog/<slug>`)
+  `<locale>/<slug>`, URL — `/blog/<slug>`, у не первой локали — `/<lang>/blog/<slug>`
 - Frontmatter — строгая мапа (неизвестное поле, в т.ч. опечатка, — ошибка):
   `title` (25–65 символов), `description` (70–170), `pubDate`, `updatedDate?` (не раньше
   `pubDate`; источник `dateModified` в JSON-LD и `lastmod` в sitemap — у записи без правки

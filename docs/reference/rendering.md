@@ -26,18 +26,19 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 `prerender = false` — им пользуются `check:content`, `check:links`, `seo:check` и HTTP-набор.
 Таблица — та же карта с решениями по кешу и индексации: у каждого on-demand файла здесь строка,
 иначе `check:content` красный; колонка «в sitemap» — следствие колонки «индексируется»: карту
-сайта пишет сборка, и в ней ровно страницы без `noindex`.
+сайта пишет сборка, и в ней ровно страницы без `noindex`. Путь `/<lang>/…` — версия страницы на не первой локали
+дескриптора (`src/shared/i18n/locale.ts`): страница есть на языках своей строки карты strategy.
 
 | путь | файл (`src/pages/`) | режим | `Cache-Control` | индексируется | в sitemap |
 |---|---|---|---|---|---|
-| `/`, `/en` | `[...locale]/index.astro` (один файл на все локали: пути — языки страницы в карте strategy) | `static` | `public, max-age=0` + ETag | да | да |
-| `/blog`, `/en/blog` | `[...locale]/blog/index.astro` | `static` | то же | да | да |
-| `/blog/page/N`, `/en/blog/page/N` | `[...locale]/blog/page/[page].astro` | `static`, пути из `getStaticPaths` | то же | да | да |
-| `/blog/<slug>`, `/en/blog/<slug>` | `[...locale]/blog/[slug].astro` | `static`, пути из контента (без черновиков) | то же | да | да |
-| `/blog/tag/<tag>`, `/en/blog/tag/<tag>` | `[...locale]/blog/tag/[tag].astro` | `static`, теги видимых записей | то же | от трёх записей локали — да; ниже — `noindex` | от трёх записей — да |
-| `/about`, `/en/about` | `[...locale]/about.astro` | `static` | то же | да | да |
-| `/contacts`, `/en/contacts` | `[...locale]/contacts/index.astro` | `static` | то же | да | да |
-| `/contacts/spasibo`, `/en/contacts/spasibo` | `[...locale]/contacts/spasibo.astro` | `static` | то же | нет — `noindex` | нет |
+| `/`, `/<lang>` | `[...locale]/index.astro` (один файл на все локали: пути — языки страницы в карте strategy) | `static` | `public, max-age=0` + ETag | да | да |
+| `/blog`, `/<lang>/blog` | `[...locale]/blog/index.astro` | `static` | то же | да | да |
+| `/blog/page/N`, `/<lang>/blog/page/N` | `[...locale]/blog/page/[page].astro` | `static`, пути из `getStaticPaths` | то же | да | да |
+| `/blog/<slug>`, `/<lang>/blog/<slug>` | `[...locale]/blog/[slug].astro` | `static`, пути из контента (без черновиков) | то же | да | да |
+| `/blog/tag/<tag>`, `/<lang>/blog/tag/<tag>` | `[...locale]/blog/tag/[tag].astro` | `static`, теги видимых записей | то же | от трёх записей локали — да; ниже — `noindex` | от трёх записей — да |
+| `/about`, `/<lang>/about` | `[...locale]/about.astro` | `static` | то же | да | да |
+| `/contacts`, `/<lang>/contacts` | `[...locale]/contacts/index.astro` | `static` | то же | да | да |
+| `/contacts/spasibo`, `/<lang>/contacts/spasibo` | `[...locale]/contacts/spasibo.astro` | `static` | то же | нет — `noindex` | нет |
 | `/legal/privacy` | `[...locale]/legal/privacy.astro` (в карте — только дефолтный язык) | `static` | то же | да | да |
 | `/api/contact` | `api/contact.astro` (страница: без JS ответ на POST — разметка) | `dynamic` | `private, no-store` (роут) | нет — `noindex` | нет |
 | `/500.html` | `500.astro` (адаптер читает файл с диска при исключении в on-demand; по `/500` — 404) | `static` | `public, max-age=0` + ETag | нет — `noindex` | нет |
@@ -45,7 +46,7 @@ HTML-ответе; `dynamic` — всегда `noindex` и вне sitemap (HTML 
 | `/_image` | `_image.ts` (endpoint изображений: маршрут вводит сам Astro, `image.endpoint` в `astro.config.ts` подменяет его для сборки; в `astro dev` — штатный) | `dynamic` | `no-cache` (роут) | — (404 текстом, `X-Robots-Tag: noindex`: картинки готовит сборка, трансформация на запрос наружу закрыта, на edge — тоже) | нет |
 | `/robots.txt` | `robots.txt.ts` (endpoint) | `dynamic` | `public, max-age=300` (роут) | — (текст; `X-Robots-Tag: noindex`) | нет |
 | `/sitemap.xml` | файла маршрута нет: карту пишет интеграция `sitemap-from-build` (`astro.config.ts`, `scripts/lib/sitemap.mjs`) по страницам `dist/client` | `static`, файл сборки | `public, max-age=0` + ETag | — (XML) | сам — карта |
-| `/rss.xml`, `/en/rss.xml` | `[...locale]/rss.xml.ts` (prerendered-эндпоинт `_blog/feed.ts`: фид — у каждой локали блога в карте) | `static` | то же | — (XML) | нет |
+| `/rss.xml`, `/<lang>/rss.xml` | `[...locale]/rss.xml.ts` (prerendered-эндпоинт `_blog/feed.ts`: фид — у каждой локали блога в карте) | `static` | то же | — (XML) | нет |
 | `/<INDEXNOW_KEY>.txt` и любой другой корневой `/*.txt` | `[key].txt.ts` (endpoint; параметризованный — перехватывает весь корневой `*.txt`, кроме статического `robots.txt`) | `dynamic` | `public, max-age=300` (роут); пустой ключ или чужое имя — 404 `text/plain` с `no-cache`, не `404.astro` | — (`X-Robots-Tag: noindex` на обоих ответах) | нет |
 | любой путь без файла → 404 | `404.astro` — на языке префикса пути | `dynamic` | `no-cache` (middleware) | нет — статус 404 + `noindex` | нет |
 | адреса из `content/redirects.yaml` и неканоническая форма любого адреса | таблица `app/middleware/redirects.ts`: 301/308 отдаёт обёртка процесса `docker/server.mjs` до статик-хендлера, 410 — middleware до роутинга, телом на языке префикса пути | `dynamic` | 301/308 — без кеш-заголовка; 410 — `no-cache` | нет | нет |
