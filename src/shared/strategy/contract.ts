@@ -330,16 +330,26 @@ export const ConsentSchema = z.object({
 
 export type Consent = z.infer<typeof ConsentSchema>
 
-export function consentOf(project: Project, id: string): Consent {
-  const plan = project.plans.find((candidate) => candidate.page.id === id) ?? fail(id, 'нет плана')
-  const h1 = plan.page.seo.h1 ?? fail(`${id}/seo/h1`, 'у документа нет заголовка')
+// Заголовок страницы — слот `seo.h1` плана («секция.слот»): текст секции плана; не текст секции — ошибка с ключом. У
+// плана без `seo.h1` заголовка нет.
+export function headingOf(plan: Plan) {
+  const h1 = plan.page.seo.h1
+  if (h1 === undefined) return undefined
   const section = h1.slice(0, h1.indexOf('.'))
   const slot = h1.slice(h1.indexOf('.') + 1)
-  const key = `${id}/${section}/${slot}`
+  const key = `${plan.page.id}/${section}/${slot}`
   const planned = plan.sections.find((candidate) => candidate.id === section)
   if (!planned?.slots.text.some((candidate) => candidate.id === slot)) {
-    fail(key, 'заголовок документа — не текст секции')
+    fail(key, 'заголовок страницы — не текст секции')
   }
+  return { section: planned, slot, key }
+}
+
+export function consentOf(project: Project, id: string): Consent {
+  const plan = project.plans.find((candidate) => candidate.page.id === id) ?? fail(id, 'нет плана')
+  const heading = headingOf(plan) ?? fail(`${id}/seo/h1`, 'у документа нет заголовка')
+  const { slot, key } = heading
+  const section = heading.section.id
   const titles = project.decks.flatMap((deck): Array<[string, string]> => {
     const page = deck.copy_deck.pages.find((candidate) => candidate.page_id === id)
     if (page === undefined) return []
@@ -350,7 +360,7 @@ export function consentOf(project: Project, id: string): Consent {
     return [[lang, chosenText(found ?? fail(key, `нет текста в copy deck ${lang}`), key)]]
   })
   const revision =
-    planned.slots.data.find((candidate) => candidate.binds.includes('date'))?.fact ??
+    heading.section.slots.data.find((candidate) => candidate.binds.includes('date'))?.fact ??
     fail(`${id}/${section}/date`, 'у даты редакции документа нет факта')
   const url = project.map
     ? mapPage(project.map, id).url

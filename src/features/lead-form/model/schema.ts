@@ -39,10 +39,8 @@ export interface Submission {
 
 export type Faults = Readonly<Record<string, FieldFault>>
 
-// Ответ обработчика формы: id формы, которой он пришёл, присланное, отказы полей и сбой доставки; на самой странице его
-// нет.
+// Ответ обработчика формы: присланное, отказы полей и сбой доставки; на самой странице его нет.
 export interface FormAnswer {
-  form: string
   submission: Submission
   faults: Faults
   failed: boolean

@@ -21,24 +21,38 @@ const filesOf = (id: string) =>
   )
 const consent = consentOf(projectOf(TEST_SITE), 'privacy')
 const forms = formsOf([
-  { files: filesOf('about'), consent, page: 'about' },
-  { files: filesOf('contacts'), consent, page: 'contacts' },
+  { files: filesOf('about'), consent },
+  { files: filesOf('contacts'), consent },
 ])
 
 describe('белый список обработчика формы', () => {
-  // Форма — на второй странице реестра: её запись называет свою страницу, а не первую.
-  it('формы плана страниц на каждом языке страницы — со своей страницей и политикой согласия', () => {
-    expect(forms.map(({ form, locale, page }) => [form.id, form.page, locale, page])).toEqual([
-      ['contacts/request', '/contacts', RU, 'contacts'],
-      ['contacts/request', '/en/contacts', EN, 'contacts'],
+  // Форма — на второй странице реестра: её запись называет свою секцию и страницу, а не первую.
+  it('формы плана страниц на каждом языке страницы — со своей секцией, страницей и политикой согласия', () => {
+    expect(
+      forms.map(({ form, section, locale, page }) => [
+        form.id,
+        form.page,
+        section,
+        locale,
+        page.id,
+      ]),
+    ).toEqual([
+      ['contacts/request', '/contacts', 'request', RU, 'contacts'],
+      ['contacts/request', '/en/contacts', 'request', EN, 'contacts'],
     ])
-    for (const { locale, policy } of forms) {
+    for (const { locale, policy, page } of forms) {
       expect(policy, locale).toEqual(policyOf(strategyPage('contacts', locale), consent))
+      expect(page, locale).toEqual(strategyPage('contacts', locale))
     }
   })
 
+  // Ответ с ошибками печатает h1 страницы — текст слота `seo.h1` её плана на языке страницы.
+  it('страница формы — с заголовком плана на её языке', () => {
+    expect(forms.map(({ page }) => page.h1)).toEqual(['Заявка', 'Заявка (en)'])
+  })
+
   it('модуль без плана — ошибка сборки', () => {
-    expect(() => formsOf([{ files: {}, consent, page: 'none' }])).toThrow('страницы нет в карте')
+    expect(() => formsOf([{ files: {}, consent }])).toThrow('страницы нет в карте')
   })
 
   it('GET обработчика — страница первой формы на языке запроса, без версии на нём — первой формы', () => {

@@ -25,6 +25,7 @@ const page = (binds: string[]): StrategyPage => ({
       groups: {},
     },
   ],
+  h1: undefined,
   policy: undefined,
   operator: undefined,
   structuredData: [],

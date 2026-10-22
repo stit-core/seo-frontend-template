@@ -2,6 +2,7 @@ import { isTooLarge, isTrapped, isTrustedOrigin, readForm } from '@/shared/antis
 import { getRuntimeConfig } from '@/shared/config'
 import { type Locale, localeOf } from '@/shared/i18n'
 import { captureServerError, type LogFields, type LogLevel, log } from '@/shared/observability'
+import type { LeadForm, Policy } from '@/shared/strategy'
 import { t } from '../lib/text'
 import {
   type Faults,
@@ -12,23 +13,29 @@ import {
   submissionOf,
 } from '../model/schema'
 import { deliverLead } from './delivery'
-import type { FormEntry } from './forms'
 
-export interface LeadContext<P> {
+// Что обработчику нужно от формы белого списка: форма плана на версии своей страницы и политика её согласия. Страницу
+// ответа знает маршрут — запись формы обработчик возвращает ему как есть.
+export interface LeadEntry {
+  form: LeadForm
+  policy: Policy
+}
+
+export interface LeadContext<E extends LeadEntry> {
   // X-Request-Id ответа: по нему событие формы сходится со строкой лога запроса.
   rid: string
   // Белый список — формы плана на версиях своих страниц (`formsOf`): `form_id` и `page_url` заявки называют одну из них.
-  forms: readonly FormEntry<P>[]
+  forms: readonly E[]
 }
 
 // Отказ до разбора заявки — статус и строка словаря `refusal.<отказ>`.
 const REFUSALS = { forbidden: 403, 'bad-request': 400, 'too-large': 413 } as const
 export type Refusal = keyof typeof REFUSALS
 
-export type LeadOutcome<P> =
-  | { status: 'accepted'; entry: FormEntry<P> }
-  | { status: 'invalid'; entry: FormEntry<P>; submission: Submission; faults: Faults }
-  | { status: 'failed'; entry: FormEntry<P>; submission: Submission }
+export type LeadOutcome<E> =
+  | { status: 'accepted'; entry: E }
+  | { status: 'invalid'; entry: E; submission: Submission; faults: Faults }
+  | { status: 'failed'; entry: E; submission: Submission }
   | { status: Refusal }
 
 // Тело заявки — персональные данные: в лог уходит только факт, канал и число попыток.
@@ -76,10 +83,10 @@ export const refusalOf = (refusal: Refusal, locale: Locale): Response =>
 
 // Антиспам-лестница (rule forms-antispam): origin-check → размер и форма тела → ловушка → правила набора, согласие
 // включительно, → доставка с записью согласия.
-export async function handleLeadRequest<P>(
+export async function handleLeadRequest<E extends LeadEntry>(
   request: Request,
-  context: LeadContext<P>,
-): Promise<LeadOutcome<P>> {
+  context: LeadContext<E>,
+): Promise<LeadOutcome<E>> {
   if (!isTrustedOrigin(request)) {
     logLead('warn', { result: 'forbidden', rid: context.rid })
     return { status: 'forbidden' }

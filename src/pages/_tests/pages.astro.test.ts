@@ -77,6 +77,7 @@ async function render(
     blocks,
     jsonLd: blocks.map((block) => block['@type']),
     h1: html.match(/<h1\b/g)?.length ?? 0,
+    title: parseHtml(html).querySelector('h1')?.textContent?.trim(),
     outsideSections: outsideSections(html),
     crumbs: crumbsOf(html, blocks),
   }
@@ -101,7 +102,7 @@ describe('индексируемые страницы', () => {
     ['/[...locale]/legal/privacy', Privacy, 'privacy'],
     ['/[...locale]/blog', Blog, 'blog'],
   ])(
-    '%s: локали — её строка карты; на каждой — её язык, self-canonical, hreflang версий, один h1, страница из секций, крошки по карте',
+    '%s: локали — её строка карты; на каждой — её язык, self-canonical, hreflang версий, один h1 — заголовок плана, страница из секций, крошки по карте',
     async (route, module, id) => {
       const pages = await built(route, module)
       expect(pages.length, route).toBeGreaterThan(0)
@@ -109,6 +110,10 @@ describe('индексируемые страницы', () => {
         pages.map(({ locale }) => locale),
         route,
       ).toEqual(pageLocales(id))
+      // h1 — слот `seo.h1` плана на языке страницы: его же печатает ответ формы с ошибками.
+      const titles = new Map<string, string | undefined>(
+        pageLocales(id).map((locale) => [locale, strategyPage(id, locale).h1]),
+      )
       for (const { path, locale, props } of pages) {
         const head = await render(module.default, path, props)
         expect(head.lang, path).toBe(locale)
@@ -116,6 +121,7 @@ describe('индексируемые страницы', () => {
         expect(head.robots, path).toBeUndefined()
         expect(head.hreflang, path).toEqual(versionsOf(pages))
         expect(head.h1, path).toBe(1)
+        expect(head.title, path).toBe(titles.get(locale))
         expect(head.outsideSections, path).toEqual([])
         // Крошки — у шаблона карты с крошками и с глубины 2; страницы первого уровня — без них.
         expect(head.crumbs.visible !== undefined, path).toBe(breadcrumbsOn(id))

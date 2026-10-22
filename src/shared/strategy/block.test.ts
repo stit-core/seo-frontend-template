@@ -58,6 +58,7 @@ const page = (...sections: Section[]): StrategyPage => ({
     ogDescription: undefined,
   },
   sections,
+  h1: undefined,
   policy: undefined,
   operator: undefined,
   structuredData: [],

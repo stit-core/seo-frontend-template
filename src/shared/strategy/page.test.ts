@@ -700,6 +700,7 @@ describe('strategy/page', () => {
             groups: {},
           },
         ],
+        h1: 'Заявка на замер принята',
         policy: { href: '/privacy' },
         operator: undefined,
         structuredData: [],

@@ -1,23 +1,28 @@
 ---
 // Обработчик формы: on-demand, потому что ему нужны тело запроса, его заголовки и живой конфиг доставки. Успех — PRG-303
-// на страницу «спасибо» плана формы (F5 не переотправляет заявку), ошибка — исходная страница формы с сохранёнными
-// полями и честным статусом. Маршрут — страница, а не endpoint: без JS ответ на POST обязан быть разметкой, а не JSON.
+// на страницу «спасибо» плана формы (F5 не переотправляет заявку), ошибка — страница формы с сохранёнными полями и
+// честным статусом. Маршрут — страница, а не endpoint: без JS ответ на POST обязан быть разметкой, а не JSON.
 export const prerender = false
 
 import privacy from 'virtual:strategy/consent/privacy'
 import contacts from 'virtual:strategy/contacts'
+import DocumentLayout from '@/app/layouts/document.astro'
 import {
+  failedTitle,
   formPageOf,
   formsOf,
   handleLeadRequest,
   refererLocale,
   refusalOf,
 } from '@/features/lead-form'
-import ContactsPage from '../_contacts/contacts-page.astro'
+import { pageVersions } from '@/shared/strategy'
+import { Heading } from '@/shared/ui/heading'
+import { Section } from '@/shared/ui/section'
+import { LeadForm, leadForm } from '@/widgets/lead-form'
 
-// Страницы с формой плана — данные, проекция политики согласия и композиция: обработчик знает каждую их форму, а ответ
-// с ошибками рисует исходную страницу. Страницу плана с формой без строки здесь называет тест маршрута.
-const forms = formsOf([{ files: contacts, consent: privacy, page: ContactsPage }])
+// Страницы с формой плана — их данные и проекция политики согласия: обработчик знает каждую их форму. Страницу плана с
+// формой без строки здесь называет тест маршрута.
+const forms = formsOf([{ files: contacts, consent: privacy }])
 const locale = refererLocale(Astro.request)
 
 // Адрес обработчика в адресной строке — не страница: GET возвращает на страницу формы.
@@ -32,13 +37,33 @@ if (outcome.status === 'accepted') return Astro.redirect(outcome.entry.form.than
 // Ответ персональный — в полях то, что прислал человек: ни кешу, ни индексу он не достаётся.
 Astro.response.status = outcome.status === 'failed' ? 500 : 200
 Astro.response.headers.set('cache-control', 'private, no-store')
-const { form, locale: formLocale, page: Page } = outcome.entry
+const { section, policy, locale: formLocale, page } = outcome.entry
 const answer = {
-  form: form.id,
   submission: outcome.submission,
   faults: outcome.status === 'invalid' ? outcome.faults : {},
   failed: outcome.status === 'failed',
 }
 ---
 
-<Page locale={formLocale} answer={answer} noindex />
+{/* Ответ с ошибками — страница формы: её каркас, отказ первым словом заголовка окна, её h1 и секция формы, которой он
+пришёл. Другие секции страницы ответ не рисует: их данные (записи коллекции, картинки) серверному бандлу не нужны. */}
+<DocumentLayout
+  locale={formLocale}
+  chrome={page}
+  meta={{ ...page.meta, title: failedTitle(formLocale, page.meta.title) }}
+  translations={pageVersions(page.id)}
+  noindex
+>
+  <Section labelledby="page-title">
+    <Heading id="page-title" level={1}>
+      {page.h1}
+    </Heading>
+  </Section>
+  <LeadForm
+    {...leadForm.props(page, section)}
+    locale={formLocale}
+    action="/api/contact"
+    policy={policy}
+    answer={answer}
+  />
+</DocumentLayout>

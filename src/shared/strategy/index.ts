@@ -27,6 +27,7 @@ export type {
   Meta,
   PageFiles,
   PageLink,
+  PlanPage,
   Policy,
   Section,
   Slots,

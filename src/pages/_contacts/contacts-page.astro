@@ -2,7 +2,6 @@
 import privacy from 'virtual:strategy/consent/privacy'
 import contacts from 'virtual:strategy/contacts'
 import DocumentLayout from '@/app/layouts/document.astro'
-import { type FormAnswer, failedTitle } from '@/features/lead-form'
 import type { Locale } from '@/shared/i18n'
 import { contactPage, localBusiness } from '@/shared/seo'
 import { pageOf, pageVersions, policyOf } from '@/shared/strategy'
@@ -12,27 +11,19 @@ import { LeadForm, leadForm } from '@/widgets/lead-form'
 
 interface Props {
   locale: Locale
-  // Ответ обработчика формы: присланное и отказы; на самой странице его нет.
-  answer?: FormAnswer | undefined
-  // Ответ обработчика персональный (в полях — присланное) и служебный: только noindex.
-  noindex?: boolean | undefined
 }
 
-const { locale, answer, noindex } = Astro.props
+const { locale } = Astro.props
 const page = pageOf(contacts, locale)
 // Согласие формы ссылается на политику ПДн плана: её версия по карте, заголовок и дата редакции — данные политики.
 const policy = policyOf(page, privacy)
-// Ответ с ошибками называет отказ первым словом заголовка окна: вкладка и чтец экрана сообщают о нём раньше текста
-// страницы.
-const meta = answer ? { ...page.meta, title: failedTitle(locale, page.meta.title) } : page.meta
 ---
 
 <DocumentLayout
   locale={locale}
   chrome={page}
-  meta={meta}
+  meta={page.meta}
   translations={pageVersions(page.id)}
-  noindex={noindex}
   jsonLd={[contactPage({ locale, path: page.url, name: page.meta.title }), localBusiness(page)]}
 >
   <HeroText {...heroText.props(page, 'hero')} />
@@ -41,7 +32,6 @@ const meta = answer ? { ...page.meta, title: failedTitle(locale, page.meta.title
     locale={locale}
     action="/api/contact"
     policy={policy}
-    answer={answer}
   />
   <ContactDetails {...contactDetails.props(page, 'contacts')} locale={locale} />
 </DocumentLayout>

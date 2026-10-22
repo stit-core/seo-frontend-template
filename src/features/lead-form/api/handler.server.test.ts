@@ -1,18 +1,12 @@
 import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '@/shared/i18n'
 import { LEAD_FORM } from '@/shared/lib/testing'
 import { FORM_DICTS } from '../config/dict'
-import type { FormEntry } from './forms'
 import { handleLeadRequest, refererLocale, refusalOf } from './handler'
 
 const ORIGIN = 'http://localhost:3000'
 const BACKEND = 'http://backend.internal/leads'
 const POLICY = { href: '/legal/privacy', title: 'Политика', revision: '10 октября 2026 года' }
-const ENTRY: FormEntry<string> = {
-  form: LEAD_FORM,
-  policy: POLICY,
-  locale: DEFAULT_LOCALE,
-  page: 'contacts',
-}
+const ENTRY = { form: LEAD_FORM, policy: POLICY }
 // Белый список — форма контактов на своей странице: другая форма или страница — формы нет.
 const context = { rid: 'test-rid', forms: [ENTRY] }
 

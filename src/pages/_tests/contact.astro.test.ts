@@ -66,13 +66,11 @@ const outlineFaults = (levels: number[]) => [
 // Формы планов снимка на каждом языке своей страницы — белый список, который обязан знать обработчик.
 const FORMS = snapshot().plans.flatMap(({ page }) =>
   pageLocales(page.id).flatMap((locale) =>
-    strategyPage(page.id, locale)
-      .sections.flatMap((section) =>
-        Object.values(section.slots).filter(
-          (value): value is LeadForm => formSlot.safeParse(value).success,
-        ),
-      )
-      .map((form) => ({ form, locale, page: page.id })),
+    strategyPage(page.id, locale).sections.flatMap((section) =>
+      Object.values(section.slots)
+        .filter((value): value is LeadForm => formSlot.safeParse(value).success)
+        .map((form) => ({ form, locale, page: page.id, section: section.id })),
+    ),
   ),
 )
 const [FIRST] = FORMS
@@ -84,9 +82,12 @@ const filled = (locale: Locale = DEFAULT_LOCALE) => filledFormOf(formOn(locale))
 // Запрос со страницы сайта: язык ответа без разобранной формы — префикс её пути.
 const from = (path: string) => ({ referer: `${ORIGIN}${path}` })
 const failedPrefix = (locale: Locale) => failedTitle(locale, '')
-// Присланное в поле ответа: значение ввода или текст многострочного поля.
-const sentBack = (doc: ReturnType<typeof parseHtml>, name: string) => {
-  const control = doc.querySelector(`form [name="${name}"]`)
+// Присланное в поле ответа — у формы со своим `form_id`: значение ввода или текст многострочного поля.
+const sentBack = (doc: ReturnType<typeof parseHtml>, formId: string, name: string) => {
+  const form = [...doc.querySelectorAll('form')].find(
+    (candidate) => candidate.querySelector('[name="form_id"]')?.getAttribute('value') === formId,
+  )
+  const control = form?.querySelector(`[name="${name}"]`)
   return control?.tagName === 'TEXTAREA' ? control.textContent : control?.getAttribute('value')
 }
 
@@ -141,9 +142,10 @@ describe('/api/contact', () => {
     },
   )
 
-  // Ответ с ошибками — исходная страница формы: её заголовок окна с отказом, её поля и сводка.
-  it('ошибка валидации каждой формы плана — 200 с её страницей и полями на языке отправителя; ответ персональный', async () => {
-    for (const { form, locale, page } of FORMS) {
+  // Ответ с ошибками — страница формы: её заголовок окна с отказом, её h1 и секция своей формы с полями и сводкой; другие
+  // секции страницы ответ не рисует.
+  it('ошибка валидации каждой формы плана — 200: страница формы, её h1 и своя форма с полями; ответ персональный', async () => {
+    for (const { form, locale, page, section } of FORMS) {
       const fields = filledFormOf(form)
       const response = await send(post({ ...fields, consent: '' }))
       const where = `${form.id} ${locale}`
@@ -159,9 +161,18 @@ describe('/api/contact', () => {
       expect(doc.title, where).toBe(
         failedTitle(locale, strategyPage(page, locale).meta?.title ?? ''),
       )
+      expect(doc.querySelector('h1')?.textContent?.trim(), where).toBe(
+        strategyPage(page, locale).h1,
+      )
+      expect(
+        [...doc.querySelectorAll('main > section')].map((child) =>
+          child.getAttribute('aria-labelledby'),
+        ),
+        where,
+      ).toEqual(['page-title', section])
       expect(doc.querySelectorAll('[role="alert"]'), where).toHaveLength(1)
       for (const field of form.fields.filter(({ id }) => id in fields)) {
-        expect(sentBack(doc, field.id), `${where} ${field.id}`).toBe(fields[field.id])
+        expect(sentBack(doc, form.id, field.id), `${where} ${field.id}`).toBe(fields[field.id])
       }
       expect(outlineFaults(headingLevels(doc)), where).toEqual([])
     }

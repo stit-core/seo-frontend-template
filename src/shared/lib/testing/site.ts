@@ -375,6 +375,7 @@ export const TEST_SITE = {
     page: {
       id: 'contacts',
       page_type: 'contacts-page',
+      seo: { h1: 'request.title' },
       legal: { privacy_policy: '/legal/privacy' },
     },
     sections: [

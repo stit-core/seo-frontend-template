@@ -1,6 +1,6 @@
 export type { FormEntry, FormPage } from './api/forms'
 export { formPageOf, formsOf } from './api/forms'
-export type { LeadContext, LeadOutcome, Refusal } from './api/handler'
+export type { LeadContext, LeadEntry, LeadOutcome, Refusal } from './api/handler'
 export { handleLeadRequest, refererLocale, refusalOf } from './api/handler'
 export { FORM_DICTS } from './config/dict'
 export { failedTitle } from './lib/text'

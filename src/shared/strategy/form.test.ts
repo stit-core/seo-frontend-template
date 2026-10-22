@@ -120,6 +120,21 @@ describe('форма действия плана — набор каталога
     },
   )
 
+  // Ответ формы с ошибками печатает h1 страницы — текст слота `seo.h1` её плана.
+  it('страница с формой — с заголовком плана на её языке; без `seo.h1` — ошибка сборки с ключом', () => {
+    expect([site.strategyPage('contacts', RU).h1, site.strategyPage('contacts', EN).h1]).toEqual([
+      'Заявка',
+      'Заявка (en)',
+    ])
+    const plan: Plan = TEST_SITE[PLAN]
+    const untitled = siteOf(
+      projectOf({ ...TEST_SITE, [PLAN]: { ...plan, page: { ...plan.page, seo: undefined } } }),
+    )
+    expect(() => untitled.strategyPage('contacts', RU)).toThrow(
+      'strategy: contacts/seo/h1 — у страницы с формой нет заголовка',
+    )
+  })
+
   it('мессенджер с готовым сообщением — ссылка с текстом слота messenger-prefill своей секции', () => {
     const request = site
       .strategyPage('contacts', RU)
@@ -197,7 +212,7 @@ describe('политика согласия формы', () => {
     [withPolicy({ seo: {} }, []), 'privacy/seo/h1 — у документа нет заголовка'],
     [
       withPolicy({ seo: { h1: 'policy.nope' } }, []),
-      'privacy/policy/nope — заголовок документа — не текст секции',
+      'privacy/policy/nope — заголовок страницы — не текст секции',
     ],
     [withPolicy({}, []), 'privacy/policy/date — у даты редакции документа нет факта'],
     [projectOf({}), 'privacy — нет плана'],

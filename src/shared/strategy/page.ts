@@ -16,6 +16,7 @@ import {
   type Fact,
   fail,
   hasBreadcrumbs,
+  headingOf,
   LeadFormsSchema,
   langOf,
   type Machine,
@@ -133,6 +134,9 @@ export interface StrategyPage extends MapEntry {
   // Мета copy deck; у шаблона коллекции заголовок и описание страницы даёт запись — меты нет.
   meta: Meta | undefined
   sections: Section[]
+  // Заголовок страницы — текст слота `seo.h1` плана на языке страницы; у шаблона коллекции его даёт запись, у плана без
+  // `seo.h1` его нет.
+  h1: string | undefined
   // Правовое плана: политика ПДн (`legal.privacy_policy`) — ссылка на её версию по карте, оператор ПДн и продавец
   // (`legal.operator_ref`) — факт языка страницы.
   policy: Link | undefined
@@ -362,15 +366,20 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
     return { id: fact.id, text: fact.verbatim[0], machine: fact.machine, binds }
   }
 
-  const sections = plan.sections.map((section): Section => {
-    const copy = page.sections.find((candidate) => candidate.section_id === section.id)
-    const textOf = (slot: string): string | undefined => {
-      const key = `${id}/${section.id}/${slot}`
-      const found = copy?.slots.find((candidate) => candidate.slot_id === slot)
-      if (found === undefined && template) return undefined
-      return chosenText(found ?? fail(key, `нет текста в copy deck ${locale}`), key)
-    }
+  // Заголовок страницы — слот `seo.h1` плана; у шаблона коллекции его даёт запись.
+  const heading = template ? undefined : headingOf(plan)
 
+  // Текст слота секции на языке страницы — выбранный вариант copy deck; у шаблона коллекции слот без текста даёт запись.
+  const textOf = (section: string, slot: string): string | undefined => {
+    const key = `${id}/${section}/${slot}`
+    const found = page.sections
+      .find((candidate) => candidate.section_id === section)
+      ?.slots.find((candidate) => candidate.slot_id === slot)
+    if (found === undefined && template) return undefined
+    return chosenText(found ?? fail(key, `нет текста в copy deck ${locale}`), key)
+  }
+
+  const sections = plan.sections.map((section): Section => {
     const slots: Slots = {}
     const instances = new Map<string, { group: string; slots: Slots }>()
     const blank = new Set<string>()
@@ -395,13 +404,15 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
     }
 
     for (const slot of section.slots.text) {
-      const text = textOf(slot.id)
+      const text = textOf(section.id, slot.id)
       place(slot, 'text', text, text === undefined)
     }
     for (const slot of section.slots.media) place(slot, 'media', undefined, true)
     for (const slot of section.slots.action) {
       const key = `${id}/${section.id}/${slot.id}`
       if (slot.form !== undefined) {
+        // Ответ формы с ошибками без JS называет страницу её заголовком: без него его не из чего напечатать.
+        if (heading === undefined) fail(`${id}/seo/h1`, 'у страницы с формой нет заголовка')
         const form = formOf(slot.form, key, facts, (route) =>
           address({ kind: 'route', value: route }, key),
         )
@@ -426,7 +437,10 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
           ? link
           : {
               ...link,
-              href: withPrefill(link.href, textOf(prefill) ?? fail(`${key}/prefill`, 'нет текста')),
+              href: withPrefill(
+                link.href,
+                textOf(section.id, prefill) ?? fail(`${key}/prefill`, 'нет текста'),
+              ),
             },
         false,
       )
@@ -480,6 +494,7 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
           ogDescription: meta?.og_description,
         },
     sections,
+    h1: heading && textOf(heading.section.id, heading.slot),
     policy:
       policy === undefined
         ? undefined
