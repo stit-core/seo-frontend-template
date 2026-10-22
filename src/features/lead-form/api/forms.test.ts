@@ -2,7 +2,8 @@ import { TEST_SITE, testLocale } from '@/shared/lib/testing'
 import { consentOf, policyOf, projectOf, strategyPage } from '@/shared/strategy'
 import { formPageOf, formsOf } from './forms'
 
-// Белый список — на локалях и проекте теста: форма — у контактов (ru и en), у «О студии» формы нет.
+// Белый список — на локалях и проекте теста: у контактов (ru и en) две формы — заявка и обратный звонок, у «О студии» формы
+// нет.
 vi.mock('@/shared/i18n', async (importOriginal) =>
   (await import('@/shared/lib/testing')).withTestLocales(importOriginal),
 )
@@ -26,7 +27,7 @@ const forms = formsOf([
 ])
 
 describe('белый список обработчика формы', () => {
-  // Форма — на второй странице реестра: её запись называет свою секцию и страницу, а не первую.
+  // Формы — на второй странице реестра, их две: запись каждой называет свою секцию и страницу, а не первые.
   it('формы плана страниц на каждом языке страницы — со своей секцией, страницей и политикой согласия', () => {
     expect(
       forms.map(({ form, section, locale, page }) => [
@@ -38,7 +39,9 @@ describe('белый список обработчика формы', () => {
       ]),
     ).toEqual([
       ['contacts/request', '/contacts', 'request', RU, 'contacts'],
+      ['contacts/callback', '/contacts', 'callback', RU, 'contacts'],
       ['contacts/request', '/en/contacts', 'request', EN, 'contacts'],
+      ['contacts/callback', '/en/contacts', 'callback', EN, 'contacts'],
     ])
     for (const { locale, policy, page } of forms) {
       expect(policy, locale).toEqual(policyOf(strategyPage('contacts', locale), consent))
@@ -48,7 +51,7 @@ describe('белый список обработчика формы', () => {
 
   // Ответ с ошибками печатает h1 страницы — текст слота `seo.h1` её плана на языке страницы.
   it('страница формы — с заголовком плана на её языке', () => {
-    expect(forms.map(({ page }) => page.h1)).toEqual(['Заявка', 'Заявка (en)'])
+    expect([...new Set(forms.map(({ page }) => page.h1))]).toEqual(['Заявка', 'Заявка (en)'])
   })
 
   it('модуль без плана — ошибка сборки', () => {
