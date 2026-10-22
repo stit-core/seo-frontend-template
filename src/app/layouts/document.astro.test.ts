@@ -6,6 +6,7 @@ import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES, t } from '@/shared/i18n'
 import { PACKAGE_LANDING, parseHtml, testLocale } from '@/shared/lib/testing'
 import { projectOf, siteOf, strategyPage } from '@/shared/strategy'
 import { jsonLdBlocks } from '../../../scripts/lib/html.mjs'
+import { RESOURCE_LINK } from '../../../scripts/lib/site-policy.mjs'
 import DocumentLayout from './document.astro'
 
 // Поле THEME, идентификатор счётчика и страницы островов в реестре — решения проекта: тест задаёт их и смотрит, что
@@ -105,6 +106,17 @@ async function render(
     root: document.documentElement,
     main: document.querySelector('main'),
     island: (name: string) => document.head.querySelector(`script[data-island="${name}"]`),
+    // Что браузер скачает сам: ресурсные <link> (та же мера, что у seo:check) и src элементов.
+    resources: [
+      ...[...document.querySelectorAll('link[href]')]
+        .filter((link) =>
+          (link.getAttribute('rel') ?? '').split(/\s+/).some((rel) => RESOURCE_LINK.test(rel)),
+        )
+        .map((link) => link.getAttribute('href') ?? ''),
+      ...[...document.querySelectorAll('[src]')].map(
+        (element) => element.getAttribute('src') ?? '',
+      ),
+    ],
     toggle: document.body.querySelector('[data-theme-toggle]'),
     colorScheme: document.querySelector('meta[name="color-scheme"]'),
   }
@@ -151,7 +163,8 @@ describe('DocumentLayout', () => {
   // переход остаётся первой ссылкой.
   it('остров счётчика и баннер согласия — вместе по строке счётчика: баннер до шапки, после перехода', async () => {
     const site = { default: 'system', switcher: true }
-    const home = strategyPage('home', DEFAULT_LOCALE)
+    // План каркаса со своей политикой ПДн: ссылка баннера — её адрес, а не адрес политики шаблона.
+    const home = { ...strategyPage('home', DEFAULT_LOCALE), policy: { href: '/legal/pd' } }
     const on = await render(site, { metrika: ['*'], chrome: home })
     const [skip, banner, next] = [...on.document.body.children]
     expect(on.island('metrika')?.getAttribute('data-counter')).toBe('12345678')
@@ -162,10 +175,18 @@ describe('DocumentLayout', () => {
     ]).toEqual(['#main', true, 'HEADER'])
     // Ссылка баннера — политика ПДн плана каркаса: её версия по карте.
     const link = banner?.querySelector('a')
-    expect([link?.getAttribute('href'), link?.getAttribute('hreflang') ?? undefined]).toEqual([
-      home.policy?.href,
-      home.policy?.hreflang,
+    expect([link?.getAttribute('href'), link?.hasAttribute('hreflang')]).toEqual([
+      '/legal/pd',
+      false,
     ])
+    // До согласия браузер не связывается со счётчиком: preconnect или dns-prefetch открыли бы соединение и отдали бы ему
+    // адрес посетителя.
+    expect(on.resources.length).toBeGreaterThan(0)
+    expect(
+      on.resources.filter(
+        (url) => new URL(url, 'https://demo.example').origin !== 'https://demo.example',
+      ),
+    ).toEqual([])
     const off = await render(site, { metrika: [], chrome: home })
     expect([off.island('metrika'), off.document.querySelector('[data-consent-banner]')]).toEqual([
       null,

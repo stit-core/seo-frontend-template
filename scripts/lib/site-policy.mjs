@@ -71,6 +71,11 @@ export const KB_SHA256 = {
 /** @type {string[]} */
 export const RESOURCE_ORIGINS = []
 
+// Связи <link>, по которым браузер сам что-то загружает; canonical, alternate, me, author, next и
+// прочие — ссылки, а не ресурсы.
+export const RESOURCE_LINK =
+  /^(stylesheet|preload|modulepreload|prefetch|preconnect|dns-prefetch|manifest|icon|apple-touch-icon|mask-icon)$/i
+
 /**
  * Хеш инлайн-скрипта или стиля в форме CSP.
  * @param {string} body

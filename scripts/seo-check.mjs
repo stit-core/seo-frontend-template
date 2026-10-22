@@ -90,6 +90,7 @@ import {
   NOINDEX_ROUTES,
   OG_IMAGE,
   ORG_TYPES,
+  RESOURCE_LINK,
   RESOURCE_ORIGINS,
   scriptsOf,
   scriptViolations,
@@ -321,11 +322,6 @@ function checkCss(where, css, page = false) {
     }
   }
 }
-
-// Связи <link>, по которым браузер сам что-то загружает; canonical, alternate, me, author, next и
-// прочие — ссылки, а не ресурсы.
-const RESOURCE_LINK =
-  /^(stylesheet|preload|modulepreload|prefetch|preconnect|dns-prefetch|manifest|icon|apple-touch-icon|mask-icon)$/i
 
 // Ресурсы документа: что браузер скачает сам (src, srcset, poster, data; ресурсные link; CSS в
 // <style> и в атрибутах style).

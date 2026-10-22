@@ -5,9 +5,10 @@ import { expectNoA11yViolations, parseHtml } from '@/shared/lib/testing'
 import ConsentBanner from './consent-banner.astro'
 
 const container = await AstroContainer.create()
+// Политика ПДн плана — по адресу, которого нет у шаблона: ссылка баннера — адрес плана, а не литерал.
 const render = (
   locale = DEFAULT_LOCALE,
-  policy: { href: string; hreflang?: string } = { href: '/legal/privacy' },
+  policy: { href: string; hreflang?: string } = { href: '/legal/pd' },
 ) => container.renderToString(ConsentBanner, { props: { locale, policy } })
 
 describe('ConsentBanner', () => {
@@ -42,7 +43,7 @@ describe('ConsentBanner', () => {
       expect(new Set(buttons.map((button) => button.getAttribute('class'))).size).toBe(1)
       const link = region?.querySelector('a')
       expect([link?.getAttribute('href'), link?.hasAttribute('hreflang')]).toEqual([
-        '/legal/privacy',
+        '/legal/pd',
         false,
       ])
       // Весь текст баннера — микрокопия словаря на языке страницы: каждый текст — свой элемент, других букв нет.
@@ -61,10 +62,10 @@ describe('ConsentBanner', () => {
 
   it('политика без версии на языке страницы — ссылка на версию другого языка с её hreflang', async () => {
     const link = parseHtml(
-      await render(DEFAULT_LOCALE, { href: '/legal/privacy', hreflang: 'xx' }),
+      await render(DEFAULT_LOCALE, { href: '/legal/pd', hreflang: 'xx' }),
     ).querySelector('[data-consent-banner] a')
     expect([link?.getAttribute('href'), link?.getAttribute('hreflang')]).toEqual([
-      '/legal/privacy',
+      '/legal/pd',
       'xx',
     ])
   })

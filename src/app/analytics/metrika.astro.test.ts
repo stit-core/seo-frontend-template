@@ -32,7 +32,7 @@ const browser = () => {
       suppressInsecureJavaScriptEnvironmentWarning: true,
       disableJavaScriptFileLoading: true,
       handleDisabledFileLoadingAsSuccess: true,
-      // В happy-dom нет requestIdleCallback: остров ждёт запасным таймером, здесь — без паузы.
+      // Простой браузера и запасной таймер острова — без паузы.
       timer: { maxTimeout: 0 },
     },
   })
@@ -40,12 +40,23 @@ const browser = () => {
   return opened
 }
 
+interface Visit {
+  stored?: string | null
+  storage?: boolean
+}
+
 // Остров исполняется в happy-dom как в браузере. Вход — выбор прошлого визита в хранилище; выходы — баннер страницы,
-// загрузчик счётчика, очередь его вызовов и хранилище.
-function open({ stored, storage = true }: { stored?: string | null; storage?: boolean } = {}) {
+// загрузчик счётчика, очередь его вызовов и хранилище. `idle` — браузер с `requestIdleCallback` (Chromium): в happy-dom
+// его нет, без заглушки остров ждёт запасным таймером (Safari).
+function openIn(idle: boolean, { stored, storage = true }: Visit = {}) {
   const page = browser().newPage()
   page.url = 'https://demo.example/blog/zapis'
   const { window } = page.mainFrame
+  if (idle) {
+    Object.assign(window, {
+      requestIdleCallback: (callback: () => void) => window.setTimeout(callback),
+    })
+  }
   if (!storage) {
     // Хранилище закрыто настройкой браузера: обращение к нему бросает.
     Object.defineProperty(window, 'localStorage', {
@@ -114,11 +125,13 @@ describe('Metrika — остров согласия со счётчиком', ()
     expectTypeOf<typeof SharedConfig.METRIKA_ID>().toEqualTypeOf<string>()
   })
 
-  it('один инлайн-скрипт без загрузки — в бюджете своей строки реестра с запасом', () => {
+  it('один инлайн-скрипт без загрузки и больше ничего — в бюджете своей строки реестра с запасом', () => {
     const scripts = island.match(/<script[^>]*>[\s\S]*?<\/script>/g) ?? []
     expect(scripts).toHaveLength(1)
     const [script = ''] = scripts
     expect(script).not.toMatch(/<script[^>]*\ssrc=/)
+    // Вывод острова — только его тег: preconnect или dns-prefetch рядом открыли бы соединение со счётчиком до согласия.
+    expect(island.trim()).toBe(script)
     // Сборка шаблона остров не печатает: его вес сверяет только этот тест — той же мерой, что seo:check.
     // Бюджет — норма реестра: факт с запасом 10 %, округлённый вверх до 25 Б, — не меньше и не больше.
     const norm = brotliBytes(script) * 1.1
@@ -135,6 +148,14 @@ describe('Metrika — остров согласия со счётчиком', ()
       expect(html).toContain(`data-counter="${id}"`)
     }
   })
+})
+
+// Счётчик ждёт простоя браузера: ветку `requestIdleCallback` идёт Chromium, запасной таймер — браузер без него.
+describe.each([
+  ['браузер с requestIdleCallback', true],
+  ['браузер без него — запасной таймер', false],
+])('Metrika — поведение: %s', (_, idle) => {
+  const open = (visit: Visit = {}) => openIn(idle, visit)
 
   it('до выбора баннер открыт, а счётчика нет — ни загрузчика, ни очереди, и после простоя браузера', async () => {
     const page = open()
