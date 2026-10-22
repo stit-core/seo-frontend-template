@@ -294,6 +294,8 @@ GEO-шаг `/seo-audit`; облик сменный — ДС одним файл�
 первый план `blocks-content-model` закрыт (`M/acceptance-blocks-content-model.md`): страница — блоки каталога в порядке
 секций плана, тексты — copy deck по ключу, контакты и реквизиты — факты `strategy/`; локали 1…N — гейт правкой данных;
 head — мета copy deck и типы JSON-LD плана; ворота strategy с планом шаблона — B только SG-CONTENT-05. Дальше — второй
-план фазы, `forms-consent-collections`. Параллельным треком идёт S10 — P9 `template-lifecycle`: этапы A (kinship и
-`docs/research` удалены) и B (версия обвязки `.template/` и `template:update`, `check:prose`) приняты и влиты в `main`,
-на ветке `p9-lifecycle` — фиксы этапа C (`check:identity`, `check:stack`).
+план фазы, `forms-consent-collections`. Параллельными треками: S10 — P9 `template-lifecycle` — этапы A–C (kinship и
+`docs/research` удалены; версия обвязки `.template/` и `template:update`; `check:prose`, `check:identity`,
+`check:stack`) приняты и влиты в `main`, этапы D–F — после P8; S9 — P8 `stitch-strategy` на ветке `p8-stitch` — этап A
+(`strategy:sync`, `check:strategy`, сборка по манифесту) — фиксы после валидатора, идёт этап C (`--final`, ворота
+strategy), этап B — после вливания этапа A.
