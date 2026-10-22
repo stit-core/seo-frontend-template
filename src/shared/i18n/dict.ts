@@ -76,9 +76,11 @@ export type DictKey = keyof (typeof DICTS)[Locale]
 
 // Словари — на каждую локаль дескриптора: интерфейса (здесь) и слайсов (форма). Строка — по ключу на языке страницы,
 // `{имя}` в строке — подстановка из `params`: порядок слов и место числа задаёт словарь языка, а не склейка в коде.
-// Подстановки нет — ошибка сборки.
+// Подстановки нет — ошибка сборки. Ключ из данных (поле формы каталога) проверяет `has`: ключи у словарей локалей одни
+// (тест словаря), поэтому строка есть на каждом языке или ни на одном.
 export function dictionary<D extends Record<Locale, Readonly<Record<string, string>>>>(dicts: D) {
-  return (
+  const keys = new Set(Object.values(dicts).flatMap((dict) => Object.keys(dict)))
+  const text = (
     locale: Locale,
     key: keyof D[Locale] & string,
     params: Readonly<Record<string, string | number>> = {},
@@ -88,6 +90,9 @@ export function dictionary<D extends Record<Locale, Readonly<Record<string, stri
       if (value === undefined) throw new Error(`i18n: ${key} — нет подстановки {${name}}`)
       return String(value)
     })
+  return Object.assign(text, {
+    has: (key: string): key is keyof D[Locale] & string => keys.has(key),
+  })
 }
 
 export const t = dictionary(DICTS)

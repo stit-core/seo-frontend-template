@@ -1,6 +1,5 @@
 import { getRuntimeConfig, type RuntimeConfig, SITE_NAME } from '@/shared/config'
 import { DEFAULT_LOCALE } from '@/shared/i18n'
-import { FORM_DICTS } from '../config/dict'
 import { t } from '../lib/text'
 
 // Запись согласия (`defaults.consent.record` каталога) — доказательство на стороне канала (152-ФЗ ст. 9 ч. 3): редакция
@@ -39,7 +38,7 @@ const sleep = (ms: number): Promise<void> => new Promise((done) => setTimeout(do
 
 // Письмо оператору — на основном языке сайта: подписи полей и вариантов — словарь формы, метки рекламы — по именам каталога.
 const word = (key: string, fallback: string): string =>
-  (FORM_DICTS[DEFAULT_LOCALE] as Readonly<Record<string, string>>)[key] ?? fallback
+  t.has(key) ? t(DEFAULT_LOCALE, key) : fallback
 
 const leadText = ({ fields, hidden, consent }: Lead): string =>
   [

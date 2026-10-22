@@ -16,9 +16,9 @@ export function testLocale(code: TestCode): I18n.Locale {
   return text as I18n.Locale
 }
 
-// Модуль `@/shared/i18n` на локалях теста — фабрика `vi.mock`: правила адреса — по TEST_LOCALES; строка словаря и
-// дата — дефолтной локали сайта, у не первой локали теста — с её кодом в скобках: тест видит, на каком языке компонент
-// их спросил, и не зависит от словарей сайта.
+// Модуль `@/shared/i18n` на локалях теста — фабрика `vi.mock`: правила адреса — по TEST_LOCALES; строка словаря (и
+// словаря слайса — `dictionary`) и дата — дефолтной локали сайта, у не первой локали теста — с её кодом в скобках: тест
+// видит, на каком языке компонент их спросил, и не зависит от словарей сайта.
 export async function withTestLocales(importOriginal: () => Promise<unknown>) {
   const i18n = (await importOriginal()) as typeof I18n
   const marked = (locale: string, text: string) =>
@@ -26,6 +26,14 @@ export async function withTestLocales(importOriginal: () => Promise<unknown>) {
   return {
     ...i18n,
     ...i18n.localeRules(TEST_LOCALES),
+    dictionary: ((dicts) => {
+      const site = i18n.dictionary(dicts)
+      return Object.assign(
+        (locale: string, key: string, params?: Readonly<Record<string, string | number>>) =>
+          marked(locale, site(i18n.DEFAULT_LOCALE, key, params)),
+        { has: site.has },
+      )
+    }) as typeof i18n.dictionary,
     t: (locale: string, key: I18n.DictKey, params?: Readonly<Record<string, string | number>>) =>
       marked(locale, i18n.t(i18n.DEFAULT_LOCALE, key, params)),
     formatDate: (locale: string, date: Date) =>
