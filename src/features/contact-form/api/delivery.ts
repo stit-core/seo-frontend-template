@@ -1,4 +1,4 @@
-import { getRuntimeConfig, type RuntimeConfig, type RuntimeEnv, SITE_NAME } from '@/shared/config'
+import { getRuntimeConfig, type RuntimeConfig, SITE_NAME } from '@/shared/config'
 import type { Contact } from '../model/schema'
 
 export interface Lead extends Contact {
@@ -11,11 +11,6 @@ export interface Lead extends Contact {
 export interface DeliveryResult {
   channel: RuntimeConfig['FORM_DELIVERY']
   attempts: number
-}
-
-export interface DeliveryOptions {
-  env?: RuntimeEnv
-  retryDelaysMs?: readonly number[]
 }
 
 // Один канал с ретраями: отправитель ждёт ответа формы, поэтому попыток мало и они короткие.
@@ -99,21 +94,17 @@ const send = (lead: Lead, target: Target): Promise<void> =>
   target.channel === 'smtp' ? sendViaSmtp(lead, target) : sendViaBackend(lead, target)
 
 // Бросает, если ни одна попытка не прошла: ответ формы об этом честно говорит.
-export async function deliverLead(
-  lead: Lead,
-  options: DeliveryOptions = {},
-): Promise<DeliveryResult> {
-  const target = resolveTarget(getRuntimeConfig(options.env))
-  const delays = options.retryDelaysMs ?? RETRY_DELAYS_MS
+export async function deliverLead(lead: Lead): Promise<DeliveryResult> {
+  const target = resolveTarget(getRuntimeConfig())
 
   let lastError: unknown
-  for (let attempt = 1; attempt <= delays.length + 1; attempt++) {
+  for (let attempt = 1; attempt <= RETRY_DELAYS_MS.length + 1; attempt++) {
     try {
       await send(lead, target)
       return { channel: target.channel, attempts: attempt }
     } catch (error) {
       lastError = error
-      const delay = delays[attempt - 1]
+      const delay = RETRY_DELAYS_MS[attempt - 1]
       if (delay !== undefined) await sleep(delay)
     }
   }

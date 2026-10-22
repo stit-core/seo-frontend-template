@@ -138,7 +138,7 @@ stable-артефакта сверяет `pnpm check:stack`.
 **Секции**: `Входящие обработчики`, `Антиспам-лестница`, `Доставка заявки`,
 `Внешние источники данных`, `Generates`.
 
-**Generates**: `src/pages/api/**`, слайс формы, шов капчи, строки в карте маршрутов и в
+**Generates**: `src/pages/api/**`, слайс формы, строки в карте маршрутов и в
 требованиях к edge `infra-handoff.md`, `e2e/{http,browser}/forms.spec.ts`, env формы в `config.md`.
 
 **Cross-kind**: rate-limit на публичный POST — **требование деплоя**, строка в

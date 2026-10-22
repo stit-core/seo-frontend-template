@@ -120,7 +120,7 @@ src/entities/     post: content/<locale>/*.md + covers/, model, api, lib; author
 src/shared/       config (runtime env, Zod; идентичность сайта), i18n, lib (+ testing), redirects,
                   seo (absoluteUrl, hreflang, SeoHead, JSON-LD, robots/sitemap/rss), strategy (чтение
                   снимка: страница и шаблон коллекции — модулем по id, секции плана, тексты по ключу,
-                  факты, мета; контракт блока), antispam (шов капчи),
+                  факты, мета; контракт блока), antispam (ступени антиспам-лестницы формы),
                   observability (JSON-лог с порогом LOG_LEVEL, Sentry по DSN), ui
 src/{content.config,middleware,env.d}.ts   навязанные Astro entry — тонкие входы
 docker/           Dockerfile (4 стадии), entrypoint.sh + stamp.mjs (штамповка SITE_URL), server.mjs
@@ -159,7 +159,7 @@ Zod-схему (`title` 25–65, `description` 70–170, `pubDate`, `tags`, `tra
 
 `/contacts` — обычная HTML-форма без JavaScript: браузер шлёт POST на `/api/contact`, сервер
 проходит лестницу origin-check → лимит и форма тела → honeypot → валидация (согласие на
-обработку ПДн проверяется и на сервере) → шов капчи и доставляет заявку одним каналом
+обработку ПДн проверяется и на сервере) и доставляет заявку одним каналом
 (`FORM_DELIVERY=smtp|backend`, три попытки). Успех — 303 на `/contacts/spasibo`, ошибка — та же
 страница с сохранёнными полями, сбой канала — честный 500; отказ до разбора заявки — короткий
 текст (403, 400, 413). Тело заявки не логируется. Rate-limit на этот путь ставится на edge —

@@ -4,11 +4,8 @@ import { captureServerError, type LogLevel, log } from '@/shared/observability'
 import { goneResponse } from './gone'
 import { resolveRequest } from './redirects'
 
-// Всё ниже действует только на on-demand маршрутах: prerendered-страницы отдаёт
-// статик-хендлер адаптера раньше приложения (со своими `Cache-Control: public, max-age=0`
-// и ETag), и middleware их не видит — поэтому `X-Robots-Tag` staging ставит обёртка процесса
-// (docker/server.mjs) на каждый ответ. Путь без файла до приложения доходит — 404-страница
-// on-demand.
+// Только on-demand маршруты: prerendered-страницы отдаёт статик-хендлер адаптера раньше приложения — заголовки
+// staging у них ставит обёртка процесса (docker/server.mjs).
 export const onRequest = defineMiddleware(async (context, next) => {
   if (context.isPrerendered) return next()
 

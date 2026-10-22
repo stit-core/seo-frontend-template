@@ -14,9 +14,6 @@ describe('runtime config', () => {
     SMTP_URL: '',
     FORM_TO: '',
     FORM_FROM: '',
-    CAPTCHA_PROVIDER: 'none',
-    CAPTCHA_SECRET: '',
-    CAPTCHA_FAIL_MODE: 'open',
     KEEP_ALIVE_TIMEOUT_MS: 95_000,
     SHUTDOWN_TIMEOUT_MS: 15_000,
   }
@@ -33,7 +30,6 @@ describe('runtime config', () => {
     expect(getRuntimeConfig({ RELEASE: '' }).RELEASE).toBe('unknown')
     expect(getRuntimeConfig({ LOG_LEVEL: '' }).LOG_LEVEL).toBe('info')
     expect(getRuntimeConfig({ FORM_DELIVERY: '' }).FORM_DELIVERY).toBe('smtp')
-    expect(getRuntimeConfig({ CAPTCHA_FAIL_MODE: '' }).CAPTCHA_FAIL_MODE).toBe('open')
   })
 
   it('секреты формы и Sentry принимаются как есть, канал доставки — из списка', () => {
@@ -53,8 +49,6 @@ describe('runtime config', () => {
       SENTRY_ENVIRONMENT: 'staging',
     })
     expect(() => getRuntimeConfig({ FORM_DELIVERY: 'telegram' })).toThrow()
-    expect(() => getRuntimeConfig({ CAPTCHA_PROVIDER: 'smartcaptcha' })).toThrow()
-    expect(() => getRuntimeConfig({ CAPTCHA_FAIL_MODE: 'half' })).toThrow()
   })
 
   it('срезает хвостовые слеши SITE_URL', () => {

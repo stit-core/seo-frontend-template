@@ -138,8 +138,6 @@ origin из runtime `SITE_URL` (`Astro.site` для URL не используе�
 | `SMTP_URL` | строка подключения SMTP (`smtps://user:pass@host`) — канал `smtp` | `''` | нет (секрет) |
 | `FORM_TO` / `FORM_FROM` | получатель и отправитель письма с заявкой — канал `smtp` | `''` | нет |
 | `FORM_BACKEND_URL` | адрес внутреннего сервиса, принимающего заявку JSON-ом — канал `backend` | `''` | нет |
-| `CAPTCHA_PROVIDER` | шов капчи; реализаций провайдеров в шаблоне нет | `none` | нет |
-| `CAPTCHA_SECRET` / `CAPTCHA_FAIL_MODE` | ключ верификации и поведение при недоступности провайдера (`open` \| `closed`) | `''` / `open` | нет (секрет) |
 | `SENTRY_DSN` / `SENTRY_ENVIRONMENT` | отправка серверных исключений; пусто — `@sentry/node` не грузится | `''` / `production` | нет |
 
 Пустое значение (`ROBOTS_POLICY=`) равносильно незаданному — берётся дефолт; значение вне

@@ -137,10 +137,8 @@ export default defineConfig({
   })),
   integrations: [closedImageEndpoint, sitemapFromBuild],
   output: 'static',
-  // Дефолтный лимит тела у адаптера — 1 ГиБ, а разбор формы буферизует тело в heap процесса
-  // (`--max-old-space-size=384`): предел на порядок ниже потолка памяти. Свой, куда более
-  // тесный предел формы держит `features/contact-form` по Content-Length; тело без длины
-  // (chunked) в процессе ограничивает только этот.
+  // Лимит тела адаптера — предел тела без длины (chunked) у формы: дефолт 1 ГиБ выше потолка памяти процесса
+  // (rule forms-antispam).
   adapter: node({
     mode: 'standalone',
     experimentalDisableStreaming: true,
@@ -150,9 +148,8 @@ export default defineConfig({
     staticHeaders: true,
   }),
   security: {
-    // За TLS-терминирующим прокси адаптер строит URL запроса как `http://<Host>`, и встроенная
-    // проверка отвечала бы 403 на любой POST формы из браузера. Origin заявки сверяет
-    // `features/contact-form` — с runtime `SITE_URL`, до которого прокси не дотягивается.
+    // Origin заявки сверяет ступень лестницы shared/antispam: встроенная проверка за прокси отвечала бы 403 на любой
+    // POST формы (rule forms-antispam).
     checkOrigin: false,
     // CSP на каждой странице: on-demand — заголовок ответа, prerendered — статик-хендлер.
     // Директивы и хеши островов — политика сборки (scripts/lib/site-policy.mjs).

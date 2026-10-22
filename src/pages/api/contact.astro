@@ -50,6 +50,6 @@ Astro.response.headers.set('cache-control', 'private, no-store')
   locale={outcome.locale}
   values={outcome.values}
   errors={outcome.status === 'invalid' ? outcome.errors : undefined}
-  notice={outcome.notice}
+  notice={outcome.status === 'failed' ? outcome.notice : undefined}
   noindex
 />

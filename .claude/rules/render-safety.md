@@ -117,7 +117,6 @@ CSP у prerendered-страниц одна на все: запись `_headers.j
 браузерный — на нарушении CSP; поэтому стиль страницы — файл (сборка не встраивает ничего). Атрибут
 `style` в теле записи CSP блокирует так же — его отклоняет `check:content` до сборки.
 
-Два значения там же живут ради единственного POST-маршрута: `security.checkOrigin: false`
-(за прокси адаптер строит URL запроса как `http://<Host>` — origin сверяет `contact-form` с
-runtime `SITE_URL`) и `bodySizeLimit` адаптера (дефолт 1 ГиБ выше потолка памяти процесса).
-Правило — `.claude/rules/forms-antispam.md`.
+Два значения там же живут ради единственного POST-маршрута формы — `security.checkOrigin: false`
+(origin заявки сверяет ступень `shared/antispam`) и `bodySizeLimit` адаптера (1 МБ вместо дефолта
+1 ГиБ); почему — rule `forms-antispam`.

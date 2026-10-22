@@ -48,11 +48,6 @@ const RuntimeConfigSchema = z.object({
   SMTP_URL: z.string().default(''),
   FORM_TO: z.string().default(''),
   FORM_FROM: z.string().default(''),
-  // Шов капчи: реализаций провайдеров в шаблоне нет, ступени honeypot и origin-check от неё
-  // не зависят. Провайдер добавляется вместе со значением enum (shared/antispam).
-  CAPTCHA_PROVIDER: z.enum(['none']).default('none'),
-  CAPTCHA_SECRET: z.string().default(''),
-  CAPTCHA_FAIL_MODE: z.enum(['open', 'closed']).default('open'),
   // Обёртка сервера (docker/server.mjs): keep-alive дольше idle-соединения прокси (у Traefik — 90 с),
   // дренаж на SIGTERM.
   KEEP_ALIVE_TIMEOUT_MS: milliseconds(95_000),

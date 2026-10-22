@@ -44,7 +44,6 @@ const ru = {
   'form.error.email': 'Адрес почты с @ и доменом: на него придёт ответ.',
   'form.error.message': 'Сообщение — от 10 до 2000 знаков.',
   'form.error.consent': 'Без согласия на обработку данных заявку принять нельзя.',
-  'form.error.captcha': 'Проверка не пройдена. Отправьте форму ещё раз.',
   'form.error.delivery': 'Заявка не ушла: сбой доставки. Напишите на почту — адрес ниже.',
 }
 
@@ -89,7 +88,6 @@ const en = {
   'form.error.email': 'An email address with @ and a domain: the reply goes there.',
   'form.error.message': 'Message — from 10 to 2000 characters.',
   'form.error.consent': 'Without consent to data processing the request cannot be accepted.',
-  'form.error.captcha': 'The check did not pass. Send the form again.',
   'form.error.delivery':
     'The request did not go through: delivery failed. Write to the email below.',
 }

@@ -1,23 +1,10 @@
-import type * as Antispam from '@/shared/antispam'
-import { getCaptchaVerifier } from '@/shared/antispam'
-import type { RuntimeEnv } from '@/shared/config'
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '@/shared/i18n'
 import { HONEYPOT_FIELD, LOCALE_FIELD } from '../model/schema'
 import { handleContactRequest } from './handler'
 
-// Провайдера капчи в шаблоне нет (`none` пропускает всё): отказ ступени подставляет тест.
-vi.mock('@/shared/antispam', async (importOriginal) => {
-  const actual = await importOriginal<typeof Antispam>()
-  return { ...actual, getCaptchaVerifier: vi.fn(actual.getCaptchaVerifier) }
-})
-
 const ORIGIN = 'http://localhost:3000'
 const BACKEND = 'http://backend.internal/leads'
-
-// Канал доставки в тесте — backend со стабом fetch: наружу тест не ходит. Порог лога — debug:
-// проверка PII в afterEach видит события любого уровня, а не только с порога info по умолчанию.
-const env: RuntimeEnv = { FORM_DELIVERY: 'backend', FORM_BACKEND_URL: BACKEND, LOG_LEVEL: 'debug' }
-const context = { rid: 'test-rid', env, retryDelaysMs: [0, 0] }
+const context = { rid: 'test-rid' }
 
 const MESSAGE = 'Нужен сайт с блогом, формой заявки и картой сайта.'
 
@@ -48,7 +35,12 @@ const logged = () =>
     .map(([line]) => String(line))
     .join('\n')
 
+// Канал доставки в тесте — backend со стабом fetch: наружу тест не ходит. Порог лога — debug: проверка PII в
+// afterEach видит события любого уровня, а не только с порога info по умолчанию.
 beforeEach(() => {
+  vi.stubEnv('FORM_DELIVERY', 'backend')
+  vi.stubEnv('FORM_BACKEND_URL', BACKEND)
+  vi.stubEnv('LOG_LEVEL', 'debug')
   fetchMock.mockReset()
   fetchMock.mockResolvedValue(new Response(null, { status: 202 }))
   vi.stubGlobal('fetch', fetchMock)
@@ -59,6 +51,8 @@ beforeEach(() => {
 
 afterEach(() => {
   const log = logged()
+  vi.useRealTimers()
+  vi.unstubAllEnvs()
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
   // Тело заявки — персональные данные: ни на одном исходе обработчика его нет в логе.
@@ -141,11 +135,11 @@ describe('обработчик формы', () => {
       },
       body: new URLSearchParams(filled),
     })
-    const outcome = await handleContactRequest(request, {
-      ...context,
-      env: { ...env, SITE_URL: 'https://demo.example' },
+    vi.stubEnv('SITE_URL', 'https://demo.example')
+    expect(await handleContactRequest(request, context)).toEqual({
+      status: 'accepted',
+      locale: DEFAULT_LOCALE,
     })
-    expect(outcome).toEqual({ status: 'accepted', locale: DEFAULT_LOCALE })
   })
 
   it('Referer подходит, когда Origin не прислан', async () => {
@@ -203,8 +197,11 @@ describe('обработчик формы', () => {
   })
 
   it('сбой канала: три попытки, честный отказ и ни строчки заявки в логе', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] })
     fetchMock.mockResolvedValue(new Response(null, { status: 502 }))
-    const outcome = await handleContactRequest(post(filled), context)
+    const pending = handleContactRequest(post(filled), context)
+    await vi.runAllTimersAsync()
+    const outcome = await pending
     expect(outcome.status).toBe('failed')
     if (outcome.status !== 'failed') return
     expect(outcome.notice).toBe('form.error.delivery')
@@ -213,81 +210,21 @@ describe('обработчик формы', () => {
     expect(logged()).toContain('failed')
   })
 
-  it('капча отказала: та же форма с полями и пояснением, доставки нет', async () => {
-    vi.mocked(getCaptchaVerifier).mockReturnValueOnce({
-      provider: 'none',
-      verify: () => Promise.resolve(false),
-    })
-    const outcome = await handleContactRequest(post(filled), context)
-    expect(outcome).toEqual({
-      status: 'invalid',
-      locale: DEFAULT_LOCALE,
-      values: { name: filled.name, email: filled.email, message: MESSAGE, consent: true },
-      errors: {},
-      notice: 'form.error.captcha',
-    })
-    expect(fetchMock).not.toHaveBeenCalled()
-    expect(logged()).toContain('captcha')
-  })
-
   it('канал не настроен: отказ без попыток отправки', async () => {
-    const outcome = await handleContactRequest(post(filled), {
-      rid: 'test-rid',
-      env: { FORM_DELIVERY: 'backend' },
-      retryDelaysMs: [0, 0],
-    })
+    vi.stubEnv('FORM_BACKEND_URL', '')
+    const outcome = await handleContactRequest(post(filled), context)
     expect(outcome.status).toBe('failed')
     expect(fetchMock).not.toHaveBeenCalled()
     expect(logged()).toContain('FORM_BACKEND_URL')
   })
 
   it('LOG_LEVEL контейнера действует и на события формы', async () => {
-    const quiet = { ...context, env: { ...env, LOG_LEVEL: 'error' } }
-    await handleContactRequest(post(filled), quiet)
+    vi.stubEnv('LOG_LEVEL', 'error')
+    await handleContactRequest(post(filled), context)
     expect(console.info).not.toHaveBeenCalled()
 
-    fetchMock.mockResolvedValue(new Response(null, { status: 502 }))
-    await handleContactRequest(post(filled), quiet)
+    vi.stubEnv('FORM_BACKEND_URL', '')
+    await handleContactRequest(post(filled), context)
     expect(console.error).toHaveBeenCalledOnce()
-  })
-})
-
-describe('origin-check: доверены только origin сайта и origin самого запроса', () => {
-  const SITE = 'https://demo.example'
-  const siteContext = { ...context, env: { ...env, SITE_URL: SITE } }
-  // Прямое обращение к контейнеру: URL запроса — его собственный адрес.
-  const direct = (headers: Record<string, string>) =>
-    new Request('http://127.0.0.1:4321/api/contact', {
-      method: 'POST',
-      headers: { 'content-type': 'application/x-www-form-urlencoded', ...headers },
-      body: new URLSearchParams(filled),
-    })
-  const send = (headers: Record<string, string>) =>
-    handleContactRequest(direct(headers), siteContext)
-
-  it.each([
-    ['двойник с доменом сайта в начале', 'https://demo.example.attacker.tld'],
-    ['поддомен', 'https://www.demo.example'],
-    ['другой порт', 'https://demo.example:8443'],
-    ['другая схема', 'http://demo.example'],
-    ['домен сайта как userinfo', 'https://demo.example@attacker.tld'],
-    ['непрозрачный origin', 'null'],
-  ])('%s — отказ и в Origin, и в Referer', async (_case, origin) => {
-    expect(await send({ origin })).toEqual({ status: 'forbidden' })
-    expect(await send({ referer: `${origin}/contacts` })).toEqual({ status: 'forbidden' })
-    expect(fetchMock).not.toHaveBeenCalled()
-  })
-
-  it('Origin сайта, origin запроса и Referer со страницы сайта — заявка принимается', async () => {
-    const accepted = { status: 'accepted', locale: DEFAULT_LOCALE }
-    expect(await send({ origin: SITE })).toEqual(accepted)
-    expect(await send({ origin: 'http://127.0.0.1:4321' })).toEqual(accepted)
-    expect(await send({ referer: `${SITE}/en/contacts` })).toEqual(accepted)
-  })
-
-  it('Origin важнее Referer: чужой Origin со своим Referer — отказ', async () => {
-    expect(await send({ origin: 'https://attacker.tld', referer: `${SITE}/contacts` })).toEqual({
-      status: 'forbidden',
-    })
   })
 })

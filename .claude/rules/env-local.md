@@ -59,7 +59,7 @@ env читает серверный код (`.ts`), а не разметка: `g
 «в HTML?» таблицы `docs/reference/deployment.md` — для каждого ключа.
 
 **Публичный per-site идентификатор — не env, а поле `shared/config/site.ts`** (`METRIKA_ID`,
-`SITE_VERIFICATION`, при появлении — site-key капчи): prerendered-страница печатается на
+`SITE_VERIFICATION`): prerendered-страница печатается на
 сборке, образ собирается без env, и runtime-значение до неё не доходит. Пустое значение
 означает «ничего не печатать»; тип поля — `string`, а не литерал пустой строки: с проектным
 значением проверка «задано ли» иначе не компилируется (держит тест типа у потребителя). Проектные
@@ -72,7 +72,7 @@ env: их читает on-demand код (`api/contact`, наблюдаемост
 
 - `.env.example` — закоммичен, описывает runtime env с дефолтами; `.env*` — в `.gitignore`;
   локальный `.env` читает только `pnpm start`, в образ он не попадает
-- Секреты — только env контейнера (`SMTP_URL`, `FORM_BACKEND_URL`, `CAPTCHA_SECRET`); в логах —
+- Секреты — только env контейнера (`SMTP_URL`, `FORM_BACKEND_URL`); в логах —
   без PII, без тел запросов и без тела заявки. Пишет один `log()` (`shared/observability`) с
   порогом `LOG_LEVEL` — и middleware, и форма (`console` в `src` вне `log.ts` и тестов валит
   ESLint); Sentry DSN public by design, но пустой по

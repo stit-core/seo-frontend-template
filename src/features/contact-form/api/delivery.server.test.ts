@@ -19,25 +19,32 @@ const lead: Lead = {
 }
 
 // FORM_DELIVERY не задан — канал по умолчанию, smtp.
-const env = {
+const SMTP = {
   SMTP_URL: 'smtp://mail.internal:25',
   FORM_TO: 'sales@example.com',
   FORM_FROM: 'site@example.com',
 }
 
 beforeEach(() => {
+  for (const [key, value] of Object.entries(SMTP)) vi.stubEnv(key, value)
   smtp.sendMail.mockResolvedValue({})
+})
+
+afterEach(() => {
+  vi.useRealTimers()
+  vi.unstubAllEnvs()
+  vi.unstubAllGlobals()
 })
 
 describe('доставка заявки: канал smtp', () => {
   it('одно письмо оператору: ответ — отправителю, в тексте заявка и доказательство согласия', async () => {
-    expect(await deliverLead(lead, { env, retryDelaysMs: [0, 0] })).toEqual({
+    expect(await deliverLead(lead)).toEqual({
       channel: 'smtp',
       attempts: 1,
     })
     // Дефолты nodemailer — минуты; отправитель формы столько не ждёт.
     expect(smtp.createTransport).toHaveBeenCalledWith({
-      url: env.SMTP_URL,
+      url: SMTP.SMTP_URL,
       connectionTimeout: 5000,
       greetingTimeout: 5000,
       socketTimeout: 5000,
@@ -63,17 +70,20 @@ describe('доставка заявки: канал smtp', () => {
   })
 
   it('сбой сервера: три попытки, транспорт закрывается после каждой, ошибка — наружу', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout'] })
     smtp.sendMail.mockRejectedValue(new Error('421 try again later'))
-    await expect(deliverLead(lead, { env, retryDelaysMs: [0, 0] })).rejects.toThrow(
-      '421 try again later',
-    )
+    const refused = expect(deliverLead(lead)).rejects.toThrow('421 try again later')
+    await vi.runAllTimersAsync()
+    await refused
     expect(smtp.sendMail).toHaveBeenCalledTimes(3)
     expect(smtp.close).toHaveBeenCalledTimes(3)
   })
 
   it('канал не настроен: отказ с именем переменной, без попыток', async () => {
     for (const key of ['SMTP_URL', 'FORM_TO', 'FORM_FROM'] as const) {
-      await expect(deliverLead(lead, { env: { ...env, [key]: '' } })).rejects.toThrow(key)
+      vi.stubEnv(key, '')
+      await expect(deliverLead(lead)).rejects.toThrow(key)
+      vi.stubEnv(key, SMTP[key])
     }
     expect(smtp.createTransport).not.toHaveBeenCalled()
   })
@@ -85,17 +95,12 @@ describe('доставка заявки: повторы по умолчанию'
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['setTimeout'] })
     vi.stubGlobal('fetch', fetchMock)
-  })
-
-  afterEach(() => {
-    vi.useRealTimers()
-    vi.unstubAllGlobals()
+    vi.stubEnv('FORM_DELIVERY', 'backend')
+    vi.stubEnv('FORM_BACKEND_URL', 'http://backend.internal/leads')
   })
 
   it('вторая попытка — через 0,5 с, третья — ещё через 2 с, затем честный отказ', async () => {
-    const delivery = deliverLead(lead, {
-      env: { FORM_DELIVERY: 'backend', FORM_BACKEND_URL: 'http://backend.internal/leads' },
-    })
+    const delivery = deliverLead(lead)
     const refused = expect(delivery).rejects.toThrow('502')
     const attemptsAfter = async (ms: number) => {
       await vi.advanceTimersByTimeAsync(ms)
