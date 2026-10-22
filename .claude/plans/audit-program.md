@@ -199,11 +199,7 @@ strategy: слоя страницы, пакета дизайна и `ready.yaml`
 - Хвост P2 — работа P4: HTTP-набор сверяет CSP ответа с записью `_headers.json` своей страницы: адаптер подбирает
   запись по вхождению пути, и свой стиль секции дал бы странице чужую CSP (ловушка — в rule `render-safety`).
 - Хвосты P3 — работа следующих фаз:
-  - P5: типы страниц `head-kit` — поверх графа `@id` (`ContactPage` и `AboutPage` ссылаются на `/#org`, `ProfilePage`
-    автора и `url` его `Person` — `/scaffold`); ссылка `rel="author"` и правила `seo:check` «подпись ⇒ `Person`» и
-    «один человек — один `@id`»; узлы чужих организаций (`worksFor`, партнёр) — типом вне `ORG_TYPES` или своим
-    правилом; датированная страница вне коллекций (генератор карты ставит ей `lastmod`, `seo:check` его не
-    принимает); подписи тегов, крошки с глубины 2, «связанные», хабы на 404, `/now`, ссылка на фид со страниц блога.
+  - P5 (второй план `forms-consent-collections`): подписи тегов, ссылка на фид со страниц блога.
   - P8: бриф → `AI_BOTS_POLICY` (`ask` → `allow-all`; «текст — продукт» — предложить `allow-search-deny-training`),
     `profiles` → `SITE_SAME_AS`, бренд → `alternateName`; факты `person` → реестр авторов, `machine` → часы и `geo`;
     копия `crawlers.yaml` → снимок; `page_gates.py --geo` в `/release` — с планом страницы он заменяет разбор флагов
@@ -218,11 +214,11 @@ strategy: слоя страницы, пакета дизайна и `ready.yaml`
     («`lastmod` только из правки»); мутация «дата в будущем» — от послезавтра; SEO-M2 держит `seo:check`, X4 —
     `test` и `seo:check`: карта выводится из сборки.
 - Хвосты P4 — работа следующих фаз:
-  - P5: блоки — в секциях P4, повторяемая форма наследует сводку ошибок; согласие — строка `ISLANDS` счётчика
-    (страницы, бюджет); переключатель движения — странице с петлями и поле `MOTION` (в public API `shared/config` — с
-    первым потребителем); пауза CSS-петель без JS (WCAG 2.2.2) — радио в `fieldset` с `legend` и `:has()` по норме
-    `motion-toggle`; кадры набора — визуальная проверка в `/scaffold`; цель касания навигации и CTA на десктопе —
-    44 × 44 по норме базы (ux/08-accessibility/01 § 12.4), если её поднимет ДС (F2); ряд ссылок без своего текста
+  - P5: повторяемая форма наследует сводку ошибок; согласие — строка `ISLANDS` счётчика (страницы, бюджет);
+    переключатель движения — странице с петлями и поле `MOTION` (в public API `shared/config` — с первым
+    потребителем); пауза CSS-петель без JS (WCAG 2.2.2) — радио в `fieldset` с `legend` и `:has()` по норме
+    `motion-toggle`; цель касания навигации и CTA на десктопе — 44 × 44 по норме базы (ux/08-accessibility/01 § 12.4),
+    если её поднимет ДС (F2); ряд ссылок без своего текста
     считается «в предложении» — у блока считать только его собственный текст; SG-GEO-01 «cta-js-only» уходит с
     главным CTA; слот `sizes` картинки блока сверяет с контейнером тест блока, как у обложки записи.
   - P8: снимок → `tokens.css` (недостающие роли называет тест — строки слоя сопоставления или `STRATEGY-ISSUE`),
@@ -241,9 +237,12 @@ strategy: слоя страницы, пакета дизайна и `ready.yaml`
     формы T-41′, T-42′; T-40 — вывод `sizes`: T-40a, T-40b, S11-T1) и сценарии § 6 с N1 и N5 приёмки S14;
     определения — `M/acc-p4/set.py`, `set2.py`, `M/p4e/s12_mutations.py`, `M/fix-p4/n5_mutations.py`; эталон — копия
     `M/p4e/mutations.py` (MUT-38′, MUT-39′ — с хешем правленого тела острова в реестре).
-- Критерий P4 «ворота strategy без B» — по семействам облика (PERF, WEIGHT, A11Y, MOB, слой движения): строки
-  SG-LEGAL-05 (реквизиты — факты), SG-CONTENT-05 (демо-почта) и SG-CONTENT-07 (призыв первого экрана — блоки)
-  закрывают P5 и P8, когда у страниц появляются блоки и данные снимка.
+- Критерий P4 «ворота strategy без B» — по семействам облика (PERF, WEIGHT, A11Y, MOB, слой движения). SG-LEGAL-05 и
+  SG-CONTENT-07 на reference-страницах шаблона без B — первый план P5; SG-CONTENT-05 (демо-почта) на сборке шаблона —
+  B: демо-факты канона — честная метка, в форке их ловит `check:identity` (P9); у пилота — P8.
+- Хвост P5 (`blocks-content-model`) — P10: набор приёмки — § 5 покрытия плана (38 строк, 40 мутаций) — копия
+  `M/acc-p5a/sets/set38.py`; эталон — `M/acc-p5a/sets/ref45.py` (слой `seo` у MUT-02 и MUT-44 зелёный, гейт красный);
+  регресс — `M/acc-p5a/sets/`; сценарии § 6 — `M/p5s11fix/sets/`; ворота с брифом и планом — `M/acc-p5a/gates/`.
 
 ## Handoff
 - `spa-frontend-template`: нейминг токенов ДС strategy (`data-theme`, DTCG, `@theme inline`) по образцу P4 сайта —
@@ -274,6 +273,15 @@ strategy: слоя страницы, пакета дизайна и `ready.yaml`
   `[data-motion-toggle]`, `[data-motion-set]` и подписи паузы; ленивая петля над h1 с preload постера
   `fetchpriority="high"` — SG-PERF-06 B и SG-PERF-16 S, хотя LCP — постер; SG-A11Y-08 не раскрывает `clamp()` в
   переменной роли — SKIP на каждой странице; SG-GEO-01: «CTA нет» и «CTA только после JS» — разные исходы.
+- strategy (`business-strategy-template`, владелец) по P5 (`blocks-content-model`): фикстура многостраничника с copy deck
+  по планам — образец для код-репо; машинный вид даты редакции документа (`machine` даты факта или поле плана) — по нему
+  `legal-text` ставит `<time>`; COPY-F-MACHINE `lint-facts` — error под `--final` у факта `company` с готовым значением
+  без `machine`; строки head-kit `page_types` пяти `proposed` типов (`security-page`, `integrations-page`,
+  `html-sitemap-page`, `event-program-page`, `speakers-page`) — до них план такой страницы несёт только
+  `BreadcrumbList`; `claims_check.py` узнаёт метку реквизита только кириллицей (`_M_LEGAL`), а «Federal Law No. 152-FZ»
+  английского текста читает числом против ОГРН (COPY-F-NUM-MISMATCH); `run_axe_targets.py` вставляет axe инлайн-скриптом
+  — CSP сайта его блокирует, а `page_gates.py --axe` засчитывает ответ с `error` как PASS SG-A11Y-01: нужна инъекция вне
+  CSP и `error` ≠ PASS (у сайта — копия с `bypass_csp`, `M/acc-p5a/gates/axe_csp.py`).
 
 ## Где мы сейчас
 P1 `harden-gate`, P2 `harden-runtime`, P3 `seo-geo-layer`, P4 `adopt-design-system`, P6 (strategy 0.2.0) и P7 (сервис
@@ -283,9 +291,9 @@ P1 `harden-gate`, P2 `harden-runtime`, P3 `seo-geo-layer`, P4 `adopt-design-syst
 GEO-шаг `/seo-audit`; облик сменный — ДС одним файлом токенов через слой сопоставления, тема и движение одним
 островом предпочтений, страницы из секций, шрифты через Fonts API, медиа готовыми файлами; хаб выпускает сайт по
 канону первого релиза, edge и CrowdSec — по контракту сайта; контракт strategy → сайт исполним кодом. Идёт S6 — P5:
-план `blocks-content-model` (11 шагов, этапы A–E) — этапы A (данные `strategy/` и чтение, локали 1…N), B (блоки
-каталога, каркас) и C (страницы и блог из блоков) приняты валидатором, этап D (head по copy deck и `head-kit`, `seo:check`
-по плану: S8, S9) и S10 (проза) сделаны, этап D — на перепроверке; затем S11 (приёмка); второй план фазы,
-`forms-consent-collections`, — после него. Параллельным треком идёт S10 — P9 `template-lifecycle`: этапы A (kinship и
+первый план `blocks-content-model` закрыт (`M/acceptance-blocks-content-model.md`): страница — блоки каталога в порядке
+секций плана, тексты — copy deck по ключу, контакты и реквизиты — факты `strategy/`; локали 1…N — гейт правкой данных;
+head — мета copy deck и типы JSON-LD плана; ворота strategy с планом шаблона — B только SG-CONTENT-05. Дальше — второй
+план фазы, `forms-consent-collections`. Параллельным треком идёт S10 — P9 `template-lifecycle`: этапы A (kinship и
 `docs/research` удалены) и B (версия обвязки `.template/` и `template:update`, `check:prose`) приняты и влиты в `main`,
 на ветке `p9-lifecycle` — фиксы этапа C (`check:identity`, `check:stack`).

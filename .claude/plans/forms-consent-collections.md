@@ -1,7 +1,7 @@
 ---
-status: blocked
+status: in-progress
 parent: —
-blocked-by: blocks-content-model
+blocked-by: —
 ---
 
 # forms-consent-collections — форма-движок по набору strategy, согласие до счётчика, коллекции модулем
@@ -28,7 +28,8 @@ blocked-by: blocks-content-model
   (`scripts/check-content.mjs:14`).
 - Находки и мутации — `M/plans/forms-consent-collections.coverage.md` (§ 1–3 — находки этого плана, прочие находки темы
   P5 — в покрытии `blocks-content-model`; § 5 — набор, шаг переносит сдвинутые; § 6 — сценарии); эталон — копия
-  `M/p5a/` после первого плана; мутации догфудера — `M/dogmut/mutations.mjs`, ветка `worktree-agent-a406185c2ed2ca966`.
+  `M/acc-p5a/sets/mutations.py` после первого плана; мутации догфудера — `M/dogmut/mutations.mjs`, ветка
+  `worktree-agent-a406185c2ed2ca966`.
 - База strategy: `lead-forms.yaml#defaults` (`consent.record`, `antispam.without_js`, `hidden_fields_without_js`,
   `success.without_js`), наборы `form_sets` (`contact-message`, `callback`); `events.yaml#defaults` (`consent`,
   `without_js`); блок `cookie-banner` (`blocks.yaml`); README слоя страницы — «Форма без JS на клиенте».
@@ -167,5 +168,6 @@ blocked-by: blocks-content-model
 - strategy (владелец): `label` поля в `lead-forms.yaml` — одна, русская; второй язык подписей держит сайт.
 
 ## Где мы сейчас
-План не начат. Старт — после закрытия `blocks-content-model`: этап A — исполнитель на один-два шага (S1–S2, затем
-S3), затем валидатор этапа; материалы — `M/p5b/`, копия мутаций эталона — из `M/p5a/`.
+План не начат: `blocks-content-model` закрыт (приёмка S11), старт — этап A: исполнитель на один-два шага (S1–S2, затем
+S3), затем валидатор этапа; материалы — `M/p5b/`, последние копии мутаций эталона и наборов первого плана —
+`M/acc-p5a/sets/` (эталон — `ref45.py`, якоря 45 из 45 на `96a3434`).
