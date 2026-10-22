@@ -77,10 +77,17 @@ blocked-by: —
   успех — 303 на `thank_you_page` плана своей локали, GET — на страницу формы, отказы 403, 400, 413 — текст словаря на
   языке страницы формы. Проверка: тест маршрута, `pnpm test:http`; E9, COD-01d, COD-16b, F-05…F-08 → красный; браузер
   без JS — PRG (`pnpm test:e2e`)
-- [ ] **AC3** — Лестница в `shared`: origin-check, размер и форма тела, ловушка — `shared/antispam`, их зовёт
+- [x] **AC3** — Лестница в `shared`: origin-check, размер и форма тела, ловушка — `shared/antispam`, их зовёт
   обработчик; шов капчи и `CAPTCHA_*` удалены; в API лога и доставки нет тестовых параметров. Проверка:
   `grep -rn CAPTCHA_` по `src`, `.claude` (вне планов), `docs/reference`, `docs/stack`, `.env.example` → пусто; MUT-25,
   26, 30…33 → красный
+  - Подтверждено: S1 (`3dfa44c`). Ступени — `shared/antispam/ladder.ts` (`isTrustedOrigin`, `isTooLarge`, `readForm`,
+    `isTrapped`) под тестом `ladder.server.test.ts`, обработчик зовёт их по порядку; капчи нет ни кодом, ни env, ни
+    словарём, `grep -rn CAPTCHA_` по `src`, `.claude` вне планов, `docs/reference`, `docs/stack`, `.env.example` — пусто;
+    `log(level, fields)` и `deliverLead(lead)` без тестовых параметров (`grep env?: RuntimeEnv`, `retryDelaysMs` вне
+    тестов — пусто). Переносы на код S1 (`M/p5b2a/run-s1b`): MUT-25, MUT-26, MUT-30, MUT-31 — red `test` на ступенях,
+    MUT-32, MUT-33 — red `test` на fake timers; композиция S1-C1 (ловушка о чужом поле), S1-C2 (лог без порога) — red
+    `test`; MUT-34 — red `test`. Правду прозы о форме целиком сверяет S8
 - [ ] **AC4** — Согласие до счётчика: при счётчике — баннер по блоку `cookie-banner` каталога (немодальный, «Принять» и
   «Отклонить» равного веса, ссылка на политику); без JS ни баннера, ни счётчика; счётчик грузится только после
   «Принять», выбор помнит сайт; без счётчика нет ни баннера, ни острова; строка `ISLANDS` — основание, страницы, бюджет.
@@ -102,11 +109,18 @@ blocked-by: —
 
 ## Шаги
 ### Этап A — лестница и форма-движок
-- [ ] **S1** — Ступени лестницы — `shared/antispam`: origin-check, размер и форма тела, ловушка — функции под тестами,
+- [x] **S1** — Ступени лестницы — `shared/antispam`: origin-check, размер и форма тела, ловушка — функции под тестами,
   обоснование `checkOrigin` — одно место (rule `forms-antispam`); шов капчи, `CAPTCHA_*` и ключ `form.error.captcha`
   удалены; в API лога и доставки нет тестовых параметров (`vi.stubEnv`, fake timers)
   - Проверка: unit ступеней; перенос MUT-25, MUT-26, MUT-30…MUT-33 → красный; `grep -rn CAPTCHA_ src` → пусто
     · Закрывает: AC3 · Зависит от: —
+  - Сделано: `3dfa44c`. Ступени — функции `shared/antispam/ladder.ts`, обработчик `features/contact-form` их зовёт и
+    пишет событие отказа; шов капчи, `CAPTCHA_*`, `form.error.captcha` сняты; `log` и `deliverLead` — без `env` и
+    `retryDelaysMs`, тесты — `vi.stubEnv` и fake timers; обоснование `checkOrigin` и лимита тела — rule `forms-antispam`,
+    у `astro.config.ts` и в rule `render-safety` — ссылка, эссе middleware — строка; проза о капче (rules, `.env.example`,
+    `deployment.md`, шаблоны стека `api`, `config`, README, `/stack-deep-dive`) — снята. `pnpm check` — зелёный (633
+    теста, ветви 99,37 %, серверный бандл 887,25 КБ); набор S1 — 8 из 8 red, MUT-34 — red; якоря эталона — 45 из 45,
+    набора первого плана — 40 из 40 (сухой прогон, `M/p5b2a/dry1-*`)
 - [ ] **S2** — Форма-движок `features/lead-form`: чтение — `form` действия и `target.prefill` (`contract.ts`), набор
   каталога — полями схемы чтения; набор `form.ref` → поля, обязательность, `one_of_required`, согласие, ловушка
   каталога; подписи полей и вариантов — словарь фичи по локалям; скрытые поля без JS (`build`, `server`); запись
@@ -244,6 +258,6 @@ blocked-by: —
 
 ## Где мы сейчас
 Этап A, исполнитель (материалы — `M/p5b2a/`: `notes.md`, наборы и сценарии `sets/`, драйвер `mut.py`). План сверен с кодом
-после первого плана P5 (`1d19b8d`). S1 — ступени лестницы в `shared/antispam`, капча и тестовые параметры сняты, проза
-правдива; дальше — мутации S1 и `[x]`, затем S2 (форма-движок). Рядом идёт трек P8 A–C (`p8-stitch`): общие файлы сверяет
-вливание дирижёра.
+после первого плана P5 (`1d19b8d`). S1 сделан (`3dfa44c`): ступени лестницы — `shared/antispam`, капча и тестовые
+параметры сняты, AC3 подтверждён. Дальше — S2 (форма-движок `features/lead-form`), затем S3. Рядом идёт трек P8 A–C
+(`p8-stitch`): общие файлы сверяет вливание дирижёра.
