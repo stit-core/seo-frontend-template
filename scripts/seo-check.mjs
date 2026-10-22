@@ -626,7 +626,8 @@ function checkEntities(where, blocks, page) {
           `${label}: узел с @id организации типа «${node['@type']}» вне ORG_TYPES (scripts/lib/site-policy.mjs)`,
         )
       }
-      if (node['@type'] === 'Person') {
+      // Человек внутри чужой организации (её основатель, сотрудник) — не автор сайта, пока не несёт свой @id.
+      if (node['@type'] === 'Person' && (!inForeign || ownId(node['@id']))) {
         checkPerson(where, label, node, page)
         persons.push(node)
       }

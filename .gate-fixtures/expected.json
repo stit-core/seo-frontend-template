@@ -206,6 +206,7 @@
     "dist/client/vtoroe-imya/index.html: Article.author: Person.name «Невидимый Автор» не виден — автор в разметке подписан на странице",
     "dist/client/vtoroe-imya/index.html: Article.author: Person без своего @id на своём origin (нет)",
     "dist/client/vtoroe-imya/index.html: Article.author: Person без своего @id на своём origin (https://example.ru/#author)",
+    "dist/client/vtoroe-imya/index.html: Article.author.affiliation.founder: Person.name «Скрытый Основатель» не виден — автор в разметке подписан на странице",
     "dist/client/vtoroe-imya/index.html: подпись «Вера Подписанная» (rel=\"author\" → /avtory/vera) — нет Person с этим именем и профилем в разметке",
     "dist/client/vtoroe-imya/index.html: подпись «Анна Другая» (rel=\"author\" → /avtory/drugaya) — нет Person с этим именем и профилем в разметке",
     "dist/client/xdefault/index.html: x-default не совпадает ни с одной локальной версией",
