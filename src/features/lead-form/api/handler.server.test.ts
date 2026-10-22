@@ -17,19 +17,28 @@ const ENTRY: FormEntry<string> = {
 const context = { rid: 'test-rid', forms: [ENTRY] }
 
 const TASK = 'Нужен сайт с блогом, формой заявки и картой сайта.'
-const filled = {
+// Ответ на каждое поле набора — значения, которые не встречаются в строках лога сами по себе: по ним тест ищет утечку.
+const ANSWERS = {
   name: 'Мария',
   email: 'maria@example.com',
+  phone: '+7 900 123-45-67',
+  'contact-channel': 'call',
   task: TASK,
-  consent: '1',
-  form_id: LEAD_FORM.id,
-  page_url: LEAD_FORM.page,
 }
+const filled = { ...ANSWERS, consent: '1', form_id: LEAD_FORM.id, page_url: LEAD_FORM.page }
+// Метка рекламы в query Referer: адрес страницы человека в лог не идёт, как и его ответы.
+const MARK = 'utm-mark-7f3a9c'
 
+// Заявка со страницы формы: Referer — её адрес с меткой рекламы, как у перехода из объявления.
 const post = (fields: Record<string, string>, headers: Record<string, string> = {}): Request =>
   new Request(`${ORIGIN}/api/contact`, {
     method: 'POST',
-    headers: { origin: ORIGIN, 'content-type': 'application/x-www-form-urlencoded', ...headers },
+    headers: {
+      origin: ORIGIN,
+      referer: `${ORIGIN}/contacts?utm_source=${MARK}`,
+      'content-type': 'application/x-www-form-urlencoded',
+      ...headers,
+    },
     body: new URLSearchParams(fields),
   })
 
@@ -69,22 +78,22 @@ afterEach(() => {
   vi.unstubAllEnvs()
   vi.unstubAllGlobals()
   vi.restoreAllMocks()
-  // Тело заявки — персональные данные: ни на одном исходе обработчика его нет в логе.
-  for (const value of [filled.name, filled.email, TASK]) expect(log).not.toContain(value)
+  // Тело заявки — персональные данные, query Referer — метки человека: ни на одном исходе обработчика их нет в логе.
+  for (const value of [...Object.values(ANSWERS), MARK]) expect(log).not.toContain(value)
 })
 
 describe('обработчик формы', () => {
   it('заявка уходит одним запросом: ответы набора, метки рекламы из Referer и запись согласия', async () => {
-    const outcome = await handleLeadRequest(
-      post(filled, { referer: `${ORIGIN}/contacts?utm_source=yandex&yclid=42&utm_term=&other=1` }),
-      context,
-    )
+    const referer = `${ORIGIN}/contacts?utm_source=${MARK}&yclid=42&utm_term=&other=${MARK}`
+    const outcome = await handleLeadRequest(post(filled, { referer }), context)
     expect(outcome).toEqual({ status: 'accepted', entry: ENTRY })
     expect(fetchMock).toHaveBeenCalledOnce()
     expect(fetchMock.mock.calls[0]?.[0]).toBe(BACKEND)
     const lead = delivered()
-    expect(lead.fields).toEqual({ name: 'Мария', email: 'maria@example.com', task: TASK })
-    expect(lead.hidden).toEqual({ utm_source: 'yandex', yclid: '42' })
+    // Заявка теста отвечает на каждое поле набора: лог проверяется на каждом.
+    expect(Object.keys(ANSWERS)).toEqual(LEAD_FORM.fields.map(({ id }) => id))
+    expect(lead.fields).toEqual(ANSWERS)
+    expect(lead.hidden).toEqual({ utm_source: MARK, yclid: '42' })
     // Редакция — дата политики, на которую ссылается согласие формы; страница и форма — откуда пришла заявка.
     const consent = lead.consent as Record<string, unknown>
     expect(String(consent.consent_at)).toMatch(/^\d{4}-\d{2}-\d{2}T/)
@@ -98,20 +107,30 @@ describe('обработчик формы', () => {
   })
 
   it('без Referer меток рекламы нет; Referer не адрес — тоже', async () => {
-    await handleLeadRequest(post(filled), context)
-    expect(delivered().hidden).toEqual({})
-    fetchMock.mockClear()
-    const request = new Request(`${ORIGIN}/api/contact`, {
-      method: 'POST',
-      headers: {
-        origin: ORIGIN,
-        referer: 'not a url',
-        'content-type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams(filled),
-    })
-    await handleLeadRequest(request, context)
-    expect(delivered().hidden).toEqual({})
+    for (const referer of [undefined, 'not a url']) {
+      fetchMock.mockClear()
+      const request = new Request(`${ORIGIN}/api/contact`, {
+        method: 'POST',
+        headers: {
+          origin: ORIGIN,
+          ...(referer === undefined ? {} : { referer }),
+          'content-type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams(filled),
+      })
+      await handleLeadRequest(request, context)
+      expect(delivered().hidden, referer).toEqual({})
+    }
+  })
+
+  // Метка — короткий ответ объявления, а не текст: Referer длиной в заголовок в заявку не уезжает.
+  it('метка рекламы из Referer — не длиннее 200 знаков', async () => {
+    const long = 'u'.repeat(201)
+    await handleLeadRequest(
+      post(filled, { referer: `${ORIGIN}/contacts?utm_source=${long}` }),
+      context,
+    )
+    expect(delivered().hidden).toEqual({ utm_source: 'u'.repeat(200) })
   })
 
   it('форма не из плана или страница не её — 400 до разбора ответов', async () => {
@@ -154,7 +173,7 @@ describe('обработчик формы', () => {
 
   it('правила набора: отказ называет поля, присланное возвращается в форму, доставки нет', async () => {
     const outcome = await handleLeadRequest(
-      post({ ...filled, email: '', task: '', consent: '' }),
+      post({ ...filled, email: '', phone: '', task: '', consent: '' }),
       context,
     )
     expect(outcome).toMatchObject({
@@ -188,6 +207,28 @@ describe('обработчик формы', () => {
     expect(await handleLeadRequest(request, context)).toEqual({ status })
     expect(fetchMock).not.toHaveBeenCalled()
     expect(logged()).toContain(status)
+  })
+
+  // Размер — до чтения тела: разбор формы буферизует тело в heap, поэтому тело с заявленной длиной больше лимита не
+  // читается вовсе. Тело теста не читается — разбор до ступени размера дал бы 400, а не 413.
+  it('тело больше лимита по Content-Length — 413, тело не читалось', async () => {
+    const body = new ReadableStream(
+      { pull: (controller) => controller.error(new Error('тело не читается')) },
+      { highWaterMark: 0 },
+    )
+    const init: RequestInit & { duplex: 'half' } = {
+      method: 'POST',
+      headers: {
+        origin: ORIGIN,
+        'content-type': 'application/x-www-form-urlencoded',
+        'content-length': String(64 * 1024 + 1),
+      },
+      body,
+      duplex: 'half',
+    }
+    const request = new Request(`${ORIGIN}/api/contact`, init)
+    expect(await handleLeadRequest(request, context)).toEqual({ status: 'too-large' })
+    expect(request.bodyUsed).toBe(false)
   })
 
   it('сбой канала: три попытки, честный отказ с присланным', async () => {
