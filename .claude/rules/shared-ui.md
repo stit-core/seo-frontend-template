@@ -384,10 +384,16 @@ ESLint проверяет как обычный модуль. Реестр — �
 `scripts/` не импортирует (ESLint). Ресурсы — со своего сайта: чужой origin (шрифты, CDN) — только
 строкой в `RESOURCE_ORIGINS` политики (её же пропускает CSP), data:-адрес — никогда (CSP его не
 пропускает); `@font-face` — только Fonts API по списку шрифтов (§ Шрифты), с `font-display` swap,
-fallback или optional. Сторонний скрипт (счётчик) — одна точка `app/analytics`, грузится после
-`requestIdleCallback`; оболочка печатает его по строке реестра, а она называет страницы только
-при заданном идентификаторе в `shared/config/site.ts`: пусто — сторонних скриптов нет вовсе. Его origin — `sources` острова в `ISLANDS`: CSP пропускает
-их, только когда остров стоит хотя бы на одной странице.
+fallback или optional. Сторонний скрипт (счётчик) — одна точка `app/analytics`: остров согласия
+`metrika.astro` и его разметка — баннер по анатомии блока `cookie-banner` каталога (`consent-banner.astro`) — одна
+строка реестра `metrika`; оболочка ставит их вместе, а строка называет страницы только при заданном идентификаторе в
+`shared/config/site.ts`: пусто — ни баннера, ни сторонних скриптов. Баннер — первым в `<body>`, в потоке (вариант
+`in-flow-top`: клавиатура встречает его раньше страницы, фокус он не закрывает): немодальная область с подписью
+(`<section aria-label>`), текст, ссылка на политику ПДн плана каркаса, «Принять» и «Отклонить» — кнопки одного вида;
+тексты — словарь `consent.*` (`shared/i18n`). Печатается он скрытым, открывает его остров, пока выбора нет: без JS нет
+ни баннера, ни счётчика. Счётчик грузится только после «Принять» и `requestIdleCallback`; выбор — `localStorage` (ключ
+`consent`, действует год), cookie сайт не ставит. Его origin — `sources` острова в `ISLANDS`: CSP пропускает их,
+только когда остров стоит хотя бы на одной странице.
 
 ## Где что
 
@@ -401,6 +407,7 @@ fallback или optional. Сторонний скрипт (счётчик) — �
 | каркас: шапка, подвал и крошки — блоки каталога, их ставит оболочка | `widgets/header`, `widgets/footer`, `widgets/breadcrumbs` |
 | документ-шелл: `<html lang>`, `<head>` со `<slot name="head">`, лендмарки (`<main>` — без ширины), skip-link | `app/layouts/document.astro` |
 | предпочтения посетителя: тема и движение | `features/preferences` (`PreferencesInit` в `<head>`, `ThemeToggle` в шапке, `MotionToggle` — странице с петлями, поле `MOTION`) |
+| согласие и счётчик (при `METRIKA_ID`) | `app/analytics` (`metrika.astro` в `<head>`, `consent-banner.astro` первым в `<body>`) |
 | шрифты ДС: список и файлы | `app/styles/fonts.ts`, `app/styles/fonts/`; `<Font>` — в `app/layouts/document.astro` |
 
 Форматирует `.astro` Prettier (`pnpm format`), линтят Biome (a11y-группа `lint/a11y/*`: `alt`,

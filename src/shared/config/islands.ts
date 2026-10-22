@@ -38,14 +38,17 @@ export const ISLANDS = {
     markup: ['data-theme-toggle', 'data-motion-set'],
     budget: 750,
   },
-  // Счётчик стоит только при заданном идентификаторе: пусто — сторонних скриптов на сайте нет.
-  // tag.js, хиты и пиксель счётчика — с его origin. Вебвизору, карте кликов и региональным доменам
-  // нужно больше — список Яндекса: https://yandex.ru/support/metrica/code/install-counter-csp.html
+  // Согласие со счётчиком — один остров при заданном идентификаторе: пусто — ни баннера, ни сторонних скриптов на
+  // сайте. Баннер — его разметка: «Принять» и «Отклонить» обслуживает он. tag.js, хиты и пиксель счётчика — с его
+  // origin. Вебвизору, карте кликов и региональным доменам нужно больше — список Яндекса:
+  // https://yandex.ru/support/metrica/code/install-counter-csp.html
   metrika: {
-    hash: 'sha256-14Iw2r5Y2q0vfD5FiTsyPGJGKyYCRHoQAMPZJ8TSEOQ=',
-    basis: 'счётчик посещений: решение проекта — идентификатор METRIKA_ID',
+    hash: 'sha256-jAIiRUSseDiZkwfZRwe82CGtMR9TnG4yNlvAnqxtyjA=',
+    basis:
+      'согласие до счётчика: баннер cookie-banner каталога, счётчик посещений — после «Принять» (events.yaml#defaults.consent базы strategy); счётчик — решение проекта, идентификатор METRIKA_ID',
     pages: METRIKA_ID !== '' ? ['*'] : [],
-    budget: 325,
+    markup: ['data-consent-banner', 'data-consent'],
+    budget: 700,
     sources: {
       'script-src': ['https://mc.yandex.ru'],
       'connect-src': ['https://mc.yandex.ru'],

@@ -1,21 +1,37 @@
 ---
-import { METRIKA_ID } from '@/shared/config'
+interface Props {
+  // Идентификатор счётчика — поле METRIKA_ID (shared/config/site.ts): его даёт оболочка.
+  counter: string
+}
 
-// Единственная точка подключения аналитики. Идентификатор счётчика — поле site.ts, а не env:
-// prerendered-страница печатается на сборке и runtime env не видит. Где стоит счётчик, решает его
-// строка реестра ISLANDS (shared/config/islands.ts): без идентификатора — нигде, и сторонних
-// скриптов на сайте нет вообще.
-// Сам счётчик — 95 КБ чужого кода, поэтому он грузится после простоя браузера, не конкурируя
-// с контентом, и ровно один раз. `init` без параметров: просмотр страницы он засчитывает сам,
-// остальное настраивается в панели Метрики, а не здесь. data-island — имя строки реестра: без него
-// seo:check счётчик не пропустит.
-// Идентификатор — атрибутом, а не в коде: тело острова одно на любой счётчик, и CSP пропускает
-// его по хешу своей строки реестра.
+const { counter } = Astro.props
+
+// Остров согласия со счётчиком — единственная точка аналитики; где он стоит, решает строка `metrika` реестра ISLANDS
+// (shared/config/islands.ts): только при заданном идентификаторе, вместе с баннером (consent-banner.astro).
+// Счётчик — 95 КБ чужого кода и cookie посетителя, поэтому он грузится только после «Принять» (норма базы strategy:
+// events.yaml#defaults.consent) и после простоя браузера, ровно один раз; `init` без параметров: просмотр страницы он
+// засчитывает сам, цели — визит «спасибо» и автоцели — настраиваются в панели Метрики. Выбор — localStorage (ключ
+// `consent`: «accept» или «reject» и время выбора; cookie сайт не ставит), действует год, как у варианта «согласие»
+// базы strategy; закрытое хранилище оставляет выбор странице. Без выбора остров открывает баннер каждый кадр, пока
+// документ разбирается, — до его отрисовки. Страница из кеша переходов «назад» перечитывает выбор: его могли сделать
+// на другой странице.
+// Идентификатор — атрибутом, а не в коде: тело одно на любой счётчик, и CSP пропускает его по хешу строки реестра.
 ---
 
-<script is:inline data-island="metrika" data-counter={METRIKA_ID}>
+<script is:inline data-island="metrika" data-counter={counter}>
   {
-    const counterId = document.currentScript.dataset.counter
+    const d = document
+    const counterId = d.currentScript.dataset.counter
+    const YEAR = 31536e6
+    let choice = ''
+    const read = () => {
+      try {
+        const [value, at] = (localStorage.getItem('consent') ?? '').split(' ')
+        choice = /^(accept|reject)$/.test(value) && Date.now() - at < YEAR ? value : ''
+      } catch {
+        choice = ''
+      }
+    }
     const load = () => {
       if (window.ym) return
       window.ym = (...args) => {
@@ -23,13 +39,46 @@ import { METRIKA_ID } from '@/shared/config'
         window.ym.a.push(args)
       }
       window.ym.l = Date.now()
-      const script = document.createElement('script')
+      const script = d.createElement('script')
       script.async = true
       script.src = 'https://mc.yandex.ru/metrika/tag.js'
-      document.head.append(script)
+      d.head.append(script)
       window.ym(counterId, 'init')
     }
-    if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 5000 })
-    else setTimeout(load, 2000)
+    const start = () => {
+      if (choice !== 'accept') return
+      if ('requestIdleCallback' in window) requestIdleCallback(load, { timeout: 5000 })
+      else setTimeout(load, 2000)
+    }
+    const show = () => {
+      for (const banner of d.querySelectorAll('[data-consent-banner]'))
+        banner.hidden = choice !== ''
+    }
+    const tick = () => {
+      show()
+      if (d.readyState === 'loading') requestAnimationFrame(tick)
+    }
+    read()
+    start()
+    tick()
+    d.addEventListener('readystatechange', show)
+    addEventListener('pageshow', (event) => {
+      if (!event.persisted) return
+      read()
+      show()
+      start()
+    })
+    d.addEventListener('click', (event) => {
+      const value = event.target.closest?.('[data-consent]')?.dataset.consent
+      if (value !== 'accept' && value !== 'reject') return
+      try {
+        localStorage.setItem('consent', `${value} ${Date.now()}`)
+        read()
+      } catch {
+        choice = value
+      }
+      show()
+      start()
+    })
   }
 </script>

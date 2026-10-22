@@ -8,7 +8,7 @@ import { projectOf, siteOf, strategyPage } from '@/shared/strategy'
 import { jsonLdBlocks } from '../../../scripts/lib/html.mjs'
 import DocumentLayout from './document.astro'
 
-// Поле THEME и страницы островов в реестре — решения проекта: тест задаёт их и смотрит, что
+// Поле THEME, идентификатор счётчика и страницы островов в реестре — решения проекта: тест задаёт их и смотрит, что
 // печатает оболочка. У строки реестра оболочка читает только страницы.
 const theme = vi.hoisted(() => ({ default: 'system', switcher: true }))
 const islands = vi.hoisted(() => ({
@@ -19,6 +19,7 @@ vi.mock('@/shared/config', async (importOriginal) => ({
   ...(await importOriginal<typeof Config>()),
   THEME: theme,
   ISLANDS: islands,
+  METRIKA_ID: '12345678',
 }))
 
 // Список шрифтов — данные ДС проекта, у шаблона он пуст: тест задаёт семейства, а их `@font-face`
@@ -144,6 +145,36 @@ describe('DocumentLayout', () => {
       expect(await printed(['/kejsy/*'], '/kejsy')).toBe(false)
     },
   )
+
+  // Счётчик без баннера не спросит согласия, баннер без острова выбор не применит: оболочка ставит их одним решением —
+  // строкой счётчика. Баннер — первым в <body>, до перехода к содержимому: клавиатура встречает его раньше страницы.
+  it('остров счётчика и баннер согласия — вместе по строке счётчика: баннер первым в <body>', async () => {
+    const site = { default: 'system', switcher: true }
+    const home = strategyPage('home', DEFAULT_LOCALE)
+    const on = await render(site, { metrika: ['*'], chrome: home })
+    const banner = on.document.body.firstElementChild
+    expect(on.island('metrika')?.getAttribute('data-counter')).toBe('12345678')
+    expect(banner?.hasAttribute('data-consent-banner')).toBe(true)
+    expect(banner?.nextElementSibling?.getAttribute('href')).toBe('#main')
+    // Ссылка баннера — политика ПДн плана каркаса: её версия по карте.
+    const link = banner?.querySelector('a')
+    expect([link?.getAttribute('href'), link?.getAttribute('hreflang') ?? undefined]).toEqual([
+      home.policy?.href,
+      home.policy?.hreflang,
+    ])
+    const off = await render(site, { metrika: [], chrome: home })
+    expect([off.island('metrika'), off.document.querySelector('[data-consent-banner]')]).toEqual([
+      null,
+      null,
+    ])
+  })
+
+  it('счётчик у страницы, чей план каркаса не называет политику ПДн, — ошибка с ключом', async () => {
+    const chrome = { ...strategyPage('home', DEFAULT_LOCALE), policy: undefined }
+    await expect(
+      render({ default: 'system', switcher: true }, { metrika: ['*'], chrome }),
+    ).rejects.toThrow('strategy: home/legal/privacy_policy')
+  })
 
   // Ширину, фон и отступы странице дают её секции: класс на <main> сузил бы каждую страницу.
   it('оболочка страницу не сужает: у <main> — только место в колонке оболочки', async () => {

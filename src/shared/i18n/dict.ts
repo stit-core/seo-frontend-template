@@ -1,9 +1,9 @@
 import type { Locale } from './locale'
 
-// Подписи интерфейса — каркас (переход к содержимому, лендмарки, тема и движение), страницы 410 и 500 без плана, блог
-// (пагинация, заглушка, теги) и термины пар («часы работы», автор и даты записи) — словарь на каждую локаль
-// дескриптора; микрокопия формы — словарь её фичи. Тексты страниц — copy deck strategy (меню, подвал, секции плана),
-// записи — markdown-коллекции.
+// Подписи интерфейса — каркас (переход к содержимому, лендмарки, тема и движение, баннер согласия на счётчик), страницы
+// 410 и 500 без плана, блог (пагинация, заглушка, теги) и термины пар («часы работы», автор и даты записи) — словарь на
+// каждую локаль дескриптора; микрокопия формы — словарь её фичи. Тексты страниц — copy deck strategy (меню, подвал,
+// секции плана), записи — markdown-коллекции.
 const ru = {
   'nav.label': 'Основная навигация',
   'nav.skip': 'К содержимому',
@@ -13,6 +13,12 @@ const ru = {
   'motion.system': 'Как в системе',
   'motion.reduced': 'Меньше',
   'motion.full': 'Полное',
+  'consent.label': 'Cookie',
+  'consent.text':
+    'С вашего согласия включим Яндекс Метрику: она ставит cookie, а мы видим, какие страницы полезны.',
+  'consent.policy': 'Политика обработки персональных данных',
+  'consent.accept': 'Принять',
+  'consent.reject': 'Отклонить',
   'footer.links': 'Ссылки подвала',
   'og.alt': '{site}',
   'error.home': 'На главную',
@@ -45,6 +51,12 @@ const en = {
   'motion.system': 'System',
   'motion.reduced': 'Reduced',
   'motion.full': 'Full',
+  'consent.label': 'Cookies',
+  'consent.text':
+    'With your consent we turn on Yandex Metrica: it sets cookies, and we see which pages are useful.',
+  'consent.policy': 'Personal data policy',
+  'consent.accept': 'Accept',
+  'consent.reject': 'Reject',
   'footer.links': 'Footer links',
   'og.alt': '{site}',
   'error.home': 'Home',

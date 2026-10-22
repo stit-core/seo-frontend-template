@@ -1,0 +1,47 @@
+---
+import { type Locale, t } from '@/shared/i18n'
+import type { Link } from '@/shared/strategy'
+import { Container } from '@/shared/ui/section'
+
+interface Props {
+  locale: Locale
+  // Политика ПДн каркаса страницы — её версия по карте: без версии на языке страницы — другого языка с `hreflang`.
+  policy: Link
+}
+
+const { locale, policy } = Astro.props
+---
+
+{/* Баннер — анатомия и семантика блока cookie-banner каталога: немодальная область с подписью (`<section>` с
+`aria-label` — та же роль region, что у элемента каталога), текст, «Принять» и «Отклонить» — кнопки одного вида,
+ссылка на политику. Вариант in-flow-top: первым в <body>, в потоке — клавиатура встречает его раньше страницы, а фокус
+он не закрывает (WCAG 2.4.11). Печатается скрытым: без острова согласия выбор не сохранить, и баннера нет; открывает
+его остров, пока выбора нет. */}
+<section
+  aria-label={t(locale, 'consent.label')}
+  data-consent-banner
+  hidden
+  class="border-b border-subtle"
+>
+  <Container
+    width="page"
+    class="flex flex-wrap items-center justify-between gap-x-xl gap-y-sm py-md"
+  >
+    <div>
+      <p>{t(locale, 'consent.text')}</p>
+      <p class="mt-xs text-helper">
+        <a class="touch-target" href={policy.href} hreflang={policy.hreflang}>
+          {t(locale, 'consent.policy')}
+        </a>
+      </p>
+    </div>
+    <div class="flex flex-wrap gap-sm">
+      <button type="button" class="button" data-consent="accept">
+        {t(locale, 'consent.accept')}
+      </button>
+      <button type="button" class="button" data-consent="reject">
+        {t(locale, 'consent.reject')}
+      </button>
+    </div>
+  </Container>
+</section>

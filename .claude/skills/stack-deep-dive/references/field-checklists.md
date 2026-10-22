@@ -160,9 +160,9 @@ stable-артефакта сверяет `pnpm check:stack`.
 чужие origin в `RESOURCE_ORIGINS` (`scripts/lib/site-policy.mjs`, их держат `seo:check` и CSP).
 
 **Cross-kind**: идентификатор счётчика — поле `site.ts`, не env (`config.md § Публичные
-идентификаторы`); баннер — остров, строка в `rendering.md` и в `ISLANDS`.
+идентификаторы`); баннер и счётчик — один остров (`metrika`): строка в `rendering.md` и в `ISLANDS`.
 
-**Anti-patterns**: счётчик синхронно в `<head>`; подключение из виджета или страницы мимо
+**Anti-patterns**: счётчик синхронно в `<head>` или до «Принять»; подключение из виджета или страницы мимо
 единственной точки `app/analytics`; GA4 как основная аналитика для российской аудитории.
 
 ---

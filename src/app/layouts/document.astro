@@ -4,10 +4,11 @@ import type { CssVariable } from 'astro:assets'
 // sharp), а оболочку рендерят и on-demand страницы — их серверный бандл нёс бы его зря.
 import Font from 'astro/components/Font.astro'
 import '@/app/styles/index.css'
+import ConsentBanner from '@/app/analytics/consent-banner.astro'
 import Metrika from '@/app/analytics/metrika.astro'
 import { fontFamilies } from '@/app/styles/fonts'
 import { PreferencesInit } from '@/features/preferences'
-import { ISLANDS, standsOn, THEME } from '@/shared/config'
+import { ISLANDS, METRIKA_ID, standsOn, THEME } from '@/shared/config'
 import { type Locale, localePath, routeOf, type Translations, t } from '@/shared/i18n'
 import {
   breadcrumbList,
@@ -17,7 +18,7 @@ import {
   type PageMeta,
   SeoHead,
 } from '@/shared/seo'
-import { type BlockProps, pageLink, type StrategyPage } from '@/shared/strategy'
+import { type BlockProps, fail, pageLink, type StrategyPage } from '@/shared/strategy'
 import { Container } from '@/shared/ui/section'
 import { Breadcrumbs, type breadcrumbs } from '@/widgets/breadcrumbs'
 import { Footer, footer } from '@/widgets/footer'
@@ -69,8 +70,14 @@ const blocks = trail ? [...jsonLd, breadcrumbList(trail)] : jsonLd
 // полем THEME ставит атрибут ДС. Своего color-scheme у оболочки нет — его объявляет файл токенов.
 const theme = THEME.default === 'system' ? undefined : THEME.default
 // Острова оболочки — по строкам реестра: предпочтения — на каждой странице, когда сайт даёт выбор (кнопка
-// темы или переключатель движения); счётчик — при заданном идентификаторе.
+// темы или переключатель движения); счётчик — при заданном идентификаторе, вместе со своим баннером согласия: без
+// баннера согласия не спросить, без острова — выбор не применить. Баннер ссылается на политику ПДн плана каркаса.
 const route = routeOf(Astro.url.pathname)
+const counter = standsOn(ISLANDS.metrika, route)
+const policy = counter
+  ? (chrome.policy ??
+    fail(`${chrome.id}/legal/privacy_policy`, 'у счётчика нет политики ПДн для баннера'))
+  : undefined
 // Фид блога — у языка, где есть свой блог: фид другого языка в автообнаружении не нужен.
 const blog = pageLink('/blog', locale)
 const feed =
@@ -113,10 +120,11 @@ const fonts = fontFamilies().map(({ variable, preload }) => ({
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     {standsOn(ISLANDS.preferences, route) && <PreferencesInit />}
-    {standsOn(ISLANDS.metrika, route) && <Metrika />}
+    {counter && <Metrika counter={METRIKA_ID} />}
     <slot name="head" />
   </head>
   <body class="flex min-h-dvh flex-col">
+    {policy && <ConsentBanner locale={locale} policy={policy} />}
     <a
       href="#main"
       class="sr-only focus:not-sr-only focus:fixed focus:top-md focus:left-md focus:z-10 focus:rounded-control focus:bg-accent-solid focus:px-md focus:py-xs focus:text-on-accent"
