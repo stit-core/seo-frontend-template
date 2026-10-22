@@ -70,8 +70,7 @@ const blocks = trail ? [...jsonLd, breadcrumbList(trail)] : jsonLd
 // полем THEME ставит атрибут ДС. Своего color-scheme у оболочки нет — его объявляет файл токенов.
 const theme = THEME.default === 'system' ? undefined : THEME.default
 // Острова оболочки — по строкам реестра: предпочтения — на каждой странице, когда сайт даёт выбор (кнопка
-// темы или переключатель движения); счётчик — при заданном идентификаторе, вместе со своим баннером согласия: без
-// баннера согласия не спросить, без острова — выбор не применить. Баннер ссылается на политику ПДн плана каркаса.
+// темы или переключатель движения); счётчик — при заданном идентификаторе и только со своим баннером согласия.
 const route = routeOf(Astro.url.pathname)
 const counter = standsOn(ISLANDS.metrika, route)
 const policy = counter
@@ -124,13 +123,15 @@ const fonts = fontFamilies().map(({ variable, preload }) => ({
     <slot name="head" />
   </head>
   <body class="flex min-h-dvh flex-col">
-    {policy && <ConsentBanner locale={locale} policy={policy} />}
     <a
       href="#main"
       class="sr-only focus:not-sr-only focus:fixed focus:top-md focus:left-md focus:z-10 focus:rounded-control focus:bg-accent-solid focus:px-md focus:py-xs focus:text-on-accent"
     >
       {t(locale, 'nav.skip')}
     </a>
+    {/* Баннер согласия — до шапки, но после перехода к содержимому: переход — первая ссылка страницы, иначе axe не
+    признаёт его переходом и считает содержимым вне лендмарков. */}
+    {policy && <ConsentBanner locale={locale} policy={policy} />}
     {top && <Header {...header.props(chrome, top)} locale={locale} translations={translations} />}
     {/* Крошки — каркас, а не секция страницы: на контейнере шапки, перед <main>. */}
     {crumbs && (

@@ -147,15 +147,19 @@ describe('DocumentLayout', () => {
   )
 
   // Счётчик без баннера не спросит согласия, баннер без острова выбор не применит: оболочка ставит их одним решением —
-  // строкой счётчика. Баннер — первым в <body>, до перехода к содержимому: клавиатура встречает его раньше страницы.
-  it('остров счётчика и баннер согласия — вместе по строке счётчика: баннер первым в <body>', async () => {
+  // строкой счётчика. Баннер — до шапки, сразу после перехода к содержимому: клавиатура встречает его раньше страницы, а
+  // переход остаётся первой ссылкой.
+  it('остров счётчика и баннер согласия — вместе по строке счётчика: баннер до шапки, после перехода', async () => {
     const site = { default: 'system', switcher: true }
     const home = strategyPage('home', DEFAULT_LOCALE)
     const on = await render(site, { metrika: ['*'], chrome: home })
-    const banner = on.document.body.firstElementChild
+    const [skip, banner, next] = [...on.document.body.children]
     expect(on.island('metrika')?.getAttribute('data-counter')).toBe('12345678')
-    expect(banner?.hasAttribute('data-consent-banner')).toBe(true)
-    expect(banner?.nextElementSibling?.getAttribute('href')).toBe('#main')
+    expect([
+      skip?.getAttribute('href'),
+      banner?.hasAttribute('data-consent-banner'),
+      next?.tagName,
+    ]).toEqual(['#main', true, 'HEADER'])
     // Ссылка баннера — политика ПДн плана каркаса: её версия по карте.
     const link = banner?.querySelector('a')
     expect([link?.getAttribute('href'), link?.getAttribute('hreflang') ?? undefined]).toEqual([

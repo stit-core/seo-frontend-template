@@ -35,8 +35,8 @@ import Metrika from '${repo}/src/app/analytics/metrika.astro'
     <Metrika counter="${COUNTER}" />
   </head>
   <body>
-    <ConsentBanner locale="${DEFAULT_LOCALE}" policy={{ href: '/legal/privacy' }} />
     <a href="#main">${t(DEFAULT_LOCALE, 'nav.skip')}</a>
+    <ConsentBanner locale="${DEFAULT_LOCALE}" policy={{ href: '/legal/privacy' }} />
     <main id="main">
       <h1>Согласие на счётчик</h1>
       <p><a href="/vtoraya">Вторая страница</a></p>
@@ -188,14 +188,19 @@ test.describe('скрипта нет', () => {
   })
 })
 
-// Баннер — первым в <body>: Tab встречает его раньше страницы, выбор делается клавиатурой, а дальше фокус идёт по
-// порядку — к переходу к содержимому.
-test('клавиатура: цели баннера — первые, фокус виден, после выбора — переход к содержимому', async ({
+// Баннер — до шапки, сразу после перехода к содержимому (как ставит оболочка): Tab встречает его раньше страницы,
+// выбор делается клавиатурой, а дальше фокус идёт по порядку — к первой цели после баннера.
+test('клавиатура: цели баннера — сразу после перехода к содержимому, фокус виден, после выбора — дальше по порядку', async ({
   page,
 }) => {
   await page.goto(site)
-  const policy = bannerOf(page).getByRole('link', { name: t(DEFAULT_LOCALE, 'consent.policy') })
-  for (const target of [policy, choice(page, 'consent.accept'), choice(page, 'consent.reject')]) {
+  const targets = [
+    page.getByRole('link', { name: t(DEFAULT_LOCALE, 'nav.skip') }),
+    bannerOf(page).getByRole('link', { name: t(DEFAULT_LOCALE, 'consent.policy') }),
+    choice(page, 'consent.accept'),
+    choice(page, 'consent.reject'),
+  ]
+  for (const target of targets) {
     await page.keyboard.press('Tab')
     await expect(target).toBeFocused()
     expect(await target.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe(
@@ -205,7 +210,7 @@ test('клавиатура: цели баннера — первые, фокус
   await page.keyboard.press('Enter')
   await expect(bannerOf(page)).toBeHidden()
   await page.keyboard.press('Tab')
-  await expect(page.getByRole('link', { name: t(DEFAULT_LOCALE, 'nav.skip') })).toBeFocused()
+  await expect(page.getByRole('link', { name: 'Вторая страница' })).toBeFocused()
 })
 
 // WCAG 2.2 AA целиком: без тегов axe не запускает, например, target-size (2.5.8).
