@@ -44,6 +44,11 @@ copy_deck:
               variants:
                 - {id: a, text: Контакты, status: assumed, source: ai-self}
               chosen: a
+            - slot_id: cta-label
+              slot_type: cta-label
+              variants:
+                - {id: a, text: Оставить заявку, status: assumed, source: ai-self}
+              chosen: a
         - section_id: legal
           section_role: legal
           block: legal-text

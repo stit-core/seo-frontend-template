@@ -37,7 +37,7 @@ page:
       device: mixed
   macrostructure: long-document
   macrostructure_family: document
-  first_screen_policy: offer-cta
+  first_screen_policy: offer-cta-header
   budget_profile: legal-page@L0
   ambition_level: L0
   navigation:
@@ -83,6 +83,8 @@ sections:
         - id: nav-link-3
           slot: nav-label
           anatomy: nav-link
+        - id: cta-label
+          slot: cta-label
       media:
         - id: logo
           slot: brand-logo
@@ -95,6 +97,14 @@ sections:
           slot: link
           action: read-more
           style: link
+        - id: cta
+          slot: cta-primary
+          action: lead-request
+          style: primary
+          label: cta-label
+          target:
+            kind: route
+            value: /contacts
   - id: legal
     role: legal
     question: кто обрабатывает мои данные и зачем

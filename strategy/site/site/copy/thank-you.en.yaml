@@ -46,6 +46,11 @@ copy_deck:
               variants:
                 - {id: a, text: Contacts, status: assumed, source: ai-self}
               chosen: a
+            - slot_id: cta-label
+              slot_type: cta-label
+              variants:
+                - {id: a, text: Send a request, status: assumed, source: ai-self}
+              chosen: a
         - section_id: confirmation
           section_role: confirmation
           block: thank-you
