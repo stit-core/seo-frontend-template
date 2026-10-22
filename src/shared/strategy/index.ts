@@ -15,7 +15,7 @@ export {
   unshown,
   untargeted,
 } from './block'
-export { elementOf, fail, projectOf } from './contract'
+export { consentOf, elementOf, fail, projectOf } from './contract'
 export type {
   Action,
   FactValue,

@@ -1,4 +1,4 @@
-import privacy from 'virtual:strategy/privacy'
+import privacy from 'virtual:strategy/consent/privacy'
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
 import { FORM_DICTS, failedTitle } from '@/features/lead-form'
 import { DEFAULT_LOCALE, type Locale, localePath } from '@/shared/i18n'

@@ -4,8 +4,8 @@
 // честным статусом. Маршрут — страница, а не endpoint: без JS ответ на POST обязан быть разметкой, а не JSON.
 export const prerender = false
 
+import privacy from 'virtual:strategy/consent/privacy'
 import contacts from 'virtual:strategy/contacts'
-import privacy from 'virtual:strategy/privacy'
 import { type FormEntry, handleLeadRequest } from '@/features/lead-form'
 import { pageLocales, pageOf, policyOf } from '@/shared/strategy'
 import { leadForm } from '@/widgets/lead-form'

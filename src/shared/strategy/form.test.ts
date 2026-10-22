@@ -1,5 +1,5 @@
 import { TEST_SITE, testLocale } from '@/shared/lib/testing'
-import { projectOf } from './contract'
+import { consentOf, projectOf } from './contract'
 import { type LeadForm, siteOf } from './page'
 
 // Механика — на локалях и проекте теста.
@@ -116,17 +116,23 @@ describe('форма действия плана — набор каталога
 })
 
 describe('политика согласия формы', () => {
-  const privacy: Record<string, unknown> = Object.fromEntries(
-    Object.entries(TEST_SITE).filter(([path]) =>
-      /\/(?:plans|copy)\/privacy(?:\.\w+)?\.yaml$/.test(path),
-    ),
-  )
+  const project = projectOf(TEST_SITE)
+  const consent = consentOf(project, 'privacy')
 
-  it('версия политики по карте, заголовок документа и дата редакции — факт, который план связывает с датой', () => {
+  // Ссылка согласия читает проекцию документа: адрес, заголовок на языке каждого copy deck и факт даты редакции.
+  it('проекция политики — адрес по карте, заголовок документа по языкам и факт, который план связывает с датой', () => {
+    expect(consent).toEqual({
+      id: 'privacy',
+      url: '/legal/privacy',
+      titles: { ru: 'Политика теста' },
+      revision: 'fact:policy-revision',
+    })
+  })
+
+  it('версия политики по карте, заголовок документа и дата редакции — формулировка факта на языке версии', () => {
     for (const locale of [RU, EN]) {
       const page = site.strategyPage('contacts', locale)
-      const policy = site.policyOf(page, privacy)
-      expect(policy, locale).toEqual({
+      expect(site.policyOf(page, consent), locale).toEqual({
         ...page.policy,
         title: 'Политика теста',
         revision: '1 октября 2026 года',
@@ -134,43 +140,77 @@ describe('политика согласия формы', () => {
     }
   })
 
-  // План политики в модуле — с другой формой: без заголовка, с заголовком не текстом секции, без факта даты редакции.
-  const privacyWith = (page: Record<string, unknown>, data: unknown[] | undefined) =>
-    Object.fromEntries(
-      Object.entries(privacy).map(([path, file]) => {
-        if (!path.includes('/plans/')) return [path, file]
-        const plan = file as {
-          page: Record<string, unknown>
-          sections: Array<{ slots: Record<string, unknown> }>
-        }
-        const sections = plan.sections.map((section) => ({
-          ...section,
-          slots: { ...section.slots, data },
-        }))
-        return [path, { ...plan, page: { ...plan.page, ...page }, sections }]
-      }),
-    )
+  // План политики с другой формой: без заголовка, с заголовком не текстом секции, без факта даты редакции.
+  const PRIVACY = 'site/test/plans/privacy.yaml'
+  const withPolicy = (page: Record<string, unknown>, data: unknown[]) => {
+    const plan = TEST_SITE[PRIVACY]
+    const sections = plan.sections.map((section) => ({
+      ...section,
+      slots: { ...section.slots, data },
+    }))
+    return projectOf({
+      ...TEST_SITE,
+      [PRIVACY]: { ...plan, page: { ...plan.page, ...page }, sections },
+    })
+  }
+
+  // Проект теста с copy deck политики без текста слота; без карты — лендинг (адрес документа — его план).
+  const deckWithout = (slot: string) => ({
+    ...project,
+    decks: project.decks.map(({ copy_deck }) => ({
+      copy_deck: {
+        ...copy_deck,
+        pages: copy_deck.pages.map((page) => ({
+          ...page,
+          sections: page.sections.map((section) => ({
+            ...section,
+            slots: section.slots.filter((candidate) => candidate.slot_id !== slot),
+          })),
+        })),
+      },
+    })),
+  })
+  const landing = (url?: string) => ({
+    ...project,
+    map: undefined,
+    plans: project.plans.map((plan) => ({ ...plan, page: { ...plan.page, url } })),
+  })
 
   it.each([
-    [{}, 'в модуле политики планов 0'],
-    [privacyWith({ seo: {} }, []), 'privacy/seo/h1 — у документа нет заголовка'],
+    [withPolicy({ seo: {} }, []), 'privacy/seo/h1 — у документа нет заголовка'],
     [
-      privacyWith({ seo: { h1: 'policy.nope' } }, []),
+      withPolicy({ seo: { h1: 'policy.nope' } }, []),
       'privacy/policy/nope — заголовок документа — не текст секции',
     ],
-    [privacyWith({}, []), 'privacy/policy/date — у даты редакции документа нет факта'],
-  ])('модуль политики, по которому согласию нечего назвать, — ошибка с ключом', (files, why) => {
-    expect(() => site.policyOf(site.strategyPage('contacts', RU), files as never)).toThrow(why)
+    [withPolicy({}, []), 'privacy/policy/date — у даты редакции документа нет факта'],
+    [projectOf({}), 'privacy — нет плана'],
+    [deckWithout('title'), 'privacy/policy/title — нет текста в copy deck ru'],
+    [landing(), 'privacy — у страницы без карты нет page.url в плане'],
+  ])('документ, по которому согласию нечего назвать, — ошибка сборки с ключом', (files, why) => {
+    expect(() => consentOf(files, 'privacy')).toThrow(`strategy: ${why}`)
   })
 
-  it('модуль другой страницы вместо политики плана — ошибка с ключом', () => {
-    const about = Object.fromEntries(
-      Object.entries(TEST_SITE).filter(([path]) =>
-        /\/(?:plans|copy)\/about(?:\.\w+)?\.yaml$/.test(path),
-      ),
-    )
-    expect(() => site.policyOf(site.strategyPage('contacts', RU), about)).toThrow(
-      'strategy: contacts/legal/privacy_policy — модуль страницы about — не политика плана /legal/privacy',
-    )
+  it('у лендинга без карты адрес документа — page.url его плана', () => {
+    expect(consentOf(landing('/policy'), 'privacy').url).toBe('/policy')
   })
+
+  it.each([
+    [{}, 'contacts/legal/privacy_policy — модуль согласия — не проекция политики consentOf'],
+    [
+      { ...consent, id: 'about', url: '/about' },
+      'contacts/legal/privacy_policy — проекция страницы about — не политика плана /legal/privacy',
+    ],
+    [{ ...consent, titles: {} }, 'privacy/seo/h1 — нет заголовка документа на ru'],
+    [
+      { ...consent, revision: 'missing:policy-revision' },
+      'privacy/revision — missing:policy-revision нет в фактах ru',
+    ],
+  ])(
+    'проекция, которая не та политика или без её данных на языке версии, — ошибка с ключом',
+    (data, why) => {
+      expect(() => site.policyOf(site.strategyPage('contacts', RU), data)).toThrow(
+        `strategy: ${why}`,
+      )
+    },
+  )
 })

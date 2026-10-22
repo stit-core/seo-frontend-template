@@ -12,10 +12,12 @@ import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from './src/shared/i18n/locale.ts'
 import { TRAILING_SLASH } from './src/shared/redirects/table.ts'
 import {
   CopyDeckSchema,
+  consentOf,
   FactsSchema,
   LeadFormsSchema,
   PlanSchema,
   parseFile,
+  projectOf,
   SiteMapSchema,
 } from './src/shared/strategy/contract.ts'
 import { slotSizes } from './src/shared/ui/section/sizes.ts'
@@ -45,20 +47,33 @@ const SNAPSHOT_SCHEMAS = [
 // Данные одной страницы strategy — модуль `virtual:strategy/<page-id>`: план и copy deck страницы по языкам в раскладке
 // снимка (`plans/<page-id>.yaml`, `copy/<page-id>.yaml` и `.<lang>.yaml`), путь файла от корня снимка → данные.
 // Страница везёт свои данные, а не снимок целиком: серверному бандлу on-demand маршрута (404, ответ формы) — только их.
+// У политики ПДн ссылка согласия формы читает проекцию — модуль `virtual:strategy/consent/<page-id>` (`consentOf`):
+// адрес, заголовок на каждом языке и факт даты редакции; план и тексты политики в бандл ответа формы не едут.
 const PAGE_MODULE = 'virtual:strategy/'
+const CONSENT_MODULE = 'consent/'
 const yamlModules = {
   name: 'yaml-modules',
   resolveId: (id: string) => (id.startsWith(PAGE_MODULE) ? `\0${id}` : null),
-  load(id: string) {
+  load(this: { addWatchFile: (file: string) => void }, id: string) {
     if (!id.startsWith(`\0${PAGE_MODULE}`)) return null
-    const page = id.slice(PAGE_MODULE.length + 1)
+    const name = id.slice(PAGE_MODULE.length + 1)
+    const consent = name.startsWith(CONSENT_MODULE)
+    const page = consent ? name.slice(CONSENT_MODULE.length) : name
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(page)) {
-      throw new Error(`${PAGE_MODULE}${page}: id страницы — kebab-case карты strategy`)
+      throw new Error(`${PAGE_MODULE}${name}: id страницы — kebab-case карты strategy`)
     }
     const files = globSync(
       [`site/*/plans/${page}.yaml`, `site/*/copy/${page}.yaml`, `site/*/copy/${page}.*.yaml`],
       { cwd: STRATEGY },
     ).sort()
+    if (consent) {
+      const read = [...globSync('site/*/site-map.yaml', { cwd: STRATEGY }), ...files]
+      for (const file of read) this.addWatchFile(STRATEGY + file)
+      const project = projectOf(
+        Object.fromEntries(read.map((file) => [file, load(readFileSync(STRATEGY + file, 'utf8'))])),
+      )
+      return `export default ${JSON.stringify(consentOf(project, page))}`
+    }
     return [
       ...files.map((file, index) => `import f${index} from ${JSON.stringify(STRATEGY + file)}`),
       `export default {${files.map((file, index) => `${JSON.stringify(file)}: f${index}`).join(', ')}}`,

@@ -6,7 +6,7 @@ import {
   TEST_SITE,
   testLocale,
 } from '@/shared/lib/testing'
-import { policyOf, strategyPage } from '@/shared/strategy'
+import { consentOf, policyOf, projectOf, strategyPage } from '@/shared/strategy'
 import { leadForm } from '../model/block'
 import LeadForm from './lead-form.astro'
 
@@ -20,11 +20,7 @@ vi.mock('@/shared/strategy', async (importOriginal) =>
 
 const RU = testLocale('ru')
 const EN = testLocale('en')
-const privacy = Object.fromEntries(
-  Object.entries(TEST_SITE).filter(([path]) =>
-    /\/(?:plans|copy)\/privacy(?:\.\w+)?\.yaml$/.test(path),
-  ),
-)
+const privacy = consentOf(projectOf(TEST_SITE), 'privacy')
 
 const render = async (locale = RU) => {
   const page = strategyPage('contacts', locale)

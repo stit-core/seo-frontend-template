@@ -9,6 +9,7 @@ import {
 } from '@/shared/i18n'
 import catalog from '../../../strategy/kb/site/05-conversion-funnels/lead-forms.yaml'
 import {
+  ConsentSchema,
   chosenText,
   deckPageOf,
   elementOf,
@@ -491,41 +492,36 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
   }
 }
 
-// Политика ПДн, на которую ссылается согласие формы: её версия по карте, заголовок документа (`seo.h1` её плана) на языке
-// версии и дата редакции — факт, который план документа связывает с его датой (`binds: [date]`): дата одна — на
-// странице политики и в записи согласия.
+// Политика ПДн, на которую ссылается согласие формы: её версия по карте, заголовок документа на языке версии и дата
+// редакции — формулировка факта, который план документа связывает с его датой: дата одна — на странице политики и в
+// записи согласия.
 export interface Policy extends Link {
   title: string
   revision: string
 }
 
-function readPolicy(project: Project, page: StrategyPage, files: PageFiles): Policy {
+// Политика согласия — по проекции документа (`consentOf`, модуль `virtual:strategy/consent/<id>`): ответ формы не везёт
+// план и тексты политики. Проекция другой страницы, без заголовка или факта на языке версии — ошибка с ключом.
+function readPolicy(project: Project, page: StrategyPage, data: unknown): Policy {
   const key = `${page.id}/legal/privacy_policy`
   const link = page.policy ?? fail(key, 'у страницы с формой нет политики ПДн')
-  const { plans, decks } = projectOf(files)
-  const [plan] = plans
-  if (plan === undefined || plans.length > 1)
-    fail(key, `в модуле политики планов ${plans.length}, а нужен один`)
-  const document = readPage(
-    { ...project, plans, decks },
-    plan.page.id,
-    link.hreflang ?? localeOf(page.url),
-  )
-  if (document.url !== link.href)
-    fail(key, `модуль страницы ${document.id} — не политика плана ${link.href}`)
-  const h1 = plan.page.seo.h1 ?? fail(`${document.id}/seo/h1`, 'у документа нет заголовка')
-  const section = h1.slice(0, h1.indexOf('.'))
-  const slot = h1.slice(h1.indexOf('.') + 1)
-  const title = document.sections.find((candidate) => candidate.id === section)?.slots[slot]
-  if (typeof title !== 'string')
-    fail(`${document.id}/${section}/${slot}`, 'заголовок документа — не текст секции')
-  const bound = plan.sections
-    .find((candidate) => candidate.id === section)
-    ?.slots.data.find((candidate) => candidate.binds.includes('date'))
-  const revision = document.facts.find((fact) => `fact:${fact.id}` === bound?.fact)
-  if (revision === undefined)
-    fail(`${document.id}/${section}/date`, 'у даты редакции документа нет факта')
-  return { ...link, title, revision: revision.text }
+  const parsed = ConsentSchema.safeParse(data)
+  if (!parsed.success) fail(key, 'модуль согласия — не проекция политики consentOf')
+  const consent = parsed.data
+  const locale = link.hreflang ?? localeOf(page.url)
+  if (localePath(locale, consent.url) !== link.href) {
+    fail(key, `проекция страницы ${consent.id} — не политика плана ${link.href}`)
+  }
+  const title =
+    consent.titles[locale] ?? fail(`${consent.id}/seo/h1`, `нет заголовка документа на ${locale}`)
+  const fact = project.facts
+    .filter((file) => langOf(file.lang) === locale)
+    .flatMap((file) => file.facts)
+    .find((candidate) => `fact:${candidate.id}` === consent.revision)
+  if (fact === undefined) {
+    fail(`${consent.id}/revision`, `${consent.revision} нет в фактах ${locale}`)
+  }
+  return { ...link, title, revision: fact.verbatim[0] }
 }
 
 // Снимок strategy сайта — `strategy/` в корне репозитория. YAML — модулем сборки (плагин yaml-modules
@@ -574,8 +570,8 @@ export function siteOf(project: Project) {
         props: { locale },
       })),
     strategyPage: (id: string, locale: Locale): StrategyPage => readPage(project, id, locale),
-    // Политика согласия формы страницы — по модулю данных политики (`virtual:strategy/<id>`).
-    policyOf: (page: StrategyPage, files: PageFiles): Policy => readPolicy(project, page, files),
+    // Политика согласия формы страницы — по проекции документа (`virtual:strategy/consent/<id>`).
+    policyOf: (page: StrategyPage, consent: unknown): Policy => readPolicy(project, page, consent),
   }
 }
 

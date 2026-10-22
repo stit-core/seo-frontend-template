@@ -30,6 +30,13 @@ declare module 'virtual:strategy/*' {
   export default files
 }
 
+// Что читает у политики ПДн ссылка согласия формы — проекция документа по его id (плагин yaml-modules, `consentOf`
+// shared/strategy/contract.ts); форму проверяет чтение (`policyOf`).
+declare module 'virtual:strategy/consent/*' {
+  const consent: unknown
+  export default consent
+}
+
 // `sizes` картинки по ширине контейнера секции: его выводит сборка из ролей файла токенов (плагин
 // slot-sizes из astro.config.ts, разбор — shared/ui/section/sizes.ts).
 declare module 'virtual:slot-sizes' {

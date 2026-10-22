@@ -1,5 +1,5 @@
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES } from '@/shared/i18n'
-import { langOf, mapLanguages, projectOf } from './contract'
+import { consentOf, langOf, mapLanguages, projectOf } from './contract'
 import {
   type PageFiles,
   pageLink,
@@ -73,6 +73,20 @@ describe('снимок сайта strategy/', () => {
       for (const locale of pageLocales(page.id)) {
         expect(read(files, locale), `${page.id} (${locale})`).toEqual(strategyPage(page.id, locale))
       }
+    }
+  })
+
+  // Ссылка согласия формы читает проекцию политики, а не её данные: модуль — то, что проекция даёт по снимку целиком.
+  it('модуль согласия — проекция политики плана по снимку: адрес, заголовок по языкам и факт даты редакции', async () => {
+    const { map, plans } = snapshot()
+    const routes = new Set(plans.flatMap(({ page }) => page.legal?.privacy_policy ?? []))
+    expect(routes.size).toBeGreaterThan(0)
+    for (const route of routes) {
+      const id = map?.pages.find((page) => page.url === route)?.id ?? ''
+      const { default: consent } = (await import(
+        /* @vite-ignore */ `virtual:strategy/consent/${id}`
+      )) as { default: unknown }
+      expect(consent, route).toEqual(consentOf(snapshot(), id))
     }
   })
 

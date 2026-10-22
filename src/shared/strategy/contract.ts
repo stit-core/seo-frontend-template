@@ -317,6 +317,47 @@ export const deckPageOf = (project: Project, id: string, lang: string) =>
     .flatMap((deck) => deck.copy_deck.pages)
     .find((page) => page.page_id === id)
 
+// Что читает у политики ПДн ссылка согласия формы — проекция документа, а не его данные: адрес страницы по карте (у
+// лендинга без карты — `page.url` плана), заголовок (`seo.h1` плана) на языке каждого copy deck и факт даты редакции,
+// который план связывает с датой (`binds: [date]`) в секции заголовка. Её собирает сборка — модуль
+// `virtual:strategy/consent/<page-id>` (плагин yaml-modules): ответ формы на запросе везёт её, а не план и тексты политики.
+export const ConsentSchema = z.object({
+  id: z.string(),
+  url: z.string(),
+  titles: z.record(z.string(), z.string()),
+  revision: z.string().regex(/^(?:fact|missing):/),
+})
+
+export type Consent = z.infer<typeof ConsentSchema>
+
+export function consentOf(project: Project, id: string): Consent {
+  const plan = project.plans.find((candidate) => candidate.page.id === id) ?? fail(id, 'нет плана')
+  const h1 = plan.page.seo.h1 ?? fail(`${id}/seo/h1`, 'у документа нет заголовка')
+  const section = h1.slice(0, h1.indexOf('.'))
+  const slot = h1.slice(h1.indexOf('.') + 1)
+  const key = `${id}/${section}/${slot}`
+  const planned = plan.sections.find((candidate) => candidate.id === section)
+  if (!planned?.slots.text.some((candidate) => candidate.id === slot)) {
+    fail(key, 'заголовок документа — не текст секции')
+  }
+  const titles = project.decks.flatMap((deck): Array<[string, string]> => {
+    const page = deck.copy_deck.pages.find((candidate) => candidate.page_id === id)
+    if (page === undefined) return []
+    const lang = langOf(deck.copy_deck.lang)
+    const found = page.sections
+      .find((candidate) => candidate.section_id === section)
+      ?.slots.find((candidate) => candidate.slot_id === slot)
+    return [[lang, chosenText(found ?? fail(key, `нет текста в copy deck ${lang}`), key)]]
+  })
+  const revision =
+    planned.slots.data.find((candidate) => candidate.binds.includes('date'))?.fact ??
+    fail(`${id}/${section}/date`, 'у даты редакции документа нет факта')
+  const url = project.map
+    ? mapPage(project.map, id).url
+    : (plan.page.url ?? fail(id, 'у страницы без карты нет page.url в плане'))
+  return { id, url, titles: Object.fromEntries(titles), revision }
+}
+
 // Страница проекта по адресу без префикса языка: строка карты с этим адресом (`{x}` — любой сегмент) или страница 2…N
 // списка строки (`<адрес>/page/<n>`, номер — `list`); у лендинга без карты — `page.url` его плана (план без него адреса
 // не даёт). Адреса нет ни у одной страницы — страницы нет.
