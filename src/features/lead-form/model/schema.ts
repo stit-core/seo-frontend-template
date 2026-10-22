@@ -21,7 +21,9 @@ const TEL = /^\+?[\d\s()-]+$/
 const isPhone = (value: string) =>
   TEL.test(value) && value.replace(/\D/g, '').length >= 10 && value.replace(/\D/g, '').length <= 15
 
-const Email = z.email()
+// Почта — правилом браузера у `type="email"` (HTML): домен — буквы, цифры и дефисы, поэтому адрес на кириллическом домене,
+// который браузер шлёт в punycode (`info@пример.рф` → `info@xn--e1afmkfd.xn--p1ai`), — законный.
+const Email = z.email({ pattern: z.regexes.html5Email })
 
 // Согласие на обработку ПДн — `literal(true)` и на сервере: без галочки обработка шла бы без согласия (152-ФЗ ст. 9
 // ч. 1), а валидация обходилась бы curl'ом.
@@ -46,9 +48,11 @@ export interface FormAnswer {
   failed: boolean
 }
 
+// Перевод строки — один знак, как его считает `maxlength` поля: форма шлёт CRLF, и текст у границы длины вышел бы
+// длиннее, чем его видел человек.
 const text = (data: FormData, field: string): string => {
   const value = data.get(field)
-  return typeof value === 'string' ? value.trim() : ''
+  return typeof value === 'string' ? value.replaceAll('\r\n', '\n').trim() : ''
 }
 
 export function submissionOf(form: LeadForm, data: FormData): Submission {

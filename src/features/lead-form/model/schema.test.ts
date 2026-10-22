@@ -36,6 +36,18 @@ describe('форма: ответ человека', () => {
     })
   })
 
+  // Форма шлёт перевод строки парой CRLF, а `maxlength` поля считает его одним знаком: граница длины — та, что видел
+  // человек.
+  it.each([
+    [2000, undefined],
+    [2001, 'long'],
+  ])('текст с переводами строк в %i знаков (CRLF — один знак) — %s', (length, fault) => {
+    const task = `${'ж\r\n'.repeat(19)}${'ж'.repeat(length - 38)}`
+    const submission = submissionOf(FORM, data({ ...valid.values, task, consent: '1' }))
+    expect(submission.values.task).toBe(task.replaceAll('\r\n', '\n'))
+    expect(faultsOf(FORM, submission).task).toBe(fault)
+  })
+
   // Браузер шлёт значение чекбокса, только если он отмечен: пустое значение из рукописного запроса — не согласие.
   it('согласие — непустое значение галочки, а не наличие поля', () => {
     expect(submissionOf(FORM, data({ consent: '' })).consent).toBe(false)
@@ -70,8 +82,16 @@ describe('форма: правила набора на сервере', () => {
     ).toEqual({})
   })
 
+  // Почту браузер проверяет правилом HTML и шлёт домен в punycode: за `info@пример.рф` приходит xn--.
+  it('почта на кириллическом домене — как её шлёт браузер — без отказа', () => {
+    for (const email of ['info@xn--e1afmkfd.xn--p1ai', 'user@xn--80a1acny.xn--p1ai']) {
+      expect(faultsOf(FORM, { ...valid, values: { ...valid.values, email } }), email).toEqual({})
+    }
+  })
+
   it.each([
     ['email', 'not-an-email', 'email'],
+    ['email', 'maria@example..com', 'email'],
     ['phone', '12', 'tel'],
     ['phone', '+7 495 000 00 00 00 00 0', 'tel'],
     ['phone', 'позвоните', 'tel'],
