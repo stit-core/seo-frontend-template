@@ -1,7 +1,8 @@
 import AxeBuilder from '@axe-core/playwright'
 import type { Page } from '@playwright/test'
+import { FORM_DICTS } from '../../src/features/lead-form/config/dict.ts'
 import { THEME } from '../../src/shared/config/site.ts'
-import { t } from '../../src/shared/i18n/dict.ts'
+import { dictionary } from '../../src/shared/i18n/dict.ts'
 import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
 import { pageText, prerenderedPaths } from '../site'
 import { expect, test } from './csp'
@@ -46,7 +47,7 @@ for (const theme of SITE_THEMES) {
         })
         .click()
       await expect(page).toHaveTitle(
-        new RegExp(`^${t(DEFAULT_LOCALE, 'form.failed', { title: '' })}`),
+        new RegExp(`^${dictionary(FORM_DICTS)(DEFAULT_LOCALE, 'failed', { title: '' })}`),
       )
       await expect(page.getByRole('alert')).toBeFocused()
       expect(await violations(page)).toEqual([])

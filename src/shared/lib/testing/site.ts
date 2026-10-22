@@ -84,7 +84,19 @@ const factsOf = (lang: string, name: string) => ({
         hours: [{ days: ['mo', 'tu', 'we', 'th', 'fr'], opens: '10:00', closes: '19:00' }],
       },
     },
+    { id: 'policy-revision', verbatim: [say(lang, '1 октября 2026 года')] },
+    {
+      id: 'company-telegram',
+      verbatim: ['t.me/test'],
+      machine: { type: 'messenger', network: 'telegram', value: 'https://t.me/test' },
+    },
   ],
+})
+
+// Мессенджер компании теста с готовым сообщением — текстом слота `messenger-prefill` своей секции.
+const telegram = (id: string) => ({
+  id,
+  target: { kind: 'messenger', value: 'messenger:company-telegram', prefill: 'messenger-prefill' },
 })
 
 const NAV = ['/blog', '/about', '/contacts'] as const
@@ -104,6 +116,7 @@ const ABOUT = {
     'info-1': '101000, Москва, ул. Тестовая, 1',
     'info-2': 'Пн–Пт, 10:00–19:00',
     legal: 'ООО «Тест», ОГРН 1000000000002',
+    'messenger-prefill': 'Здравствуйте! Есть вопрос о сайте.',
   },
 }
 const CONTACTS = {
@@ -114,6 +127,7 @@ const CONTACTS = {
     consent: 'Согласен на обработку персональных данных',
     'next-steps': 'Ответим в течение рабочего дня.',
     success: 'Заявка у нас.',
+    'messenger-prefill': 'Здравствуйте! Хочу обсудить сайт.',
   },
 }
 const THANKS = {
@@ -121,6 +135,7 @@ const THANKS = {
     title: 'Заявка у нас',
     'next-steps': 'Ответим на почту в течение рабочего дня.',
     'secondary-label': 'Вернуться к контактам',
+    'messenger-prefill': 'Здравствуйте! Отправил заявку на сайте.',
   },
 }
 const PRIVACY = {
@@ -341,10 +356,12 @@ export const TEST_SITE = {
             { id: 'info-1', anatomy: 'info' },
             { id: 'info-2', anatomy: 'info' },
             { id: 'legal' },
+            { id: 'messenger-prefill' },
           ],
           action: [
             { id: 'phone', target: { kind: 'tel', value: 'tel:+70000000000' } },
             { id: 'email', target: { kind: 'url', value: 'mailto:test@example.com' } },
+            telegram('messenger'),
           ],
           data: [
             { id: 'company', anatomy: 'company', fact: 'fact:company-name', binds: ['legal'] },
@@ -355,7 +372,11 @@ export const TEST_SITE = {
     ],
   },
   'site/test/plans/contacts.yaml': {
-    page: { id: 'contacts', page_type: 'contacts-page' },
+    page: {
+      id: 'contacts',
+      page_type: 'contacts-page',
+      legal: { privacy_policy: '/legal/privacy' },
+    },
     sections: [
       {
         id: 'request',
@@ -364,7 +385,13 @@ export const TEST_SITE = {
         variant: 'with-details',
         slots: {
           text: Object.keys(CONTACTS.request).map((id) => ({ id })),
-          action: [{ id: 'form' }],
+          action: [
+            {
+              id: 'form',
+              form: { ref: 'lead-forms.yaml#contact-message', thank_you_page: '/contacts/spasibo' },
+            },
+            telegram('messenger'),
+          ],
         },
       },
     ],
@@ -379,13 +406,13 @@ export const TEST_SITE = {
         variant: 'page',
         slots: {
           text: Object.keys(THANKS.confirmation).map((id) => ({ id })),
-          action: [{ id: 'secondary', target: route('/contacts') }],
+          action: [{ id: 'secondary', target: route('/contacts') }, telegram('channels')],
         },
       },
     ],
   },
   'site/test/plans/privacy.yaml': {
-    page: { id: 'privacy', page_type: 'legal-page' },
+    page: { id: 'privacy', page_type: 'legal-page', seo: { h1: 'policy.title' } },
     sections: [
       {
         id: 'policy',
@@ -405,6 +432,7 @@ export const TEST_SITE = {
           ],
           data: [
             { id: 'company', anatomy: 'company', fact: 'fact:company-name', binds: ['operator'] },
+            { id: 'revision', fact: 'fact:policy-revision', binds: ['date'] },
           ],
         },
       },

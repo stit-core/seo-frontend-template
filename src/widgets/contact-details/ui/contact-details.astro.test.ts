@@ -37,6 +37,7 @@ describe('ContactDetails', () => {
     }
   })
 
+  // Мессенджер — с готовым сообщением секции: его несёт ссылка, на странице текста нет.
   it('контакты — в <address>: строки по порядку, ссылки канала показывают свой адрес; реквизиты — после', async () => {
     const { section } = await render(details())
     const title = section?.querySelector('h1, h2, h3')
@@ -44,10 +45,14 @@ describe('ContactDetails', () => {
     const address = section?.querySelector('address')
     expect(
       [...(address?.querySelectorAll(':scope > p') ?? [])].map((p) => p.textContent?.trim()),
-    ).toEqual(['101000, Москва, ул. Тестовая, 1', '+70000000000', 'test@example.com'])
+    ).toEqual(['101000, Москва, ул. Тестовая, 1', '+70000000000', 'test@example.com', 't.me/test'])
     expect(
       [...(address?.querySelectorAll('a') ?? [])].map((link) => link.getAttribute('href')),
-    ).toEqual(['tel:+70000000000', 'mailto:test@example.com'])
+    ).toEqual([
+      'tel:+70000000000',
+      'mailto:test@example.com',
+      `https://t.me/test?text=${encodeURIComponent('Здравствуйте! Есть вопрос о сайте.')}`,
+    ])
     expect(section?.querySelector('address + p')?.textContent).toBe(
       'ООО «Тест», ОГРН\u00a01000000000002',
     )

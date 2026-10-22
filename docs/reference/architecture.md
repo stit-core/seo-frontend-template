@@ -94,7 +94,7 @@ src/
 ├─ widgets/       блоки каталога: hero-text · feature-grid · prose · contact-details · lead-form
 │                 · thank-you · not-found · legal-text · article-cards · article-body · related-links
 │                 · header · footer · breadcrumbs
-├─ features/      contact-form · preferences
+├─ features/      lead-form · preferences
 ├─ entities/      post (content/<locale>/*.md + covers, model, api, lib) · author
 └─ shared/        config · i18n · seo · redirects · strategy · observability · antispam · lib
                   · ui/{section,heading,term-list,media,action,card}

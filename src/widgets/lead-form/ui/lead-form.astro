@@ -1,35 +1,34 @@
 ---
-import { type ContactErrors, ContactForm, type ContactValues } from '@/features/contact-form'
-import type { DictKey, Locale } from '@/shared/i18n'
-import type { BlockProps, Link } from '@/shared/strategy'
+import { Form, type FormAnswer } from '@/features/lead-form'
+import type { Locale } from '@/shared/i18n'
+import { channelText } from '@/shared/lib'
+import type { BlockProps, Policy } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
 import type { leadForm } from '../model/block'
 
 type Props = BlockProps<typeof leadForm> & {
   locale: Locale
-  // Маршрут обработчика и политику ПДн (версия по карте) знает страница.
+  // Маршрут обработчика и политику ПДн согласия (версия по карте, заголовок и редакция) знает страница.
   action: string
-  policy: Link
-  // Значения и ошибки приходят с ответа обработчика формы; на самой странице их нет.
-  values?: ContactValues | undefined
-  errors?: ContactErrors | undefined
-  notice?: DictKey | undefined
+  policy: Policy
+  // Ответ обработчика формы: присланное и отказы; на самой странице его нет.
+  answer?: FormAnswer | undefined
 }
 
 const {
   id,
   title,
   lead,
+  form,
   'cta-label': submitLabel,
   consent,
   'next-steps': nextSteps,
+  messenger,
   locale,
   action,
   policy,
-  values,
-  errors,
-  notice,
+  answer,
 } = Astro.props
 ---
 
@@ -39,16 +38,24 @@ const {
   </Heading>
   <p class="mt-md text-lead text-secondary">{lead}</p>
   <div class="mt-lg">
-    <ContactForm
+    <Form
+      id={id}
       locale={locale}
       action={action}
+      form={form}
       policy={policy}
       submitLabel={submitLabel}
       consentLabel={consent}
-      values={values}
-      errors={errors}
-      notice={notice}
+      answer={answer}
     />
   </div>
   <p class="mt-lg text-helper text-secondary">{nextSteps}</p>
+  {/* Канал того же действия без подписи в анатомии показывает свой адрес. */}
+  {messenger && (
+    <p class="mt-md">
+      <a class="touch-target" href={messenger.href}>
+        {channelText(messenger.href)}
+      </a>
+    </p>
+  )}
 </Section>

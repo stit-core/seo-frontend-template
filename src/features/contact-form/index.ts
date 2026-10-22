@@ -1,5 +1,0 @@
-export type { ContactContext, ContactOutcome } from './api/handler'
-export { handleContactRequest } from './api/handler'
-export type { Contact, ContactErrors, ContactField, ContactValues } from './model/schema'
-export { EMPTY_CONTACT_VALUES } from './model/schema'
-export { default as ContactForm } from './ui/contact-form.astro'

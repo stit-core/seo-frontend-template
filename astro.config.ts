@@ -13,6 +13,7 @@ import { TRAILING_SLASH } from './src/shared/redirects/table.ts'
 import {
   CopyDeckSchema,
   FactsSchema,
+  LeadFormsSchema,
   PlanSchema,
   parseFile,
   SiteMapSchema,
@@ -39,6 +40,7 @@ const SNAPSHOT_SCHEMAS = [
   { file: /^site\/[^/]+\/site-map\.yaml$/, schema: SiteMapSchema },
   { file: /^site\/[^/]+\/plans\/[^/]+\.yaml$/, schema: PlanSchema },
   { file: /^site\/[^/]+\/copy\/[^/]+\.yaml$/, schema: CopyDeckSchema },
+  { file: /^kb\/site\/05-conversion-funnels\/lead-forms\.yaml$/, schema: LeadFormsSchema },
 ]
 // Данные одной страницы strategy — модуль `virtual:strategy/<page-id>`: план и copy deck страницы по языкам в раскладке
 // снимка (`plans/<page-id>.yaml`, `copy/<page-id>.yaml` и `.<lang>.yaml`), путь файла от корня снимка → данные.

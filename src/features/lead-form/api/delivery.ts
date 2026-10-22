@@ -1,11 +1,24 @@
 import { getRuntimeConfig, type RuntimeConfig, SITE_NAME } from '@/shared/config'
-import type { Contact } from '../model/schema'
+import { DEFAULT_LOCALE } from '@/shared/i18n'
+import { FORM_DICTS } from '../config/dict'
+import { t } from '../lib/text'
 
-export interface Lead extends Contact {
-  // Доказательство согласия хранится вместе с заявкой: версия текста политики и момент
-  // согласия (152-ФЗ ст. 9 ч. 1).
-  consentVersion: string
-  consentedAt: string
+// Запись согласия (`defaults.consent.record` каталога) — доказательство на стороне канала (152-ФЗ ст. 9 ч. 3): редакция
+// политики, момент согласия, страница и форма, согласие на рекламу.
+export interface ConsentRecord {
+  consent_version: string
+  consent_at: string
+  page_url: string
+  form_id: string
+  marketing_consent: boolean
+}
+
+// Заявка: ответы набора по id поля каталога (пустые — без ключа), скрытые поля без JS (`hidden_fields_without_js`
+// каталога: метки рекламы, которые сервер взял из Referer) и запись согласия.
+export interface Lead {
+  fields: Readonly<Record<string, string>>
+  hidden: Readonly<Record<string, string>>
+  consent: ConsentRecord
 }
 
 export interface DeliveryResult {
@@ -24,14 +37,23 @@ type Target =
 
 const sleep = (ms: number): Promise<void> => new Promise((done) => setTimeout(done, ms))
 
-const leadText = (lead: Lead): string =>
+// Письмо оператору — на основном языке сайта: подписи полей и вариантов — словарь формы, метки рекламы — по именам каталога.
+const word = (key: string, fallback: string): string =>
+  (FORM_DICTS[DEFAULT_LOCALE] as Readonly<Record<string, string>>)[key] ?? fallback
+
+const leadText = ({ fields, hidden, consent }: Lead): string =>
   [
-    `Имя: ${lead.name}`,
-    `Почта: ${lead.email}`,
+    ...Object.entries(fields).map(([field, value]) =>
+      t(DEFAULT_LOCALE, 'mail.field', {
+        label: word(`label.${field}`, field),
+        value: word(`option.${field}.${value}`, value),
+      }),
+    ),
     '',
-    lead.message,
-    '',
-    `Согласие на обработку ПДн: версия ${lead.consentVersion}, ${lead.consentedAt}`,
+    ...Object.entries({ ...hidden, page_url: consent.page_url, form_id: consent.form_id }).map(
+      ([name, value]) => t(DEFAULT_LOCALE, 'mail.field', { label: name, value }),
+    ),
+    t(DEFAULT_LOCALE, 'mail.consent', { version: consent.consent_version, at: consent.consent_at }),
   ].join('\n')
 
 // Пустой адрес канала — не повод падать при старте (сайт без настроенной формы обязан
@@ -81,8 +103,8 @@ async function sendViaSmtp(lead: Lead, target: Extract<Target, { channel: 'smtp'
     await transport.sendMail({
       from: target.from,
       to: target.to,
-      replyTo: lead.email,
-      subject: `Заявка с сайта ${SITE_NAME}: ${lead.name}`,
+      ...(lead.fields.email === undefined ? {} : { replyTo: lead.fields.email }),
+      subject: t(DEFAULT_LOCALE, 'mail.subject', { site: SITE_NAME, form: lead.consent.form_id }),
       text: leadText(lead),
     })
   } finally {

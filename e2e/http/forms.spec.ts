@@ -1,21 +1,23 @@
 import { type APIRequestContext, expect, test } from '@playwright/test'
 import { scriptViolations } from '../../scripts/lib/site-policy.mjs'
 import { DEFAULT_LOCALE, localePath, SUPPORTED_LOCALES } from '../../src/shared/i18n/locale.ts'
-import { cspProblems, edgeHeadersIn, originOf } from '../site'
+import { cspProblems, edgeHeadersIn, leadFormOf, originOf } from '../site'
 
-const MESSAGE = 'Нужен сайт с блогом, формой заявки и картой сайта. Бюджет обсудим.'
+const TASK = 'Нужен сайт с блогом, формой заявки и картой сайта. Бюджет обсудим.'
 
 // Адрес уникален на тест: приёмник общий, а спеки идут параллельно. Адрес на fail- приёмник
 // отвергает — так проверяется отказ канала.
 const address = (label: string) =>
   `${label}-${Date.now()}-${Math.random().toString(36).slice(2)}@example.com`
 
-const form = (email: string, extra: Record<string, string> = {}) => ({
+// Заявка формы контактов на версии страницы: поля набора и скрытые поля сборки — id формы и адрес страницы.
+const form = (email: string, extra: Record<string, string> = {}, locale = DEFAULT_LOCALE) => ({
   name: 'Мария',
   email,
-  message: MESSAGE,
+  task: TASK,
   consent: '1',
-  locale: DEFAULT_LOCALE,
+  form_id: leadFormOf('contacts').id,
+  page_url: localePath(locale, leadFormOf('contacts').url),
   ...extra,
 })
 
@@ -36,7 +38,7 @@ test.describe('обработчик формы /api/contact: HTTP-контрак
     for (const locale of SUPPORTED_LOCALES) {
       const email = address(`prg-${locale}`)
       const response = await request.post('/api/contact', {
-        form: form(email, { locale }),
+        form: form(email, {}, locale),
         headers: { origin: baseURL ?? '' },
         maxRedirects: 0,
       })
@@ -49,7 +51,7 @@ test.describe('обработчик формы /api/contact: HTTP-контрак
   test('ловушка заполнена: ответ как у человека, доставки нет', async ({ request, baseURL }) => {
     const email = address('honeypot')
     const response = await request.post('/api/contact', {
-      form: form(email, { company: 'ООО Спам' }),
+      form: form(email, { 'company-website': 'ООО Спам' }),
       headers: { origin: baseURL ?? '' },
       maxRedirects: 0,
     })
@@ -66,7 +68,7 @@ test.describe('обработчик формы /api/contact: HTTP-контрак
   }) => {
     const email = address('invalid')
     const response = await request.post('/api/contact', {
-      form: form(email, { consent: '', message: 'коротко' }),
+      form: form(email, { consent: '' }),
       headers: { origin: baseURL ?? '' },
     })
     expect(response.status()).toBe(200)
@@ -147,7 +149,7 @@ test.describe('обработчик формы /api/contact: HTTP-контрак
     })
     expect(broken.status()).toBe(400)
     const huge = await request.post('/api/contact', {
-      form: form(address('huge'), { message: 'x'.repeat(70_000) }),
+      form: form(address('huge'), { task: 'x'.repeat(70_000) }),
       headers: { origin },
       maxRedirects: 0,
     })

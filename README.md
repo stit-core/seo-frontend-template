@@ -113,7 +113,7 @@ src/widgets/      блоки каталога strategy (пропсы — эле�
                   feature-grid, prose, contact-details, lead-form, thank-you, not-found, legal-text,
                   article-cards, article-body, related-links и каркас — header, footer, breadcrumbs
                   (их ставит оболочка по секциям плана страницы)
-src/features/     contact-form (форма без JS и её обработчик), preferences (остров предпочтений:
+src/features/     lead-form (форма без JS по набору плана и её обработчик), preferences (остров предпочтений:
                   тема и движение)
 src/entities/     post: content/<locale>/*.md + covers/, model, api, lib; author: реестр авторов
                   (в шаблоне пуст): имя, роль и профиль для подписи записи

@@ -1,6 +1,6 @@
 ---
 import { type Locale, t } from '@/shared/i18n'
-import { bindNumbers } from '@/shared/lib'
+import { bindNumbers, channelText } from '@/shared/lib'
 import type { BlockProps } from '@/shared/strategy'
 import { Heading } from '@/shared/ui/heading'
 import { Section } from '@/shared/ui/section'
@@ -10,7 +10,7 @@ import { hoursOf } from '../model/hours'
 
 type Props = BlockProps<typeof contactDetails> & { locale: Locale }
 
-const { id, title, info, phone, email, legal, company = [], locale } = Astro.props
+const { id, title, info, phone, email, messenger, legal, company = [], locale } = Astro.props
 
 // Часы работы (html каталога) — пара «термин — описание»: строка контактов, которая их называет, с временем факта в
 // `<time>` (запись строки — как в тексте); прочие строки — как есть.
@@ -37,19 +37,15 @@ const hours = hoursOf(info, company, `${id}/info`)
         <p>{bindNumbers(line)}</p>
       )
     })}
-    {phone && (
-      <p>
-        <a class="touch-target" href={phone.href}>
-          {phone.href.replace(/^tel:/, '')}
-        </a>
-      </p>
-    )}
-    {email && (
-      <p>
-        <a class="touch-target" href={email.href}>
-          {email.href.replace(/^mailto:/, '')}
-        </a>
-      </p>
+    {[phone, email, messenger].map(
+      (channel) =>
+        channel && (
+          <p>
+            <a class="touch-target" href={channel.href}>
+              {channelText(channel.href)}
+            </a>
+          </p>
+        ),
     )}
   </address>
   {legal && <p class="mt-md text-helper text-secondary">{bindNumbers(legal)}</p>}

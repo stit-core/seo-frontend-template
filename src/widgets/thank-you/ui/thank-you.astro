@@ -1,4 +1,5 @@
 ---
+import { channelText } from '@/shared/lib'
 import type { BlockProps } from '@/shared/strategy'
 import { ActionLink } from '@/shared/ui/action'
 import { Heading } from '@/shared/ui/heading'
@@ -13,6 +14,7 @@ const {
   'next-steps': nextSteps,
   secondary,
   'secondary-label': secondaryLabel,
+  channels,
 } = Astro.props
 ---
 
@@ -29,6 +31,14 @@ const {
         label={secondaryLabel}
         kind="secondary"
       />
+    </p>
+  )}
+  {/* Канал без подписи в анатомии показывает свой адрес. */}
+  {channels && (
+    <p class="mt-md">
+      <a class="touch-target" href={channels.href}>
+        {channelText(channels.href)}
+      </a>
     </p>
   )}
 </Section>

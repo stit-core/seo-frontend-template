@@ -41,6 +41,7 @@ src/app
 src/shared
 :(exclude)src/shared/config/site.ts
 src/widgets
+src/features/lead-form
 src/features/preferences
 src/content.config.ts
 src/env.d.ts

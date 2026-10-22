@@ -1,11 +1,13 @@
 import {
   DEFAULT_LOCALE,
   type Locale,
+  localeOf,
   localeParam,
   localePath,
   SUPPORTED_LOCALES,
   type Translations,
 } from '@/shared/i18n'
+import catalog from '../../../strategy/kb/site/05-conversion-funnels/lead-forms.yaml'
 import {
   chosenText,
   deckPageOf,
@@ -13,15 +15,18 @@ import {
   type Fact,
   fail,
   hasBreadcrumbs,
+  LeadFormsSchema,
   langOf,
   type Machine,
   mapPage,
   type Plan,
+  type PlanFormValue,
   type PlanSlot,
   type PlanTarget,
   type Project,
   pageLanguages,
   parentsOf,
+  parseFile,
   projectOf,
   relatedRule,
   type SiteMap,
@@ -53,8 +58,44 @@ export interface FactValue {
   binds: readonly string[]
 }
 
-// Значение слота: текст copy deck, действие плана, факт.
-export type SlotValue = string | Action | FactValue | undefined
+// Поле набора формы: id каталога, вид ввода, обязательность, подсказки браузеру и варианты выбора.
+export interface FormField {
+  id: string
+  type: 'text' | 'textarea' | 'email' | 'tel' | 'radio'
+  required: boolean
+  autocomplete: string | undefined
+  inputmode:
+    | 'none'
+    | 'text'
+    | 'decimal'
+    | 'numeric'
+    | 'tel'
+    | 'search'
+    | 'email'
+    | 'url'
+    | undefined
+  spellcheck: boolean | undefined
+  options: string[]
+}
+
+// Форма действия плана — набор каталога `lead-forms.yaml` по `form.ref`: поля по порядку, «хотя бы одно из», ловушка,
+// скрытые поля, которые без JS ставит сервер, и страница «спасибо» на языке страницы.
+export interface LeadForm {
+  // form_id заявки — `<страница>/<секция>`.
+  id: string
+  set: string
+  fields: FormField[]
+  oneOf: string[]
+  honeypot: string
+  server: string[]
+  // page_url заявки — адрес страницы с формой на её языке.
+  page: string
+  thankYou: Link
+  marketingConsent: boolean
+}
+
+// Значение слота: текст copy deck, действие плана, факт, форма.
+export type SlotValue = string | Action | FactValue | LeadForm | undefined
 
 // Слоты по элементу анатомии блока («headline»; в экземпляре группы — «title» из «card.title»). Элемент, который план
 // заполняет не раз (пункты меню), — список значений по порядку плана.
@@ -200,6 +241,90 @@ function placeOf(project: Project, plan: Plan, locale: Locale) {
   return { url: localePath(locale, mapPage(project.map, id).url), parents }
 }
 
+const LEAD_FORMS = parseFile(
+  LeadFormsSchema,
+  catalog,
+  'kb/site/05-conversion-funnels/lead-forms.yaml',
+)
+const FIELD_TYPES = new Set<string>(['text', 'textarea', 'email', 'tel', 'radio'])
+
+// Варианты поля канала связи — только каналы, которые бизнес ведёт (fields.contact-channel каталога): звонок и почта —
+// факты с machine telephone и email, мессенджер — факт messenger своей сети.
+function channelOf(option: string, facts: ReadonlyMap<string, Fact>): boolean {
+  const machines = [...facts.values()].flatMap((fact) => (fact.machine ? [fact.machine] : []))
+  if (option === 'call') return machines.some((machine) => machine.type === 'telephone')
+  if (option === 'email') return machines.some((machine) => machine.type === 'email')
+  return machines.some((machine) => machine.type === 'messenger' && machine.network === option)
+}
+
+// Набор формы `form.ref` — поля каталога по порядку набора. Форма без JS: успех — страница «спасибо», согласие —
+// отдельная галочка, один шаг; поле вида, который форма без JS не собирает, — ошибка с ключом действия.
+function formOf(
+  form: PlanFormValue,
+  key: string,
+  facts: ReadonlyMap<string, Fact>,
+  address: (route: string) => Link,
+): Omit<LeadForm, 'id' | 'page'> {
+  const id = form.ref.slice('lead-forms.yaml#'.length)
+  const set =
+    LEAD_FORMS.form_sets.find((candidate) => candidate.id === id) ??
+    fail(key, `${form.ref} — набора нет в каталоге`)
+  if ((form.success ?? 'thank-you-page') === 'inline') {
+    fail(
+      key,
+      'form.success: inline — успех на месте формы только с JS: у формы без JS успех — страница «спасибо»',
+    )
+  }
+  if ((form.consent ?? 'separate-checkbox') !== 'separate-checkbox') {
+    fail(
+      key,
+      `form.consent: ${form.consent} — заявка с ПДн собирается только с отдельной галочкой согласия`,
+    )
+  }
+  if (form.marketing_consent)
+    fail(key, 'form.marketing_consent — текста согласия на рекламу у секции нет')
+  if (Math.max(set.steps, form.steps ?? 1) > 1)
+    fail(key, `${form.ref} — шагов больше одного: форма без JS — один шаг`)
+  const fields = set.fields.flatMap(({ field, required }): FormField[] => {
+    const entry = LEAD_FORMS.fields[field] ?? fail(key, `${form.ref}: поля ${field} нет в каталоге`)
+    if (!FIELD_TYPES.has(entry.type))
+      fail(key, `${form.ref}: поле ${field} вида ${entry.type} форма без JS не собирает`)
+    const listed = entry.options ?? entry.options_ru_2026 ?? []
+    if (typeof listed === 'string')
+      fail(key, `${form.ref}: варианты поля ${field} — ${listed}, а не список`)
+    const options =
+      field === 'contact-channel' ? listed.filter((option) => channelOf(option, facts)) : listed
+    if (entry.type === 'radio' && options.length === 0) return []
+    return [
+      {
+        id: field,
+        type: entry.type as FormField['type'],
+        required,
+        autocomplete: entry.autocomplete,
+        inputmode: entry.inputmode,
+        spellcheck: entry.spellcheck,
+        options,
+      },
+    ]
+  })
+  return {
+    set: set.id,
+    fields,
+    oneOf: set.one_of_required,
+    honeypot: LEAD_FORMS.defaults.antispam.honeypot.field,
+    server: LEAD_FORMS.defaults.hidden_fields_without_js.server,
+    thankYou: address(
+      form.thank_you_page ??
+        fail(key, 'у формы без JS нет form.thank_you_page — страницы «спасибо»'),
+    ),
+    marketingConsent: form.marketing_consent,
+  }
+}
+
+// Готовое первое сообщение мессенджера — параметр `text` адреса ссылки (wa.me, t.me): так его несёт ссылка действия.
+const withPrefill = (href: string, text: string) =>
+  `${href}${href.includes('?') ? '&' : '?'}text=${encodeURIComponent(text)}`
+
 // Страница сайта из снимка: секции плана по порядку, их тексты на языке страницы, адреса действий, факты слотов
 // данных, мета copy deck и место в карте. Нет плана, страницы copy deck, текста слота или факта — ошибка с ключом.
 // Шаблон коллекции (`page.template`) — страница записи: в copy deck — тексты шаблона, слот без текста и мету
@@ -275,10 +400,33 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
     for (const slot of section.slots.media) place(slot, 'media', undefined, true)
     for (const slot of section.slots.action) {
       const key = `${id}/${section.id}/${slot.id}`
+      if (slot.form !== undefined) {
+        const form = formOf(slot.form, key, facts, (route) =>
+          address({ kind: 'route', value: route }, key),
+        )
+        place(
+          slot,
+          'action',
+          { id: `${id}/${section.id}`, page: placeOf(project, plan, locale).url, ...form },
+          false,
+        )
+        continue
+      }
+      if (slot.target === undefined) {
+        place(slot, 'action', { href: undefined }, false)
+        continue
+      }
+      const link = address(slot.target, key)
+      const prefill = slot.target.prefill
       place(
         slot,
         'action',
-        slot.target === undefined ? { href: undefined } : address(slot.target, key),
+        prefill === undefined
+          ? link
+          : {
+              ...link,
+              href: withPrefill(link.href, textOf(prefill) ?? fail(`${key}/prefill`, 'нет текста')),
+            },
         false,
       )
     }
@@ -343,6 +491,43 @@ export function readPage(project: Project, id: string, locale: Locale): Strategy
   }
 }
 
+// Политика ПДн, на которую ссылается согласие формы: её версия по карте, заголовок документа (`seo.h1` её плана) на языке
+// версии и дата редакции — факт, который план документа связывает с его датой (`binds: [date]`): дата одна — на
+// странице политики и в записи согласия.
+export interface Policy extends Link {
+  title: string
+  revision: string
+}
+
+function readPolicy(project: Project, page: StrategyPage, files: PageFiles): Policy {
+  const key = `${page.id}/legal/privacy_policy`
+  const link = page.policy ?? fail(key, 'у страницы с формой нет политики ПДн')
+  const { plans, decks } = projectOf(files)
+  const [plan] = plans
+  if (plan === undefined || plans.length > 1)
+    fail(key, `в модуле политики планов ${plans.length}, а нужен один`)
+  const document = readPage(
+    { ...project, plans, decks },
+    plan.page.id,
+    link.hreflang ?? localeOf(page.url),
+  )
+  if (document.url !== link.href)
+    fail(key, `модуль страницы ${document.id} — не политика плана ${link.href}`)
+  const h1 = plan.page.seo.h1 ?? fail(`${document.id}/seo/h1`, 'у документа нет заголовка')
+  const section = h1.slice(0, h1.indexOf('.'))
+  const slot = h1.slice(h1.indexOf('.') + 1)
+  const title = document.sections.find((candidate) => candidate.id === section)?.slots[slot]
+  if (typeof title !== 'string')
+    fail(`${document.id}/${section}/${slot}`, 'заголовок документа — не текст секции')
+  const bound = plan.sections
+    .find((candidate) => candidate.id === section)
+    ?.slots.data.find((candidate) => candidate.binds.includes('date'))
+  const revision = document.facts.find((fact) => `fact:${fact.id}` === bound?.fact)
+  if (revision === undefined)
+    fail(`${document.id}/${section}/date`, 'у даты редакции документа нет факта')
+  return { ...link, title, revision: revision.text }
+}
+
 // Снимок strategy сайта — `strategy/` в корне репозитория. YAML — модулем сборки (плагин yaml-modules
 // astro.config.ts): в бандле — поля схем чтения, а не парсер, и страницы на запросе читают то же, что на сборке.
 // Карта и факты — сразу: правила карты (языки, ссылки, меню, крошки) и факты нужны каждой странице; план и copy deck
@@ -389,6 +574,8 @@ export function siteOf(project: Project) {
         props: { locale },
       })),
     strategyPage: (id: string, locale: Locale): StrategyPage => readPage(project, id, locale),
+    // Политика согласия формы страницы — по модулю данных политики (`virtual:strategy/<id>`).
+    policyOf: (page: StrategyPage, files: PageFiles): Policy => readPolicy(project, page, files),
   }
 }
 
@@ -401,6 +588,7 @@ export const {
   breadcrumbsOn,
   relatedOf,
   localeRoutes,
+  policyOf,
 } = siteOf(site)
 
 // Страница из снимка целиком — для проверок по всем страницам сайта.

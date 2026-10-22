@@ -10,7 +10,7 @@ Reference-набор шаблона — **живой образец**, а не �
 
 `src/pages/[...locale]/{index,about,contacts/*,legal/privacy}`,
 `src/pages/{404,500,healthz,robots.txt,[key].txt,api/contact}`,
-файлы страниц `_about/`, `_contacts/`, `_privacy/`, `src/features/{contact-form,preferences}`,
+файлы страниц `_about/`, `_contacts/`, `_privacy/`, `src/features/{lead-form,preferences}`,
 `src/widgets/{header,footer,breadcrumbs}` и блоки страниц, данные `strategy/`,
 `src/shared/**`, `src/app/**`, `.gate-fixtures/`, `docker/`, `scripts/`, гейты. Фикстуры гейта на
 гейт не правятся ни в каком режиме: у мини-проектов `.gate-fixtures/` свой реестр коллекций, и

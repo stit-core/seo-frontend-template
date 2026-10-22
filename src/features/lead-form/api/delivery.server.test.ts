@@ -1,4 +1,7 @@
 import { SITE_NAME } from '@/shared/config'
+import { DEFAULT_LOCALE } from '@/shared/i18n'
+import { FORM_DICTS } from '../config/dict'
+import { t } from '../lib/text'
 import { deliverLead, type Lead } from './delivery'
 
 // nodemailer подменён: письмо никуда не уходит, транспорт и вызовы видны тесту.
@@ -10,12 +13,20 @@ const smtp = vi.hoisted(() => {
 vi.mock('nodemailer', () => ({ createTransport: smtp.createTransport }))
 
 const lead: Lead = {
-  name: 'Мария',
-  email: 'maria@example.com',
-  message: 'Нужен сайт с блогом и формой заявки.',
-  consent: true,
-  consentVersion: '2026-09-17',
-  consentedAt: '2026-10-06T09:00:00.000Z',
+  fields: {
+    name: 'Мария',
+    email: 'maria@example.com',
+    'contact-channel': 'email',
+    task: 'Нужен сайт с блогом.',
+  },
+  hidden: { utm_source: 'yandex' },
+  consent: {
+    consent_version: '10 октября 2026 года',
+    consent_at: '2026-10-06T09:00:00.000Z',
+    page_url: 'https://demo.example/contacts',
+    form_id: 'contacts/lead-form',
+    marketing_consent: false,
+  },
 }
 
 // FORM_DELIVERY не задан — канал по умолчанию, smtp.
@@ -55,18 +66,34 @@ describe('доставка заявки: канал smtp', () => {
       from: 'site@example.com',
       to: 'sales@example.com',
       replyTo: 'maria@example.com',
-      subject: `Заявка с сайта ${SITE_NAME}: Мария`,
+      subject: t(DEFAULT_LOCALE, 'mail.subject', { site: SITE_NAME, form: 'contacts/lead-form' }),
     })
+    // Поле и вариант — подписями словаря основного языка, метки рекламы и запись согласия — целиком.
     for (const part of [
-      lead.name,
-      lead.email,
-      lead.message,
-      lead.consentVersion,
-      lead.consentedAt,
+      t(DEFAULT_LOCALE, 'mail.field', {
+        label: FORM_DICTS[DEFAULT_LOCALE]['label.name'],
+        value: 'Мария',
+      }),
+      t(DEFAULT_LOCALE, 'mail.field', {
+        label: FORM_DICTS[DEFAULT_LOCALE]['label.contact-channel'],
+        value: FORM_DICTS[DEFAULT_LOCALE]['option.contact-channel.email'],
+      }),
+      lead.fields.task ?? '',
+      'utm_source: yandex',
+      lead.consent.page_url,
+      lead.consent.form_id,
+      lead.consent.consent_version,
+      lead.consent.consent_at,
     ]) {
       expect(mail.text).toContain(part)
     }
     expect(smtp.close).toHaveBeenCalledOnce()
+  })
+
+  it('без почты в заявке ответа отправителю нет: письмо уходит без reply-to', async () => {
+    await deliverLead({ ...lead, fields: { phone: '+7 900 000-00-00' } })
+    const [mail] = smtp.sendMail.mock.calls.at(-1) as [Record<string, string>]
+    expect(mail).not.toHaveProperty('replyTo')
   })
 
   it('сбой сервера: три попытки, транспорт закрывается после каждой, ошибка — наружу', async () => {

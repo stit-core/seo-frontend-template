@@ -1,12 +1,14 @@
 ---
-// Обработчик формы: on-demand, потому что ему нужны тело запроса, его заголовки и живой
-// конфиг доставки. Успех — PRG-303 на страницу подтверждения (F5 не переотправляет заявку),
-// ошибка — та же страница контактов с сохранёнными полями и честным статусом. Маршрут —
-// страница, а не endpoint: без JS ответ на POST обязан быть разметкой, а не JSON.
+// Обработчик формы: on-demand, потому что ему нужны тело запроса, его заголовки и живой конфиг доставки. Успех — PRG-303
+// на страницу «спасибо» плана формы (F5 не переотправляет заявку), ошибка — страница формы с сохранёнными полями и
+// честным статусом. Маршрут — страница, а не endpoint: без JS ответ на POST обязан быть разметкой, а не JSON.
 export const prerender = false
 
-import { handleContactRequest } from '@/features/contact-form'
-import { localePath } from '@/shared/i18n'
+import contacts from 'virtual:strategy/contacts'
+import privacy from 'virtual:strategy/privacy'
+import { type FormEntry, handleLeadRequest } from '@/features/lead-form'
+import { pageLocales, pageOf, policyOf } from '@/shared/strategy'
+import { leadForm } from '@/widgets/lead-form'
 import ContactsPage from '../_contacts/contacts-page.astro'
 
 // Отказ до разбора заявки — короткий текст, а не страница: возвращать в форму нечего.
@@ -19,7 +21,18 @@ const REFUSALS = {
 // Адрес обработчика в адресной строке — не страница: GET возвращает на форму.
 if (Astro.request.method !== 'POST') return Astro.redirect('/contacts', 303)
 
-const outcome = await handleContactRequest(Astro.request, { rid: Astro.locals.rid })
+// Форма заявки — форма плана контактов на версии страницы, с которой она пришла (`form_id`, `page_url`).
+const formOf = (formId: string, pageUrl: string): FormEntry | undefined => {
+  for (const locale of pageLocales('contacts')) {
+    const page = pageOf(contacts, locale)
+    if (page.url !== pageUrl) continue
+    const { form } = leadForm.props(page, 'lead-form')
+    if (form.id === formId) return { form, policy: policyOf(page, privacy), locale }
+  }
+  return undefined
+}
+
+const outcome = await handleLeadRequest(Astro.request, { rid: Astro.locals.rid, formOf })
 
 if (
   outcome.status === 'forbidden' ||
@@ -37,19 +50,16 @@ if (
   })
 }
 
-if (outcome.status === 'accepted') {
-  return Astro.redirect(localePath(outcome.locale, '/contacts/spasibo'), 303)
-}
+if (outcome.status === 'accepted') return Astro.redirect(outcome.entry.form.thankYou.href, 303)
 
 // Ответ персональный — в полях то, что прислал человек: ни кешу, ни индексу он не достаётся.
 Astro.response.status = outcome.status === 'failed' ? 500 : 200
 Astro.response.headers.set('cache-control', 'private, no-store')
+const answer = {
+  submission: outcome.submission,
+  faults: outcome.status === 'invalid' ? outcome.faults : {},
+  failed: outcome.status === 'failed',
+}
 ---
 
-<ContactsPage
-  locale={outcome.locale}
-  values={outcome.values}
-  errors={outcome.status === 'invalid' ? outcome.errors : undefined}
-  notice={outcome.status === 'failed' ? outcome.notice : undefined}
-  noindex
-/>
+<ContactsPage locale={outcome.entry.locale} answer={answer} noindex />

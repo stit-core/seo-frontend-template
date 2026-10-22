@@ -1,0 +1,211 @@
+---
+import type { Locale } from '@/shared/i18n'
+import type { LeadForm, Policy } from '@/shared/strategy'
+import { t, textOf } from '../lib/text'
+import {
+  CONSENT_FIELD,
+  FORM_ID_FIELD,
+  type FormAnswer,
+  MAX_LENGTH,
+  PAGE_URL_FIELD,
+} from '../model/schema'
+
+interface Props {
+  // id секции плана: от него id полей и сводки — две формы на странице не делят id.
+  id: string
+  locale: Locale
+  // Маршрут обработчика знает страница: слайс не решает, как устроен роутинг.
+  action: string
+  form: LeadForm
+  policy: Policy
+  // Подпись кнопки и текст согласия — тексты своей секции формы.
+  submitLabel: string
+  consentLabel: string
+  answer?: FormAnswer | undefined
+}
+
+const { id, locale, action, form, policy, submitLabel, consentLabel, answer } = Astro.props
+const values = answer?.submission.values ?? {}
+const faults = answer?.faults ?? {}
+const where = `${form.id}/form`
+const labelOf = (field: string) => textOf(locale, `label.${field}`, where)
+const oneOfKey = [...form.oneOf].sort().join('+')
+const oneOf = form.oneOf.length > 0 ? textOf(locale, `oneOf.${oneOfKey}`, where) : undefined
+
+// Обязательность отмечает меньшая группа (`required_marking: minority-rule` каталога); поле «хотя бы одного из» —
+// необязательное само по себе.
+const required = form.fields.filter((field) => field.required).length
+const marked = required * 2 <= form.fields.length ? 'required' : 'optional'
+const captionOf = (field: (typeof form.fields)[number]) =>
+  field.required === (marked === 'required')
+    ? t(locale, marked, { label: labelOf(field.id) })
+    : labelOf(field.id)
+
+const messageOf = (field: (typeof form.fields)[number]): string | undefined => {
+  const fault = faults[field.id]
+  if (fault === undefined || fault === 'oneOf') return fault && oneOf
+  return t(locale, `error.${fault}`, { label: labelOf(field.id), max: MAX_LENGTH[field.type] })
+}
+const consentFault = faults[CONSENT_FIELD] && t(locale, 'error.consent')
+const failures = [
+  ...form.fields.map((field) => ({ field: field.id, message: messageOf(field) })),
+  { field: CONSENT_FIELD, message: consentFault },
+].flatMap(({ field, message }) => (message ? [{ href: `#${id}-${field}`, message }] : []))
+const describedBy = (field: string, ...extra: (string | false)[]): string | undefined =>
+  [faults[field] !== undefined && `${id}-${field}-error`, ...extra].filter(Boolean).join(' ') ||
+  undefined
+const lang = policy.hreflang
+---
+
+{/* Сводка получает фокус при загрузке ответа, без JS: чтец экрана и клавиатура начинают с
+отказа, а не с начала страницы; `role="alert"` при загрузке объявляют не все чтецы. */}
+{(failures.length > 0 || answer?.failed) && (
+  <div
+    role="alert"
+    aria-labelledby={`${id}-summary`}
+    tabindex="-1"
+    autofocus
+    class="mb-lg rounded-control border-l-thick border-danger bg-danger px-md py-sm text-body"
+  >
+    <h3 id={`${id}-summary`} class="text-body-strong">
+      {t(locale, 'summary')}
+    </h3>
+    {answer?.failed && <p class="mt-xs">{t(locale, 'delivery')}</p>}
+    {failures.length > 0 && (
+      <ul class="mt-xs list-disc space-y-2xs pl-lg text-helper">
+        {failures.map((failure) => (
+          <li>
+            <a class="touch-target" href={failure.href}>
+              {failure.message}
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+)}
+
+<form method="post" action={action} class="grid gap-lg">
+  <input type="hidden" name={FORM_ID_FIELD} value={form.id} />
+  <input type="hidden" name={PAGE_URL_FIELD} value={form.page} />
+  {oneOf && (
+    <p id={`${id}-one-of`} class="text-helper text-secondary">
+      {oneOf}
+    </p>
+  )}
+
+  {form.fields.map((field) => {
+    const fieldId = `${id}-${field.id}`
+    const group = form.oneOf.includes(field.id) && `${id}-one-of`
+    const message = messageOf(field)
+    return field.type === 'radio' ? (
+      <fieldset class="grid gap-xs" aria-describedby={describedBy(field.id, group)}>
+        <legend class="text-label">{captionOf(field)}</legend>
+        {field.options.map((option, index) => (
+          <label class="flex items-start gap-sm text-body">
+            <input
+              class="touch-target size-md shrink-0 pointer-fine:mt-3xs"
+              id={index === 0 ? fieldId : undefined}
+              name={field.id}
+              type="radio"
+              value={option}
+              required={field.required}
+              checked={values[field.id] === option}
+              aria-invalid={message ? 'true' : undefined}
+            />
+            <span>{textOf(locale, `option.${field.id}.${option}`, where)}</span>
+          </label>
+        ))}
+        {message && (
+          <p class="text-helper text-danger" id={`${fieldId}-error`}>
+            {message}
+          </p>
+        )}
+      </fieldset>
+    ) : (
+      <div>
+        <label class="block text-label" for={fieldId}>
+          {captionOf(field)}
+        </label>
+        {field.type === 'textarea' ? (
+          <textarea
+            class="field mt-xs resize-y"
+            id={fieldId}
+            name={field.id}
+            rows="6"
+            required={field.required}
+            maxlength={MAX_LENGTH.textarea}
+            aria-invalid={message ? 'true' : undefined}
+            aria-describedby={describedBy(field.id, group)}
+          >{values[field.id] ?? ''}</textarea>
+        ) : (
+          <input
+            class="field mt-xs"
+            id={fieldId}
+            name={field.id}
+            type={field.type}
+            value={values[field.id] ?? ''}
+            required={field.required}
+            maxlength={MAX_LENGTH[field.type]}
+            autocomplete={field.autocomplete}
+            inputmode={field.inputmode}
+            spellcheck={field.spellcheck === false ? 'false' : undefined}
+            aria-invalid={message ? 'true' : undefined}
+            aria-describedby={describedBy(field.id, group)}
+          />
+        )}
+        {message && (
+          <p class="mt-xs text-helper text-danger" id={`${fieldId}-error`}>
+            {message}
+          </p>
+        )}
+      </div>
+    )
+  })}
+
+  <div class="honeypot" aria-hidden="true">
+    <label for={`${id}-${form.honeypot}`}>{labelOf(form.honeypot)}</label>
+    <input
+      id={`${id}-${form.honeypot}`}
+      name={form.honeypot}
+      type="text"
+      tabindex="-1"
+      autocomplete="off"
+    />
+  </div>
+
+  {/* Согласие — отдельная галочка с текстом секции формы; политика — ссылка на её версию по карте: заголовок документа
+  на языке версии. */}
+  <div class="note">
+    <label class="flex items-start gap-sm text-helper" for={`${id}-${CONSENT_FIELD}`}>
+      <input
+        class="touch-target size-md shrink-0 pointer-fine:mt-3xs"
+        id={`${id}-${CONSENT_FIELD}`}
+        name={CONSENT_FIELD}
+        type="checkbox"
+        value="1"
+        required
+        checked={answer?.submission.consent}
+        aria-invalid={faults[CONSENT_FIELD] ? 'true' : undefined}
+        aria-describedby={describedBy(CONSENT_FIELD, `${id}-policy`)}
+      />
+      <span>{consentLabel}</span>
+    </label>
+    <p class="mt-xs text-helper" id={`${id}-policy`}>
+      <a class="touch-target" href={policy.href} hreflang={lang} lang={lang}>
+        {policy.title}
+      </a>
+    </p>
+    {consentFault && (
+      <p class="mt-xs text-helper text-danger" id={`${id}-${CONSENT_FIELD}-error`}>
+        {consentFault}
+      </p>
+    )}
+  </div>
+
+  <div>
+    <button class="button" type="submit">
+      {submitLabel}
+    </button>
+  </div>
+</form>

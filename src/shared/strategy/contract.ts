@@ -7,6 +7,18 @@ import { z } from 'zod'
 const Target = z.object({
   kind: z.enum(['anchor', 'route', 'url', 'tel', 'messenger', 'store', 'external']),
   value: z.string(),
+  // Готовое первое сообщение мессенджера — id текстового слота `messenger-prefill` той же секции.
+  prefill: z.string().optional(),
+})
+
+// Форма действия: набор полей каталога `lead-forms.yaml#<id>`, согласие, успех и страница «спасибо».
+const PlanForm = z.object({
+  ref: z.string().regex(/^lead-forms\.yaml#[a-z0-9]+(?:-[a-z0-9]+)*$/),
+  consent: z.enum(['separate-checkbox', 'link-only', 'none']).optional(),
+  success: z.enum(['inline', 'thank-you-page']).optional(),
+  thank_you_page: z.string().optional(),
+  marketing_consent: z.boolean().default(false),
+  steps: z.number().optional(),
 })
 
 const PlanSlot = z.object({
@@ -24,8 +36,9 @@ export const PlanSchema = z.object({
     // План шаблона коллекции: тексты шаблона — copy deck, слоты без текста и мету страницы даёт запись коллекции.
     template: z.boolean().default(false),
     // Типы JSON-LD страницы — `seo.structured_data` плана (head-kit `page_types` её типа): страница печатает ровно их.
+    // Заголовок страницы — слот `<секция>.<слот>` (`seo.h1`): по нему форма называет документ политики.
     seo: z
-      .object({ structured_data: z.array(z.string()).default([]) })
+      .object({ structured_data: z.array(z.string()).default([]), h1: z.string().optional() })
       .default({ structured_data: [] }),
     // Правовые решения страницы: адрес политики ПДн и оператор — факт `fact:<id>`.
     legal: z
@@ -49,7 +62,13 @@ export const PlanSchema = z.object({
         .object({
           text: z.array(PlanSlot).default([]),
           action: z
-            .array(PlanSlot.extend({ target: Target.optional(), label: z.string().optional() }))
+            .array(
+              PlanSlot.extend({
+                target: Target.optional(),
+                label: z.string().optional(),
+                form: PlanForm.optional(),
+              }),
+            )
             .default([]),
           // `binds` — тексты секции, которые показывают факт; без них факт показывает сам блок.
           data: z
@@ -198,6 +217,37 @@ export const HeadKitSchema = z.object({
   ),
 })
 
+// Каталог форм базы `lead-forms.yaml`: ловушка и скрытые поля без JS, запись согласия, библиотека полей и наборы.
+export const LeadFormsSchema = z.object({
+  defaults: z.object({
+    consent: z.object({ record: z.array(z.string()) }),
+    antispam: z.object({ honeypot: z.object({ field: z.string() }) }),
+    hidden_fields_without_js: z.object({ build: z.array(z.string()), server: z.array(z.string()) }),
+  }),
+  fields: z.record(
+    z.string(),
+    z.object({
+      type: z.string(),
+      autocomplete: z.string().optional(),
+      inputmode: z
+        .enum(['none', 'text', 'decimal', 'numeric', 'tel', 'search', 'email', 'url'])
+        .optional(),
+      spellcheck: z.boolean().optional(),
+      // Варианты — список id; строка — варианты из фактов заказчика (`by-offer`), их форма без JS не знает.
+      options: z.union([z.array(z.string()), z.string()]).optional(),
+      options_ru_2026: z.array(z.string()).optional(),
+    }),
+  ),
+  form_sets: z.array(
+    z.object({
+      id: z.string(),
+      fields: z.array(z.object({ field: z.string(), required: z.boolean() })).default([]),
+      one_of_required: z.array(z.string()).default([]),
+      steps: z.number().default(1),
+    }),
+  ),
+})
+
 export type Plan = z.infer<typeof PlanSchema>
 export type PlanSlot = z.infer<typeof PlanSlot>
 export type CopyDeck = z.infer<typeof CopyDeckSchema>
@@ -208,6 +258,8 @@ export type Machine = z.infer<typeof MachineSchema>
 export type SiteMap = z.infer<typeof SiteMapSchema>
 export type PlanTarget = z.infer<typeof Target>
 export type HeadKit = z.infer<typeof HeadKitSchema>
+export type PlanFormValue = z.infer<typeof PlanForm>
+export type LeadForms = z.infer<typeof LeadFormsSchema>
 
 // Файл снимка по своей схеме; ошибка называет файл и поле.
 export function parseFile<S extends z.ZodType>(

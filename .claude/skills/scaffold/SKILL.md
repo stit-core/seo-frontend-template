@@ -146,7 +146,7 @@ JavaScript**: форма шлёт нативный POST, ответ рисует
 строка реестра `ISLANDS` (`src/shared/config/islands.ts`) — основание, страницы и бюджет в brotli;
 инлайн — ещё хеш тела, файл — путь компонента.
 
-**Тесты обязательны** (образец — `features/contact-form`): `model/schema.test.ts` — значения и
+**Тесты обязательны** (образец — `features/lead-form`): `model/schema.test.ts` — значения и
 бюджеты полей граничными литералами; `api/<name>.server.test.ts` — каждый исход и строка лога
 без PII; `ui/<name>.astro.test.ts` — Container API + `expectNoA11yViolations`; маршрут фичи —
 тест в `src/pages/_tests/` (раздел route).

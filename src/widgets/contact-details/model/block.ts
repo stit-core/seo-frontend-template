@@ -1,4 +1,4 @@
-import { action, defineBlock, fact, list, text } from '@/shared/strategy'
+import { action, defineBlock, fact, list, text, unshown } from '@/shared/strategy'
 
 export const contactDetails = defineBlock({
   id: 'contact-details',
@@ -9,6 +9,9 @@ export const contactDetails = defineBlock({
     info: list(text),
     phone: action.optional(),
     email: action.optional(),
+    // Мессенджер — ссылкой; готовое сообщение несёт её адрес.
+    messenger: action.optional(),
+    'messenger-prefill': unshown.optional(),
     // Реквизиты оператора — текст copy deck, который показывает факт company (binds плана); пробел в фактах — без
     // значения.
     legal: text.optional(),

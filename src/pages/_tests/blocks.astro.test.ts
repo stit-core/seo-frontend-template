@@ -182,16 +182,19 @@ describe('блоки каталога: блок ↔ каталог ↔ план�
     ).toEqual([])
   })
 
-  // Текст, который блок принимает и не показывает, — только успех формы: на месте формы его показал бы остров, а без JS
-  // успех — страница «спасибо» плана. Любой другой элемент каталог велит показать.
-  it('вид unshown — только у успеха формы: элемент со слотом form-success у блока с формой', () => {
+  // Текст, который блок принимает и не показывает, — успех формы (на месте формы его показал бы остров, а без JS успех —
+  // страница «спасибо» плана) и готовое сообщение мессенджера (его несёт ссылка действия). Любой другой элемент каталог
+  // велит показать.
+  it('вид unshown — только у успеха формы и готового сообщения мессенджера', () => {
     expect(
       blocks.flatMap(({ block }) =>
         [...unshownOf(block)]
           .filter((element) => {
             const entry = catalog[block.id]
             const slot = entry?.slots.find((candidate) => candidate.id === element)?.slot
-            return entry?.html.form !== true || slot !== 'form-success'
+            return (
+              slot !== 'messenger-prefill' && (entry?.html.form !== true || slot !== 'form-success')
+            )
           })
           .map(
             (element) => `${block.id}: элемент ${element} — unshown, а каталог велит его показать`,

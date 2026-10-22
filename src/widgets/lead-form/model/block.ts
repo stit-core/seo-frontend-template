@@ -1,4 +1,4 @@
-import { defineBlock, text, unshown, untargeted } from '@/shared/strategy'
+import { action, defineBlock, form, text, unshown } from '@/shared/strategy'
 
 export const leadForm = defineBlock({
   id: 'lead-form',
@@ -6,11 +6,14 @@ export const leadForm = defineBlock({
   slots: {
     title: text,
     lead: text,
-    // Место формы: поля, проверку и обработчик даёт фича формы.
-    form: untargeted,
+    // Форма плана: набор полей каталога, проверку и обработчик даёт фича формы.
+    form,
     'cta-label': text,
     consent: text,
     'next-steps': text,
     success: unshown.optional(),
+    // Канал того же действия — ссылка мессенджера; готовое сообщение несёт её адрес.
+    messenger: action.optional(),
+    'messenger-prefill': unshown.optional(),
   },
 })

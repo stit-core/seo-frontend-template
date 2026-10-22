@@ -331,6 +331,17 @@ export function pageText(page: string, block: string, element: string, locale: L
 }
 
 // Правила content/redirects.yaml.
+// Форма заявки страницы плана: form_id — `<страница>/<секция блока lead-form>`, адрес — `page.url` плана (без языка).
+export function leadFormOf(page: string): { id: string; url: string } {
+  const plan = strategyFiles('plans', (data, path) => parseFile(PlanSchema, data, path)).find(
+    (candidate) => candidate.page.id === page,
+  )
+  const section = plan?.sections.find((candidate) => candidate.block === 'lead-form')
+  if (plan?.page.url === undefined || section === undefined)
+    throw new Error(`e2e: у страницы ${page} нет формы`)
+  return { id: `${page}/${section.id}`, url: plan.page.url }
+}
+
 export function redirects(): readonly RedirectRule[] {
   const data = load(readFileSync(resolve(root, 'content/redirects.yaml'), 'utf8'))
   return buildRedirectTable(data).rules

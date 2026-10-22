@@ -26,11 +26,12 @@ createServer((req, res) => {
         json(res, 400, { error: 'not json' })
         return
       }
-      if (String(lead.email).startsWith('fail-')) {
+      const email = String(lead.fields?.email)
+      if (email.startsWith('fail-')) {
         json(res, 502, { error: 'channel down' })
         return
       }
-      received.push(lead.email)
+      received.push(email)
       json(res, 202, { ok: true })
     })
     return

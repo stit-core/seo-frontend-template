@@ -1,8 +1,9 @@
 import type { Locale } from './locale'
 
 // Подписи интерфейса — каркас (переход к содержимому, лендмарки, тема и движение), страницы 410 и 500 без плана, блог
-// (пагинация, заглушка, теги), форма и термины пар («часы работы», автор и даты записи) — словарь на каждую локаль
-// дескриптора. Тексты страниц — copy deck strategy (меню, подвал, секции плана), записи — markdown-коллекции.
+// (пагинация, заглушка, теги) и термины пар («часы работы», автор и даты записи) — словарь на каждую локаль
+// дескриптора; микрокопия формы — словарь её фичи. Тексты страниц — copy deck strategy (меню, подвал, секции плана),
+// записи — markdown-коллекции.
 const ru = {
   'nav.label': 'Основная навигация',
   'nav.skip': 'К содержимому',
@@ -33,18 +34,6 @@ const ru = {
   'post.published': 'Опубликовано',
   'post.updated': 'Обновлено',
   'company.hours': 'Часы работы',
-  'form.name': 'Как вас зовут',
-  'form.email': 'Почта для ответа',
-  'form.message': 'Что нужно сделать',
-  'form.consentPolicy': 'Политика обработки персональных данных',
-  'form.honeypot': 'Не заполняйте это поле',
-  'form.summary': 'Заявка не отправлена',
-  'form.failed': 'Ошибка: {title}',
-  'form.error.name': 'Имя — от 2 до 80 знаков.',
-  'form.error.email': 'Адрес почты с @ и доменом: на него придёт ответ.',
-  'form.error.message': 'Сообщение — от 10 до 2000 знаков.',
-  'form.error.consent': 'Без согласия на обработку данных заявку принять нельзя.',
-  'form.error.delivery': 'Заявка не ушла: сбой доставки. Напишите на почту — адрес ниже.',
 }
 
 const en = {
@@ -77,19 +66,6 @@ const en = {
   'post.published': 'Published',
   'post.updated': 'Updated',
   'company.hours': 'Office hours',
-  'form.name': 'Your name',
-  'form.email': 'Email for the reply',
-  'form.message': 'What you need',
-  'form.consentPolicy': 'Personal data policy',
-  'form.honeypot': 'Leave this field empty',
-  'form.summary': 'The request was not sent',
-  'form.failed': 'Error: {title}',
-  'form.error.name': 'Name — from 2 to 80 characters.',
-  'form.error.email': 'An email address with @ and a domain: the reply goes there.',
-  'form.error.message': 'Message — from 10 to 2000 characters.',
-  'form.error.consent': 'Without consent to data processing the request cannot be accepted.',
-  'form.error.delivery':
-    'The request did not go through: delivery failed. Write to the email below.',
 }
 
 export const DICTS = { ru, en } satisfies Record<Locale, Readonly<Record<string, string>>>
@@ -98,16 +74,20 @@ export const DICTS = { ru, en } satisfies Record<Locale, Readonly<Record<string,
 // словаря нет — локаль уходит из сайта вместе со своим словарём.
 export type DictKey = keyof (typeof DICTS)[Locale]
 
-// Строка словаря на языке страницы. `{имя}` в строке — подстановка из `params`: порядок слов и место числа задаёт
-// словарь языка, а не склейка в коде. Подстановки нет — ошибка сборки.
-export function t(
-  locale: Locale,
-  key: DictKey,
-  params: Readonly<Record<string, string | number>> = {},
-): string {
-  return DICTS[locale][key].replace(/\{(\w+)\}/g, (_, name: string) => {
-    const value = params[name]
-    if (value === undefined) throw new Error(`i18n: ${key} — нет подстановки {${name}}`)
-    return String(value)
-  })
+// Словари — на каждую локаль дескриптора: интерфейса (здесь) и слайсов (форма). Строка — по ключу на языке страницы,
+// `{имя}` в строке — подстановка из `params`: порядок слов и место числа задаёт словарь языка, а не склейка в коде.
+// Подстановки нет — ошибка сборки.
+export function dictionary<D extends Record<Locale, Readonly<Record<string, string>>>>(dicts: D) {
+  return (
+    locale: Locale,
+    key: keyof D[Locale] & string,
+    params: Readonly<Record<string, string | number>> = {},
+  ): string =>
+    (dicts[locale][key] as string).replace(/\{(\w+)\}/g, (_, name: string) => {
+      const value = params[name]
+      if (value === undefined) throw new Error(`i18n: ${key} — нет подстановки {${name}}`)
+      return String(value)
+    })
 }
+
+export const t = dictionary(DICTS)

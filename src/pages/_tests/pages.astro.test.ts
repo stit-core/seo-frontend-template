@@ -281,11 +281,7 @@ describe('текст страницы — данные', () => {
       const faults: string[] = []
       for (const { path, locale, props } of pages) {
         const { html } = await render(module.default, path, props)
-        faults.push(
-          ...strayText(html, pageTexts(locale as Locale)).map(
-            (fault) => `${path} (${locale}): ${fault}`,
-          ),
-        )
+        faults.push(...strayText(html, pageTexts).map((fault) => `${path} (${locale}): ${fault}`))
       }
       expect(faults).toEqual([])
     },

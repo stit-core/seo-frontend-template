@@ -1,7 +1,7 @@
 import type { ImageMetadata } from 'astro'
 import { z } from 'zod'
 import { fail } from './contract'
-import type { FactValue, StrategyPage } from './page'
+import type { FactValue, LeadForm, StrategyPage } from './page'
 
 // Значения слотов блока — как их отдаёт чтение страницы: текст copy deck, действие плана с адресом цели (и языком цели,
 // когда это версия другого языка), факт.
@@ -17,9 +17,16 @@ export const untargeted = z.strictObject({ href: z.undefined() })
 // Медиа-слот: файл — манифест пакета дизайна, чтение плана его не заполняет; элемент рисует блок (знак — имя бренда).
 export const media = z.undefined().optional()
 
+// Форма действия плана — набор каталога `lead-forms.yaml` по `form.ref`: поля, ловушка, скрытые поля и страница
+// «спасибо»; собирает её фича формы.
+export const form = z.custom<LeadForm>(
+  (value) => typeof value === 'object' && value !== null && 'set' in value && 'fields' in value,
+)
+
 // Текст, который блок принимает и не показывает: успех формы без JS — страница «спасибо» плана (`form.thank_you_page`),
-// на месте формы его показал бы только остров. Метку вида читают тесты: разметки — такой текст на странице не ищут,
-// контракта — пускают её только на слот `form-success` блока с формой.
+// на месте формы его показал бы только остров; готовое сообщение мессенджера несёт ссылка действия. Метку вида читают
+// тесты: разметки — такой текст на странице не ищут, контракта — пускают её только на слот `form-success` блока с формой
+// и на `messenger-prefill`.
 export const unshown = text.meta({ unshown: true })
 
 // Дата записи коллекции: её кладёт страница из записи, а не чтение плана; блок печатает `<time>` — дату языка

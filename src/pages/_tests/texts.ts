@@ -1,4 +1,5 @@
 import { experimental_AstroContainer as AstroContainer } from 'astro/container'
+import { FORM_DICTS } from '@/features/lead-form'
 import { SITE_NAME } from '@/shared/config'
 import {
   BUTTON_TYPES,
@@ -9,6 +10,7 @@ import {
   SUPPORTED_LOCALES,
   TEXT_ATTRIBUTES,
 } from '@/shared/i18n'
+import { channelText } from '@/shared/lib'
 import { parseHtml } from '@/shared/lib/testing'
 import { pageLocales, snapshot, strategyPage } from '@/shared/strategy'
 import { AUTHORS, POSTS } from './fixtures'
@@ -26,38 +28,48 @@ const INLINE = new Set(
   ),
 )
 
+// Участок текста — с языком, на котором он написан: `lang` ближайшего предка (ссылка на версию страницы другого языка
+// называет её своим языком).
+interface Run {
+  text: string
+  lang: string
+}
+
 // Участки текста `<body>` и `<head>`: текст блочного элемента вместе со строчными детьми и текстовые атрибуты — каждый
 // своим участком. Скрытое (`hidden`, `aria-hidden`, `sr-only`) — тоже текст страницы: его читают поиск и чтец экрана.
-function runsOf(root: Element): string[] {
-  const runs: string[] = []
+function runsOf(root: Element, lang: string): Run[] {
+  const runs: Run[] = []
   let run = ''
+  let runLang = lang
   const flush = () => {
-    if (LETTER.test(run)) runs.push(normalize(run))
+    if (LETTER.test(run)) runs.push({ text: normalize(run), lang: runLang })
     run = ''
   }
-  const walk = (node: Element) => {
+  const walk = (node: Element, nodeLang: string) => {
     for (const child of node.childNodes) {
       if (child.nodeType === 3) {
+        if (run === '') runLang = nodeLang
         run += child.textContent ?? ''
         continue
       }
       if (child.nodeType !== 1) continue
       const element = child as Element
       if (['SCRIPT', 'STYLE', 'TEMPLATE'].includes(element.tagName)) continue
+      const own = element.getAttribute('lang') ?? nodeLang
       const button =
         element.tagName === 'INPUT' &&
         BUTTON_TYPES.includes((element.getAttribute('type') ?? '').toLowerCase())
       for (const name of button ? [...TEXT_ATTRIBUTES, 'value'] : TEXT_ATTRIBUTES) {
         const value = element.getAttribute(name)
-        if (value !== null && LETTER.test(value)) runs.push(normalize(value))
+        if (value !== null && LETTER.test(value)) runs.push({ text: normalize(value), lang: own })
       }
       const inline = INLINE.has(element.tagName)
-      if (!inline) flush()
-      walk(element)
-      if (!inline) flush()
+      if (!inline || own !== nodeLang) flush()
+      walk(element, own)
+      if (!inline || own !== nodeLang) flush()
     }
   }
-  walk(root)
+  walk(root, lang)
   flush()
   return runs
 }
@@ -66,51 +78,67 @@ function runsOf(root: Element): string[] {
 const HEAD_META = ['description', 'og:title', 'og:description', 'og:image:alt']
 
 // Участки текста <head>: заголовок и текстовые атрибуты (подпись фида) — как в теле, мета — своим участком.
-function headRunsOf(head: Element): string[] {
+function headRunsOf(head: Element, lang: string): Run[] {
   const meta = [...head.querySelectorAll('meta')].flatMap((tag) => {
     const name = tag.getAttribute('name') ?? tag.getAttribute('property') ?? ''
     const content = tag.getAttribute('content') ?? ''
-    return HEAD_META.includes(name) && LETTER.test(content) ? [normalize(content)] : []
+    return HEAD_META.includes(name) && LETTER.test(content)
+      ? [{ text: normalize(content), lang }]
+      : []
   })
-  return [...runsOf(head), ...meta]
+  return [...runsOf(head, lang), ...meta]
 }
 
-// Слова страницы мимо данных: из каждого участка вычитаются тексты данных — длинные первыми, чтобы короткая строка не
-// разрезала длинную; остаток с буквами — текст, которого нет ни в одном источнике. Ответ — остатки с участком.
-export function strayText(html: string, texts: Iterable<string>): string[] {
-  const known = [...new Set([...texts].map(normalize).filter((text) => LETTER.test(text)))].sort(
-    (a, b) => b.length - a.length,
-  )
+// Слова страницы мимо данных: из каждого участка вычитаются тексты данных его языка (`textsOf`: язык страницы — `lang`
+// `<html>`, у участка с `lang` другого языка — его) — длинные первыми, чтобы короткая строка не разрезала длинную;
+// остаток с буквами — текст, которого нет ни в одном источнике. Ответ — остатки с участком.
+export function strayText(html: string, textsOf: (lang: Locale) => Iterable<string>): string[] {
+  const knownOf = (lang: string) => {
+    const locale = SUPPORTED_LOCALES.find((candidate) => candidate === lang)
+    return [...new Set([...(locale ? textsOf(locale) : [])].map(normalize))]
+      .filter((text) => LETTER.test(text))
+      .sort((a, b) => b.length - a.length)
+  }
   const page = parseHtml(html)
-  return [...headRunsOf(page.head), ...runsOf(page.body)].flatMap((run) => {
-    const rest = known.reduce((left, text) => left.split(text).join('\u0000'), run)
-    const stray = rest
-      .split('\u0000')
-      .map(normalize)
-      .filter((part) => LETTER.test(part))
-    return stray.length > 0 ? [`«${stray.join(' … ')}» в «${run.slice(0, 120)}»`] : []
-  })
+  const lang = page.documentElement.getAttribute('lang') ?? ''
+  return [...headRunsOf(page.head, lang), ...runsOf(page.body, lang)].flatMap(
+    ({ text, lang: of }) => {
+      const rest = knownOf(of).reduce((left, known) => left.split(known).join('\u0000'), text)
+      const stray = rest
+        .split('\u0000')
+        .map(normalize)
+        .filter((part) => LETTER.test(part))
+      return stray.length > 0 ? [`«${stray.join(' … ')}» в «${text.slice(0, 120)}»`] : []
+    },
+  )
 }
 
-// Значения слотов секции: тексты copy deck, формулировки фактов, адрес канала без подписи (почта, телефон — ссылка
-// показывает свой адрес).
+// Значения слотов секции: тексты copy deck, формулировки фактов, адрес канала без подписи (почта, телефон, мессенджер —
+// ссылка показывает свой адрес).
 function valuesOf(value: unknown): string[] {
   if (typeof value === 'string') return [value]
   if (Array.isArray(value)) return value.flatMap(valuesOf)
   if (typeof value !== 'object' || value === null) return []
   if ('binds' in value && 'text' in value) return [String(value.text)]
-  if ('href' in value && typeof value.href === 'string' && /^(?:mailto|tel):/.test(value.href)) {
-    return [value.href.replace(/^(?:mailto|tel):/, '')]
+  if (
+    'href' in value &&
+    typeof value.href === 'string' &&
+    /^(?:mailto|tel|https?):/.test(value.href)
+  ) {
+    return [channelText(value.href)]
   }
   return []
 }
 
 const container = await AstroContainer.create()
 // Тело записи фикстуры — её Markdown: текст коллекции, а не разметки страницы.
-const body = runsOf(parseHtml(await container.renderToString(PostBody)).body)
+const body = runsOf(parseHtml(await container.renderToString(PostBody)).body, '').map(
+  ({ text }) => text,
+)
 
 // Что может стоять на странице языка словами — данные: тексты страниц снимка на этом языке (copy deck по ключу, факты,
-// адреса каналов, мета), строки словаря без подстановок (подстановка — сама данные: тег, номер страницы, заголовок),
+// адреса каналов, мета), строки словарей интерфейса и формы без подстановок (подстановка — сама данные: тег, номер
+// страницы, заголовок, подпись поля),
 // самоназвания языков (переключатель), имя сайта (знак шапки) и записи коллекции фикстур этого языка — заголовок,
 // анонс, теги, автор, даты в формате сайта, альтернатива обложки, тело.
 export function pageTexts(locale: Locale): string[] {
@@ -130,7 +158,10 @@ export function pageTexts(locale: Locale): string[] {
     ]),
     ...valuesOf(page.operator),
   ])
-  const dictionary = Object.values(DICTS[locale]).flatMap((text) => text.split(/\{\w+\}/))
+  const dictionary = [
+    ...Object.values(DICTS[locale]),
+    ...Object.values(FORM_DICTS[locale]),
+  ].flatMap((text) => text.split(/\{\w+\}/))
   const records = POSTS.filter(
     ({ id, data }) => id.startsWith(`${locale}/`) && !data.draft,
   ).flatMap(({ data }) => {

@@ -1,35 +1,30 @@
 ---
 import contacts from 'virtual:strategy/contacts'
+import privacy from 'virtual:strategy/privacy'
 import DocumentLayout from '@/app/layouts/document.astro'
-import type { ContactErrors, ContactValues } from '@/features/contact-form'
-import { type DictKey, type Locale, t } from '@/shared/i18n'
+import { type FormAnswer, failedTitle } from '@/features/lead-form'
+import type { Locale } from '@/shared/i18n'
 import { contactPage, localBusiness } from '@/shared/seo'
-import { fail, pageOf, pageVersions } from '@/shared/strategy'
+import { pageOf, pageVersions, policyOf } from '@/shared/strategy'
 import { ContactDetails, contactDetails } from '@/widgets/contact-details'
 import { HeroText, heroText } from '@/widgets/hero-text'
 import { LeadForm, leadForm } from '@/widgets/lead-form'
 
 interface Props {
   locale: Locale
-  // Заполненные поля и ошибки приходят с ответа обработчика формы; на самой странице их нет.
-  values?: ContactValues | undefined
-  errors?: ContactErrors | undefined
-  notice?: DictKey | undefined
+  // Ответ обработчика формы: присланное и отказы; на самой странице его нет.
+  answer?: FormAnswer | undefined
   // Ответ обработчика персональный (в полях — присланное) и служебный: только noindex.
   noindex?: boolean | undefined
 }
 
-const { locale, values, errors, notice, noindex } = Astro.props
+const { locale, answer, noindex } = Astro.props
 const page = pageOf(contacts, locale)
-// Ответ с ошибками называет отказ первым словом заголовка окна: вкладка и чтец экрана сообщают о
-// нём раньше текста страницы.
-const failed = errors !== undefined || notice !== undefined
-const meta = failed
-  ? { ...page.meta, title: t(locale, 'form.failed', { title: page.meta.title }) }
-  : page.meta
-// Согласие на обработку ПДн ссылается на политику — её версию по карте; без политики форму не собрать.
-const policy =
-  page.policy ?? fail(`${page.id}/legal/privacy_policy`, 'у страницы с формой нет политики ПДн')
+// Согласие формы ссылается на политику ПДн плана: её версия по карте, заголовок и дата редакции — данные политики.
+const policy = policyOf(page, privacy)
+// Ответ с ошибками называет отказ первым словом заголовка окна: вкладка и чтец экрана сообщают о нём раньше текста
+// страницы.
+const meta = answer ? { ...page.meta, title: failedTitle(locale, page.meta.title) } : page.meta
 ---
 
 <DocumentLayout
@@ -46,9 +41,7 @@ const policy =
     locale={locale}
     action="/api/contact"
     policy={policy}
-    values={values}
-    errors={errors}
-    notice={notice}
+    answer={answer}
   />
   <ContactDetails {...contactDetails.props(page, 'contacts')} locale={locale} />
 </DocumentLayout>

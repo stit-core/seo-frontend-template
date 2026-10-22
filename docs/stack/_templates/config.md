@@ -50,7 +50,6 @@ prerendered-выхода, `absoluteUrl()` на on-demand); публичные и
 | `CLEAN_PARAMS` | служебные параметры адреса: строка `Clean-param` прод-`robots.txt` | строки нет |
 | `METRIKA_ID` | счётчик | сторонних скриптов нет |
 | `SITE_VERIFICATION.google` / `.yandex` | подтверждение домена | тега нет |
-| `PRIVACY_POLICY_VERSION` | редакция политики ПДн, уезжает с заявкой | — |
 
 ## Секреты
 
