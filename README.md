@@ -6,15 +6,17 @@
 
 Astro 7 + Node-адаптер, Feature-Sliced Design под линтером, JavaScript — только
 острова по реестру, один Docker-образ на все среды. Приложение за логином —
-это [`spa-frontend-template`](https://git.stit.tech/stit-core/spa-frontend-template).
+это [`spa-frontend-template`](https://github.com/stit-core/spa-frontend-template).
 
 [![License](https://img.shields.io/badge/license-Apache--2.0-2563eb)](LICENSE)
-[![Часть stit](https://img.shields.io/badge/stit-открытые_шаблоны-6366f1)](https://git.stit.tech/stit-core/stit-public)
+[![Часть stit](https://img.shields.io/badge/stit-открытые_шаблоны-6366f1)](https://github.com/stit-core)
 [![Astro](https://img.shields.io/badge/Astro-7-ff5d01)](#стек)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6)](#стек)
 [![Arch](https://img.shields.io/badge/arch-FSD_%2B_ESLint_%2B_Steiger-22c55e)](#структура)
 
 </div>
+
+> Разработка идёт в приватном Gitea (`git.stit.tech/stit-core/ssr-frontend-template`), публичное зеркало — [github.com/stit-core/ssr-frontend-template](https://github.com/stit-core/ssr-frontend-template). Как с ним работать вне инфраструктуры stit — в [профиле stit-core](https://github.com/stit-core).
 
 ---
 
@@ -252,7 +254,7 @@ shutdown под Traefik и отказывается стартовать, есл
 
 Это один из открытых шаблонов stit (Apache-2.0) — фундамент «-1 уровня»,
 берите бесплатно и владейте. Карта всех шаблонов и точка входа —
-**[витрина stit](https://git.stit.tech/stit-core/stit-public)**. Нужна
+**[витрина stit](https://github.com/stit-core)**. Нужна
 команда, стандарт или поддержка — **[наш подход и контакты (vision)](https://git.stit.tech/stit/vision)**.
 
 ## Лицензия
