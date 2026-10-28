@@ -6,7 +6,7 @@
 
 ## Где этот шаблон
 
-`ssr-frontend-template` — шаблон **индексируемого сайта**: контент, который должен
+`seo-frontend-template` — шаблон **индексируемого сайта**: контент, который должен
 находиться в поиске, отдаётся первым HTML-ответом. Приложение за логином — другой
 шаблон, `spa-frontend-template`. Проект может иметь оба одновременно: сайт на корне
 домена, приложение на `app.${DOMAIN}`.
@@ -25,7 +25,7 @@
 ~/git/<org>/
 ├─ strategy/   ← business-strategy-template
 ├─ infra/      ← project-infra-template-compose
-├─ site/       ← ssr-frontend-template (этот репо)
+├─ site/       ← seo-frontend-template (этот репо)
 ├─ frontend/   ← spa-frontend-template (опционально)
 ├─ backend/    ← go-backend-template (опционально)
 ├─ <bot>/      ← telegram-bot-template (опционально)
@@ -38,7 +38,7 @@
 | `project-infra-template-compose` → `<org>/infra` | runtime проекта (docker-compose на VPS) и **операционный хаб**: общий план, рассылка агентов по сиблингам, выкатка тегов (`make bump`) |
 | `go-backend-template` → `<org>/backend` | Go-сервис: HTTP API и данные — если сайту нужны данные извне |
 | `spa-frontend-template` → `<org>/frontend` | React SPA (кабинет, всё за логином) |
-| `ssr-frontend-template` → `<org>/site` | **этот репо**: Astro SSR-сайт — контент, маршруты, SEO, форма, Docker-образ |
+| `seo-frontend-template` → `<org>/site` | **этот репо**: Astro SEO-сайт — контент, маршруты, SEO, форма, Docker-образ |
 | `telegram-bot-template` → `<org>/<bot>` | Telegram-бот (Python, aiogram) |
 | `mobile-template` → `<org>/mobile` | KMP-приложение Android + iOS; релиз — в магазины |
 

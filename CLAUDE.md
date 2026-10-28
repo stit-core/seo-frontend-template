@@ -1,4 +1,4 @@
-# ssr-frontend-template — гайд для агентов
+# seo-frontend-template — гайд для агентов
 
 Шаблон индексируемого сайта: **static-first, SSR по необходимости**. Astro 7.3 +
 `@astrojs/node` (`output: 'static'`, `standalone`) / TypeScript 6 (`astro/tsconfigs/strictest`)

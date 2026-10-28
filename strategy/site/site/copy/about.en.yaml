@@ -4,7 +4,7 @@ copy_deck:
   version: 1
   date: '2026-10-17'
   site: site-template
-  product_name: ssr-frontend-template
+  product_name: seo-frontend-template
   lang: en
   source_lang: ru
   source_ref: about.yaml
@@ -19,7 +19,7 @@ copy_deck:
       page_type: about-page
       status: assumed
       meta:
-        title: 'About ssr-frontend-template: sites you can find in search'
+        title: 'About seo-frontend-template: sites you can find in search'
         description: >-
           A studio that builds sites you can find in search: what we do, where we are, when we work and how to reach
           us.

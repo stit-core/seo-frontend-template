@@ -20,7 +20,7 @@ stable-артефакта сверяет `pnpm check:stack`.
 из `Домены` → `seo.md § Идентичность` и `SITE_URL`; `project-slug`/`strategy-path`/`surface`
 — резолв FSD-карты для `/scaffold` и `/de-template`.
 
-**Anti-patterns**: имя пакета осталось `@stit/ssr-frontend-template`; теги `:latest`/`:edge`;
+**Anti-patterns**: имя пакета осталось `@stit/seo-frontend-template`; теги `:latest`/`:edge`;
 два «канонических» хоста.
 
 ---

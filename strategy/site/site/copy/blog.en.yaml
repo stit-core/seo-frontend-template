@@ -4,7 +4,7 @@ copy_deck:
   version: 1
   date: '2026-10-17'
   site: site-template
-  product_name: ssr-frontend-template
+  product_name: seo-frontend-template
   lang: en
   source_lang: ru
   source_ref: blog.yaml
@@ -19,7 +19,7 @@ copy_deck:
       page_type: blog-index-page
       status: assumed
       meta:
-        title: ssr-frontend-template blog on indexable sites
+        title: seo-frontend-template blog on indexable sites
         description: >-
           Short notes on content sites: prerendering, zero JavaScript, honest status codes, canonical and
           hreflang, images, sitemaps and one image for every environment

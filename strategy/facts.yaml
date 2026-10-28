@@ -11,7 +11,7 @@ collected_by: исполнитель шаблона по README и коду ре
 never_claim_defaults: ru-default-1
 
 entities:
-  - {id: product-template, type: product, names: [ssr-frontend-template, шаблон индексируемого сайта]}
+  - {id: product-template, type: product, names: [seo-frontend-template, шаблон индексируемого сайта]}
   - {id: company-primer, type: company, names: [ООО «Пример», «Пример»]}
   - {id: city-moscow, type: place, names: [Москва, Москве]}
   - {id: tech-astro, type: other, names: [Astro]}

@@ -54,7 +54,7 @@ const FACE_FILE = /^(?:public\/|src\/entities\/[^/]+\/content\/|content\/redirec
 const spaced = (text) => text.replace(/\s+/g, ' ').trim()
 const WORD = /[\p{L}\p{N}]/u
 // Строка лица входит в текст словом: «site-template» — не в «website-template», а имя шаблона — и в имени пакета
-// «@stit/ssr-frontend-template». Смещения — в тексте как есть: по ним номер строки.
+// «@stit/seo-frontend-template». Смещения — в тексте как есть: по ним номер строки.
 function hits(text, face) {
   const body = face
     .split(' ')
@@ -165,7 +165,7 @@ if (canon) {
     )
     process.exit(1)
   }
-  // Имя шаблона под своим scope (@acme/ssr-frontend-template) — тоже не своё имя.
+  // Имя шаблона под своим scope (@acme/seo-frontend-template) — тоже не своё имя.
   if (hits(String(name ?? ''), TEMPLATE_NAME).length > 0) {
     problems.push(
       `package.json: имя пакета ${name} — с именем шаблона: своё — scope из docs/stack/service.md`,

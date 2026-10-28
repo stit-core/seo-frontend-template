@@ -261,7 +261,7 @@ const GIT_ENV = {
   GIT_COMMITTER_DATE: '2026-01-01T00:00:00Z',
   LC_ALL: 'C',
 }
-const CANONICAL_ORIGIN = 'git@git.stit.tech:stit-core/ssr-frontend-template.git'
+const CANONICAL_ORIGIN = 'git@git.stit.tech:stit-core/seo-frontend-template.git'
 const FORK_ORIGIN = 'git@git.stit.tech:acme/site.git'
 const gitIn = (cwd, args) => {
   const result = spawnSync('git', args, { cwd, env: GIT_ENV, encoding: 'utf8' })

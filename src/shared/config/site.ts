@@ -1,9 +1,9 @@
 // Идентичность сайта — демо-значения шаблона; /de-template заменяет их проектными.
-export const SITE_NAME = 'ssr-frontend-template'
+export const SITE_NAME = 'seo-frontend-template'
 
 // Профили организации в других сервисах (JSON-LD Organization.sameAs).
 export const SITE_SAME_AS: readonly string[] = [
-  'https://git.stit.tech/stit-core/ssr-frontend-template',
+  'https://git.stit.tech/stit-core/seo-frontend-template',
 ]
 
 // Логотип организации (JSON-LD Organization.logo) — из набора иконок public/.

@@ -5,7 +5,7 @@ copy_deck:
   version: 1
   date: '2026-10-17'
   site: site-template
-  product_name: ssr-frontend-template
+  product_name: seo-frontend-template
   lang: ru
   facts_ref: ../../../facts.yaml
   page_plan_ref: ../plans/about.yaml
@@ -17,7 +17,7 @@ copy_deck:
       page_type: about-page
       status: assumed
       meta:
-        title: 'О компании ssr-frontend-template: сайты, которые видно в поиске'
+        title: 'О компании seo-frontend-template: сайты, которые видно в поиске'
         description: >-
           Студия делает сайты, которые видно в поиске: чем мы занимаемся, где находимся, когда работаем и как с нами
           связаться.

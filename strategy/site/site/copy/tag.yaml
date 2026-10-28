@@ -5,7 +5,7 @@ copy_deck:
   version: 1
   date: '2026-10-16'
   site: site-template
-  product_name: ssr-frontend-template
+  product_name: seo-frontend-template
   lang: ru
   facts_ref: ../../../facts.yaml
   page_plan_ref: ../plans/tag.yaml

@@ -4,7 +4,7 @@ copy_deck:
   version: 1
   date: '2026-10-17'
   site: site-template
-  product_name: ssr-frontend-template
+  product_name: seo-frontend-template
   lang: en
   source_lang: ru
   source_ref: not-found.yaml
@@ -19,7 +19,7 @@ copy_deck:
       page_type: not-found-page
       status: assumed
       meta:
-        title: Page not found — ssr-frontend-template
+        title: Page not found — seo-frontend-template
         description: >-
           There is no such page on the site: the address has changed or has a typo. Start from the home page or open
           the section you need.

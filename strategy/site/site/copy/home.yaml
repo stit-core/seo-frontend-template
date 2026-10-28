@@ -4,7 +4,7 @@ copy_deck:
   version: 1
   date: '2026-10-17'
   site: site-template
-  product_name: ssr-frontend-template
+  product_name: seo-frontend-template
   lang: ru
   facts_ref: ../../../facts.yaml
   page_plan_ref: ../plans/home.yaml
@@ -16,7 +16,7 @@ copy_deck:
       page_type: home-multipage
       status: assumed
       meta:
-        title: ssr-frontend-template — шаблон индексируемого сайта на Astro
+        title: seo-frontend-template — шаблон индексируемого сайта на Astro
         description: >-
           Шаблон сайта на Astro, который собирает страницы заранее: JavaScript — только острова по решению, один
           Docker-образ на все среды.

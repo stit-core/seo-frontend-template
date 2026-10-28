@@ -4,7 +4,7 @@ copy_deck:
   version: 1
   date: '2026-10-17'
   site: site-template
-  product_name: ssr-frontend-template
+  product_name: seo-frontend-template
   lang: ru
   facts_ref: ../../../facts.yaml
   page_plan_ref: ../plans/privacy.yaml
@@ -16,7 +16,7 @@ copy_deck:
       page_type: legal-page
       status: assumed
       meta:
-        title: Политика обработки персональных данных — ssr-frontend-template
+        title: Политика обработки персональных данных — seo-frontend-template
         description: >-
           Кто обрабатывает персональные данные посетителей сайта, какие именно, на каком основании, где они хранятся и
           как отозвать согласие.

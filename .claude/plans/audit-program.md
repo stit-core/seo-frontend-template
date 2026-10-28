@@ -252,7 +252,7 @@ strategy: слоя страницы, пакета дизайна и `ready.yaml`
   try/catch — на методе `TRACE` и userinfo в `Host` слушатель бросает, и без перехвата процесс завершается;
   сообщить в withastro/astro. Перехват в `docker/server.mjs` и его снятие — бэклог `adapter-request-throw`.
 - `stit-public` (владелец): репозиторий витрины в `git.stit.tech` не найден; если витрина жива — строка сайта в
-  таблице шаблонов и roadmap (`ssr-frontend-template`: индексируемый сайт, Astro · Node · SEO-гейт),
+  таблице шаблонов и roadmap (`seo-frontend-template`: индексируемый сайт, Astro · Node · SEO-гейт),
   `project-docs-template` → `business-strategy-template`.
 - strategy → публичный `github` (владелец): `main` и тег `v0.2.0` лежат в приватном `origin`; публикация в
   публичный remote — его решением.

@@ -1,8 +1,8 @@
 <div align="center">
 
-# ssr-frontend-template
+# seo-frontend-template
 
-### Шаблон индексируемого сайта: static-first, SSR по необходимости
+### Шаблон индексируемого сайта: SEO-слой и SEO-гейт из коробки, static-first
 
 Astro 7 + Node-адаптер, Feature-Sliced Design под линтером, JavaScript — только
 острова по реестру, один Docker-образ на все среды. Приложение за логином —
@@ -16,7 +16,7 @@ Astro 7 + Node-адаптер, Feature-Sliced Design под линтером, Ja
 
 </div>
 
-> Разработка идёт в приватном Gitea (`git.stit.tech/stit-core/ssr-frontend-template`), публичное зеркало — [github.com/stit-core/ssr-frontend-template](https://github.com/stit-core/ssr-frontend-template). Как с ним работать вне инфраструктуры stit — в [профиле stit-core](https://github.com/stit-core).
+> Разработка идёт в приватном Gitea (`git.stit.tech/stit-core/seo-frontend-template`), публичное зеркало — [github.com/stit-core/seo-frontend-template](https://github.com/stit-core/seo-frontend-template). Как с ним работать вне инфраструктуры stit — в [профиле stit-core](https://github.com/stit-core).
 
 ---
 

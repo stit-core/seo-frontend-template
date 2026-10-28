@@ -10,7 +10,7 @@ collected_by: template maintainer from the repository README and code
 never_claim_defaults: ru-default-1
 
 entities:
-  - {id: product-template, type: product, names: [ssr-frontend-template, indexable site template]}
+  - {id: product-template, type: product, names: [seo-frontend-template, indexable site template]}
   - {id: company-primer, type: company, names: [Primer LLC, Primer]}
   - {id: city-moscow, type: place, names: [Moscow]}
   - {id: tech-astro, type: other, names: [Astro]}

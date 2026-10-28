@@ -3,7 +3,7 @@
 import { execFileSync } from 'node:child_process'
 
 // Имя шаблона — имя его репо; пакет канона — @stit/<имя>. Форк носит своё (check:identity).
-export const TEMPLATE_NAME = 'ssr-frontend-template'
+export const TEMPLATE_NAME = 'seo-frontend-template'
 export const TEMPLATE_PACKAGE = `@stit/${TEMPLATE_NAME}`
 
 // «Use this template» даёт форку свой origin, а клон шаблона без смены origin — тот же канон. Без origin — форк.

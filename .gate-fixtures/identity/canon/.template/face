@@ -5,14 +5,14 @@ text +74950000000
 text 7700000000
 text hello@example.com
 text https://t.me/demo_studio
+text seo-frontend-template
 text site-template
-text ssr-frontend-template
 text Демо-сайт
 text Демо-студия
 text ООО «Пример»
 text ул. Примерная
 file 1509feb8f859298ff29fce1ce00d44c4d2eb491cf2d900c201b5b07c0fa9b186 content/redirects.yaml
 file 70b00cc412e8eefca20ab32f355f8eb1221ea443803b3e88aceaa5d6b2d10a1f public/icon-192.png
-file 556ea5f02c29972da36f3145d4fc44a4a7d8f4fbafd549e11826e1e5ef91ce9a public/manifest.webmanifest
+file eeaa623fe3e399b7f3d6e5302e2a6e6c975aacba254bd6efae2eb90002ba4c49 public/manifest.webmanifest
 file 75f5cc0b65b10629cabae7d0b1f8a139d3783538520736d62cb6a5ddbaa6d46b src/entities/post/content/ru/zametka.md
 file 70b00cc412e8eefca20ab32f355f8eb1221ea443803b3e88aceaa5d6b2d10a1f src/shared/lib/testing/icon-192.png

@@ -4,7 +4,7 @@ copy_deck:
   version: 1
   date: '2026-10-17'
   site: site-template
-  product_name: ssr-frontend-template
+  product_name: seo-frontend-template
   lang: ru
   facts_ref: ../../../facts.yaml
   page_plan_ref: ../plans/contacts.yaml
@@ -16,7 +16,7 @@ copy_deck:
       page_type: contacts-page
       status: assumed
       meta:
-        title: Контакты ssr-frontend-template — Москва, ул. Примерная, 1
+        title: Контакты seo-frontend-template — Москва, ул. Примерная, 1
         description: >-
           101000, Москва, ул. Примерная, 1, офис 2; Пн–Пт, 10:00–19:00 (МСК); телефон +7 495 000-00-00, почта и форма
           заявки без JavaScript.

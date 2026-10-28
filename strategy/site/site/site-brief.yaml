@@ -7,7 +7,7 @@ intake:
   channel: репозиторий шаблона
   what_ordered: multipage
   notes: >-
-    Данные reference-набора ssr-frontend-template в форме strategy: шаблон держит их на месте снимка, форк заменяет
+    Данные reference-набора seo-frontend-template в форме strategy: шаблон держит их на месте снимка, форк заменяет
     своим проектом. Оператор сайта и его реквизиты вымышлены.
 project:
   slug: site-template
@@ -16,7 +16,7 @@ project:
 site_type: corporate-site
 primary_page_type: home-multipage
 business:
-  name: ssr-frontend-template
+  name: seo-frontend-template
   what: Шаблон индексируемого сайта и демо-студия, которая делает сайты, заметные в поиске
   kind: service
   goal:
@@ -54,7 +54,7 @@ constraints:
   legal_category:
     - general
   cms: static
-  stack: Astro и Node.js — сайт ssr-frontend-template
+  stack: Astro и Node.js — сайт seo-frontend-template
   hosting: VPS в РФ — хаб <org>/infra
   accessibility: wcag22-aa
   legal_intake:

@@ -7,8 +7,8 @@ text 1000000000001
 text 7700000000
 text Primer LLC
 text hello@example.com
+text seo-frontend-template
 text site-template
-text ssr-frontend-template
 text ООО «Пример»
 text ул. Примерная
 file 2ce5131e98a22a282c7e25a47df9c8f0ddeac56fcf7c38c79324444988f5bf98 .gate-fixtures/seo/dist/client/icon-192.png
@@ -19,8 +19,8 @@ file 2ce5131e98a22a282c7e25a47df9c8f0ddeac56fcf7c38c79324444988f5bf98 public/ico
 file d92213fd8b51c4f9cdb890c8cdd55ccfc25785df9cafa3e0d013f26ead4630ef public/icon-512.png
 file 3b661478f80834b5e7ab63052061716b29afe42172e8c3ba596443f73a027629 public/icon-maskable-512.png
 file b7d502c2a0ca7feedfb01639b5df39cb2d9593f1d5fe4ec90c60fa1bf812521a public/icon.svg
-file 354b8d10dc5673fa5c0b30f4783e2db8629e2cbb112bc727712832349b1e14cd public/manifest.webmanifest
-file 7de8611a8343b8e50e5e4fbdf66b1dddff4d6d0a510e154d03429cbe8f859bb4 public/og-default.png
+file 33a9f1cb97e74da1c7ead8eb98457b74e03e320951f04754cb7dd19a26b8bfd4 public/manifest.webmanifest
+file 1030a9bb7842aa9b76e838ffc9a13a466cc5a0d6cfbe47e5629db46fc537de18 public/og-default.png
 file 6f0f456bdfd94a2a086c90fdcbd4f6e4edf55d348b9bc2663b61f799094e46ec src/entities/post/content/covers/honest-404-410.png
 file 80a955c7e594185b569707ba07486e5c198b9ca601a7f90a9eb92854c9642c24 src/entities/post/content/covers/images-avif-webp.png
 file 69d202285de30f1fe8cf3793a444ec1ea8f144215870e744e968895ac86e407a src/entities/post/content/covers/staging-noindex.png

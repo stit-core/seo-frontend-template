@@ -22,7 +22,7 @@ description: Cockpit сессии — сводка состояния (ветк�
    активный план прочитай целиком, начиная с «Где мы сейчас»
 3. **Шаблонное ли состояние** репо:
    ```bash
-   grep -m1 '"name"' package.json                    # @stit/ssr-frontend-template ⇒ форк не развёрнут
+   grep -m1 '"name"' package.json                    # @stit/seo-frontend-template ⇒ форк не развёрнут
    grep -l 'example: true' strategy/facts*.yaml | wc -l   # >0 ⇒ реквизиты оператора — демо-факты
    ls docs/stack/*.md | grep -vc README.md          # 0 ⇒ стек не проектировался
    ```

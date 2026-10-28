@@ -4,7 +4,7 @@ copy_deck:
   version: 1
   date: '2026-10-17'
   site: site-template
-  product_name: ssr-frontend-template
+  product_name: seo-frontend-template
   lang: en
   source_lang: ru
   source_ref: contacts.yaml
@@ -19,7 +19,7 @@ copy_deck:
       page_type: contacts-page
       status: assumed
       meta:
-        title: ssr-frontend-template contacts — Moscow, 1 Primernaya st.
+        title: seo-frontend-template contacts — Moscow, 1 Primernaya st.
         description: >-
           1 Primernaya st., office 2, Moscow, 101000; Mon–Fri, 10:00–19:00 (MSK); phone +7 495 000-00-00, email and a
           request form without JavaScript.

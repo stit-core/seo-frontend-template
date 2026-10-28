@@ -1,3 +1,3 @@
-# ssr-frontend-template — обвязка шаблона
+# seo-frontend-template — обвязка шаблона
 
 Путь шаблона: имя шаблона здесь законно — форк его не правит. Демо-почта hello@example.com — тоже.

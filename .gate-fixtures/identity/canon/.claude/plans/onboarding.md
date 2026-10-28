@@ -1,3 +1,3 @@
-# onboarding — разворот форка ssr-frontend-template
+# onboarding — разворот форка seo-frontend-template
 
 Рабочий документ: называет шаблон законно.

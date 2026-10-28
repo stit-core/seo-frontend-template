@@ -1,11 +1,11 @@
 ---
 name: de-template
-description: Развернуть форк ssr-frontend-template в самостоятельный сайт по stable-артефактам (локальный docs/stack и FSD-карта из соседнего <org>/strategy, docs/projects/<slug>/fsd/<surface>/) — переименовать пакет, подставить идентичность сайта и реквизиты оператора в политику ПДн, переписать README, вычистить демо-контент и лишнюю часть reference-набора. Применяй один раз на форке, когда стек и нужные записи FSD-карты stable и юзер хочет превратить шаблон в свой сайт, или когда /init-service доходит до этапа 3. Механика — правки под этой процедурой с показом диффа, отдельного скрипта нет. На каноническом репозитории шаблона не запускается.
+description: Развернуть форк seo-frontend-template в самостоятельный сайт по stable-артефактам (локальный docs/stack и FSD-карта из соседнего <org>/strategy, docs/projects/<slug>/fsd/<surface>/) — переименовать пакет, подставить идентичность сайта и реквизиты оператора в политику ПДн, переписать README, вычистить демо-контент и лишнюю часть reference-набора. Применяй один раз на форке, когда стек и нужные записи FSD-карты stable и юзер хочет превратить шаблон в свой сайт, или когда /init-service доходит до этапа 3. Механика — правки под этой процедурой с показом диффа, отдельного скрипта нет. На каноническом репозитории шаблона не запускается.
 ---
 
 # Skill: de-template (движок развёртывания)
 
-Превращает форк в сайт, который ничего не помнит про `ssr-frontend-template`.
+Превращает форк в сайт, который ничего не помнит про `seo-frontend-template`.
 Читает **stable**-артефакты — локальный `docs/stack` (секции `Generates`) и
 FSD-карту поверхности из соседнего `<org>/strategy`
 (`<strategy-path>/docs/projects/<slug>/fsd/<surface>/`; резолв — поля в
@@ -30,7 +30,7 @@ FSD-карту поверхности из соседнего `<org>/strategy`
 ## Gate (проверить ДО любых правок)
 
 1. **Не канонический шаблон.** `pnpm check:identity` называет репо каноном (`origin` —
-   `stit-core/ssr-frontend-template`, правило `scripts/lib/template.mjs`) → СТОП: это канонический
+   `stit-core/seo-frontend-template`, правило `scripts/lib/template.mjs`) → СТОП: это канонический
    репо или его клон без смены `origin`. Разворот на каноне краснит гейт: его `check:identity`
    держит имя пакета шаблона и пустой `docs/stack/`.
 
@@ -71,8 +71,8 @@ FSD-карту поверхности из соседнего `<org>/strategy`
 
 ```bash
 NEW_NAME=<scope из service.md>
-git grep -lF '@stit/ssr-frontend-template' -- ':!.claude' \
-  | xargs sed -i "s|@stit/ssr-frontend-template|$NEW_NAME|g"
+git grep -lF '@stit/seo-frontend-template' -- ':!.claude' \
+  | xargs sed -i "s|@stit/seo-frontend-template|$NEW_NAME|g"
 ```
 
 `.claude/skills/**` из замены исключён намеренно: имя шаблона там — **триггер**
