@@ -1,8 +1,8 @@
 # Профиль репо для /plan — seo-frontend-template
 
-- **Роль:** сервис — Astro SEO-сайт (`<org>/site`). Работа приходит фазой программы из хаба
-  `<org>/infra` (`parent: infra:<slug>`) или прямым заходом. Итог — образ в registry (`/release`);
-  выкатка тега — только из хаба (`make bump SVC=site`).
+- **Роль:** сервис — Astro SEO-сайт (`<org>/site`). Работа приходит из корня проекта — задачей или
+  фазой программы хаба `<org>/infra` (`parent: infra:<slug>`) — или прямым заходом. Итог — образ в
+  registry (`/release`); выкатка тега — только через хаб (`make bump SVC=site`).
 - **Гейт перед «готово»:** `pnpm check` (состав — rule `tests-pipeline` § Gate).
 - **Проверка планов:** `pnpm plan:check` (входит в `pnpm check`; pre-commit проверяет, когда
   меняется `.claude/plans/`).
