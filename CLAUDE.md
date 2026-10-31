@@ -26,11 +26,13 @@ origin штампуется при старте.
 Сюда приходят двумя путями, и в обоих работаешь обвязкой этого репо — этот файл, скиллы,
 гейт `pnpm check`:
 
-- **агентом из хаба `<org>/infra`** — проект стартует в `<org>/strategy`, дальше работа идёт из
-  операционного хаба: сквозная задача — план-программа в `.claude/plans/` инфры, оттуда её фаза
-  приходит сюда (`../site`) и ведётся планом здесь (`/plan`, `parent: infra:<slug>`);
-- **прямым заходом** — нормальный режим; то, что задевает соседей, уходит handoff-блоком для
-  `<org>/infra` (его печатает `/release`, контракт сервиса `site` — `docs/reference/infra-handoff.md`).
+- **из корня проекта `~/git/<org>/`** — сначала проект продумывается в `<org>/strategy`, затем
+  сессия корня (или её фоновый агент) приходит сюда, в `site/`, с задачей или фазой программы:
+  сквозная задача — программа в `.claude/plans/` хаба `<org>/infra`, её фаза ведётся планом здесь
+  (`/plan`, `parent: infra:<slug>`);
+- **прямым заходом** (сессия в папке репо) — нормальный режим; то, что задевает соседей, уходит
+  handoff-блоком для хаба `<org>/infra` (его печатает `/release`, контракт сервиса `site` —
+  `docs/reference/infra-handoff.md`).
 
 Не знаешь, с чего начать, — `/smartdev`: покажет состояние и назовёт следующий шаг.
 Содержательное изменение идёт через план — файл в `.claude/plans/` (`/plan`: критерии приёмки,
@@ -39,15 +41,16 @@ origin штампуется при старте.
 
 ## Экосистема
 
-Этот репо — `<org>/site`, индексируемый сайт. Соседи — sibling-checkout'ы:
+Этот репо — `<org>/site`, индексируемый сайт, папка `site/` в корне проекта `~/git/<org>/`.
+Соседи — sibling-checkout'ы в том же корне:
 
 - `../strategy` (`business-strategy-template`) — design-time source of truth. FSD-карта сайта
   (`docs/projects/<slug>/fsd/<surface>/`) проектируется там (`/fsd-deep-dive`), здесь читается
   read-only (резолв — `docs/stack/service.md`): код пишется по артефактам, не наоборот, а правка
   карты — задача для strategy и её скиллов
-- `../infra` (`project-infra-template-compose`) — runtime проекта на VPS и операционный хаб. Этот
-  репо останавливается на образе в registry (`/release`); выкатка тега — только там
-  (`make bump SVC=site TAG=vX.Y.Z`)
+- `../infra` (`project-infra-template-compose`) — runtime проекта на VPS и хаб: программы сквозных
+  задач, выкатка. Этот репо останавливается на образе в registry (`/release`); выкатка тега — только
+  там (`make bump SVC=site TAG=vX.Y.Z`)
 - `../frontend` (`spa-frontend-template`) — всё за логином; `../backend` — данные извне, если нужны
 
 Соседи, флоу и контракты — `docs/reference/ecosystem.md`; канон экосистемы —
@@ -118,7 +121,7 @@ origin штампуется при старте.
 | Наблюдаемость: JSON-лог, `X-Request-Id`, `/healthz`, Sentry по DSN | `docs/reference/observability.md` |
 | Платформа проекта: 12 kinds, порядок волн, гейт `stable` | `docs/stack/README.md` |
 | Обновления стека: ритм, мажоры N / N−1, аудит, условия пересмотра | `docs/stack/dependencies.md § Обновления` (в шаблоне — `docs/stack/_templates/`) |
-| Экосистема: соседи, флоу (хаб `<org>/infra` или прямой заход), контракты, STOP на image-in-registry | `docs/reference/ecosystem.md` |
+| Экосистема: соседи, флоу (из корня проекта или прямой заход), контракты, STOP на image-in-registry | `docs/reference/ecosystem.md` |
 | Контракт сервиса `site` с `<org>/infra`: что гарантирует образ, требования к среде и edge (Traefik, CrowdSec, журнал доступа, боты), приёмка | `docs/reference/infra-handoff.md` |
 | Путь потребителя шаблона: форк → свой сайт | `docs/getting-started.md` |
 | Устройство `.claude`-системы (правила, скиллы, план) | `docs/contributing.md` |
